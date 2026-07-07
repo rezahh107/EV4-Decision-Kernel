@@ -12,6 +12,7 @@ Scope: First local schema, fixture, and validator package
 - Valid fixtures pass local validation.
 - Invalid fixtures fail local validation.
 - Validator includes semantic checks beyond shallow field presence.
+- Nested-clickable topology fails closed for ancestor + descendant, interactive self + clickable ancestor, interactive self + clickable descendant, and missing topology.
 - Project Gate packet carries pin, lineage, validation reports, and gate decision only.
 - Documentation does not claim CI enforcement unless CI actually runs the validator.
 ```
@@ -28,14 +29,14 @@ Expected output:
 MVK validator summary
 Registries: PASS
 Valid fixtures passed: 4/4
-Invalid fixtures failed as expected: 5/5
+Invalid fixtures failed as expected: 9/9
 Result: PASS
 ```
 
 ## Known Gaps
 
 ```text
-- CI is not wired yet.
+- CI workflow has been added, but PR check results must be verified before claiming ci_enforced.
 - Validator is MVK-local, not a full rule engine.
 - Schemas are not a released canonical artifact.
 - Responsive Runtime Validation Record remains future scope.
