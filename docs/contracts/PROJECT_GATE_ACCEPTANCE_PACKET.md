@@ -43,10 +43,18 @@ project_gate_acceptance_packet:
   responsive_validation_ref: string
   evidence_refs: []
   stage_authority:
-    architect: present
-    ce: present
-    builder: present
-    responsive: present
+    architect:
+      status: present
+      owner: string
+    ce:
+      status: present
+      owner: string
+    builder:
+      status: present
+      owner: string
+    responsive:
+      status: present
+      owner: string
   validation_summary:
     static_validation: planned
     semantic_validation: planned
