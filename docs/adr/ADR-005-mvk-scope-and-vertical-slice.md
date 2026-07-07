@@ -61,7 +61,7 @@ Root wrapper: Div Block or Flexbox
 Content: Heading + Paragraph + Button
 Media: Image or SVG decision
 Position case: decorative SVG absolute inside relative parent
-Responsive case: desktop explicit, tablet inherited, mobile override or unknown
+Responsive case: desktop explicit, tablet inherited, mobile overridden value or unknown
 Negative fixture: absolute without relative parent
 Negative fixture: clickable card + clickable button nested link
 ```
