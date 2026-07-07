@@ -16,10 +16,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+      - name: Show Node.js version
+        run: node --version
 
       - name: Validate MVK fixtures and gates
         run: npm run validate:mvk
