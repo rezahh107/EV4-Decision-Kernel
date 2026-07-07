@@ -1,0 +1,1 @@
+{"record_type":"position_decision_record","decision_id":"PDR-MVK-ABS-MISSING-PARENT-001","node_id":"node.decorative_svg","selected_position":"absolute","candidates":["static","absolute"],"rejected_positions":[{"position":"static","reason":"does not match visual intent"}],"containing_block_required":true,"evidence_refs":["EV-MVK-FIXTURE-001"],"decision_status":"locked"}
