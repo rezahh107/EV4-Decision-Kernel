@@ -41,7 +41,7 @@ evidence_ref:
   captured_at: string
   subject: string
   supports_claim: string
-  confidence: confirmed | proposed | inferred | unknown
+  confidence: confirmed | proposed | inferred | unknown | missing | contradicted
   limitations: []
 ```
 
