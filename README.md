@@ -38,9 +38,11 @@ Expected local result:
 MVK validator summary
 Registries: PASS
 Valid fixtures passed: 4/4
-Invalid fixtures failed as expected: 5/5
+Invalid fixtures failed as expected: 9/9
 Result: PASS
 ```
+
+The PR also adds a repository-local workflow at `.github/workflows/validate-mvk.yml` to run the same command on PRs and pushes to `main`.
 
 ## Not Included
 
@@ -55,4 +57,4 @@ Result: PASS
 - changes to other EV4 repositories
 ```
 
-Local validation is not CI enforcement. Schema-valid is not runtime-valid.
+Schema-valid is not runtime-valid. CI must be checked on the PR before claiming `ci_enforced` status.
