@@ -24,8 +24,14 @@ const fixturePlan = [
   ['invalid/nested_clickable_topology_invalid.json', 'builder_resolution_result', true],
   ['invalid/builder_ready_without_ce_closure_invalid.json', 'builder_resolution_result', true],
   ['invalid/project_gate_missing_kernel_pin_invalid.json', 'project_gate_acceptance_packet', true],
-  ['invalid/unlisted_builder_fallback_invalid.json', 'builder_resolution_result', true]
+  ['invalid/unlisted_builder_fallback_invalid.json', 'builder_resolution_result', true],
+  ['invalid/builder_button_inside_clickable_ancestor_invalid.json', 'builder_resolution_result', true],
+  ['invalid/builder_button_with_clickable_descendant_invalid.json', 'builder_resolution_result', true],
+  ['invalid/builder_missing_interaction_topology_invalid.json', 'builder_resolution_result', true],
+  ['invalid/builder_linked_image_inside_clickable_ancestor_invalid.json', 'builder_resolution_result', true]
 ];
+
+const elementRegistryById = new Map();
 
 function readJson(pathFromRoot) {
   return JSON.parse(readFileSync(join(repoRoot, pathFromRoot), 'utf8'));
@@ -57,6 +63,8 @@ function validateRegistries() {
   const ids = elements.elements.map((entry) => entry.element_id);
   const uniqueIds = new Set(ids);
 
+  elementRegistryById.clear();
+
   failWhen(errors, ids.length !== 8 || uniqueIds.size !== 8, 'element IDs must be unique and limited to eight MVK IDs');
   for (const id of coreElementIds) {
     failWhen(errors, !uniqueIds.has(id), `missing core element ID: ${id}`);
@@ -66,6 +74,7 @@ function validateRegistries() {
     requireFields(entry, ['element_id', 'display_name', 'element_generation', 'category', 'semantic_roles', 'meaningful_content_allowed', 'interactive_capability', 'requires_pro', 'requires_permission', 'status', 'evidence'], errors, entry.element_id || 'element');
     failWhen(errors, !hasItems(entry.semantic_roles), `${entry.element_id}: semantic_roles required`);
     failWhen(errors, !hasItems(entry.evidence), `${entry.element_id}: evidence required`);
+    elementRegistryById.set(entry.element_id, entry);
   }
 
   failWhen(errors, !hasItems(constraints.constraints) || constraints.constraints.length !== 6, 'expected six MVK constraints');
@@ -73,15 +82,31 @@ function validateRegistries() {
   return errors;
 }
 
+function elementIsInteractive(record) {
+  const entry = elementRegistryById.get(record.selected_element_id);
+  const capability = entry?.interactive_capability;
+  if (capability === 'primary_click_action') return true;
+  return record.interaction_topology?.self_interactive === true || record.interaction_topology?.self_link_enabled === true;
+}
+
 function validateInteractionTopology(record, errors) {
+  if (!('selected_element_id' in record)) return;
+
   const topology = record.interaction_topology;
+  failWhen(errors, !topology, 'interaction_topology is required for records with selected_element_id');
   if (!topology) return;
+
+  requireFields(topology, ['clickable_ancestor', 'clickable_descendant'], errors, 'interaction_topology');
+  const selfInteractive = elementIsInteractive(record);
+
   failWhen(errors, topology.clickable_ancestor === true && topology.clickable_descendant === true, 'nested clickable topology rejected');
+  failWhen(errors, selfInteractive && topology.clickable_ancestor === true, 'interactive element inside clickable ancestor rejected');
+  failWhen(errors, selfInteractive && topology.clickable_descendant === true, 'interactive element with clickable descendant rejected');
 }
 
 function validateElementDecision(record) {
   const errors = [];
-  requireFields(record, ['decision_id', 'node_id', 'selected_element_id', 'candidate_elements', 'rejected_alternatives', 'selection_reasons', 'required_capabilities', 'evidence_refs', 'decision_owner', 'decision_status'], errors, 'element_decision_record');
+  requireFields(record, ['decision_id', 'node_id', 'selected_element_id', 'candidate_elements', 'rejected_alternatives', 'selection_reasons', 'required_capabilities', 'evidence_refs', 'decision_owner', 'decision_status', 'interaction_topology'], errors, 'element_decision_record');
   failWhen(errors, !coreElementIds.includes(record.selected_element_id), 'selected_element_id must be a core MVK element ID');
   failWhen(errors, record.decision_owner !== 'architect', 'element decision owner must be architect');
   failWhen(errors, !hasItems(record.candidate_elements) || !record.candidate_elements.some((candidate) => candidate.element_id === record.selected_element_id && candidate.fit_status === 'selected'), 'selected element must appear as selected candidate');
@@ -112,7 +137,7 @@ function validateCeClosure(record) {
 
 function validateBuilderResolution(record) {
   const errors = [];
-  requireFields(record, ['resolution_id', 'action_id', 'target_node', 'selected_element_id', 'decision_ref', 'ce_closure_ref', 'control_resolution', 'value_unit_resolution', 'position_resolution', 'decision'], errors, 'builder_resolution_result');
+  requireFields(record, ['resolution_id', 'action_id', 'target_node', 'selected_element_id', 'decision_ref', 'ce_closure_ref', 'control_resolution', 'value_unit_resolution', 'position_resolution', 'decision', 'interaction_topology'], errors, 'builder_resolution_result');
   failWhen(errors, !coreElementIds.includes(record.selected_element_id), 'selected_element_id must be a core MVK element ID');
   if (record.decision === 'emit_action') {
     failWhen(errors, !hasText(record.decision_ref), 'emit_action requires decision_ref');
@@ -162,6 +187,8 @@ if (registryErrors.length > 0) {
 
 let validPassed = 0;
 let invalidFailed = 0;
+const expectedValid = fixturePlan.filter(([, , shouldFail]) => !shouldFail).length;
+const expectedInvalid = fixturePlan.filter(([, , shouldFail]) => shouldFail).length;
 for (const [fixturePath, validatorName, shouldFail] of fixturePlan) {
   const record = readJson(`kernel/fixtures/${fixturePath}`);
   const errors = validators[validatorName](record);
@@ -174,8 +201,8 @@ for (const [fixturePath, validatorName, shouldFail] of fixturePlan) {
   }
 }
 
-output.push(`Valid fixtures passed: ${validPassed}/4`);
-output.push(`Invalid fixtures failed as expected: ${invalidFailed}/5`);
+output.push(`Valid fixtures passed: ${validPassed}/${expectedValid}`);
+output.push(`Invalid fixtures failed as expected: ${invalidFailed}/${expectedInvalid}`);
 output.push(`Result: ${failed ? 'FAIL' : 'PASS'}`);
 console.log(output.join('\n'));
 process.exit(failed ? 1 : 0);
