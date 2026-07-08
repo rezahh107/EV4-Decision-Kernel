@@ -1,1 +1,8 @@
-{"fixture_case":"nested_links_source_missing","purpose":"Expected diagnostic: NESTED_LINKS_SOURCE_MISSING"}
+{
+  "purpose": "Real invalid fixture: remove the official Nested Links source and the Button topology source attachment.",
+  "mutations": {
+    "remove_source_refs": ["src.elementor.v4.nested_links"],
+    "remove_button_nested_links_ref": true
+  },
+  "expected_diagnostics": ["NESTED_LINKS_SOURCE_MISSING", "UNKNOWN_SOURCE_REF"]
+}
