@@ -1,0 +1,12 @@
+{
+  "purpose": "Real invalid fixture: mutate v3_v4_differences to reference a valid but wrong official source.",
+  "mutations": {
+    "set_area_source_refs": [
+      {
+        "doc_area_id": "v3_v4_differences",
+        "official_source_ref": "src.elementor.editor_v4_get_started"
+      }
+    ]
+  },
+  "expected_diagnostics": ["DOC_AREA_SOURCE_REF_MISMATCH"]
+}
