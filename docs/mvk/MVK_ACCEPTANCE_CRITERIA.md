@@ -1,7 +1,7 @@
 # MVK Acceptance Criteria — EV4 Decision Kernel
 
 Status: Kernel-local MVK validation repair added for Prompt 2.5  
-Scope: JSON Schema conformance gate, semantic validator diagnostics, fixture assertions, and coverage alignment
+Scope: JSON Schema conformance gate, semantic validator diagnostics, fixture assertions, locked npm dependencies, and coverage alignment
 
 ## Prompt 2.5 Acceptance Criteria
 
@@ -17,14 +17,16 @@ Scope: JSON Schema conformance gate, semantic validator diagnostics, fixture ass
 - R-MVK-003 selected-candidate lock is aligned between the coverage matrix and rule registry.
 - R-MVK-005 has matching valid and invalid `position_decision_record` fixtures.
 - R-MVK-007 remains `schema_backed` only; exact UI path evidence is not fixture-tested yet.
-- `.github/workflows/validate-mvk.yml` installs MVK validator dependencies and runs `npm run validate:mvk`.
+- `package-lock.json` pins the npm dependency tree for Ajv-based validation.
+- `.github/workflows/validate-mvk.yml` installs MVK validator dependencies with `npm ci` and runs `npm run validate:mvk`.
+- `.github/workflows/behavioral-coverage.yml` runs advisory and strict behavioral coverage audits.
 - No downstream enforcement is claimed.
 ```
 
 ## Local Validation
 
 ```bash
-npm install
+npm ci --ignore-scripts --no-audit --no-fund
 npm run validate:mvk
 ```
 
