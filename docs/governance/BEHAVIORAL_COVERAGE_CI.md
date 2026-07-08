@@ -19,22 +19,9 @@ system_level_enforcement:
 
 The audit makes the coverage matrix machine-auditable. It does not implement the schemas, validators, fixtures, sequence tests, runtime monitors, OS/harness controls, or downstream consumers named by the matrix.
 
-## Active Model
+## Prompt 5 Evidence Workspace Rows
 
-`docs/governance/BEHAVIORAL_RULE_COVERAGE.md` is now the active Behavioral Rule Coverage v0.4.1 model.
-
-The audit validates:
-
-```text
-- required v0.4.1 matrix columns
-- risk enum values
-- session_scope enum values
-- recovery_action enum values
-- status enum values
-- Critical/High threshold reporting
-- overclaim risk checks
-- deterministic JSON and Markdown report generation
-```
+Prompt 5 adds evidence-workspace rules to the matrix. The default behavioral coverage workflow remains advisory. Prompt 5 may truthfully mark rows as `fixture_tested` when the local validator and valid/invalid fixtures assert exact diagnostics, but it must not mark those rows as `ci_enforced`, `runtime_monitor_enforced`, `sequence_ci_enforced`, `os_harness_enforced`, or `downstream_contract_enforced` without direct evidence for those carriers.
 
 ## Advisory Mode
 
@@ -65,27 +52,6 @@ Strict mode fails on advisory failures plus v0.4.1 threshold violations.
 A strict failure can be expected while Critical/High rules remain below their minimum enforcement status. It is not automatically an implementation defect unless the failure is caused by malformed input, invalid enum values, or parser failure.
 
 Strict mode is not the default GitHub Actions gate yet.
-
-## v0.4.1 Thresholds
-
-```text
-Critical + per_artifact:
-  minimum: ci_enforced
-  target: downstream_contract_enforced
-
-Critical + cross_turn:
-  minimum: sequence_ci_enforced OR runtime_monitor_enforced
-  target: downstream_contract_enforced when a downstream boundary exists
-
-Critical + execution-only observability:
-  minimum: runtime_monitor_enforced
-
-High:
-  minimum: validator_backed
-  preferred: fixture_tested or ci_enforced
-```
-
-`advisory_ci_observed` never satisfies any Critical or High minimum by itself.
 
 ## Overclaim Boundaries
 
@@ -125,15 +91,3 @@ An advisory `pass` means the source matrix parsed safely and enum values are val
 A strict `fail` means one or more v0.4.1 thresholds are unmet, unless `parse_status` is `malformed` or enum errors are present.
 
 Neither result, by itself, makes a behavioral rule `ci_enforced`. The rule's actual validator or fixture test must fail CI on violation, and applicable downstream consumers must reject missing or invalid carriers before `downstream_contract_enforced` is justified.
-
-## Later Fail-Closed Activation
-
-Moving the workflow from advisory to strict requires an explicit later governance change. Before activation, applicable Critical rows should have real, repository-resolvable carriers and executed evidence for at least:
-
-```text
-- semantic validator rule
-- invalid fixture with expected diagnostics
-- CI step that runs the exact validator or fixture test
-```
-
-Cross-turn Critical rows require sequence-aware replay/diff tests or equivalent. Runtime-monitor rows require an actual runtime monitor.
