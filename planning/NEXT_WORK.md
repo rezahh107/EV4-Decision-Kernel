@@ -4,6 +4,12 @@
 
 Pending PR — Add KROAD-001 cross-repository adoption report
 
+## Status Authority
+
+This file is the authoritative current-status dashboard for roadmap progress after each merged PR.
+
+`planning/KERNEL_EXECUTION_PLAN.md` remains the durable detailed operating map for item meaning, scope, dependencies, acceptance criteria, evidence requirements, and do-not rules. If an item's status label in the detailed plan is stale, use this file for current roadmap status and update the detailed plan in a later maintenance PR only when changing roadmap meaning, scope, dependency, acceptance criteria, or evidence requirements.
+
 ## Status Summary
 
 Expected post-merge completed milestones: KROAD-000, KROAD-001, KROAD-002.
