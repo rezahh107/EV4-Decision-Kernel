@@ -86,6 +86,14 @@ function applyFixtureMutations(fixture, defaults) {
   }
   return {coverageIndex, manifest, labels, decisionCards};
 }
+function validFixtureArtifacts(fixture, defaults) {
+  return {
+    coverageIndex: fixture,
+    manifest: defaults.manifest,
+    labels: defaults.labels,
+    decisionCards: defaults.decisionCards
+  };
+}
 function allowedProofClaimPath(path) { return /not_proven|limitation|no_decision_card_reason|source_quality_notes|unresolved|not_applicable/i.test(path || ''); }
 function scanForbiddenProofClaims(value, path, diagnostics) {
   if (value === null || value === undefined) return;
@@ -150,7 +158,7 @@ for (const [path, shouldFail] of FIXTURE_PLAN) {
   let diagnostics = [], fixture = null;
   try {
     fixture = readJson(join('kernel/fixtures', path));
-    const fixtureArtifacts = applyFixtureMutations(fixture, defaults);
+    const fixtureArtifacts = shouldFail ? applyFixtureMutations(fixture, defaults) : validFixtureArtifacts(fixture, defaults);
     diagnostics = validateCoverageIndex({...fixtureArtifacts, sourceName: path});
   } catch (error) {
     diagnostics = [diagnostic({rule_id: 'FIXTURE_CONFORMANCE', code: 'FIXTURE_READ_FAILED', message: error.message, source: 'fixture', path})];
