@@ -17,6 +17,8 @@ Scope: Official source manifest, evidence labels, core element decision cards, s
 - Decision cards include use_when, avoid_when, decision_questions, required_evidence, role responsibilities, limitations, and minimum semantic children.
 - Workbook-derived sources cannot be promoted to official Elementor proof.
 - Decision cards must not claim project availability, runtime proof, Builder execution, or production readiness.
+- Forbidden proof tokens are rejected in all non-allowed string fields.
+- Forbidden proof keys with boolean true or string "true" are rejected outside allowed limitation/proof-gap paths.
 - Components source entry points to the official Components page and keeps Pro/Admin/Atomic limitations.
 - Source/card registry entries are listed in registry-manifest.v0.json.
 - No downstream enforcement is claimed.
@@ -36,10 +38,10 @@ node tools/audit-behavioral-coverage.mjs --mode advisory
 Source/card validator summary
 Schema setup: PASS (2/2 schemas compiled)
 Source/card integrity: PASS
-Schema validation: PASS (executed 11/11; valid fixtures schema-clean 4/4)
+Schema validation: PASS (executed 12/12; valid fixtures schema-clean 4/4)
 Valid fixtures passed schema + semantic validation: 4/4
-Invalid fixtures failed with expected diagnostics: 7/7
-Expected diagnostic assertions: PASS (7/7)
+Invalid fixtures failed with expected diagnostics: 8/8
+Expected diagnostic assertions: PASS (8/8)
 Result: PASS
 ```
 
