@@ -1,0 +1,7 @@
+{
+  "purpose": "Real invalid fixture: keep conflicting source status but remove required source quality notes.",
+  "mutations": {
+    "clear_source_quality_notes": ["reset_style_reconciliation"]
+  },
+  "expected_diagnostics": ["SOURCE_QUALITY_NOTE_REQUIRED"]
+}

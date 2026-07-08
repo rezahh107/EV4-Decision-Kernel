@@ -15,7 +15,7 @@ Agents working here must not implement a full platform unless explicitly instruc
 Current safe operating mode:
 
 ```text
-Kernel-local MVK implementation, validation hardening, source manifests, decision cards, Architect/CE source-card consumption boundaries, external evidence workspace contracts, and Behavioral Rule Coverage v0.4.1 advisory audit governance.
+Kernel-local MVK implementation, validation hardening, source manifests, Elementor V4 doc coverage index, decision cards, Architect/CE source-card consumption boundaries, external evidence workspace contracts, and Behavioral Rule Coverage v0.4.1 advisory audit governance.
 Full registry expansion, release automation, reusable workflows, cross-repo integration, runtime collectors, target-project availability exporters, Builder execution proof, downstream enforcement, and production readiness remain out of scope until explicitly prompted.
 ```
 
@@ -46,10 +46,10 @@ Responsive:
 
 Project Gate:
   owns lineage, hash, pin, schema, provenance, and handoff acceptance.
-  Project Gate integration is not implemented by Prompt 5.
+  Project Gate integration is not implemented by this repository phase.
 
 Kernel:
-  owns shared vocabulary, schemas, evidence model, source manifests, decision cards, source/card consumption-boundary contracts, evidence workspace contracts, behavioral coverage governance, hard gates, fixtures, and validation-pack shape.
+  owns shared vocabulary, schemas, evidence model, source manifests, doc coverage index, decision cards, source/card consumption-boundary contracts, evidence workspace contracts, behavioral coverage governance, hard gates, fixtures, and validation-pack shape.
   Kernel must not choose a section-specific design.
 ```
 
@@ -61,6 +61,8 @@ Agents must preserve these rules:
 
 ```text
 Documented capability != enabled project capability.
+Official docs != current user permission.
+Official docs != active Elementor Pro license.
 Schema valid != semantic valid.
 Semantic valid != runtime valid.
 provided_schema_valid != runtime_validated.
@@ -68,10 +70,12 @@ validated_fixture != real project/runtime proof.
 collected_runtime_evidence != production_ready.
 Workbook-derived rule != official Elementor capability.
 Decision card guidance != correct design choice proof.
+Doc coverage index != full Elementor documentation mirror.
 CE constructability status != Builder execution.
 Builder missing evidence -> ask/repair, not guess.
 Project Gate verifies evidence and authority; it does not design.
 Invalid fixtures must assert expected diagnostics, not just any failure.
+Synthetic fixture dispatch tables are not fixture testing.
 Advisory CI != ci_enforced.
 CI success != production readiness.
 Downstream contract enforcement requires inspected downstream rejection evidence.
@@ -106,7 +110,7 @@ Do not create these until an explicit later wave asks for them:
 - production readiness proof carriers
 ```
 
-The current target is a small, enforceable Kernel-local MVK plus source/card consumption boundaries, external evidence contracts, and an honest v0.4.1 behavioral audit model. Keep validation local, deterministic, and fixture-proven.
+The current target is a small, enforceable Kernel-local MVK plus source/card consumption boundaries, Elementor V4 doc coverage indexing, external evidence contracts, and an honest v0.4.1 behavioral audit model. Keep validation local, deterministic, and fixture-proven.
 
 ---
 
@@ -140,7 +144,7 @@ prompt_level_influence:
   role framing, prose guidance, examples, templates, prompt instructions, review guidance
 
 system_level_enforcement:
-  schema validation, validator rules, fixtures, CI failure, sequence tests,
+  schema validation, validator rules, real fixtures, CI failure, sequence tests,
   runtime monitors, OS/harness enforcement, downstream rejection
 ```
 
@@ -148,7 +152,7 @@ A prompt instruction is not an enforcement carrier. A documentation audit workfl
 
 `advisory_ci_observed` never satisfies any Critical or High minimum by itself.
 
-A rule may be `fixture_tested` only when the local validator and valid/invalid fixtures prove the intended behavior and invalid fixtures assert expected diagnostic codes.
+A rule may be `fixture_tested` only when the local validator and real valid/invalid fixtures prove the intended behavior and invalid fixtures assert expected diagnostic codes.
 
 A rule may be `ci_enforced` only after the exact relevant workflow run is observed failing on violation and passing for valid artifacts.
 
@@ -156,7 +160,25 @@ A rule may be `downstream_contract_enforced` only after an inspected downstream 
 
 ---
 
-## 7. Evidence Workspace Rule
+## 7. Elementor V4 Doc Coverage Rule
+
+Required official documentation areas must be represented in:
+
+```text
+kernel/official-sources/elementor-v4-source-manifest.v0.json
+kernel/official-sources/elementor-v4-doc-coverage-index.v0.json
+kernel/official-sources/evidence-labels.v0.json
+```
+
+Non-core documentation areas may be context sources with an explicit `no_decision_card_reason`. Do not create broad decision cards merely because a documentation page exists.
+
+Important context sources include class priority, Class Manager, user roles/classes, responsive editing, reset-style reconciliation, Variables Manager, Nested Links, V3/V4 differences, and viewport control.
+
+Viewport Control is not treated as complete breakpoint semantics. If breakpoint-specific source evidence is missing, use an explicit insufficient-evidence gap.
+
+---
+
+## 8. Evidence Workspace Rule
 
 Prompt 5 may add only Kernel-local evidence contracts:
 
@@ -172,11 +194,11 @@ Prompt 5 may add only Kernel-local evidence contracts:
 - deterministic validator diagnostics
 ```
 
-Prompt 5 must not implement exporters, collectors, downstream adapters, Project Gate intake, or production readiness proof.
+Prompt 5 and this PR #9 repair must not implement exporters, collectors, downstream adapters, Project Gate intake, or production readiness proof.
 
 ---
 
-## 8. Safe Patch Types Now
+## 9. Safe Patch Types Now
 
 Allowed now:
 
@@ -187,6 +209,7 @@ Allowed now:
 - Behavioral Rule Coverage v0.4.1 matrix and advisory audit tooling
 - evidence model docs
 - source manifests and evidence labels
+- Elementor V4 doc coverage index and validator
 - Element Decision Cards
 - Architect/CE source-card consumption-boundary schemas, fixtures, validators, and docs
 - external evidence workspace schemas, fixtures, validator, docs, and registry entries
@@ -199,6 +222,8 @@ Not allowed yet:
 ```text
 - broad registry population
 - validators that claim complete coverage
+- full Elementor documentation mirror
+- full control-level registry
 - release packaging
 - cross-repo CI coupling
 - Project Gate domain validation logic or intake
@@ -208,11 +233,12 @@ Not allowed yet:
 - Responsive runtime global-proof claims
 - external exporter implementation
 - browser/runtime collector implementation
+- production readiness proof carriers
 ```
 
 ---
 
-## 9. Required Self-Check Before Finalizing a Patch
+## 10. Required Self-Check Before Finalizing a Patch
 
 Before opening or merging a patch, answer:
 
@@ -228,6 +254,8 @@ Before opening or merging a patch, answer:
 9. Did it avoid treating advisory CI as ci_enforced?
 10. Did it avoid treating cross_turn Critical rules as satisfied by single-artifact CI?
 11. Did evidence workspace fixtures avoid real-world evidence claims?
+12. Did doc coverage fixtures avoid synthetic fixture-case dispatch?
+13. Did source quality notes preserve ambiguity instead of hiding it?
 ```
 
 If any answer is no, revise the patch before finalizing.

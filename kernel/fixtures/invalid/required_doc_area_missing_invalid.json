@@ -1,0 +1,7 @@
+{
+  "purpose": "Real invalid fixture: remove a required Elementor V4 doc area from the evaluated coverage artifact.",
+  "mutations": {
+    "remove_doc_areas": ["class_priority_cascade"]
+  },
+  "expected_diagnostics": ["REQUIRED_DOC_AREA_MISSING"]
+}

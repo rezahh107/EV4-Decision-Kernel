@@ -1,0 +1,12 @@
+{
+  "purpose": "Real invalid fixture: mutate class_priority_cascade to reference a valid but wrong official source.",
+  "mutations": {
+    "set_area_source_refs": [
+      {
+        "doc_area_id": "class_priority_cascade",
+        "official_source_ref": "src.elementor.v4.classes"
+      }
+    ]
+  },
+  "expected_diagnostics": ["DOC_AREA_SOURCE_REF_MISMATCH"]
+}

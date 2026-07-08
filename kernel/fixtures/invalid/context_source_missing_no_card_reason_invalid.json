@@ -1,0 +1,7 @@
+{
+  "purpose": "Real invalid fixture: keep the context source but clear its no-card reason.",
+  "mutations": {
+    "clear_no_card_reason": ["class_manager"]
+  },
+  "expected_diagnostics": ["DOC_COVERAGE_SCHEMA_INVALID", "MISSING_NO_CARD_REASON"]
+}

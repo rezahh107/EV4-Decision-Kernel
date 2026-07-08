@@ -1,0 +1,12 @@
+{
+  "purpose": "Real invalid fixture: mutate one doc area to reference an unknown evidence label.",
+  "mutations": {
+    "set_area_labels": [
+      {
+        "doc_area_id": "class_manager",
+        "required_evidence_label_refs": ["unknown_doc_coverage_label"]
+      }
+    ]
+  },
+  "expected_diagnostics": ["UNKNOWN_EVIDENCE_LABEL_REF"]
+}

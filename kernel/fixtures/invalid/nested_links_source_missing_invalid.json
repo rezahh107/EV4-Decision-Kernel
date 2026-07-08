@@ -1,0 +1,7 @@
+{
+  "purpose": "Real invalid fixture: remove the official Nested Links source from the evaluated manifest.",
+  "mutations": {
+    "remove_source_refs": ["src.elementor.v4.nested_links"]
+  },
+  "expected_diagnostics": ["NESTED_LINKS_SOURCE_MISSING", "UNKNOWN_SOURCE_REF"]
+}

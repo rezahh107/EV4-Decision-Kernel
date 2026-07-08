@@ -1,0 +1,7 @@
+{
+  "purpose": "Real invalid fixture: mutate the Components source claim type into project availability proof.",
+  "mutations": {
+    "components_project_availability_overclaim": true
+  },
+  "expected_diagnostics": ["COMPONENTS_PROJECT_AVAILABILITY_OVERCLAIM"]
+}

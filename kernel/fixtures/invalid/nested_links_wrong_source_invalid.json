@@ -1,0 +1,12 @@
+{
+  "purpose": "Real invalid fixture: mutate nested_links to reference a valid but wrong official source.",
+  "mutations": {
+    "set_area_source_refs": [
+      {
+        "doc_area_id": "nested_links",
+        "official_source_ref": "src.elementor.v4.button"
+      }
+    ]
+  },
+  "expected_diagnostics": ["DOC_AREA_SOURCE_REF_MISMATCH"]
+}

@@ -1,0 +1,7 @@
+{
+  "purpose": "Real invalid fixture: mutate the coverage artifact scope into a production-readiness proof claim.",
+  "mutations": {
+    "set_scope": "This doc coverage artifact proves production readiness."
+  },
+  "expected_diagnostics": ["FORBIDDEN_PRODUCTION_READY_CLAIM"]
+}
