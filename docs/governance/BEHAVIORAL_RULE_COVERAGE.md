@@ -1,6 +1,6 @@
 # Behavioral Rule Coverage — EV4 Decision Kernel
 
-**Version:** 0.2.1-mvk-local  
+**Version:** 0.2.2-mvk-local  
 **Status:** Kernel-local schema / validator / fixture coverage for Prompt 2
 
 ## Enforcement Status
@@ -26,7 +26,7 @@ No rule is marked `ci_enforced` until a PR workflow run confirms `npm run valida
 | `R-MVK-005` | Absolute positioning requires containing-block proof. | Critical | `fixture_tested` |
 | `R-MVK-006` | Nested clickable topology is rejected, including interactive-self nesting and missing topology carriers. | Critical | `fixture_tested` |
 | `R-MVK-007` | Exact UI path requires evidence. | High | `schema_backed` |
-| `R-MVK-008` | Project Gate rejects missing kernel pin/hash. | Critical | `fixture_tested` |
+| `R-MVK-008` | Project Gate rejects missing or malformed kernel pin/hash. | Critical | `fixture_tested` |
 | `R-MVK-009` | `production_ready: true` requires QA/runtime evidence. | Critical | `prose_only` |
 
 ## Local Validation
@@ -41,7 +41,7 @@ Expected result:
 MVK validator summary
 Registries: PASS
 Valid fixtures passed: 4/4
-Invalid fixtures failed as expected: 9/9
+Invalid fixtures failed as expected: 10/10
 Result: PASS
 ```
 
