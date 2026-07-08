@@ -1,0 +1,1 @@
+{"fixture_id":"invalid_roadmap_claim_as_current_capability","expected_diagnostics":["DGOV_ROADMAP_NOT_CURRENT_CAPABILITY"],"records":[{"record_id":"invalid.roadmap.current","selected_target_scope":"elementor_v4","source_tier":"elementor_release_or_update_note","temporal_status":"roadmap","claim_type":"current_capability","builder_ready":false}]}

@@ -1,0 +1,1 @@
+{"fixture_id":"invalid_future_feature_as_installed_capability","expected_diagnostics":["DGOV_FUTURE_FEATURE_NOT_INSTALLED_CAPABILITY"],"records":[{"record_id":"invalid.future.installed","selected_target_scope":"elementor_v4","temporal_status":"future_feature","claim_type":"installed_capability","installed_version_supported":true,"builder_ready":false}]}

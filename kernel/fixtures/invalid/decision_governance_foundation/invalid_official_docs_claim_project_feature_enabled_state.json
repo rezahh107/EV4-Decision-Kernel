@@ -1,0 +1,1 @@
+{"fixture_id":"invalid_official_docs_claim_project_feature_enabled_state","expected_diagnostics":["DGOV_OFFICIAL_DOCS_NOT_PROJECT_AVAILABILITY"],"records":[{"record_id":"invalid.official.project_feature_enabled_state","selected_target_scope":"elementor_v4","source_tier":"official_elementor_help","claim_type":"project_feature_enabled_state","builder_ready":false}]}

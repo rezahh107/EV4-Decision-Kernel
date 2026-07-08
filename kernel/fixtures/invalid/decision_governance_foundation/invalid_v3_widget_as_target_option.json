@@ -1,0 +1,1 @@
+{"fixture_id":"invalid_v3_widget_as_target_option","expected_diagnostics":["DGOV_V3_TARGET_FORBIDDEN"],"records":[{"record_id":"invalid.v3.widget","selected_target_scope":"elementor_v3","target_option":"v3.widget.image","valid_target_option":true,"builder_ready":false}]}

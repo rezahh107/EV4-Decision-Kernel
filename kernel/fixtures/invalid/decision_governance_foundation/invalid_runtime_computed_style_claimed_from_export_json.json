@@ -1,0 +1,1 @@
+{"fixture_id":"invalid_runtime_computed_style_claimed_from_export_json","expected_diagnostics":["DGOV_COMPUTED_STYLE_REQUIRES_RUNTIME_EVIDENCE"],"records":[{"record_id":"invalid.export.computed","selected_target_scope":"elementor_v4","evidence_source":"export_json","claim_type":"computed_css","builder_ready":false}]}

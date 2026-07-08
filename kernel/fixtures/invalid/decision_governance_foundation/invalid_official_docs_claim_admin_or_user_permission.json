@@ -1,0 +1,1 @@
+{"fixture_id":"invalid_official_docs_claim_admin_or_user_permission","expected_diagnostics":["DGOV_OFFICIAL_DOCS_NOT_PROJECT_AVAILABILITY"],"records":[{"record_id":"invalid.official.admin_or_user_permission","selected_target_scope":"elementor_v4","source_tier":"official_elementor_developer_docs","claim_type":"admin_or_user_permission","builder_ready":false}]}

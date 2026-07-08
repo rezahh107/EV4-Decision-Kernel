@@ -1,11 +1,11 @@
 # EV4 Decision Kernel
 
-**Status:** working-reference / Kernel-local MVK foundation with source manifest, doc coverage index, decision-card layer, Architect/CE consumption boundaries, external evidence workspace contracts, and Behavioral Rule Coverage v0.4.1 advisory audit model  
+**Status:** working-reference / Kernel-local MVK foundation with source manifest, doc coverage index, decision-card layer, Architect/CE consumption boundaries, external evidence workspace contracts, decision-governance foundation, and Behavioral Rule Coverage v0.4.1 advisory audit model  
 **Owner:** `rezahh107/EV4-Decision-Kernel`
 
 ## Purpose
 
-`EV4 Decision Kernel` owns shared IDs, schema contracts, evidence vocabulary, hard gates, source manifests, Elementor V4 documentation coverage boundaries, decision cards, consumption-boundary fixtures, evidence workspace contracts, behavioral coverage governance, and validator-pack shape for EV4. It does not choose section-specific Elementor designs and does not collect external evidence itself.
+`EV4 Decision Kernel` owns shared IDs, schema contracts, evidence vocabulary, hard gates, source manifests, Elementor V4 documentation coverage boundaries, decision-domain taxonomy, execution-risk boundaries, decision cards, consumption-boundary fixtures, evidence workspace contracts, behavioral coverage governance, and validator-pack shape for EV4. It does not choose section-specific Elementor designs and does not collect external evidence itself.
 
 ```text
 Documented Elementor capability != enabled project capability != constructability proven != Builder executed != Responsive validated != production ready
@@ -24,6 +24,22 @@ kernel/validator/validate-elementor-doc-coverage.mjs
 
 The coverage index is not a full documentation mirror. It prevents important V4 context areas from being silently omitted. Non-core documentation areas may be context sources with explicit `no_decision_card_reason` instead of decision cards.
 
+## Decision Governance Foundation
+
+This repository now also defines a Kernel-local taxonomy and execution-risk boundary foundation in:
+
+```text
+kernel/decision-governance/decision-domain-taxonomy.v0.json
+kernel/decision-governance/p0-decision-family-registry.v0.json
+kernel/decision-governance/source-tier-boundaries.v0.json
+kernel/decision-governance/capability-dependency-gate.v0.json
+kernel/decision-governance/atomic-export-boundary.v0.json
+kernel/decision-governance/execution-risk-domain-registry.v0.json
+kernel/validator/validate-decision-governance-foundation.mjs
+```
+
+This foundation distinguishes decision families, evidence domains, safety gates, source-boundary rules, capability-proof rules, and execution-risk controls. It is not a full matrix implementation, full Elementor feature registry, or full control-level registry.
+
 ## Role Boundary
 
 ```text
@@ -32,7 +48,7 @@ CE: owns constructability proof and decision closure. Evidence packages may supp
 Builder: resolves and executes only locked decisions.
 Responsive: validates runtime behavior.
 Project Gate: verifies lineage, hash, evidence completeness, schema validity, and stage authority. It must not make Elementor design decisions.
-Kernel: owns shared IDs, schemas, evidence vocabulary, source manifests, doc coverage index, decision cards, consumption-boundary contracts, evidence workspace contracts, behavioral coverage governance, hard gates, fixtures, and validation-pack shape.
+Kernel: owns shared IDs, schemas, evidence vocabulary, source manifests, doc coverage index, decision-governance taxonomy, execution-risk boundaries, decision cards, consumption-boundary contracts, evidence workspace contracts, behavioral coverage governance, hard gates, fixtures, and validation-pack shape.
 ```
 
 ## Evidence Boundary
@@ -57,12 +73,13 @@ node tools/audit-behavioral-coverage.mjs --mode advisory
 node tools/audit-behavioral-coverage.mjs --mode strict
 ```
 
-`npm run validate:mvk` runs the MVK validator, source/card validator, consumption-boundary validator, evidence-workspace validator, and Elementor V4 doc coverage validator.
+`npm run validate:mvk` runs the MVK validator, source/card validator, consumption-boundary validator, evidence-workspace validator, Elementor V4 doc coverage validator, and decision-governance foundation validator.
 
 ## Not Included
 
 ```text
 - full Elementor documentation mirror
+- full Elementor feature registry
 - full control-level registry
 - external exporter implementation
 - browser/runtime collector implementation
@@ -73,4 +90,4 @@ node tools/audit-behavioral-coverage.mjs --mode strict
 - production readiness proof
 ```
 
-Schema-valid is not runtime-valid. Source-backed is not project-available. Decision-card-valid is not Builder-executed. Doc-coverage-valid is not production-ready.
+Schema-valid is not runtime-valid. Source-backed is not project-available. Decision-card-valid is not Builder-executed. Doc-coverage-valid is not production-ready. Decision-governance-valid is not constructability proof.
