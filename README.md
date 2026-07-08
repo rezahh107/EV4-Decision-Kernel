@@ -26,10 +26,10 @@ Kernel: owns shared IDs, schemas, evidence vocabulary, hard gates, fixtures, and
 
 The Kernel-local MVK package now executes JSON Schema Draft 2020-12 conformance validation and semantic validation for the mapped fixture plan. Invalid fixtures must fail with expected diagnostic codes, not merely fail for any reason.
 
-Install dependencies and run:
+Install locked dependencies and run:
 
 ```bash
-npm install
+npm ci --ignore-scripts --no-audit --no-fund
 npm run validate:mvk
 ```
 
@@ -46,7 +46,7 @@ Expected diagnostic assertions: PASS (11/11)
 Result: PASS
 ```
 
-The repository-local workflow at `.github/workflows/validate-mvk.yml` installs the pinned MVK validator dependencies and runs `npm run validate:mvk` on PRs and pushes to `main`.
+The repository-local workflow at `.github/workflows/validate-mvk.yml` installs locked MVK validator dependencies with `npm ci` and runs `npm run validate:mvk` on PRs and pushes to `main`. The behavioral coverage workflow runs both advisory and strict audit modes.
 
 ## Not Included
 
