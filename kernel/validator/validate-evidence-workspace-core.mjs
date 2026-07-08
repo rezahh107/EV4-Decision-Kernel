@@ -20,6 +20,15 @@ const FORBIDDEN = new Map([
   ['project_gate_integrated',['R-MVK-EVIDENCE-004','FORBIDDEN_DOWNSTREAM_ENFORCEMENT_CLAIM','Kernel-local evidence workspace must not claim Project Gate integration.']],
   ['official_docs_fully_covered',['R-MVK-EVIDENCE-004','REQUIRED_NOT_PROVEN_BOUNDARY_MISSING','Official documentation coverage must remain explicitly bounded.']]
 ]);
+const FORBIDDEN_PATTERNS = [
+  [/production_read(?:y|iness)/, FORBIDDEN.get('production_ready')],
+  [/builder_execut/, FORBIDDEN.get('builder_executed')],
+  [/runtime_(?:validat|proof|proven)/, FORBIDDEN.get('runtime_validated')],
+  [/downstream_(?:contract_)?enforce/, FORBIDDEN.get('downstream_contract_enforced')],
+  [/cross_(?:repo|repository)_integrat/, FORBIDDEN.get('cross_repo_integrated')],
+  [/project_gate_integrat/, FORBIDDEN.get('project_gate_integrated')],
+  [/official_(?:docs|documentation).*?(?:full.*cover|fully.*cover|complete)/, FORBIDDEN.get('official_docs_fully_covered')]
+];
 const ALLOWED_PATHS = ['limitations','known_limitations','unresolved_gaps','unresolved_evidence_gaps','not_proven_by_workspace','not_proven_by_profile','not_proven_by_evidence'];
 const SCHEMAS = {
   evidence_workspace_envelope: 'kernel/schemas/evidence-workspace-envelope.schema.json',
@@ -46,7 +55,10 @@ const PLAN = [
   ['invalid/evidence_workspace_unknown_package_ref_invalid.json','evidence_workspace_envelope',true,['UNKNOWN_EVIDENCE_PACKAGE_REF']],
   ['invalid/evidence_package_status_overclaim_invalid.json','evidence_workspace_envelope',true,['STATUS_OVERCLAIM']],
   ['invalid/evidence_workspace_malformed_packages_invalid.json','evidence_workspace_envelope',true,['SCHEMA_TYPE']],
-  ['invalid/evidence_workspace_summary_status_overclaim_invalid.json','evidence_workspace_envelope',true,['STATUS_OVERCLAIM']]
+  ['invalid/evidence_workspace_summary_status_overclaim_invalid.json','evidence_workspace_envelope',true,['STATUS_OVERCLAIM']],
+  ['invalid/evidence_workspace_forbidden_prose_variants_invalid.json','evidence_workspace_envelope',true,['FORBIDDEN_PRODUCTION_READY_CLAIM','FORBIDDEN_BUILDER_EXECUTION_CLAIM','FORBIDDEN_RUNTIME_VALIDATION_CLAIM','FORBIDDEN_DOWNSTREAM_ENFORCEMENT_CLAIM','REQUIRED_NOT_PROVEN_BOUNDARY_MISSING']],
+  ['invalid/evidence_workspace_missing_compatibility_profile_invalid.json','evidence_workspace_envelope',true,['KERNEL_PIN_COMPATIBILITY_PROFILE_REQUIRED']],
+  ['invalid/project_environment_profile_missing_compatibility_profile_fields_invalid.json','project_environment_profile',true,['KERNEL_PIN_PROFILE_ID_REQUIRED','KERNEL_PIN_CONSUMER_STAGE_REQUIRED']]
 ];
 
 const read = (path) => JSON.parse(readFileSync(join(root, path), 'utf8'));
@@ -92,25 +104,47 @@ function validateKernelPin(pin, diagnostics, label) {
   add(diagnostics, !/^[a-f0-9]{40}$/i.test(pin.kernel_source_commit || ''), {rule_id:'R-MVK-EVIDENCE-001', code:'KERNEL_PIN_COMMIT_SHA_INVALID', message:`${label}.kernel_pin.kernel_source_commit must be a 40-character hex SHA`, source:'semantic', path:`${label}.kernel_pin.kernel_source_commit`});
   add(diagnostics, !hasText(pin.registry_manifest_ref), {rule_id:'R-MVK-EVIDENCE-001', code:'KERNEL_PIN_MANIFEST_REF_REQUIRED', message:`${label}.kernel_pin.registry_manifest_ref is required`, source:'semantic', path:`${label}.kernel_pin.registry_manifest_ref`});
   add(diagnostics, !/^[a-f0-9]{64}$/i.test(pin.registry_manifest_sha256 || ''), {rule_id:'R-MVK-EVIDENCE-001', code:'KERNEL_PIN_MANIFEST_SHA256_INVALID', message:`${label}.kernel_pin.registry_manifest_sha256 must be a 64-character hex SHA256`, source:'semantic', path:`${label}.kernel_pin.registry_manifest_sha256`});
+  if (!isObj(pin.compatibility_profile)) {
+    diagnostics.push(diag({rule_id:'R-MVK-EVIDENCE-001', code:'KERNEL_PIN_COMPATIBILITY_PROFILE_REQUIRED', message:`${label}.kernel_pin.compatibility_profile must be an object`, source:'semantic', path:`${label}.kernel_pin.compatibility_profile`}));
+    return;
+  }
+  add(diagnostics, !hasText(pin.compatibility_profile.profile_id), {rule_id:'R-MVK-EVIDENCE-001', code:'KERNEL_PIN_PROFILE_ID_REQUIRED', message:`${label}.kernel_pin.compatibility_profile.profile_id is required`, source:'semantic', path:`${label}.kernel_pin.compatibility_profile.profile_id`});
+  add(diagnostics, !hasText(pin.compatibility_profile.consumer_stage), {rule_id:'R-MVK-EVIDENCE-001', code:'KERNEL_PIN_CONSUMER_STAGE_REQUIRED', message:`${label}.kernel_pin.compatibility_profile.consumer_stage is required`, source:'semantic', path:`${label}.kernel_pin.compatibility_profile.consumer_stage`});
 }
 function allowedPath(path) { return ALLOWED_PATHS.some((allowed) => path.includes(allowed)); }
+function normalizeClaim(value) {
+  return String(value).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+}
+function emitForbiddenMatches(rawValue, path, diagnostics) {
+  const normalized = normalizeClaim(rawValue);
+  const emitted = new Set();
+  for (const [token, [rule_id, code, message]] of FORBIDDEN.entries()) {
+    if (normalized.includes(token) && !emitted.has(code)) {
+      diagnostics.push(diag({rule_id, code, message, source:'semantic', path}));
+      emitted.add(code);
+    }
+  }
+  for (const [pattern, detail] of FORBIDDEN_PATTERNS) {
+    if (pattern.test(normalized)) {
+      const [rule_id, code, message] = detail;
+      if (!emitted.has(code)) {
+        diagnostics.push(diag({rule_id, code, message, source:'semantic', path}));
+        emitted.add(code);
+      }
+    }
+  }
+}
 function scanForbidden(value, path, diagnostics) {
   if (value === null || value === undefined) return;
   if (typeof value === 'string') {
-    if (!allowedPath(path)) {
-      const normalized = value.toLowerCase().replace(/[\s-]+/g, '_');
-      for (const [token, [rule_id, code, message]] of FORBIDDEN.entries()) {
-        if (normalized.includes(token)) diagnostics.push(diag({rule_id, code, message, source:'semantic', path}));
-      }
-    }
+    if (!allowedPath(path)) emitForbiddenMatches(value, path, diagnostics);
     return;
   }
   if (Array.isArray(value)) return value.forEach((entry, index) => scanForbidden(entry, `${path}[${index}]`, diagnostics));
   if (isObj(value)) for (const [key, child] of Object.entries(value)) {
     const childPath = path ? `${path}.${key}` : key;
-    const forbidden = FORBIDDEN.get(key);
-    if (forbidden && !allowedPath(childPath) && (child === true || String(child).toLowerCase() === 'true')) {
-      diagnostics.push(diag({rule_id:forbidden[0], code:forbidden[1], message:forbidden[2], source:'semantic', path:childPath}));
+    if (!allowedPath(childPath) && (child === true || String(child).toLowerCase() === 'true')) {
+      emitForbiddenMatches(key, childPath, diagnostics);
     }
     scanForbidden(child, childPath, diagnostics);
   }
