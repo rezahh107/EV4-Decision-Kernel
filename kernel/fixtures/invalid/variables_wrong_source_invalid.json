@@ -1,0 +1,9 @@
+{
+  "purpose": "Real invalid fixture: mutate variables to reference a valid but wrong official source.",
+  "mutations": {
+    "set_area_source_refs": [
+      {"doc_area_id": "variables", "official_source_ref": "src.elementor.v4.variables_manager"}
+    ]
+  },
+  "expected_diagnostics": ["DOC_AREA_SOURCE_REF_MISMATCH"]
+}

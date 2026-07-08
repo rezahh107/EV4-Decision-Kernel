@@ -1,0 +1,56 @@
+{
+  "manifest_id": "elementor-v4-source-manifest-extension.v0",
+  "version": "0.7.0-complete-doc-area-coverage",
+  "scope": "Kernel-local extension for Elementor V4 official property-level documentation sources not yet present in the base source manifest.",
+  "source_policy": {
+    "upstream_source_of_truth": "Official Elementor documentation remains the upstream source of truth.",
+    "kernel_role": "The Kernel stores structured source refs, claim summaries, scope, limitations, and doc coverage mappings.",
+    "workbook_policy": "Workbook-derived material is educational seed only and is never official Elementor proof.",
+    "project_availability_policy": "Official docs prove documented platform capability only, not availability in a target WordPress project.",
+    "runtime_policy": "Runtime proof requires future browser/runtime evidence and is not created by this manifest extension."
+  },
+  "sources": [
+    {
+      "source_id": "src.elementor.v4.logical_properties",
+      "title": "What are logical properties?",
+      "url": "https://elementor.com/help/what-are-logical-properties/",
+      "source_class": "official_elementor_help",
+      "authority": "official_upstream",
+      "retrieved_or_verified_at": "2026-07-08T00:00:00Z",
+      "verification_method": "web_open_official_elementor",
+      "claims": [
+        {
+          "claim_id": "claim.elementor.v4.logical_properties",
+          "claim_type": "editor_v4_ui",
+          "claim": "Logical properties documentation supports writing-direction-aware property context such as start and end.",
+          "support_status": "supported"
+        }
+      ],
+      "verification_scope": ["editor_v4_ui"],
+      "support_status": "supported",
+      "limitations": ["Does not create a full control registry or prove runtime layout behavior."],
+      "used_by": ["doc_area.logical_properties"]
+    },
+    {
+      "source_id": "src.elementor.v4.attributes",
+      "title": "Add and delete attributes",
+      "url": "https://elementor.com/help/add-and-delete-attributes/",
+      "source_class": "official_elementor_help",
+      "authority": "official_upstream",
+      "retrieved_or_verified_at": "2026-07-08T00:00:00Z",
+      "verification_method": "web_open_official_elementor",
+      "claims": [
+        {
+          "claim_id": "claim.elementor.v4.attributes",
+          "claim_type": "editor_v4_ui",
+          "claim": "Attributes documentation supports V4 General-tab attribute add/delete and Dynamic Tags name/value context.",
+          "support_status": "supported"
+        }
+      ],
+      "verification_scope": ["editor_v4_ui"],
+      "support_status": "supported",
+      "limitations": ["Does not prove safe target mutation, exact target UI path, Builder execution, or runtime DOM output."],
+      "used_by": ["doc_area.attributes", "doc_area.ui_path_boundaries"]
+    }
+  ]
+}
