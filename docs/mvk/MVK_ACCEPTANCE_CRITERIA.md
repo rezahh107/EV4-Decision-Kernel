@@ -60,10 +60,10 @@ Scope: schemas, fixtures, validator checks, docs, registry manifest updates, beh
 - Invalid Prompt 5 fixtures fail with exact expected diagnostic codes.
 - Evidence package references inside workspace envelopes are checked.
 - Malformed workspace package arrays produce deterministic diagnostics instead of process crashes.
-- Kernel pin shape is checked where required or referenced.
+- Kernel pin shape is checked where required or referenced, including compatibility_profile.profile_id and compatibility_profile.consumer_stage.
 - Evidence status vocabulary values are validated.
 - Package and summary status overclaims are rejected.
-- Forbidden production, runtime, downstream, Builder, cross-repo, Project Gate, and official-docs-completeness claims are rejected outside explicit limitation/not-proven fields.
+- Forbidden production, runtime, downstream, Builder, cross-repo, Project Gate, and official-docs-completeness claims are rejected outside explicit limitation/not-proven fields, including common prose variants.
 - Every evidence schema preserves explicit not-proven boundaries.
 - Fixture evidence is not described as real runtime, project, Builder, downstream, or production evidence.
 - Registry manifest lists Prompt 5 schema and evidence status artifacts.
@@ -86,10 +86,10 @@ Expected Prompt 5 portion:
 Evidence workspace validator summary
 Schema setup: PASS (6/6 schemas compiled)
 Evidence package registry load: PASS (5 package refs)
-Schema validation: PASS (executed 17/17; valid fixtures schema-clean 6/6)
+Schema validation: PASS (executed 20/20; valid fixtures schema-clean 6/6)
 Valid fixtures passed schema + semantic validation: 6/6
-Invalid fixtures failed with expected diagnostics: 11/11
-Expected diagnostic assertions: PASS (11/11)
+Invalid fixtures failed with expected diagnostics: 14/14
+Expected diagnostic assertions: PASS (14/14)
 Result: PASS
 ```
 
