@@ -1,1 +1,12 @@
-{"fixture_case":"responsive_inheritance_claims_runtime_validation","purpose":"Expected diagnostic: FORBIDDEN_RUNTIME_PROOF_CLAIM"}
+{
+  "purpose": "Real invalid fixture: mutate responsive documentation into a runtime validation proof claim.",
+  "mutations": {
+    "set_area_title": [
+      {
+        "doc_area_id": "responsive_editing_inheritance",
+        "title": "Responsive runtime validation proven by official docs"
+      }
+    ]
+  },
+  "expected_diagnostics": ["FORBIDDEN_RUNTIME_PROOF_CLAIM"]
+}
