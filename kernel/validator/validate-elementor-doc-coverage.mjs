@@ -54,7 +54,6 @@ const validateCoverageSchema = ajv.compile(readJson('kernel/schemas/elementor-v4
 function area(index, id) { return (index.required_doc_areas || []).find((item) => item.doc_area_id === id); }
 function source(manifest, id) { return (manifest.sources || []).find((item) => item.source_id === id); }
 function buttonCard(cards) { return (cards.cards || []).find((card) => card.element_id === 'v4.button'); }
-
 function applyFixtureMutations(fixture, defaults) {
   const coverageIndex = clone(fixture.coverage_index_override || defaults.coverageIndex);
   const manifest = clone(fixture.manifest_override || defaults.manifest);
@@ -79,7 +78,6 @@ function applyFixtureMutations(fixture, defaults) {
   }
   return { coverageIndex, manifest, labels, decisionCards };
 }
-
 function allowedProofClaimPath(path) { return /not_proven|limitation|no_decision_card_reason|source_quality_notes|unresolved|not_applicable/i.test(path || ''); }
 function scanForbiddenProofClaims(value, path, diagnostics) {
   if (value === null || value === undefined) return;
@@ -95,7 +93,6 @@ function scanForbiddenProofClaims(value, path, diagnostics) {
   if (Array.isArray(value)) return value.forEach((entry, index) => scanForbiddenProofClaims(entry, `${path}[${index}]`, diagnostics));
   if (typeof value === 'object') for (const [key, child] of Object.entries(value)) scanForbiddenProofClaims(child, path ? `${path}.${key}` : key, diagnostics);
 }
-
 function validateCoverageIndex({ coverageIndex, manifest, labels, decisionCards, sourceName }) {
   const diagnostics = [];
   if (!validateCoverageSchema(coverageIndex)) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-001', code: 'DOC_COVERAGE_SCHEMA_INVALID', message: `Doc coverage index schema validation failed: ${(validateCoverageSchema.errors || []).map((error) => `${error.instancePath || '/'} ${error.message}`).join('; ')}`, source: 'schema', path: sourceName }));
@@ -121,7 +118,6 @@ function validateCoverageIndex({ coverageIndex, manifest, labels, decisionCards,
   scanForbiddenProofClaims(coverageIndex, sourceName || 'elementor_doc_coverage_index', diagnostics);
   return diagnostics;
 }
-
 function codes(diagnostics) { return diagnostics.map((item) => item.code).sort(); }
 function assertExpectedDiagnostics(diagnostics, expectedDiagnostics) {
   const observed = codes(diagnostics);
@@ -129,13 +125,7 @@ function assertExpectedDiagnostics(diagnostics, expectedDiagnostics) {
   const duplicateCodes = observed.filter((code, index) => observed.indexOf(code) !== index);
   return { ok: duplicateCodes.length === 0 && observed.length === expected.length && observed.every((code, index) => code === expected[index]), observed, expected, duplicateCodes };
 }
-
-const defaults = {
-  coverageIndex: readJson('kernel/official-sources/elementor-v4-doc-coverage-index.v0.json'),
-  manifest: readJson('kernel/official-sources/elementor-v4-source-manifest.v0.json'),
-  labels: readJson('kernel/official-sources/evidence-labels.v0.json'),
-  decisionCards: readJson('kernel/decision-cards/elements.core.v0.json')
-};
+const defaults = { coverageIndex: readJson('kernel/official-sources/elementor-v4-doc-coverage-index.v0.json'), manifest: readJson('kernel/official-sources/elementor-v4-source-manifest.v0.json'), labels: readJson('kernel/official-sources/evidence-labels.v0.json'), decisionCards: readJson('kernel/decision-cards/elements.core.v0.json') };
 const output = ['Elementor V4 doc coverage validator summary'];
 let failed = false;
 const mainDiagnostics = validateCoverageIndex({ ...defaults, sourceName: 'kernel/official-sources/elementor-v4-doc-coverage-index.v0.json' });
@@ -146,7 +136,7 @@ for (const [path, shouldFail] of FIXTURE_PLAN) {
   let diagnostics = [], fixture = null;
   try {
     fixture = readJson(join('kernel/fixtures', path));
-    const fixtureArtifacts = shouldFail ? applyFixtureMutations(fixture, defaults) : { coverageIndex: fixture, manifest: defaults.manifest, labels: defaults.labels, decisionCards: defaults.decisionCards };
+    const fixtureArtifacts = applyFixtureMutations(fixture, defaults);
     diagnostics = validateCoverageIndex({ ...fixtureArtifacts, sourceName: path });
   } catch (error) {
     diagnostics = [diagnostic({ rule_id: 'FIXTURE_CONFORMANCE', code: 'FIXTURE_READ_FAILED', message: error.message, source: 'fixture', path })];
