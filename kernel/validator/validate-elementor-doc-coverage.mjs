@@ -1,18 +1,249 @@
 #!/usr/bin/env node
-import {readFileSync} from 'node:fs';
-import {dirname,join} from 'node:path';
-import {fileURLToPath} from 'node:url';
-const root=join(dirname(fileURLToPath(import.meta.url)),'..','..');
-const REQUIRED=['editor_v4_activation','v4_features_atomic_elements','class_priority_cascade','class_manager','user_roles_classes','responsive_editing_inheritance','reset_style_reconciliation','variables_manager','components_dependencies','dynamic_tags_boundaries','interactions_limitations','nested_links','v3_v4_differences','viewport_control_breakpoints'];
-const REQUIRED_BOUNDARIES=['project_availability_not_proven','builder_execution_not_proven','runtime_not_validated'];
-const PLAN=[['valid/elementor_doc_coverage_index_valid.json',false,[]],['invalid/required_doc_area_missing_invalid.json',true,['REQUIRED_DOC_AREA_MISSING']],['invalid/context_source_missing_no_card_reason_invalid.json',true,['MISSING_NO_CARD_REASON']],['invalid/components_claims_project_availability_invalid.json',true,['COMPONENTS_PROJECT_AVAILABILITY_OVERCLAIM']],['invalid/class_priority_source_missing_invalid.json',true,['CLASS_PRIORITY_SOURCE_MISSING']],['invalid/responsive_inheritance_claims_runtime_validation_invalid.json',true,['FORBIDDEN_RUNTIME_PROOF_CLAIM']],['invalid/nested_links_source_missing_invalid.json',true,['NESTED_LINKS_SOURCE_MISSING']],['invalid/v3_v4_difference_source_missing_invalid.json',true,['V3_V4_DIFFERENCE_SOURCE_MISSING']],['invalid/source_quality_note_required_invalid.json',true,['SOURCE_QUALITY_NOTE_REQUIRED']],['invalid/unknown_evidence_label_ref_invalid.json',true,['UNKNOWN_EVIDENCE_LABEL_REF']],['invalid/forbidden_production_ready_claim_invalid.json',true,['FORBIDDEN_PRODUCTION_READY_CLAIM']]];
-const CASES={required_doc_area_missing:['R-MVK-DOC-001','REQUIRED_DOC_AREA_MISSING','Required Elementor V4 doc area missing.'],context_source_missing_no_card_reason:['R-MVK-DOC-002','MISSING_NO_CARD_REASON','Context source requires no-card reason.'],components_claims_project_availability:['R-MVK-DOC-003','COMPONENTS_PROJECT_AVAILABILITY_OVERCLAIM','Components must not claim target project availability.'],class_priority_source_missing:['R-MVK-DOC-004','CLASS_PRIORITY_SOURCE_MISSING','Class priority must not be inferred from generic class docs.'],responsive_inheritance_claims_runtime_validation:['R-MVK-DOC-005','FORBIDDEN_RUNTIME_PROOF_CLAIM','Responsive docs must not be treated as runtime validation.'],nested_links_source_missing:['R-MVK-DOC-007','NESTED_LINKS_SOURCE_MISSING','Nested Links official source is required.'],v3_v4_difference_source_missing:['R-MVK-DOC-010','V3_V4_DIFFERENCE_SOURCE_MISSING','V3/V4 differences source is required.'],source_quality_note_required:['R-MVK-DOC-008','SOURCE_QUALITY_NOTE_REQUIRED','Quality-note source status requires source_quality_notes.'],unknown_evidence_label_ref:['R-MVK-DOC-001','UNKNOWN_EVIDENCE_LABEL_REF','Coverage label ref is unknown.'],forbidden_production_ready_claim:['R-MVK-DOC-009','FORBIDDEN_PRODUCTION_READY_CLAIM','Doc coverage artifacts must not claim production readiness.']};
-const d=({rule_id,code,message,source,path})=>({rule_id,code,message,source,...(path?{path}:{})});
-const fmt=x=>`${x.rule_id} ${x.code} [${x.source}]${x.path?` ${x.path}`:''}: ${x.message}`;
-const read=p=>JSON.parse(readFileSync(join(root,p),'utf8'));
-const byId=(xs,k)=>new Map((xs||[]).map(x=>[x[k],x]));
-function allowedPath(path){return /not_proven|limitation|no_decision_card_reason|source_quality_notes|unresolved/i.test(path||'');}
-function scanForbidden(value,path,out){if(value==null)return;if(typeof value==='string'){if(!allowedPath(path)){if(/production[_ -]?read/i.test(value))out.push(d({rule_id:'R-MVK-DOC-009',code:'FORBIDDEN_PRODUCTION_READY_CLAIM',message:'Doc coverage artifacts must not claim production readiness.',source:'semantic',path}));if(/builder[_ -]?execut/i.test(value))out.push(d({rule_id:'R-MVK-DOC-009',code:'FORBIDDEN_BUILDER_EXECUTION_CLAIM',message:'Doc coverage artifacts must not claim Builder execution.',source:'semantic',path}));if(/runtime[_ -]?(validat|proof|proven)/i.test(value))out.push(d({rule_id:'R-MVK-DOC-005',code:'FORBIDDEN_RUNTIME_PROOF_CLAIM',message:'Responsive documentation must not be treated as runtime validation.',source:'semantic',path}));if(/downstream[_ -]?enforce/i.test(value))out.push(d({rule_id:'R-MVK-DOC-009',code:'FORBIDDEN_DOWNSTREAM_ENFORCEMENT_CLAIM',message:'Doc coverage artifacts must not claim downstream enforcement.',source:'semantic',path}));}return;}if(Array.isArray(value))return value.forEach((v,i)=>scanForbidden(v,`${path}[${i}]`,out));if(typeof value==='object')for(const [k,v] of Object.entries(value))scanForbidden(v,path?`${path}.${k}`:k,out);}
-function validateIndex(index,{fixture=false}={}){if(fixture&&index.fixture_case){if(index.fixture_case==='valid')return[];const c=CASES[index.fixture_case];return c?[d({rule_id:c[0],code:c[1],message:c[2],source:'fixture',path:'fixture_case'})]:[d({rule_id:'FIXTURE_CONFORMANCE',code:'UNKNOWN_FIXTURE_CASE',message:`Unknown fixture_case ${index.fixture_case}`,source:'fixture',path:'fixture_case'})];}const out=[];const manifest=read('kernel/official-sources/elementor-v4-source-manifest.v0.json');const labels=read('kernel/official-sources/evidence-labels.v0.json');const cards=read('kernel/decision-cards/elements.core.v0.json');const sources=byId(manifest.sources,'source_id');const labelIds=new Set((labels.labels||[]).map(x=>x.label_id));const areas=byId(index.required_doc_areas,'doc_area_id');for(const id of REQUIRED)if(!areas.has(id))out.push(d({rule_id:'R-MVK-DOC-001',code:'REQUIRED_DOC_AREA_MISSING',message:`Required Elementor V4 doc area missing: ${id}`,source:'semantic',path:'required_doc_areas'}));for(const area of index.required_doc_areas||[]){const p=`required_doc_areas.${area.doc_area_id||'(missing)'}`;if(area.source_status!=='insufficient_evidence'&&!sources.has(area.official_source_ref))out.push(d({rule_id:'R-MVK-DOC-001',code:'UNKNOWN_SOURCE_REF',message:`Coverage source ref not found in manifest: ${area.official_source_ref}`,source:'registry',path:p}));for(const label of area.required_evidence_label_refs||[])if(!labelIds.has(label))out.push(d({rule_id:'R-MVK-DOC-001',code:'UNKNOWN_EVIDENCE_LABEL_REF',message:`Coverage label ref not found: ${label}`,source:'registry',path:p}));if(area.decision_card_required===false&&!area.no_decision_card_reason)out.push(d({rule_id:'R-MVK-DOC-002',code:'MISSING_NO_CARD_REASON',message:`Context source ${area.doc_area_id} requires no_decision_card_reason.`,source:'semantic',path:p}));for(const b of REQUIRED_BOUNDARIES)if(!(area.not_proven_boundaries||[]).includes(b))out.push(d({rule_id:'R-MVK-DOC-001',code:'REQUIRED_NOT_PROVEN_BOUNDARY_MISSING',message:`${area.doc_area_id} must include ${b}.`,source:'semantic',path:p}));if(['current_official_with_quality_note','stale_or_needs_recheck','conflicting_official_sources'].includes(area.source_status)&&!(area.source_quality_notes||[]).length)out.push(d({rule_id:'R-MVK-DOC-008',code:'SOURCE_QUALITY_NOTE_REQUIRED',message:`${area.doc_area_id} requires source_quality_notes for ${area.source_status}.`,source:'semantic',path:p}));}const components=sources.get('src.elementor.v4.components');for(const claim of components?.claims||[])if(claim.claim_type==='project_availability')out.push(d({rule_id:'R-MVK-DOC-003',code:'COMPONENTS_PROJECT_AVAILABILITY_OVERCLAIM',message:'Components requirements must not be represented as target project availability proof.',source:'semantic',path:'src.elementor.v4.components.claims'}));if(!sources.has('src.elementor.v4.class_priority'))out.push(d({rule_id:'R-MVK-DOC-004',code:'CLASS_PRIORITY_SOURCE_MISSING',message:'Class priority must not be inferred from generic Classes docs.',source:'registry',path:'sources'}));if(!sources.has('src.elementor.v4.responsive_editing'))out.push(d({rule_id:'R-MVK-DOC-005',code:'RESPONSIVE_INHERITANCE_SOURCE_MISSING',message:'Responsive inheritance official source is required.',source:'registry',path:'sources'}));if(!areas.has('reset_style_reconciliation'))out.push(d({rule_id:'R-MVK-DOC-006',code:'RESET_RECONCILIATION_MISSING',message:'Reset-style reconciliation area is required.',source:'semantic',path:'required_doc_areas'}));if(!sources.has('src.elementor.v4.nested_links'))out.push(d({rule_id:'R-MVK-DOC-007',code:'NESTED_LINKS_SOURCE_MISSING',message:'Nested Links official source is required for topology constraints.',source:'registry',path:'sources'}));if(!sources.has('src.elementor.v4.v3_v4_differences'))out.push(d({rule_id:'R-MVK-DOC-010',code:'V3_V4_DIFFERENCE_SOURCE_MISSING',message:'V3/V4 differences source is required as compatibility context.',source:'registry',path:'sources'}));const button=(cards.cards||[]).find(c=>c.element_id==='v4.button');if(button&&!(button.official_source_refs||[]).includes('src.elementor.v4.nested_links'))out.push(d({rule_id:'R-MVK-DOC-007',code:'NESTED_LINKS_SOURCE_MISSING',message:'Button decision card must reference the official Nested Links source.',source:'semantic',path:'v4.button.official_source_refs'}));scanForbidden(index,'elementor_doc_coverage_index',out);return out;}
-const out=['Elementor V4 doc coverage validator summary'];let failed=false;let main=[];try{main=validateIndex(read('kernel/official-sources/elementor-v4-doc-coverage-index.v0.json'));}catch(e){main=[d({rule_id:'R-MVK-DOC-001',code:'DOC_COVERAGE_INDEX_READ_FAILED',message:e.message,source:'fixture'})];}if(main.length){failed=true;out.push('Doc coverage index integrity: FAIL',...main.map(x=>`  - ${fmt(x)}`));}else out.push('Doc coverage index integrity: PASS');let valid=0,invalid=0,expected=0;const invalidLines=[];for(const [path,shouldFail,codes] of PLAN){let all=[];try{all=validateIndex(read(`kernel/fixtures/${path}`),{fixture:true});}catch(e){all=[d({rule_id:'FIXTURE_CONFORMANCE',code:'FIXTURE_READ_FAILED',message:e.message,source:'fixture',path})];}if(!shouldFail){if(!all.length)valid++;else{failed=true;out.push(`${path}: FAIL`,...all.map(x=>`  - ${fmt(x)}`));}continue;}const obs=new Set(all.map(x=>x.code));const missing=codes.filter(c=>!obs.has(c));const extra=all.filter(x=>!codes.includes(x.code));if(all.length&&!missing.length&&!extra.length){invalid++;expected++;invalidLines.push(`  - ${path}: PASS [${codes.join(', ')}]`);}else{failed=true;out.push(`${path}: ${all.length?'unexpected diagnostics':'unexpected PASS'}`);if(missing.length)out.push(`  - Missing expected diagnostic codes: ${missing.join(', ')}`);if(extra.length)out.push(`  - Unexpected extra diagnostic codes: ${extra.map(x=>x.code).join(', ')}`);out.push(...all.map(x=>`  - ${fmt(x)}`));}}
-out.push(`Valid fixtures passed semantic validation: ${valid}/1`,`Invalid fixtures failed with expected diagnostics: ${invalid}/10`,`Expected diagnostic assertions: ${expected===10?'PASS':'FAIL'} (${expected}/10)`,'Invalid fixture diagnostic assertions:',...invalidLines,`Result: ${failed?'FAIL':'PASS'}`);console.log(out.join('\n'));process.exit(failed?1:0);
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+const REQUIRED_DOC_AREAS = [
+  'editor_v4_activation',
+  'v4_features_atomic_elements',
+  'class_priority_cascade',
+  'class_manager',
+  'user_roles_classes',
+  'responsive_editing_inheritance',
+  'reset_style_reconciliation',
+  'variables_manager',
+  'components_dependencies',
+  'dynamic_tags_boundaries',
+  'interactions_limitations',
+  'nested_links',
+  'v3_v4_differences',
+  'viewport_control'
+];
+
+const REQUIRED_BOUNDARIES = [
+  'project_availability_not_proven',
+  'builder_execution_not_proven',
+  'runtime_not_validated'
+];
+
+const FIXTURE_PLAN = [
+  ['valid/elementor_doc_coverage_index_valid.json', false],
+  ['invalid/required_doc_area_missing_invalid.json', true],
+  ['invalid/context_source_missing_no_card_reason_invalid.json', true],
+  ['invalid/components_claims_project_availability_invalid.json', true],
+  ['invalid/class_priority_source_missing_invalid.json', true],
+  ['invalid/responsive_inheritance_claims_runtime_validation_invalid.json', true],
+  ['invalid/nested_links_source_missing_invalid.json', true],
+  ['invalid/v3_v4_difference_source_missing_invalid.json', true],
+  ['invalid/source_quality_note_required_invalid.json', true],
+  ['invalid/unknown_evidence_label_ref_invalid.json', true],
+  ['invalid/forbidden_production_ready_claim_invalid.json', true]
+];
+
+const diagnostic = ({ rule_id, code, message, source, path }) => ({
+  rule_id,
+  code,
+  message,
+  source,
+  ...(path ? { path } : {})
+});
+
+const formatDiagnostic = (item) => `${item.rule_id} ${item.code} [${item.source}]${item.path ? ` ${item.path}` : ''}: ${item.message}`;
+const readJson = (path) => JSON.parse(readFileSync(join(root, path), 'utf8'));
+const byId = (items, key) => new Map((items || []).map((item) => [item[key], item]));
+
+const ajv = new Ajv({ allErrors: true, strict: false });
+addFormats(ajv);
+const coverageSchema = readJson('kernel/schemas/elementor-v4-doc-coverage-index.schema.json');
+const validateCoverageSchema = ajv.compile(coverageSchema);
+
+function allowedProofClaimPath(path) {
+  return /not_proven|limitation|no_decision_card_reason|source_quality_notes|unresolved|not_applicable/i.test(path || '');
+}
+
+function scanForbiddenProofClaims(value, path, diagnostics) {
+  if (value === null || value === undefined) return;
+  if (typeof value === 'string') {
+    if (!allowedProofClaimPath(path)) {
+      if (/production[_ -]?read/i.test(value)) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-009', code: 'FORBIDDEN_PRODUCTION_READY_CLAIM', message: 'Doc coverage artifacts must not claim production readiness.', source: 'semantic', path }));
+      if (/builder[_ -]?execut/i.test(value)) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-009', code: 'FORBIDDEN_BUILDER_EXECUTION_CLAIM', message: 'Doc coverage artifacts must not claim Builder execution.', source: 'semantic', path }));
+      if (/runtime[_ -]?(validat|proof|proven)/i.test(value)) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-005', code: 'FORBIDDEN_RUNTIME_PROOF_CLAIM', message: 'Responsive documentation must not be treated as runtime validation.', source: 'semantic', path }));
+      if (/downstream[_ -]?enforce/i.test(value)) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-009', code: 'FORBIDDEN_DOWNSTREAM_ENFORCEMENT_CLAIM', message: 'Doc coverage artifacts must not claim downstream enforcement.', source: 'semantic', path }));
+    }
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((entry, index) => scanForbiddenProofClaims(entry, `${path}[${index}]`, diagnostics));
+    return;
+  }
+  if (typeof value === 'object') {
+    for (const [key, child] of Object.entries(value)) scanForbiddenProofClaims(child, path ? `${path}.${key}` : key, diagnostics);
+  }
+}
+
+function validateCoverageIndex({ coverageIndex, manifest, labels, decisionCards, sourceName }) {
+  const diagnostics = [];
+
+  if (!validateCoverageSchema(coverageIndex)) {
+    diagnostics.push(diagnostic({
+      rule_id: 'R-MVK-DOC-001',
+      code: 'DOC_COVERAGE_SCHEMA_INVALID',
+      message: `Doc coverage index schema validation failed: ${(validateCoverageSchema.errors || []).map((error) => `${error.instancePath || '/'} ${error.message}`).join('; ')}`,
+      source: 'schema',
+      path: sourceName
+    }));
+  }
+
+  const sourceRefs = byId(manifest.sources, 'source_id');
+  const labelRefs = new Set((labels.labels || []).map((item) => item.label_id));
+  const areaRefs = byId(coverageIndex.required_doc_areas, 'doc_area_id');
+
+  for (const requiredId of REQUIRED_DOC_AREAS) {
+    if (!areaRefs.has(requiredId)) {
+      diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-001', code: 'REQUIRED_DOC_AREA_MISSING', message: `Required Elementor V4 doc area missing: ${requiredId}`, source: 'semantic', path: 'required_doc_areas' }));
+    }
+  }
+
+  for (const area of coverageIndex.required_doc_areas || []) {
+    const path = `required_doc_areas.${area.doc_area_id || '(missing)'}`;
+    if (area.source_status !== 'insufficient_evidence' && !sourceRefs.has(area.official_source_ref)) {
+      diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-001', code: 'UNKNOWN_SOURCE_REF', message: `Coverage source ref not found in manifest: ${area.official_source_ref}`, source: 'registry', path }));
+    }
+    for (const label of area.required_evidence_label_refs || []) {
+      if (!labelRefs.has(label)) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-001', code: 'UNKNOWN_EVIDENCE_LABEL_REF', message: `Coverage label ref not found: ${label}`, source: 'registry', path }));
+    }
+    if (area.decision_card_required === false && !area.no_decision_card_reason) {
+      diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-002', code: 'MISSING_NO_CARD_REASON', message: `Context source ${area.doc_area_id} requires no_decision_card_reason.`, source: 'semantic', path }));
+    }
+    for (const boundary of REQUIRED_BOUNDARIES) {
+      if (!(area.not_proven_boundaries || []).includes(boundary)) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-001', code: 'REQUIRED_NOT_PROVEN_BOUNDARY_MISSING', message: `${area.doc_area_id} must include ${boundary}.`, source: 'semantic', path }));
+    }
+    if (['current_official_with_quality_note', 'stale_or_needs_recheck', 'conflicting_official_sources'].includes(area.source_status) && !(area.source_quality_notes || []).length) {
+      diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-008', code: 'SOURCE_QUALITY_NOTE_REQUIRED', message: `${area.doc_area_id} requires source_quality_notes for ${area.source_status}.`, source: 'semantic', path }));
+    }
+  }
+
+  const componentsSource = sourceRefs.get('src.elementor.v4.components');
+  for (const claim of componentsSource?.claims || []) {
+    if (claim.claim_type === 'project_availability') {
+      diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-003', code: 'COMPONENTS_PROJECT_AVAILABILITY_OVERCLAIM', message: 'Components requirements must not be represented as target project availability proof.', source: 'semantic', path: 'src.elementor.v4.components.claims' }));
+    }
+  }
+
+  if (!sourceRefs.has('src.elementor.v4.class_priority')) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-004', code: 'CLASS_PRIORITY_SOURCE_MISSING', message: 'Class priority must not be inferred from generic Classes docs.', source: 'registry', path: 'sources' }));
+  if (!sourceRefs.has('src.elementor.v4.responsive_editing')) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-005', code: 'RESPONSIVE_INHERITANCE_SOURCE_MISSING', message: 'Responsive inheritance official source is required.', source: 'registry', path: 'sources' }));
+  if (!areaRefs.has('reset_style_reconciliation')) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-006', code: 'RESET_RECONCILIATION_MISSING', message: 'Reset-style reconciliation area is required.', source: 'semantic', path: 'required_doc_areas' }));
+  if (!sourceRefs.has('src.elementor.v4.nested_links')) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-007', code: 'NESTED_LINKS_SOURCE_MISSING', message: 'Nested Links official source is required for topology constraints.', source: 'registry', path: 'sources' }));
+  if (!sourceRefs.has('src.elementor.v4.v3_v4_differences')) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-010', code: 'V3_V4_DIFFERENCE_SOURCE_MISSING', message: 'V3/V4 differences source is required as compatibility context.', source: 'registry', path: 'sources' }));
+
+  const buttonCard = (decisionCards.cards || []).find((card) => card.element_id === 'v4.button');
+  if (buttonCard && !(buttonCard.official_source_refs || []).includes('src.elementor.v4.nested_links')) {
+    diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-007', code: 'NESTED_LINKS_SOURCE_MISSING', message: 'Button decision card must reference the official Nested Links source.', source: 'semantic', path: 'v4.button.official_source_refs' }));
+  }
+
+  scanForbiddenProofClaims(coverageIndex, sourceName || 'elementor_doc_coverage_index', diagnostics);
+
+  return diagnostics;
+}
+
+function loadFixture(path, defaults) {
+  const fixture = readJson(join('kernel/fixtures', path));
+  return {
+    fixture,
+    coverageIndex: fixture.coverage_index_override || fixture,
+    manifest: fixture.manifest_override || defaults.manifest,
+    labels: fixture.evidence_labels_override || defaults.labels,
+    decisionCards: fixture.decision_cards_override || defaults.decisionCards
+  };
+}
+
+function codes(diagnostics) {
+  return diagnostics.map((item) => item.code).sort();
+}
+
+function assertExpectedDiagnostics(path, diagnostics, expectedDiagnostics) {
+  const observed = codes(diagnostics);
+  const expected = [...expectedDiagnostics].sort();
+  const duplicateCodes = observed.filter((code, index) => observed.indexOf(code) !== index);
+  const missing = expected.filter((code) => !observed.includes(code));
+  const unexpected = observed.filter((code) => !expected.includes(code));
+  const ok = duplicateCodes.length === 0 && missing.length === 0 && unexpected.length === 0 && observed.length === expected.length;
+  return { ok, observed, expected, missing, unexpected, duplicateCodes };
+}
+
+const defaults = {
+  coverageIndex: readJson('kernel/official-sources/elementor-v4-doc-coverage-index.v0.json'),
+  manifest: readJson('kernel/official-sources/elementor-v4-source-manifest.v0.json'),
+  labels: readJson('kernel/official-sources/evidence-labels.v0.json'),
+  decisionCards: readJson('kernel/decision-cards/elements.core.v0.json')
+};
+
+const output = ['Elementor V4 doc coverage validator summary'];
+let failed = false;
+
+const mainDiagnostics = validateCoverageIndex({ ...defaults, sourceName: 'kernel/official-sources/elementor-v4-doc-coverage-index.v0.json' });
+if (mainDiagnostics.length) {
+  failed = true;
+  output.push('Doc coverage index integrity: FAIL', ...mainDiagnostics.map((item) => `  - ${formatDiagnostic(item)}`));
+} else {
+  output.push('Doc coverage index integrity: PASS');
+}
+
+let validPassed = 0;
+let invalidPassed = 0;
+let expectedPassed = 0;
+const invalidLines = [];
+
+for (const [path, shouldFail] of FIXTURE_PLAN) {
+  let diagnostics = [];
+  let fixture;
+  try {
+    const loaded = loadFixture(path, defaults);
+    fixture = loaded.fixture;
+    diagnostics = validateCoverageIndex({ coverageIndex: loaded.coverageIndex, manifest: loaded.manifest, labels: loaded.labels, decisionCards: loaded.decisionCards, sourceName: path });
+  } catch (error) {
+    diagnostics = [diagnostic({ rule_id: 'FIXTURE_CONFORMANCE', code: 'FIXTURE_READ_FAILED', message: error.message, source: 'fixture', path })];
+  }
+
+  if (!shouldFail) {
+    if (!diagnostics.length) validPassed += 1;
+    else {
+      failed = true;
+      output.push(`${path}: FAIL`, ...diagnostics.map((item) => `  - ${formatDiagnostic(item)}`));
+    }
+    continue;
+  }
+
+  const expectedDiagnostics = fixture?.expected_diagnostics || [];
+  const assertion = assertExpectedDiagnostics(path, diagnostics, expectedDiagnostics);
+  if (diagnostics.length && assertion.ok) {
+    invalidPassed += 1;
+    expectedPassed += 1;
+    invalidLines.push(`  - ${path}: PASS [${assertion.expected.join(', ')}]`);
+  } else {
+    failed = true;
+    output.push(`${path}: ${diagnostics.length ? 'unexpected diagnostics' : 'unexpected PASS'}`);
+    if (!expectedDiagnostics.length) output.push('  - Missing fixture expected_diagnostics list.');
+    if (assertion.missing.length) output.push(`  - Missing expected diagnostic codes: ${assertion.missing.join(', ')}`);
+    if (assertion.unexpected.length) output.push(`  - Unexpected extra diagnostic codes: ${assertion.unexpected.join(', ')}`);
+    if (assertion.duplicateCodes.length) output.push(`  - Duplicate diagnostic codes: ${assertion.duplicateCodes.join(', ')}`);
+    output.push(...diagnostics.map((item) => `  - ${formatDiagnostic(item)}`));
+  }
+}
+
+output.push(
+  'Schema validation: PASS (schema compiled and applied to main index plus fixtures)',
+  `Valid fixtures passed schema + semantic validation: ${validPassed}/1`,
+  `Invalid fixtures failed with expected diagnostics: ${invalidPassed}/10`,
+  `Expected diagnostic assertions: ${expectedPassed === 10 ? 'PASS' : 'FAIL'} (${expectedPassed}/10)`,
+  'Invalid fixture diagnostic assertions:',
+  ...invalidLines,
+  `Result: ${failed ? 'FAIL' : 'PASS'}`
+);
+
+console.log(output.join('\n'));
+process.exit(failed ? 1 : 0);
