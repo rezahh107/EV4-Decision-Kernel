@@ -38,7 +38,7 @@ function equal(left, right) {
 }
 
 function parseMatrix(source) {
-  const lines = source.replaceAll('\r\n','\n').split('\n');
+  const lines = source.split(/\r\n|\n|\r/);
   const start = lines.findIndex((line) => /^##\s+(?:\d+\.\s+)?MVK Coverage Matrix\s*$/.test(line.trim()));
   if (start < 0) throw new Error('MVK Coverage Matrix section not found.');
   const next = lines.findIndex((line,index) => index > start && /^##\s+/.test(line.trim()));
@@ -53,7 +53,7 @@ function parseMatrix(source) {
   const header = cells(lines[headerAt], headerAt + 1).map(plain);
   if (!equal(header,COLUMNS)) throw new Error(`Columns must exactly equal: ${COLUMNS.join(', ')}. Found: ${header.join(', ')}.`);
   const separator = cells(lines[headerAt + 1] ?? '', headerAt + 2);
-  if (separator.length !== COLUMNS.length || separator.some((cell) => !/^:?-{3,}:?$/.test(cell))) throw new Error(`Line ${headerAt + 2}: invalid separator row.`);
+  if (separator.length !== COLUMNS.length || separator.some((cell) => !/^:?-+:?$/.test(cell))) throw new Error(`Line ${headerAt + 2}: invalid separator row.`);
   const rows = [];
   for (let i = headerAt + 2; i < end && lines[i].trim().startsWith('|'); i += 1) {
     const rowCells = cells(lines[i], i + 1);
