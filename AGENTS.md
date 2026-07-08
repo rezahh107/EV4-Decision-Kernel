@@ -259,3 +259,16 @@ Before opening or merging a patch, answer:
 ```
 
 If any answer is no, revise the patch before finalizing.
+---
+
+## 11. Repository Memory / Next Work
+
+- Before proposing or implementing the next task, read `planning/NEXT_WORK.md`.
+- For detailed task meaning and acceptance criteria, read `planning/KERNEL_EXECUTION_PLAN.md`.
+- Do not rely on chat history as the source of truth when these files exist.
+- If a PR changes files under `kernel/`, `docs/`, `planning/`, schemas, validators, decision cards, governance documents, or roadmap-relevant source files, update `planning/NEXT_WORK.md` in the same PR.
+- If a PR changes the meaning, order, scope, dependency, or acceptance criteria of any KROAD item, update `planning/KERNEL_EXECUTION_PLAN.md` in the same PR.
+- Before ticking any item as complete, verify concrete repository evidence exists.
+- If evidence is missing or uncertain, do not tick the item; add a note explaining what is missing.
+- Add a short note such as: `Update note: This PR completed KROAD-XXX by adding <short evidence>.`
+- If unsure whether a PR requires a roadmap update, update `planning/NEXT_WORK.md` with a short note instead of leaving it stale.
