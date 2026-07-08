@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import Ajv from 'ajv';
+import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -27,7 +27,7 @@ const formatDiagnostic = (item) => `${item.rule_id} ${item.code} [${item.source}
 const readJson = (path) => JSON.parse(readFileSync(join(root, path), 'utf8'));
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const byId = (items, key) => new Map((items || []).map((item) => [item[key], item]));
-const ajv = new Ajv({ allErrors: true, strict: false });
+const ajv = new Ajv2020({ allErrors: true, strict: false });
 addFormats(ajv);
 const validateCoverageSchema = ajv.compile(readJson('kernel/schemas/elementor-v4-doc-coverage-index.schema.json'));
 
