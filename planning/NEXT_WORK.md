@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-Pending PR — Add KROAD-001 cross-repository adoption report
+PR #13 — Add KROAD-001 cross-repository adoption report
 
 ## Status Authority
 
@@ -12,12 +12,12 @@ This file is the authoritative current-status dashboard for roadmap progress aft
 
 ## Status Summary
 
-Expected post-merge completed milestones: KROAD-000, KROAD-001, KROAD-002.
-Next task after this PR is merged: KROAD-003 — Decision Record Schema v2 + Migration Plan.
+Current completed milestones: KROAD-000, KROAD-001, KROAD-002.
+Current next task: KROAD-003 — Decision Record Schema v2 + Migration Plan.
 Detailed plan: `planning/KERNEL_EXECUTION_PLAN.md`.
 Do not continue from chat history; read this file first.
 
-Important: KROAD-001 is not complete on `main` until the PR adding `planning/CROSS_REPO_ADOPTION_REPORT.md` is merged.
+KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPTION_REPORT.md`.
 
 ## Next Task
 
@@ -27,8 +27,7 @@ Important: KROAD-001 is not complete on `main` until the PR adding `planning/CRO
 
 - [x] KROAD-000 — Live Baseline Precheck
 - [x] KROAD-001 — Cross-Repository Adoption Report
-  - Update note: This PR adds `planning/CROSS_REPO_ADOPTION_REPORT.md` with the read-only adoption report, inspected repository/path references, explicit classification for all six related repositories, do-not-import guards, limitations, and roadmap-impact notes.
-  - Completion note: This item becomes complete on `main` only after this PR is merged.
+  - Update note: PR #13 added `planning/CROSS_REPO_ADOPTION_REPORT.md` with the read-only adoption report, inspected repository/path references, explicit classification for all six related repositories, Four Truths Framework, do-not-import guards, limitations, and roadmap-impact notes.
 - [x] KROAD-002 — Taxonomy + Execution-Risk Boundaries
   - Update note: PR #11 completed the decision governance taxonomy and execution-risk boundary foundation.
 
