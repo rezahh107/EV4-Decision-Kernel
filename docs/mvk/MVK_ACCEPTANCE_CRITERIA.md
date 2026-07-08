@@ -10,11 +10,14 @@ Scope: Official source manifest, evidence labels, core element decision cards, s
 - Structured diagnostics still include rule_id, code, message, and source.
 - Invalid fixtures still assert expected diagnostic codes.
 - Official Elementor source manifest exists under kernel/official-sources/.
+- Real source/card artifacts are schema-validated, not only fixture-validated.
 - Evidence labels exist under kernel/official-sources/.
 - Every MVK core element has exactly one decision card.
+- Standalone and registry decision cards share the same strict schema contract.
 - Decision cards include use_when, avoid_when, decision_questions, required_evidence, role responsibilities, limitations, and minimum semantic children.
 - Workbook-derived sources cannot be promoted to official Elementor proof.
 - Decision cards must not claim project availability, runtime proof, Builder execution, or production readiness.
+- Components source entry points to the official Components page and keeps Pro/Admin/Atomic limitations.
 - Source/card registry entries are listed in registry-manifest.v0.json.
 - No downstream enforcement is claimed.
 ```
@@ -33,10 +36,10 @@ node tools/audit-behavioral-coverage.mjs --mode advisory
 Source/card validator summary
 Schema setup: PASS (2/2 schemas compiled)
 Source/card integrity: PASS
-Schema validation: PASS (executed 9/9; valid fixtures schema-clean 3/3)
-Valid fixtures passed schema + semantic validation: 3/3
-Invalid fixtures failed with expected diagnostics: 6/6
-Expected diagnostic assertions: PASS (6/6)
+Schema validation: PASS (executed 11/11; valid fixtures schema-clean 4/4)
+Valid fixtures passed schema + semantic validation: 4/4
+Invalid fixtures failed with expected diagnostics: 7/7
+Expected diagnostic assertions: PASS (7/7)
 Result: PASS
 ```
 
@@ -50,6 +53,7 @@ Result: PASS
 - Project availability requires future WordPress/EDIS project evidence.
 - Runtime proof requires future browser/runtime evidence.
 - Builder execution proof requires future Builder evidence.
+- Components require Atomic elements, Admin-level permissions, and Elementor Pro before target-project use can be claimed.
 - No other EV4 repository consumes this package yet.
 - No downstream EV4 consumer rejects invalid carriers yet.
 ```
