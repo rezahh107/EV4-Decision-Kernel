@@ -38,7 +38,7 @@ Expected local result:
 MVK validator summary
 Registries: PASS
 Valid fixtures passed: 4/4
-Invalid fixtures failed as expected: 10/10
+Invalid fixtures failed as expected: 11/11
 Result: PASS
 ```
 
