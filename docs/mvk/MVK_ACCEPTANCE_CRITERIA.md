@@ -1,7 +1,7 @@
 # MVK Acceptance Criteria — EV4 Decision Kernel
 
-Status: Kernel-local MVK source manifest and decision-card layer added for Prompt 3  
-Scope: Official source manifest, evidence labels, core element decision cards, schemas, fixtures, validator integrity checks, and coverage alignment
+Status: Kernel-local MVK source/card consumption-boundary layer added for Prompt 4  
+Scope: Architect and CE consumption-boundary schemas, fixtures, validator checks, docs, registry manifest updates, and coverage alignment
 
 ## Prompt 3 Acceptance Criteria
 
@@ -24,6 +24,31 @@ Scope: Official source manifest, evidence labels, core element decision cards, s
 - No downstream enforcement is claimed.
 ```
 
+## Prompt 4 Acceptance Criteria
+
+```text
+- Architect source/card consumption schema exists.
+- CE source/card consumption schema exists.
+- Architect and CE valid fixtures pass schema and semantic validation.
+- Required invalid fixtures fail with deterministic expected diagnostic codes.
+- consumed_element_id must resolve to a real card in kernel/decision-cards/elements.core.v0.json.
+- consumed_card_ref must match the consumed element card ref.
+- official_source_refs_used must exist in kernel/official-sources/elementor-v4-source-manifest.v0.json.
+- Architect records cannot claim project availability from official docs.
+- Architect records cannot claim a card proves the correct design choice.
+- CE records cannot claim Builder execution.
+- CE records cannot claim runtime responsive validation.
+- CE constructable_with_limitations and constructable_pending_builder_resolution require constructability_evidence.
+- CE must check or acknowledge every required_evidence item listed by the consumed card.
+- CE `required_evidence_checked` entries with `checked` require `evidence_ref`.
+- CE `required_evidence_checked` entries with `acknowledged_not_available` or `not_applicable_with_reason` require `reason`.
+- Forbidden proof claims are rejected outside explicit limitation/proof-gap fields with stem-oriented scanner coverage.
+- Invalid fixture assertions reject unexpected extra diagnostic codes.
+- Registry manifest lists the consumption-boundary schema entries.
+- Behavioral coverage rows describe only Kernel-local schema, validator, fixture, and advisory CI behavior.
+- No downstream enforcement, Builder execution, runtime validation, project availability, constructability proof from official docs, or production readiness is claimed.
+```
+
 ## Local Validation
 
 ```bash
@@ -32,16 +57,16 @@ npm run validate:mvk
 node tools/audit-behavioral-coverage.mjs --mode advisory
 ```
 
-`npm run validate:mvk` runs both the Prompt 2.5 MVK validator and the Prompt 3 source/card validator. Expected source/card portion:
+`npm run validate:mvk` runs the Prompt 2.5 MVK validator, the Prompt 3 source/card validator, and the Prompt 4 consumption-boundary validator. Expected Prompt 4 portion:
 
 ```text
-Source/card validator summary
+Source/card consumption-boundary validator summary
 Schema setup: PASS (2/2 schemas compiled)
-Source/card integrity: PASS
-Schema validation: PASS (executed 12/12; valid fixtures schema-clean 4/4)
+Consumption registry load: PASS (8 cards; 16 sources)
+Schema validation: PASS (executed 18/18; valid fixtures schema-clean 4/4)
 Valid fixtures passed schema + semantic validation: 4/4
-Invalid fixtures failed with expected diagnostics: 8/8
-Expected diagnostic assertions: PASS (8/8)
+Invalid fixtures failed with expected diagnostics: 14/14
+Expected diagnostic assertions: PASS (14/14)
 Result: PASS
 ```
 
@@ -51,6 +76,8 @@ Result: PASS
 - CI workflow results must be inspected before changing any row to ci_enforced.
 - Validator is MVK-local, not a full rule engine.
 - Schemas are not a released canonical artifact.
+- Architect repository does not yet consume this contract.
+- CE repository does not yet consume this contract.
 - Responsive Runtime Validation Record remains future scope.
 - Project availability requires future WordPress/EDIS project evidence.
 - Runtime proof requires future browser/runtime evidence.

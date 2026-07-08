@@ -15,8 +15,8 @@ Agents working here must not implement a full platform unless explicitly instruc
 Current safe operating mode:
 
 ```text
-Kernel-local MVK implementation and validation hardening.
-Full registry expansion, release automation, reusable workflows, cross-repo integration, runtime evidence, source manifests, and Element Decision Cards remain out of scope until explicitly prompted.
+Kernel-local MVK implementation, validation hardening, source manifests, decision cards, and Architect/CE source-card consumption boundaries.
+Full registry expansion, release automation, reusable workflows, cross-repo integration, runtime evidence, target-project availability evidence, Builder execution proof, and production readiness remain out of scope until explicitly prompted.
 ```
 
 ---
@@ -28,9 +28,13 @@ Do not weaken these boundaries:
 ```text
 Architect:
   owns candidate generation, comparison, selection, and decision records.
+  Architect may consume Kernel source/cards only as bounded candidate guidance.
+  Architect must not treat source/cards as proof of project availability or correct design choice.
 
 CE:
   owns constructability proof, dependency proof, and decision closure.
+  CE may consume Kernel source/cards only with required-evidence checks and limitations.
+  CE must not treat source/cards as proof of Builder execution or runtime validation.
 
 Builder:
   owns execution resolution and safe action batches only.
@@ -44,7 +48,7 @@ Project Gate:
   Project Gate must not become an Elementor design-decision owner.
 
 Kernel:
-  owns shared vocabulary, schemas, evidence model, hard gates, fixtures, and validation-pack shape.
+  owns shared vocabulary, schemas, evidence model, source manifests, decision cards, source/card consumption-boundary contracts, hard gates, fixtures, and validation-pack shape.
   Kernel must not choose a section-specific design.
 ```
 
@@ -59,6 +63,8 @@ Documented capability != enabled project capability.
 Schema valid != semantic valid.
 Semantic valid != runtime valid.
 Workbook-derived rule != official Elementor capability.
+Decision card guidance != correct design choice proof.
+CE constructability status != Builder execution.
 Builder missing evidence -> ask/repair, not guess.
 Project Gate verifies evidence and authority; it does not design.
 Critical behavioral gates must not remain prose-only.
@@ -80,11 +86,16 @@ Do not create these until an explicit later wave asks for them:
 - scheduled official-doc monitoring
 - migration/deprecation automation
 - signed validation outputs
-- source manifest expansion
-- Element Decision Cards
+- Architect repo integration
+- CE repo integration
+- Builder repo integration
+- Responsive repo integration
+- Project Gate integration
+- runtime proof carriers
+- target-project availability proof carriers
 ```
 
-The current target is a small, enforceable MVK plus one vertical E2E slice. Keep validation local, deterministic, and fixture-proven.
+The current target is a small, enforceable MVK plus source/card consumption boundaries. Keep validation local, deterministic, and fixture-proven.
 
 ---
 
@@ -185,6 +196,9 @@ Allowed now:
 - structured diagnostic codes for validator failures
 - behavioral coverage matrix alignment
 - evidence model docs
+- source manifests and evidence labels
+- Element Decision Cards
+- Architect/CE source-card consumption-boundary schemas, fixtures, validators, and docs
 - UX boundary docs
 - kernel ownership and distribution decision docs
 ```
@@ -197,9 +211,10 @@ Not allowed yet:
 - release packaging
 - cross-repo CI coupling
 - Project Gate domain validation logic
-- source manifests
-- Element Decision Cards
 - downstream runtime enforcement claims
+- target-project availability proof claims
+- Builder execution proof claims
+- Responsive runtime validation proof claims
 ```
 
 ---
