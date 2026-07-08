@@ -30,12 +30,12 @@ function fail(filePath, problem, suggestedFix) {
   failures.push({ filePath, problem, suggestedFix });
 }
 
-function lineNumberFor(text, index) {
-  return text.slice(0, index).split('\n').length;
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function extractSection(text, heading) {
-  const headingPattern = new RegExp(`^## ${heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`, 'm');
+  const headingPattern = new RegExp(`^## ${escapeRegExp(heading)}\\s*$`, 'm');
   const match = headingPattern.exec(text);
   if (!match) return '';
   const start = match.index + match[0].length;
@@ -47,7 +47,7 @@ function extractSection(text, heading) {
 function extractCompletedKroads(nextWork) {
   const completed = extractSection(nextWork, 'Completed');
   const matches = [...completed.matchAll(/^- \[x\] (KROAD-\d{3})\s+—\s+(.+)$/gm)];
-  return matches.map((match) => ({ id: match[1], title: match[2], index: match.index ?? 0, section: completed }));
+  return matches.map((match) => ({ id: match[1], title: match[2] }));
 }
 
 function assertStatusAuthority(nextWork) {
@@ -96,6 +96,15 @@ function assertCompletedItemsHaveEvidence(nextWork) {
   }
 }
 
+function hasExplicitStatusNeutralization(nextWork, id) {
+  const statusAuthority = extractSection(nextWork, 'Status Authority');
+  const mentionsId = new RegExp(escapeRegExp(id), 'i').test(statusAuthority);
+  const mentionsDetailedPlan = /KERNEL_EXECUTION_PLAN\.md/i.test(statusAuthority);
+  const saysNonAuthoritative = /non-authoritative/i.test(statusAuthority);
+  const pointsToNextWork = /Current status source/i.test(statusAuthority) && /planning\/NEXT_WORK\.md/i.test(statusAuthority);
+  return mentionsId && mentionsDetailedPlan && saysNonAuthoritative && pointsToNextWork;
+}
+
 function assertKernelDoesNotOverrideCompletedStatus(nextWork, executionPlan) {
   const hasStatusAuthority = /^## Status Authority\s*$/m.test(nextWork) && /authoritative current-status dashboard/i.test(nextWork);
   const completedIds = extractCompletedKroads(nextWork).map((item) => item.id);
@@ -106,12 +115,13 @@ function assertKernelDoesNotOverrideCompletedStatus(nextWork, executionPlan) {
     const sectionRest = executionPlan.slice(sectionStart);
     const nextSection = sectionRest.slice(1).search(/\n## KROAD-\d{3}/);
     const section = nextSection === -1 ? sectionRest : sectionRest.slice(0, nextSection + 1);
+    const hasStaleNotStarted = /^- \*\*Status:\*\*\s+not_started\s*$/m.test(section);
 
-    if (/^- \*\*Status:\*\*\s+not_started\s*$/m.test(section) && !hasStatusAuthority) {
+    if (hasStaleNotStarted && (!hasStatusAuthority || !hasExplicitStatusNeutralization(nextWork, id))) {
       fail(
         'planning/KERNEL_EXECUTION_PLAN.md',
         `${id} is complete in NEXT_WORK.md but still has mutable status not_started in the detailed plan.`,
-        'Use planning/NEXT_WORK.md as the status source, or replace the stale per-item status line with a stable current-status-source note.',
+        'Replace the stale per-item status with a stable current-status-source note, or explicitly document the legacy detailed-plan status as non-authoritative in NEXT_WORK.md.',
       );
     }
   }
@@ -131,7 +141,7 @@ function assertNoStalePreMergeWording() {
     const lines = text.split('\n');
     lines.forEach((line, i) => {
       const lower = line.toLowerCase();
-      const explicitlyHistorical = /historical|history|previous review|past PR/i.test(line);
+      const explicitlyHistorical = /historical|history|previous review|past PR|legacy/i.test(line);
       for (const phrase of STALE_PRE_MERGE_PHRASES) {
         if (lower.includes(phrase.toLowerCase()) && !explicitlyHistorical) {
           fail(
