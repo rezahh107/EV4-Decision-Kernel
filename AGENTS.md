@@ -266,6 +266,12 @@ If any answer is no, revise the patch before finalizing.
 - Before proposing or implementing the next task, read `planning/NEXT_WORK.md`.
 - For detailed task meaning and acceptance criteria, read `planning/KERNEL_EXECUTION_PLAN.md`.
 - Do not rely on chat history as the source of truth when these files exist.
+- Current roadmap status must live in `planning/NEXT_WORK.md`.
+- Do not duplicate mutable current roadmap status in detailed planning or report documents.
+- `planning/KERNEL_EXECUTION_PLAN.md` should describe item meaning, scope, dependencies, acceptance criteria, evidence requirements, and do-not rules.
+- If a PR completes a KROAD item, search changed planning/report files for stale pre-merge or stale status wording.
+- Stale phrases include `not_started`, `pending PR`, `not complete on main until this PR is merged`, `expected post-merge state`, and `becomes complete only after this PR merges`.
+- After merge, clean up stale pre-merge wording or mark it clearly as historical.
 - If a PR changes files under `kernel/`, `docs/`, `planning/`, schemas, validators, decision cards, governance documents, or roadmap-relevant source files, update `planning/NEXT_WORK.md` in the same PR.
 - If a PR changes the meaning, order, scope, dependency, or acceptance criteria of any KROAD item, update `planning/KERNEL_EXECUTION_PLAN.md` in the same PR.
 - Before ticking any item as complete, verify concrete repository evidence exists.
