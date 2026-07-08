@@ -42,9 +42,6 @@ jobs:
       - name: Run advisory coverage audit
         run: node tools/audit-behavioral-coverage.mjs --mode advisory
 
-      - name: Run strict coverage audit
-        run: node tools/audit-behavioral-coverage.mjs --mode strict
-
       - name: Upload coverage reports
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

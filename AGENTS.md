@@ -8,15 +8,15 @@
 
 ## 1. Mission Boundary
 
-This repository defines shared decision, evidence, and enforcement contracts for the EV4 Elementor V4 workflow.
+This repository defines shared decision, evidence, behavioral coverage, and enforcement contracts for the EV4 Elementor V4 workflow.
 
 Agents working here must not implement a full platform unless explicitly instructed by a scoped prompt.
 
 Current safe operating mode:
 
 ```text
-Kernel-local MVK implementation, validation hardening, source manifests, decision cards, and Architect/CE source-card consumption boundaries.
-Full registry expansion, release automation, reusable workflows, cross-repo integration, runtime evidence, target-project availability evidence, Builder execution proof, and production readiness remain out of scope until explicitly prompted.
+Kernel-local MVK implementation, validation hardening, source manifests, decision cards, Architect/CE source-card consumption boundaries, and Behavioral Rule Coverage v0.4.1 advisory audit governance.
+Full registry expansion, release automation, reusable workflows, cross-repo integration, runtime evidence, target-project availability evidence, Builder execution proof, external evidence contracts, and production readiness remain out of scope until explicitly prompted.
 ```
 
 ---
@@ -48,7 +48,7 @@ Project Gate:
   Project Gate must not become an Elementor design-decision owner.
 
 Kernel:
-  owns shared vocabulary, schemas, evidence model, source manifests, decision cards, source/card consumption-boundary contracts, hard gates, fixtures, and validation-pack shape.
+  owns shared vocabulary, schemas, evidence model, source manifests, decision cards, source/card consumption-boundary contracts, behavioral coverage governance, hard gates, fixtures, and validation-pack shape.
   Kernel must not choose a section-specific design.
 ```
 
@@ -67,8 +67,14 @@ Decision card guidance != correct design choice proof.
 CE constructability status != Builder execution.
 Builder missing evidence -> ask/repair, not guess.
 Project Gate verifies evidence and authority; it does not design.
-Critical behavioral gates must not remain prose-only.
+Critical behavioral gates must not remain prose-only without being reported as gaps.
 Invalid fixtures must assert expected diagnostics, not just any failure.
+Advisory CI != ci_enforced.
+CI success != production readiness.
+Downstream contract enforcement requires inspected downstream rejection evidence.
+Runtime monitor enforcement requires an actual runtime monitor.
+Sequence CI enforcement requires sequence-aware replay/diff tests or equivalent.
+OS harness enforcement requires OS/process/file/network-level enforcement.
 ```
 
 ---
@@ -93,9 +99,11 @@ Do not create these until an explicit later wave asks for them:
 - Project Gate integration
 - runtime proof carriers
 - target-project availability proof carriers
+- external evidence contracts
+- browser/runtime evidence schemas
 ```
 
-The current target is a small, enforceable MVK plus source/card consumption boundaries. Keep validation local, deterministic, and fixture-proven.
+The current target is a small, enforceable MVK plus source/card consumption boundaries and an honest v0.4.1 behavioral audit model. Keep validation local, deterministic, and fixture-proven.
 
 ---
 
@@ -120,26 +128,47 @@ Use stable headings and short sections. Prefer small, enforceable contracts over
 
 ## 6. Behavioral Rule Coverage Standard
 
-For Critical and High behavioral rules, do not rely on prose alone.
+Behavioral Rule Coverage v0.4.1 is the active practical audit model.
 
-Target chain:
+Always distinguish:
 
 ```text
-Concept
-  -> canonical schema field
-  -> minimum semantic children
-  -> validator rule
-  -> valid fixture
-  -> invalid fixture
-  -> CI enforcement
-  -> downstream rejection
+prompt_level_influence:
+  role framing, prose guidance, examples, templates, prompt instructions, review guidance
+
+system_level_enforcement:
+  schema validation, validator rules, fixtures, CI failure, sequence tests,
+  runtime monitors, OS/harness enforcement, downstream rejection
 ```
 
-A Critical rule with status `prose_only` or `schema_backed` is an open enforcement gap.
+A prompt instruction is not an enforcement carrier. A documentation audit workflow is not equivalent to rule-level CI enforcement unless the exact rule validator/test fails the build on violation.
+
+Minimum thresholds:
+
+```text
+Critical + per_artifact:
+  minimum: ci_enforced
+  target: downstream_contract_enforced
+
+Critical + cross_turn:
+  minimum: sequence_ci_enforced OR runtime_monitor_enforced
+  target: downstream_contract_enforced when a downstream boundary exists
+
+Critical + execution-only observability:
+  minimum: runtime_monitor_enforced
+
+High:
+  minimum: validator_backed
+  preferred: fixture_tested or ci_enforced
+```
+
+`advisory_ci_observed` never satisfies any Critical or High minimum by itself.
 
 A rule may be `fixture_tested` only when the local validator and valid/invalid fixtures prove the intended behavior and invalid fixtures assert the expected diagnostic codes.
 
-A rule may be `ci_enforced` only after the relevant workflow run is observed passing on the PR or target branch.
+A rule may be `ci_enforced` only after the exact relevant workflow run is observed failing on violation and passing for valid artifacts.
+
+A rule may be `downstream_contract_enforced` only after an inspected downstream EV4 consumer rejects missing or invalid carriers.
 
 ---
 
@@ -194,7 +223,7 @@ Allowed now:
 - Kernel-local MVK schemas, fixtures, and validators
 - JSON Schema conformance validation for MVK fixtures
 - structured diagnostic codes for validator failures
-- behavioral coverage matrix alignment
+- Behavioral Rule Coverage v0.4.1 matrix and advisory audit tooling
 - evidence model docs
 - source manifests and evidence labels
 - Element Decision Cards
@@ -215,6 +244,9 @@ Not allowed yet:
 - target-project availability proof claims
 - Builder execution proof claims
 - Responsive runtime validation proof claims
+- external evidence contracts
+- project availability schemas
+- runtime/browser evidence schemas
 ```
 
 ---
@@ -225,13 +257,15 @@ Before opening or merging a patch, answer:
 
 ```text
 1. Did this patch preserve EV4 role boundaries?
-2. Did it reduce prose-only critical gates?
+2. Did it reduce or clearly report prose-only / below-threshold Critical and High gates?
 3. Did it avoid building the full platform too early?
 4. Did it avoid adding local rule forks?
 5. Did it make the next MVK step clearer?
 6. Did it avoid claiming runtime validity without runtime evidence?
 7. Did invalid fixtures assert expected diagnostic codes?
 8. Did coverage status avoid downstream or CI claims without evidence?
+9. Did it avoid treating advisory CI as ci_enforced?
+10. Did it avoid treating cross_turn Critical rules as satisfied by single-artifact CI?
 ```
 
 If any answer is no, revise the patch before finalizing.

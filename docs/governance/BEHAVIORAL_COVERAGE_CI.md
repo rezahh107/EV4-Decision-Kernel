@@ -1,44 +1,107 @@
 # Behavioral Coverage CI — EV4 Decision Kernel
 
-**Status:** implemented audit layer / advisory CI  
-**Scope:** structural and coverage-state audit of `docs/governance/BEHAVIORAL_RULE_COVERAGE.md`  
+**Status:** implemented v0.4.1 audit layer / advisory CI  
+**Scope:** structural, enum, threshold, and overclaim-risk audit of `docs/governance/BEHAVIORAL_RULE_COVERAGE.md`  
 **Owner or intended consumer:** Kernel maintainers, reviewers, and CI operators
 
 ## Purpose
 
-Behavioral rules can influence an LLM without being enforceable by the repository. The coverage matrix records the carriers expected to move a rule from guidance toward deterministic rejection:
-
-```text
-Concept
-  -> canonical schema field
-  -> minimum semantic children
-  -> validator rule
-  -> valid fixture
-  -> invalid fixture
-  -> CI enforcement
-  -> downstream rejection
-```
-
-The audit makes the matrix machine-auditable and detects weak or missing coverage. It does not implement the schemas, validators, fixtures, or downstream consumers named by that matrix.
-
-## Enforcement Boundary
+Behavioral Rule Coverage v0.4.1 lets the Kernel distinguish prompt-level influence from system-level enforcement.
 
 ```text
 prompt_level_influence:
-  prose guidance, templates, examples, role instructions
+  role framing, prose guidance, examples, templates, prompt instructions, review guidance
 
 system_level_enforcement:
-  parser checks, schema validation, validator rules, fixtures, CI,
-  downstream rejection
+  schema validation, validator rules, fixtures, CI failure, sequence tests,
+  runtime monitors, OS/harness enforcement, downstream rejection
 ```
 
-`tools/audit-behavioral-coverage.mjs` is system-level enforcement for the **shape and declared state of the coverage matrix**. It is not system-level enforcement of each listed behavioral rule.
+The audit makes the coverage matrix machine-auditable. It does not implement the schemas, validators, fixtures, sequence tests, runtime monitors, OS/harness controls, or downstream consumers named by the matrix.
 
-Running this audit does not justify changing a matrix row to `ci_enforced`. That status requires the rule's actual validator or fixture test to run in CI. Cross-agent enforcement remains incomplete until the applicable downstream consumer rejects missing or invalid carriers.
+## Active Model
+
+`docs/governance/BEHAVIORAL_RULE_COVERAGE.md` is now the active Behavioral Rule Coverage v0.4.1 model.
+
+The audit validates:
+
+```text
+- required v0.4.1 matrix columns
+- risk enum values
+- session_scope enum values
+- recovery_action enum values
+- status enum values
+- Critical/High threshold reporting
+- overclaim risk checks
+- deterministic JSON and Markdown report generation
+```
+
+## Advisory Mode
+
+Advisory mode is the active GitHub workflow mode.
+
+It fails only when:
+
+```text
+- the source document is missing;
+- the matrix is malformed;
+- required columns are missing;
+- enum values are invalid;
+- the parser cannot safely interpret the matrix.
+```
+
+Advisory mode does not fail solely because open enforcement gaps exist.
+
+## Strict Mode
+
+Strict mode is available for local governance checks:
+
+```bash
+node tools/audit-behavioral-coverage.mjs --mode strict
+```
+
+Strict mode fails on advisory failures plus v0.4.1 threshold violations.
+
+A strict failure can be expected while Critical/High rules remain below their minimum enforcement status. It is not automatically an implementation defect unless the failure is caused by malformed input, invalid enum values, or parser failure.
+
+Strict mode is not the default GitHub Actions gate yet.
+
+## v0.4.1 Thresholds
+
+```text
+Critical + per_artifact:
+  minimum: ci_enforced
+  target: downstream_contract_enforced
+
+Critical + cross_turn:
+  minimum: sequence_ci_enforced OR runtime_monitor_enforced
+  target: downstream_contract_enforced when a downstream boundary exists
+
+Critical + execution-only observability:
+  minimum: runtime_monitor_enforced
+
+High:
+  minimum: validator_backed
+  preferred: fixture_tested or ci_enforced
+```
+
+`advisory_ci_observed` never satisfies any Critical or High minimum by itself.
+
+## Overclaim Boundaries
+
+The audit report checks for these overclaim risks:
+
+```text
+- advisory CI treated as ci_enforced
+- field presence treated as semantic enforcement
+- fixture existence treated as CI enforcement
+- synthetic fixture treated as real E2E
+- CI success treated as production readiness
+- downstream_contract_enforced without inspected downstream rejection evidence
+- cross_turn Critical rule treated as satisfied by single-artifact ci_enforced
+```
 
 ## Commands
-
-The script has no external package dependency and defaults to advisory mode:
 
 ```bash
 node tools/audit-behavioral-coverage.mjs
@@ -55,74 +118,22 @@ artifacts/behavioral-coverage-report.md
 
 The generated `artifacts/` directory is ignored by Git. CI uploads the reports as a workflow artifact.
 
-## Advisory Mode
+## Report Interpretation
 
-Advisory mode is the active repository workflow mode. It fails only when the source document is unavailable or the matrix is structurally malformed, including:
+An advisory `pass` means the source matrix parsed safely and enum values are valid. Warnings may still identify open enforcement gaps.
 
-```text
-- missing MVK Coverage Matrix section
-- missing or non-exact required columns
-- malformed Markdown separator row
-- wrong row cell count
-- empty cells instead of explicit None
-- duplicate rule_id values
-- no parseable rule rows
-```
+A strict `fail` means one or more v0.4.1 thresholds are unmet, unless `parse_status` is `malformed` or enum errors are present.
 
-Weak Critical/High coverage, missing carriers, and invalid risk/status values are reported without failing advisory mode. This is intentional while MVK schemas, validators, and fixtures are developed in a separate scoped patch.
-
-## Strict Mode
-
-Strict mode is available for local governance checks and later CI activation. It fails on structural errors plus any of these conditions:
-
-```text
-- a Critical rule is prose_only or schema_backed
-- a Critical rule has invalid_fixture == None
-- a Critical rule marked ci_enforced has CI_step == None
-- any rule has a risk outside Critical, High, Medium, Low
-- any rule has a status outside the allowed status set
-```
-
-Strict mode is not used by the current GitHub Actions workflow. A strict failure during the current phase is an expected coverage result, not necessarily a parser failure.
-
-## Current Repository Phase
-
-This patch adds only the behavioral coverage audit layer:
-
-```text
-included:
-  coverage parser
-  advisory workflow
-  strict-mode capability
-  generated machine/human reports
-
-not included:
-  MVK schemas
-  MVK fixtures
-  semantic validator implementation
-  downstream intake rejection
-  release automation
-  reusable workflows
-```
-
-The workflow runs on pull requests, pushes to `main`, and manual dispatch. It remains advisory so known unenforced Critical rules do not block parallel MVK work.
+Neither result, by itself, makes a behavioral rule `ci_enforced`. The rule's actual validator or fixture test must fail CI on violation, and applicable downstream consumers must reject missing or invalid carriers before `downstream_contract_enforced` is justified.
 
 ## Later Fail-Closed Activation
 
-Moving CI from advisory to strict requires an explicit governance change. Before activation, applicable Critical rows should have real, repository-resolvable carriers and executed evidence for at least:
+Moving the workflow from advisory to strict requires an explicit later governance change. Before activation, applicable Critical rows should have real, repository-resolvable carriers and executed evidence for at least:
 
 ```text
 - semantic validator rule
-- invalid fixture
-- CI step that runs the validator or fixture test
+- invalid fixture with expected diagnostics
+- CI step that runs the exact validator or fixture test
 ```
 
-Strict CI still does not prove final cross-agent enforcement. Where a rule governs a handoff, the target remains `downstream_contract_enforced`, backed by deterministic downstream rejection.
-
-## Report Interpretation
-
-An advisory `pass` means the source matrix parsed successfully; warnings may still identify open enforcement gaps.
-
-A strict `fail` means one or more configured strict thresholds are unmet. It does not mean the Markdown parser failed unless `parse_status` is `malformed`.
-
-The checked-in `BEHAVIORAL_COVERAGE_CI_REPORT.md` is a placeholder and usage reference. Actual results are generated under `artifacts/` and uploaded by CI.
+Cross-turn Critical rows require sequence-aware replay/diff tests or equivalent. Runtime-monitor rows require an actual runtime monitor.
