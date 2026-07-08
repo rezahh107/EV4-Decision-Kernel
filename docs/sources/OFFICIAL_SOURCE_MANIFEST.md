@@ -1,6 +1,6 @@
 # Official Source Manifest
 
-Status: Kernel-local official source extraction and Elementor V4 doc coverage repair  
+Status: Kernel-local official source extraction and Elementor V4 doc coverage completion  
 Scope: Elementor V4 source references for MVK decision cards and required context-source coverage
 
 ## Boundary
@@ -29,12 +29,16 @@ kernel/schemas/elementor-v4-doc-coverage-index.schema.json
 kernel/validator/validate-elementor-doc-coverage.mjs
 ```
 
-## Coverage Repair
+## Coverage Completion
 
-The source manifest now includes required V4 context sources for Atomic/V4 features, class priority, Class Manager, user roles/classes, responsive editing, reset-style reconciliation, Variables Manager, Nested Links, V3/V4 differences, viewport control, logical properties, and attributes.
+The source manifest includes required V4 context sources for Atomic/V4 features, local/global Classes, class priority, Class Manager, user roles/classes, element states, responsive editing, reset-style reconciliation, Variables, Variables Manager, Components, Dynamic Tags, Interactions, Nested Links, V3/V4 differences, viewport control, logical properties, and attributes.
 
 The coverage index defines whether each documentation area is represented as a core decision card, context source, evidence boundary, documented limitation, or insufficient-evidence gap.
 
+## Explicit Remaining Boundary
+
+Breakpoint semantics remain an `insufficient_evidence` gap unless a current official breakpoint-specific Elementor source is inspected. Viewport Control and Responsive Editing are not treated as complete breakpoint semantics.
+
 ## Prompt Limitation
 
-This pass verifies and structures source references and coverage boundaries. It does not create docs monitoring, release automation, downstream adapters, runtime evidence, project evidence, or production readiness proof.
+This pass verifies and structures source references and coverage boundaries. It does not create docs monitoring, release automation, downstream adapters, runtime evidence, project evidence, Project Gate intake, or production readiness proof.
