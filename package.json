@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "validate:mvk": "node kernel/validator/validate-mvk.mjs"
+    "validate:mvk": "node kernel/validator/validate-mvk.mjs && node kernel/validator/validate-source-cards.mjs"
   },
   "dependencies": {
     "ajv": "8.17.1",
     "ajv-formats": "3.0.1"
   },
-  "description": "Kernel-local MVK schema, fixture, and validator package."
+  "description": "Kernel-local MVK schema, fixture, source-card, and validator package."
 }
