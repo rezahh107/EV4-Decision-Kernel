@@ -49,10 +49,10 @@ node tools/audit-behavioral-coverage.mjs --mode advisory
 Source/card validator summary
 Schema setup: PASS (2/2 schemas compiled)
 Source/card integrity: PASS
-Schema validation: PASS (executed 11/11; valid fixtures schema-clean 4/4)
+Schema validation: PASS (executed 12/12; valid fixtures schema-clean 4/4)
 Valid fixtures passed schema + semantic validation: 4/4
-Invalid fixtures failed with expected diagnostics: 7/7
-Expected diagnostic assertions: PASS (7/7)
+Invalid fixtures failed with expected diagnostics: 8/8
+Expected diagnostic assertions: PASS (8/8)
 Result: PASS
 ```
 
