@@ -1,0 +1,1 @@
+{"fixture_id":"invalid_custom_css_without_environment_boundary","expected_diagnostics":["DGOV_CUSTOM_CSS_REQUIRES_ENVIRONMENT_BOUNDARY"],"records":[{"record_id":"invalid.custom_css.env","selected_target_scope":"elementor_v4","decision_family":"styling_mechanism","selected_styling_mechanism":"custom_css","external_style_environment_risk_declared":false,"builder_ready":false}]}
