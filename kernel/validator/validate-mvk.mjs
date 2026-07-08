@@ -127,21 +127,10 @@ function validateInteractionTopology(record, errors) {
 
   requireFields(topology, ['clickable_ancestor', 'clickable_descendant'], errors, 'interaction_topology');
   const selfInteractive = elementIsInteractive(record);
-function validateInteractionTopology(record, errors) {
-  const topology = record.interaction_topology;
-  const label = record.record_type || 'record';
-  if (!topology) {
-    errors.push(`${label}: missing interaction_topology`);
-    return;
-  }
-  const isClickable = record.selected_element_id === 'v4.button';
-  const hasAncestor = topology.clickable_ancestor === true;
-  const hasDescendant = topology.clickable_descendant === true;
-  failWhen(
-    errors,
-    (hasAncestor && hasDescendant) || (isClickable && (hasAncestor || hasDescendant)),
-    'nested clickable topology rejected'
-  );
+
+  failWhen(errors, topology.clickable_ancestor === true && topology.clickable_descendant === true, 'nested clickable topology rejected');
+  failWhen(errors, selfInteractive && topology.clickable_ancestor === true, 'interactive element inside clickable ancestor rejected');
+  failWhen(errors, selfInteractive && topology.clickable_descendant === true, 'interactive element with clickable descendant rejected');
 }
 
 function validateElementDecision(record) {
