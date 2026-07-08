@@ -40,7 +40,10 @@ Scope: Architect and CE consumption-boundary schemas, fixtures, validator checks
 - CE records cannot claim runtime responsive validation.
 - CE constructable_with_limitations and constructable_pending_builder_resolution require constructability_evidence.
 - CE must check or acknowledge every required_evidence item listed by the consumed card.
-- Forbidden proof claims are rejected outside explicit limitation/proof-gap fields.
+- CE `required_evidence_checked` entries with `checked` require `evidence_ref`.
+- CE `required_evidence_checked` entries with `acknowledged_not_available` or `not_applicable_with_reason` require `reason`.
+- Forbidden proof claims are rejected outside explicit limitation/proof-gap fields with stem-oriented scanner coverage.
+- Invalid fixture assertions reject unexpected extra diagnostic codes.
 - Registry manifest lists the consumption-boundary schema entries.
 - Behavioral coverage rows describe only Kernel-local schema, validator, fixture, and advisory CI behavior.
 - No downstream enforcement, Builder execution, runtime validation, project availability, constructability proof from official docs, or production readiness is claimed.
@@ -60,10 +63,10 @@ node tools/audit-behavioral-coverage.mjs --mode advisory
 Source/card consumption-boundary validator summary
 Schema setup: PASS (2/2 schemas compiled)
 Consumption registry load: PASS (8 cards; 16 sources)
-Schema validation: PASS (executed 12/12; valid fixtures schema-clean 4/4)
+Schema validation: PASS (executed 18/18; valid fixtures schema-clean 4/4)
 Valid fixtures passed schema + semantic validation: 4/4
-Invalid fixtures failed with expected diagnostics: 8/8
-Expected diagnostic assertions: PASS (8/8)
+Invalid fixtures failed with expected diagnostics: 14/14
+Expected diagnostic assertions: PASS (14/14)
 Result: PASS
 ```
 
