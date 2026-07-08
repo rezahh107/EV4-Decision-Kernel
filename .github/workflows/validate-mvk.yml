@@ -1,0 +1,23 @@
+name: Validate MVK
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate-mvk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Show Node.js version
+        run: node --version
+
+      - name: Validate MVK fixtures and gates
+        run: npm run validate:mvk

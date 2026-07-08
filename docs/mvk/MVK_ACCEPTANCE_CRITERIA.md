@@ -1,85 +1,46 @@
 # MVK Acceptance Criteria — EV4 Decision Kernel
 
-Status: Draft / Wave 0 planning  
-Scope: Acceptance criteria for future MVK implementation readiness  
-Owner or intended consumer: EV4 Decision Kernel maintainers and future reviewers
+Status: Kernel-local MVK foundation added for Prompt 2  
+Scope: First local schema, fixture, and validator package
 
-## What This Document Is
-
-This document lists the checks a later MVK implementation must satisfy before it can be treated as useful.
-
-## What This Document Is Not
+## Prompt 2 Acceptance Criteria
 
 ```text
-- not proof that the MVK is implemented
-- not a CI result
-- not runtime validation
-- not a release checklist
-- not a migration guide
+- Core element registry contains only the approved eight MVK element IDs.
+- Core constraint registry contains only the approved six MVK hard gates.
+- JSON Schema files exist for evidence, kernel pin, decision records, CE closure, Builder resolution, and Project Gate packet.
+- Valid fixtures pass local validation.
+- Invalid fixtures fail local validation.
+- Validator includes semantic checks beyond shallow field presence.
+- Selected candidate mismatch fails closed.
+- Nested-clickable topology fails closed for ancestor + descendant, interactive self + clickable ancestor, interactive self + clickable descendant, and missing topology.
+- Kernel pin validation fails closed for malformed commit SHA, manifest SHA-256, manifest reference, kernel version, and compatibility profile.
+- Project Gate packet carries pin, lineage, validation reports, and gate decision only.
+- Documentation does not claim CI enforcement unless CI actually runs the validator.
 ```
 
-## Confirmed Facts
+## Local Validation
 
-```text
-- Wave 0 creates planning artifacts only.
-- The MVK must fail closed on missing CE Closure, missing Kernel pin/hash, missing containing-block proof, nested clickable topology, and unlisted Builder fallback.
-- Project Gate must remain verifier-only.
+```bash
+npm run validate:mvk
 ```
 
-## Proposed Approach
-
-A future MVK implementation should be accepted only when it has:
+Expected output:
 
 ```text
-- planning docs aligned with ADR-001 through ADR-005
-- schema carriers for the MVK records
-- semantic validator rules for Critical gates
-- valid and invalid fixtures for the vertical slice
-- local validation command
-- documented downstream rejection behavior
+MVK validator summary
+Registries: PASS
+Valid fixtures passed: 4/4
+Invalid fixtures failed as expected: 11/11
+Result: PASS
 ```
 
-Minimum planned validation outcomes:
+## Known Gaps
 
 ```text
-PASS: valid/mvk-section-complete.json
-FAIL: invalid/missing-ce-closure.json
-FAIL: invalid/missing-kernel-pin.json
-FAIL: invalid/absolute-without-relative-parent.json
-FAIL: invalid/nested-clickable-card-button.json
-FAIL: invalid/builder-unlisted-fallback.json
-```
-
-## Open Decisions
-
-```text
-- exact validator command
-- exact expected output format
-- exact CI wrapper name
-- exact Project Gate packet error codes
-```
-
-## Acceptance Criteria
-
-For a later implementation, all must be true:
-
-```text
-- No full platform is introduced.
-- No full registry is introduced.
-- No release automation is introduced.
-- No reusable workflow is introduced.
-- Local profile remains config/adapters only.
-- Project Gate remains verifier-only.
-- MVK validates static and semantic gates for the vertical slice.
-- Documentation does not claim runtime validation.
-```
-
-## What Must Not Be Done Yet
-
-```text
-- do not mark MVK complete from planning docs alone
-- do not claim CI enforcement from planned CI steps
-- do not claim runtime behavior from static validation
-- do not treat contract examples as final schemas
-- do not merge or migrate other EV4 repositories from this document
+- CI workflow has been added, but PR check results must be verified before claiming ci_enforced.
+- Validator is MVK-local, not a full rule engine.
+- Schemas are not a released canonical artifact.
+- Responsive Runtime Validation Record remains future scope.
+- No other EV4 repository consumes this package yet.
 ```
