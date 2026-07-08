@@ -10,6 +10,8 @@ This file is the authoritative current-status dashboard for roadmap progress aft
 
 `planning/KERNEL_EXECUTION_PLAN.md` remains the durable detailed operating map for item meaning, scope, dependencies, acceptance criteria, evidence requirements, and do-not rules. If an item's status label in the detailed plan is stale, use this file for current roadmap status and update the detailed plan in a later maintenance PR only when changing roadmap meaning, scope, dependency, acceptance criteria, or evidence requirements.
 
+Known detailed-plan status label: `KROAD-001` may still show a legacy `not_started` status in `planning/KERNEL_EXECUTION_PLAN.md`; this line is non-authoritative. Current status source for `KROAD-001` is `planning/NEXT_WORK.md`.
+
 ## Status Summary
 
 Current completed milestones: KROAD-000, KROAD-001, KROAD-002.
@@ -26,6 +28,7 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
 ## Completed
 
 - [x] KROAD-000 — Live Baseline Precheck
+  - Update note: Baseline repository memory exists in `planning/NEXT_WORK.md`, the durable plan exists in `planning/KERNEL_EXECUTION_PLAN.md`, and current roadmap status is maintained here as the status dashboard.
 - [x] KROAD-001 — Cross-Repository Adoption Report
   - Update note: PR #13 added `planning/CROSS_REPO_ADOPTION_REPORT.md` with the read-only adoption report, inspected repository/path references, explicit classification for all six related repositories, Four Truths Framework, do-not-import guards, limitations, and roadmap-impact notes.
 - [x] KROAD-002 — Taxonomy + Execution-Risk Boundaries
