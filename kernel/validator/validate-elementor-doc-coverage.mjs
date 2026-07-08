@@ -8,15 +8,23 @@ import addFormats from 'ajv-formats';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const REQUIRED_DOC_AREAS = ['editor_v4_activation','v4_features_atomic_elements','class_priority_cascade','class_manager','user_roles_classes','responsive_editing_inheritance','reset_style_reconciliation','variables_manager','components_dependencies','dynamic_tags_boundaries','interactions_limitations','nested_links','v3_v4_differences','viewport_control'];
 const REQUIRED_BOUNDARIES = ['project_availability_not_proven','builder_execution_not_proven','runtime_not_validated'];
+const REQUIRED_SOURCE_BY_DOC_AREA = new Map([
+  ['class_priority_cascade', { source_ref: 'src.elementor.v4.class_priority', rule_id: 'R-MVK-DOC-004' }],
+  ['nested_links', { source_ref: 'src.elementor.v4.nested_links', rule_id: 'R-MVK-DOC-007' }],
+  ['v3_v4_differences', { source_ref: 'src.elementor.v4.v3_v4_differences', rule_id: 'R-MVK-DOC-010' }]
+]);
 const FIXTURE_PLAN = [
   ['valid/elementor_doc_coverage_index_valid.json', false],
   ['invalid/required_doc_area_missing_invalid.json', true],
   ['invalid/context_source_missing_no_card_reason_invalid.json', true],
   ['invalid/components_claims_project_availability_invalid.json', true],
   ['invalid/class_priority_source_missing_invalid.json', true],
+  ['invalid/class_priority_wrong_source_invalid.json', true],
   ['invalid/responsive_inheritance_claims_runtime_validation_invalid.json', true],
   ['invalid/nested_links_source_missing_invalid.json', true],
+  ['invalid/nested_links_wrong_source_invalid.json', true],
   ['invalid/v3_v4_difference_source_missing_invalid.json', true],
+  ['invalid/v3_v4_difference_wrong_source_invalid.json', true],
   ['invalid/source_quality_note_required_invalid.json', true],
   ['invalid/unknown_evidence_label_ref_invalid.json', true],
   ['invalid/forbidden_production_ready_claim_invalid.json', true]
@@ -47,6 +55,7 @@ function applyFixtureMutations(fixture, defaults) {
   for (const id of mutations.clear_source_quality_notes || []) { const target = area(coverageIndex, id); if (target) target.source_quality_notes = []; }
   for (const patch of mutations.set_area_labels || []) { const target = area(coverageIndex, patch.doc_area_id); if (target) target.required_evidence_label_refs = patch.required_evidence_label_refs; }
   for (const patch of mutations.set_area_title || []) { const target = area(coverageIndex, patch.doc_area_id); if (target) target.title = patch.title; }
+  for (const patch of mutations.set_area_source_refs || []) { const target = area(coverageIndex, patch.doc_area_id); if (target) target.official_source_ref = patch.official_source_ref; }
   if (mutations.set_scope) coverageIndex.scope = mutations.set_scope;
 
   for (const id of mutations.remove_source_refs || []) manifest.sources = (manifest.sources || []).filter((item) => item.source_id !== id);
@@ -89,7 +98,9 @@ function validateCoverageIndex({ coverageIndex, manifest, labels, decisionCards,
   for (const requiredId of REQUIRED_DOC_AREAS) if (!areaRefs.has(requiredId)) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-001', code: 'REQUIRED_DOC_AREA_MISSING', message: `Required Elementor V4 doc area missing: ${requiredId}`, source: 'semantic', path: 'required_doc_areas' }));
   for (const entry of coverageIndex.required_doc_areas || []) {
     const path = `required_doc_areas.${entry.doc_area_id || '(missing)'}`;
+    const expectedSource = REQUIRED_SOURCE_BY_DOC_AREA.get(entry.doc_area_id);
     if (entry.source_status !== 'insufficient_evidence' && !sourceRefs.has(entry.official_source_ref)) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-001', code: 'UNKNOWN_SOURCE_REF', message: `Coverage source ref not found in manifest: ${entry.official_source_ref}`, source: 'registry', path }));
+    if (expectedSource && entry.official_source_ref !== expectedSource.source_ref) diagnostics.push(diagnostic({ rule_id: expectedSource.rule_id, code: 'DOC_AREA_SOURCE_REF_MISMATCH', message: `${entry.doc_area_id} must reference ${expectedSource.source_ref}, not ${entry.official_source_ref}.`, source: 'semantic', path: `${path}.official_source_ref` }));
     for (const label of entry.required_evidence_label_refs || []) if (!labelRefs.has(label)) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-001', code: 'UNKNOWN_EVIDENCE_LABEL_REF', message: `Coverage label ref not found: ${label}`, source: 'registry', path }));
     if (entry.decision_card_required === false && !entry.no_decision_card_reason) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-002', code: 'MISSING_NO_CARD_REASON', message: `Context source ${entry.doc_area_id} requires no_decision_card_reason.`, source: 'semantic', path }));
     for (const boundary of REQUIRED_BOUNDARIES) if (!(entry.not_proven_boundaries || []).includes(boundary)) diagnostics.push(diagnostic({ rule_id: 'R-MVK-DOC-001', code: 'REQUIRED_NOT_PROVEN_BOUNDARY_MISSING', message: `${entry.doc_area_id} must include ${boundary}.`, source: 'semantic', path }));
@@ -161,6 +172,6 @@ for (const [path, shouldFail] of FIXTURE_PLAN) {
   }
 }
 
-output.push('Schema validation: PASS (schema compiled and applied to main index plus fixtures)', `Valid fixtures passed schema + semantic validation: ${validPassed}/1`, `Invalid fixtures failed with expected diagnostics: ${invalidPassed}/10`, `Expected diagnostic assertions: ${expectedPassed === 10 ? 'PASS' : 'FAIL'} (${expectedPassed}/10)`, 'Invalid fixture diagnostic assertions:', ...invalidLines, `Result: ${failed ? 'FAIL' : 'PASS'}`);
+output.push('Schema validation: PASS (schema compiled and applied to main index plus fixtures)', `Valid fixtures passed schema + semantic validation: ${validPassed}/1`, `Invalid fixtures failed with expected diagnostics: ${invalidPassed}/13`, `Expected diagnostic assertions: ${expectedPassed === 13 ? 'PASS' : 'FAIL'} (${expectedPassed}/13)`, 'Invalid fixture diagnostic assertions:', ...invalidLines, `Result: ${failed ? 'FAIL' : 'PASS'}`);
 console.log(output.join('\n'));
 process.exit(failed ? 1 : 0);
