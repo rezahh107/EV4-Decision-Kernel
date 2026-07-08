@@ -1,32 +1,39 @@
 # EV4 Decision Kernel — Next Work
 
 ## Last Updated
-PR #12 — Add repository-local planning dashboard and repository-memory rules
+
+Pending PR — Add KROAD-001 cross-repository adoption report
+
+## Status Authority
+
+This file is the authoritative current-status dashboard for roadmap progress after each merged PR.
+
+`planning/KERNEL_EXECUTION_PLAN.md` remains the durable detailed operating map for item meaning, scope, dependencies, acceptance criteria, evidence requirements, and do-not rules. If an item's status label in the detailed plan is stale, use this file for current roadmap status and update the detailed plan in a later maintenance PR only when changing roadmap meaning, scope, dependency, acceptance criteria, or evidence requirements.
 
 ## Status Summary
-Current completed milestone: KROAD-002.
-Next task: KROAD-001 — Cross-Repository Adoption Report.
+
+Expected post-merge completed milestones: KROAD-000, KROAD-001, KROAD-002.
+Next task after this PR is merged: KROAD-003 — Decision Record Schema v2 + Migration Plan.
 Detailed plan: `planning/KERNEL_EXECUTION_PLAN.md`.
 Do not continue from chat history; read this file first.
 
-## Next Task
-- [ ] KROAD-001 — Cross-Repository Adoption Report
+Important: KROAD-001 is not complete on `main` until the PR adding `planning/CROSS_REPO_ADOPTION_REPORT.md` is merged.
 
-Inspect these repositories:
-- rezahh107/EDAS-v4
-- rezahh107/elementor-v4-knowledge-base
-- rezahh107/EV4-Workbook-Jinja
-- rezahh107/EDIS-Browser-Runtime-Evidence-Collector
-- rezahh107/EDIS-WordPress-Evidence-Exporter
-- rezahh107/Elementor-Design-Audit-System
+## Next Task
+
+- [ ] KROAD-003 — Decision Record Schema v2 + Migration Plan
 
 ## Completed
+
 - [x] KROAD-000 — Live Baseline Precheck
+- [x] KROAD-001 — Cross-Repository Adoption Report
+  - Update note: This PR adds `planning/CROSS_REPO_ADOPTION_REPORT.md` with the read-only adoption report, inspected repository/path references, explicit classification for all six related repositories, do-not-import guards, limitations, and roadmap-impact notes.
+  - Completion note: This item becomes complete on `main` only after this PR is merged.
 - [x] KROAD-002 — Taxonomy + Execution-Risk Boundaries
   - Update note: PR #11 completed the decision governance taxonomy and execution-risk boundary foundation.
 
-## Remaining Work (including next task)
-- [ ] KROAD-001 — Cross-Repository Adoption Report
+## Remaining Work
+
 - [ ] KROAD-003 — Decision Record Schema v2 + Migration Plan
 - [ ] KROAD-004 — P0 Decision Matrices
 - [ ] KROAD-005 — Decision Resolver Contract
@@ -45,6 +52,7 @@ Inspect these repositories:
 - [ ] KROAD-018 — Final Kernel Release Gate
 
 ## Update Rule
+
 Every PR that completes or materially changes a roadmap item must update this file.
 
 If a PR changes files under `kernel/`, `docs/`, `planning/`, schemas, validators, decision cards, governance documents, or roadmap-relevant source files, update this file in the same PR.
@@ -62,6 +70,7 @@ Before ticking any item as complete, verify concrete repository evidence exists,
 If evidence is missing or uncertain, do not tick the item; add a note explaining what is missing.
 
 ## Open Notes
+
 - Decision Resolver must be three-state: `auto_resolved` / `conditional` / `unresolvable`.
 - Decision Record Schema v2 must include `resolver_status`, `evidence_tier`, `rule_version`, `decision_type`, `trigger_source`, `provisional_status`, `reopen_count`, and `previous_decision_ref`.
 - L2 Audit must rerun the resolver, not act as a second free-text opinion.
