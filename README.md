@@ -84,10 +84,10 @@ Expected Prompt 5 portion:
 Evidence workspace validator summary
 Schema setup: PASS (6/6 schemas compiled)
 Evidence package registry load: PASS (5 package refs)
-Schema validation: PASS (executed 17/17; valid fixtures schema-clean 6/6)
+Schema validation: PASS (executed 20/20; valid fixtures schema-clean 6/6)
 Valid fixtures passed schema + semantic validation: 6/6
-Invalid fixtures failed with expected diagnostics: 11/11
-Expected diagnostic assertions: PASS (11/11)
+Invalid fixtures failed with expected diagnostics: 14/14
+Expected diagnostic assertions: PASS (14/14)
 Result: PASS
 ```
 
