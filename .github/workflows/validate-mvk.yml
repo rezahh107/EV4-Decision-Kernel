@@ -23,7 +23,7 @@ jobs:
           package-manager-cache: false
 
       - name: Install MVK validator dependencies
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Validate MVK fixtures and gates
         run: npm run validate:mvk
