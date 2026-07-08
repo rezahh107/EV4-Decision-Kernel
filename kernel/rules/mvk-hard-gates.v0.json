@@ -1,1 +1,92 @@
-{"rule_set_id":"mvk-hard-gates.v0","version":"0.1.0-mvk","scope":"Semantic checks implemented by validate-mvk.mjs; not a full rule engine.","rules":[{"rule_id":"R-MVK-001","constraint_id":"constraint.builder_forbidden_unlisted_fallback","status":"fixture_tested"},{"rule_id":"R-MVK-002","constraint_id":"constraint.builder_requires_ce_closure","status":"fixture_tested"},{"rule_id":"R-MVK-005","constraint_id":"constraint.absolute_requires_containing_block","status":"fixture_tested"},{"rule_id":"R-MVK-006","constraint_id":"constraint.reject_nested_clickable_topology","status":"fixture_tested","validated_cases":["clickable_ancestor_and_clickable_descendant","interactive_self_inside_clickable_ancestor","interactive_self_with_clickable_descendant","missing_interaction_topology"]},{"rule_id":"R-MVK-008","constraint_id":"constraint.project_gate_requires_kernel_pin","status":"fixture_tested"}]}
+{
+  "rule_set_id": "mvk-hard-gates.v0",
+  "version": "0.2.5-mvk-validation-repair",
+  "scope": "Schema conformance plus MVK-local semantic checks implemented by validate-mvk.mjs; not a full rule engine.",
+  "rules": [
+    {
+      "rule_id": "R-MVK-001",
+      "constraint_id": "constraint.builder_forbidden_unlisted_fallback",
+      "status": "fixture_tested",
+      "validator": "validateBuilderResolution",
+      "diagnostic_codes": [
+        "BUILDER_FALLBACK_ELEMENT_NOT_LISTED",
+        "BUILDER_FALLBACK_SUBSTITUTION_INVALID",
+        "SELECTED_ELEMENT_ID_NOT_IN_CORE_REGISTRY"
+      ]
+    },
+    {
+      "rule_id": "R-MVK-002",
+      "constraint_id": "constraint.builder_requires_ce_closure",
+      "status": "fixture_tested",
+      "validator": "validateBuilderResolution, validateCeClosure",
+      "diagnostic_codes": [
+        "BUILDER_READY_REQUIRES_CE_CLOSURE",
+        "BUILDER_READY_REQUIRES_DECISION_REF",
+        "BUILDER_READY_REQUIRES_NO_OPEN_ARCHITECTURE_DECISIONS",
+        "BUILDER_READY_REQUIRES_NO_OPEN_CONSTRUCTABILITY_DECISIONS",
+        "BUILDER_READY_REQUIRES_PROVEN_CONSTRUCTABILITY"
+      ]
+    },
+    {
+      "rule_id": "R-MVK-003",
+      "constraint_id": "mvk-local.selected_candidate_lock",
+      "constraint_origin": "mvk_local_rule_not_core_constraint",
+      "status": "fixture_tested",
+      "validator": "validateElementDecision, validateBuilderResolution",
+      "diagnostic_codes": [
+        "SELECTED_ELEMENT_MUST_APPEAR_AS_SELECTED_CANDIDATE",
+        "BUILDER_ACTION_REQUIRES_LOCKED_DECISION_REF",
+        "ELEMENT_DECISION_OWNER_MUST_BE_ARCHITECT"
+      ]
+    },
+    {
+      "rule_id": "R-MVK-005",
+      "constraint_id": "constraint.absolute_requires_containing_block",
+      "status": "fixture_tested",
+      "validator": "validatePositionDecision, validateBuilderResolution",
+      "diagnostic_codes": [
+        "ABSOLUTE_REQUIRES_CONTAINING_BLOCK_REQUIRED_TRUE",
+        "ABSOLUTE_REQUIRES_CONTAINING_BLOCK_PROOF",
+        "CONTAINING_BLOCK_PROOF_PRESENT_TRUE_REQUIRED",
+        "CONTAINING_BLOCK_PARENT_NODE_REF_REQUIRED",
+        "CONTAINING_BLOCK_PARENT_POSITIONING_STRATEGY_REQUIRED",
+        "CONTAINING_BLOCK_EVIDENCE_REFS_REQUIRED",
+        "RELATIVE_PARENT_PROOF_PRESENT_TRUE_REQUIRED"
+      ]
+    },
+    {
+      "rule_id": "R-MVK-006",
+      "constraint_id": "constraint.reject_nested_clickable_topology",
+      "status": "fixture_tested",
+      "validator": "validateInteractionTopology",
+      "diagnostic_codes": [
+        "INTERACTION_TOPOLOGY_REQUIRED",
+        "NESTED_CLICKABLE_TOPOLOGY_REJECTED",
+        "INTERACTIVE_ELEMENT_INSIDE_CLICKABLE_ANCESTOR",
+        "INTERACTIVE_ELEMENT_WITH_CLICKABLE_DESCENDANT"
+      ],
+      "validated_cases": [
+        "clickable_ancestor_and_clickable_descendant",
+        "interactive_self_inside_clickable_ancestor",
+        "interactive_self_with_clickable_descendant",
+        "missing_interaction_topology"
+      ]
+    },
+    {
+      "rule_id": "R-MVK-008",
+      "constraint_id": "constraint.project_gate_requires_kernel_pin",
+      "status": "fixture_tested",
+      "validator": "validateKernelPin, validateProjectGatePacket",
+      "diagnostic_codes": [
+        "KERNEL_PIN_REQUIRED",
+        "KERNEL_PIN_VERSION_REQUIRED",
+        "KERNEL_PIN_COMMIT_SHA_INVALID",
+        "KERNEL_PIN_MANIFEST_REF_REQUIRED",
+        "KERNEL_PIN_MANIFEST_SHA256_INVALID",
+        "KERNEL_PIN_COMPATIBILITY_PROFILE_REQUIRED",
+        "KERNEL_PIN_PROFILE_ID_REQUIRED",
+        "KERNEL_PIN_CONSUMER_STAGE_REQUIRED"
+      ]
+    }
+  ]
+}
