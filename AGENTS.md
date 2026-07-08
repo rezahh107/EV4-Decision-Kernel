@@ -15,7 +15,8 @@ Agents working here must not implement a full platform unless explicitly instruc
 Current safe operating mode:
 
 ```text
-Wave 0 / MVK planning only
+Kernel-local MVK implementation and validation hardening.
+Full registry expansion, release automation, reusable workflows, cross-repo integration, runtime evidence, source manifests, and Element Decision Cards remain out of scope until explicitly prompted.
 ```
 
 ---
@@ -61,6 +62,7 @@ Workbook-derived rule != official Elementor capability.
 Builder missing evidence -> ask/repair, not guess.
 Project Gate verifies evidence and authority; it does not design.
 Critical behavioral gates must not remain prose-only.
+Invalid fixtures must assert expected diagnostics, not just any failure.
 ```
 
 ---
@@ -78,9 +80,11 @@ Do not create these until an explicit later wave asks for them:
 - scheduled official-doc monitoring
 - migration/deprecation automation
 - signed validation outputs
+- source manifest expansion
+- Element Decision Cards
 ```
 
-The first target is a small, enforceable MVK plus one vertical E2E slice.
+The current target is a small, enforceable MVK plus one vertical E2E slice. Keep validation local, deterministic, and fixture-proven.
 
 ---
 
@@ -121,6 +125,10 @@ Concept
 ```
 
 A Critical rule with status `prose_only` or `schema_backed` is an open enforcement gap.
+
+A rule may be `fixture_tested` only when the local validator and valid/invalid fixtures prove the intended behavior and invalid fixtures assert the expected diagnostic codes.
+
+A rule may be `ci_enforced` only after the relevant workflow run is observed passing on the PR or target branch.
 
 ---
 
@@ -172,10 +180,11 @@ Do not mix UX tone rules into Kernel domain validation.
 Allowed now:
 
 ```text
-- Wave 0 ADR drafts
-- MVK planning artifacts
+- Kernel-local MVK schemas, fixtures, and validators
+- JSON Schema conformance validation for MVK fixtures
+- structured diagnostic codes for validator failures
+- behavioral coverage matrix alignment
 - evidence model docs
-- behavioral rule coverage matrix
 - UX boundary docs
 - kernel ownership and distribution decision docs
 ```
@@ -188,6 +197,9 @@ Not allowed yet:
 - release packaging
 - cross-repo CI coupling
 - Project Gate domain validation logic
+- source manifests
+- Element Decision Cards
+- downstream runtime enforcement claims
 ```
 
 ---
@@ -203,6 +215,8 @@ Before opening or merging a patch, answer:
 4. Did it avoid adding local rule forks?
 5. Did it make the next MVK step clearer?
 6. Did it avoid claiming runtime validity without runtime evidence?
+7. Did invalid fixtures assert expected diagnostic codes?
+8. Did coverage status avoid downstream or CI claims without evidence?
 ```
 
 If any answer is no, revise the patch before finalizing.
