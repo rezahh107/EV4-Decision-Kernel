@@ -13,6 +13,7 @@ Scope: First local schema, fixture, and validator package
 - Invalid fixtures fail local validation.
 - Validator includes semantic checks beyond shallow field presence.
 - Nested-clickable topology fails closed for ancestor + descendant, interactive self + clickable ancestor, interactive self + clickable descendant, and missing topology.
+- Kernel pin validation fails closed for malformed commit SHA, manifest SHA-256, manifest reference, kernel version, and compatibility profile.
 - Project Gate packet carries pin, lineage, validation reports, and gate decision only.
 - Documentation does not claim CI enforcement unless CI actually runs the validator.
 ```
@@ -29,7 +30,7 @@ Expected output:
 MVK validator summary
 Registries: PASS
 Valid fixtures passed: 4/4
-Invalid fixtures failed as expected: 9/9
+Invalid fixtures failed as expected: 10/10
 Result: PASS
 ```
 
