@@ -27,3 +27,6 @@ jobs:
 
       - name: Validate MVK fixtures and gates
         run: npm run validate:mvk
+
+      - name: Validate roadmap memory consistency
+        run: npm run validate:roadmap-memory
