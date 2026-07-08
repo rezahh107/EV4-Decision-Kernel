@@ -1,1 +1,7 @@
-{"fixture_case":"class_priority_source_missing","purpose":"Expected diagnostic: CLASS_PRIORITY_SOURCE_MISSING"}
+{
+  "purpose": "Real invalid fixture: remove the official class-priority source from the evaluated manifest.",
+  "mutations": {
+    "remove_source_refs": ["src.elementor.v4.class_priority"]
+  },
+  "expected_diagnostics": ["CLASS_PRIORITY_SOURCE_MISSING", "UNKNOWN_SOURCE_REF"]
+}
