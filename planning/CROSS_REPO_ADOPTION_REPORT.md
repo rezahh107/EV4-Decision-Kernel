@@ -41,6 +41,25 @@ Do-not rules:
 - do not import V3 as a design target;
 - do not claim runtime proof from source evidence.
 
+## Four Truths Framework
+
+KROAD-001 uses four truth domains. Adoption recommendations must preserve these boundaries.
+
+| Truth domain | What it means | What it can prove | What it cannot prove |
+|---|---|---|---|
+| Documentation Truth | Official Elementor/help/developer documentation, source manifests, documented capability notes, and reviewed knowledge-base claims. | A capability or behavior is documented by a source at an inspected locator or snapshot. | Target-project availability, active license, user permission, constructability, Builder execution, runtime behavior, downstream acceptance, or production readiness. |
+| Source Truth | Saved project/source evidence such as WordPress/Elementor exports, controlled source snapshots, registries, source manifests, and immutable source packages. | The captured source/export contained specific saved data, references, registries, hashes, or provenance at capture time. | Rendered DOM, computed style, viewport behavior, final correlation, frontend runtime behavior, or production readiness. |
+| Runtime Truth | Browser-observed rendered facts such as DOM, geometry, computed style, viewport facts, visibility, runtime relationships, and bounded source-runtime binding evidence. | A captured runtime context exhibited observed browser facts within the stated viewport/session limits. | Official capability, saved source identity without binding evidence, global production behavior, complete breakpoint semantics, downstream enforcement, or production readiness. |
+| Project Truth | Target-project-specific evidence such as enabled features, active license, user permissions, environment profile, dependency availability, validated fixtures, and downstream/project gate acceptance. | A specific project/environment has or lacks required availability, permission, dependency, or acceptance evidence. | General Elementor truth, official documentation truth, unrelated runtime sessions, or correctness outside the validated project/evidence scope. |
+
+Boundary rules:
+
+- Documentation Truth may support guidance, but by itself it is not Project Truth or Runtime Truth.
+- Source Truth may prove saved configuration, but by itself it is not Runtime Truth.
+- Runtime Truth may prove captured browser facts, but by itself it is not production readiness.
+- Project Truth is scoped to the inspected project/environment and must not be generalized to all Elementor projects.
+- A decision may combine truth domains only through explicit evidence references, evidence tier, resolver status, and forbidden-overclaim guards.
+
 ## Classification Vocabulary
 
 - `adopt_now`: Small principle, contract, vocabulary, or boundary immediately useful for the Kernel roadmap. It does not mean code import, platform import, or implementation in this PR.
@@ -284,7 +303,7 @@ After this report is merged, the next recommended task is:
 KROAD-003 — Decision Record Schema v2 + Migration Plan
 ```
 
-No KROAD meaning, dependency, scope, acceptance criteria, or evidence requirement changes are proposed by this report. `planning/KERNEL_EXECUTION_PLAN.md` does not need to change.
+No KROAD meaning, dependency, scope, acceptance criteria, or evidence requirement changes are proposed by this report. `planning/KERNEL_EXECUTION_PLAN.md` does not need to change for roadmap-design reasons; if repository status is recorded there, it should be updated only to avoid status drift after merge.
 
 ## Completion Rule
 
