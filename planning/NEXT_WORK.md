@@ -1,7 +1,7 @@
 # EV4 Decision Kernel — Next Work
 
 ## Last Updated
-PR #11 — Taxonomy + Execution-Risk Boundaries
+PR #12 — Add repository-local planning dashboard and repository-memory rules
 
 ## Status Summary
 Current completed milestone: KROAD-002.
@@ -25,7 +25,7 @@ Inspect these repositories:
 - [x] KROAD-002 — Taxonomy + Execution-Risk Boundaries
   - Update note: PR #11 completed the decision governance taxonomy and execution-risk boundary foundation.
 
-## Remaining Work
+## Remaining Work (including next task)
 - [ ] KROAD-001 — Cross-Repository Adoption Report
 - [ ] KROAD-003 — Decision Record Schema v2 + Migration Plan
 - [ ] KROAD-004 — P0 Decision Matrices
