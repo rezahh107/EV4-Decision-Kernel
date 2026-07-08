@@ -19,7 +19,11 @@ Evaluate strict v0.4.1 thresholds with:
 node tools/audit-behavioral-coverage.mjs --mode strict
 ```
 
-## Expected Interpretation During the Current Phase
+## Current Phase
+
+This phase adds Elementor V4 doc coverage rows. The report still does not prove full documentation mirroring, exporter implementation, runtime collection, Project Gate integration, downstream rejection, Builder execution, or production readiness.
+
+## Expected Interpretation
 
 ```text
 advisory pass:
@@ -28,30 +32,9 @@ advisory pass:
   coverage warnings and threshold gaps may remain.
 
 strict fail:
-  one or more v0.4.1 Critical/High thresholds are still unmet;
+  one or more v0.4.1 Critical/High thresholds may still be unmet;
   this can be expected while rows remain below ci_enforced, sequence_ci_enforced,
   runtime_monitor_enforced, or downstream_contract_enforced as applicable.
-```
-
-## Prompt 5 Report Boundary
-
-Prompt 5 adds evidence workspace rows and may increase rule count. The report still does not prove exporter implementation, runtime collection, Project Gate integration, downstream rejection, Builder execution, or production readiness.
-
-## Required v0.4.1 Report Sections
-
-```text
-source
-mode
-outcome
-parse_status
-rules parsed
-risk counts
-status counts
-threshold violations
-overclaim risk checks
-structural errors
-open enforcement gaps
-rules
 ```
 
 ## Overclaim Boundary
