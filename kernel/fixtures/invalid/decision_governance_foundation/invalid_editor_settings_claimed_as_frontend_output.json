@@ -1,0 +1,1 @@
+{"fixture_id":"invalid_editor_settings_claimed_as_frontend_output","expected_diagnostics":["DGOV_EDITOR_SETTINGS_NOT_FRONTEND_OUTPUT"],"records":[{"record_id":"invalid.editor.output","selected_target_scope":"elementor_v4","evidence_source":"project_export","source_field":"editor_settings","claim_type":"frontend_output","builder_ready":false}]}
