@@ -28,7 +28,8 @@ const fixturePlan = [
   ['invalid/builder_button_inside_clickable_ancestor_invalid.json', 'builder_resolution_result', true],
   ['invalid/builder_button_with_clickable_descendant_invalid.json', 'builder_resolution_result', true],
   ['invalid/builder_missing_interaction_topology_invalid.json', 'builder_resolution_result', true],
-  ['invalid/builder_linked_image_inside_clickable_ancestor_invalid.json', 'builder_resolution_result', true]
+  ['invalid/builder_linked_image_inside_clickable_ancestor_invalid.json', 'builder_resolution_result', true],
+  ['invalid/project_gate_malformed_kernel_pin_invalid.json', 'project_gate_acceptance_packet', true]
 ];
 
 const elementRegistryById = new Map();
@@ -49,21 +50,48 @@ function hasText(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function isObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
 function requireFields(record, fields, errors, label) {
   for (const field of fields) {
-    failWhen(errors, !(field in record), `${label}: missing ${field}`);
+    failWhen(errors, !isObject(record) || !(field in record), `${label}: missing ${field}`);
   }
 }
 
 function validateRegistries() {
   const errors = [];
-  const elements = readJson('kernel/registries/elements.core.v0.json');
-  const constraints = readJson('kernel/registries/constraints.core.v0.json');
-  const manifest = readJson('kernel/registries/registry-manifest.v0.json');
-  const ids = elements.elements.map((entry) => entry.element_id);
-  const uniqueIds = new Set(ids);
+  let elements;
+  let constraints;
+  let manifest;
 
   elementRegistryById.clear();
+
+  try {
+    elements = readJson('kernel/registries/elements.core.v0.json');
+    constraints = readJson('kernel/registries/constraints.core.v0.json');
+    manifest = readJson('kernel/registries/registry-manifest.v0.json');
+  } catch (error) {
+    errors.push(`failed to read or parse registry files: ${error.message}`);
+    return errors;
+  }
+
+  if (!isObject(elements) || !Array.isArray(elements.elements)) {
+    errors.push('elements.core.v0.json: missing or invalid elements array');
+    return errors;
+  }
+  if (!isObject(constraints) || !Array.isArray(constraints.constraints)) {
+    errors.push('constraints.core.v0.json: missing or invalid constraints array');
+    return errors;
+  }
+  if (!isObject(manifest) || !Array.isArray(manifest.registries)) {
+    errors.push('registry-manifest.v0.json: missing or invalid registries array');
+    return errors;
+  }
+
+  const ids = elements.elements.map((entry) => entry.element_id);
+  const uniqueIds = new Set(ids);
 
   failWhen(errors, ids.length !== 8 || uniqueIds.size !== 8, 'element IDs must be unique and limited to eight MVK IDs');
   for (const id of coreElementIds) {
@@ -71,13 +99,14 @@ function validateRegistries() {
   }
 
   for (const entry of elements.elements) {
-    requireFields(entry, ['element_id', 'display_name', 'element_generation', 'category', 'semantic_roles', 'meaningful_content_allowed', 'interactive_capability', 'requires_pro', 'requires_permission', 'status', 'evidence'], errors, entry.element_id || 'element');
-    failWhen(errors, !hasItems(entry.semantic_roles), `${entry.element_id}: semantic_roles required`);
-    failWhen(errors, !hasItems(entry.evidence), `${entry.element_id}: evidence required`);
-    elementRegistryById.set(entry.element_id, entry);
+    const label = entry?.element_id || 'element';
+    requireFields(entry, ['element_id', 'display_name', 'element_generation', 'category', 'semantic_roles', 'meaningful_content_allowed', 'interactive_capability', 'requires_pro', 'requires_permission', 'status', 'evidence'], errors, label);
+    failWhen(errors, !hasItems(entry?.semantic_roles), `${label}: semantic_roles required`);
+    failWhen(errors, !hasItems(entry?.evidence), `${label}: evidence required`);
+    if (hasText(entry?.element_id)) elementRegistryById.set(entry.element_id, entry);
   }
 
-  failWhen(errors, !hasItems(constraints.constraints) || constraints.constraints.length !== 6, 'expected six MVK constraints');
+  failWhen(errors, constraints.constraints.length !== 6, 'expected six MVK constraints');
   failWhen(errors, !hasItems(manifest.registries), 'registry manifest must list registries');
   return errors;
 }
@@ -156,10 +185,33 @@ function validateBuilderResolution(record) {
   return errors;
 }
 
+function validateKernelPin(pin, errors, label) {
+  if (!isObject(pin)) {
+    errors.push(`${label}: kernel_pin must be an object`);
+    return;
+  }
+
+  requireFields(pin, ['kernel_version', 'kernel_source_commit', 'registry_manifest_ref', 'registry_manifest_sha256', 'compatibility_profile'], errors, `${label}.kernel_pin`);
+  failWhen(errors, !hasText(pin.kernel_version), `${label}.kernel_pin: kernel_version must be a non-empty string`);
+  failWhen(errors, !/^[a-f0-9]{40}$/i.test(pin.kernel_source_commit || ''), `${label}.kernel_pin: kernel_source_commit must be a 40-character hex string`);
+  failWhen(errors, !hasText(pin.registry_manifest_ref), `${label}.kernel_pin: registry_manifest_ref must be a non-empty string`);
+  failWhen(errors, !/^[a-f0-9]{64}$/i.test(pin.registry_manifest_sha256 || ''), `${label}.kernel_pin: registry_manifest_sha256 must be a 64-character hex string`);
+
+  if (!isObject(pin.compatibility_profile)) {
+    errors.push(`${label}.kernel_pin: compatibility_profile must be an object`);
+    return;
+  }
+
+  requireFields(pin.compatibility_profile, ['profile_id', 'consumer_stage'], errors, `${label}.kernel_pin.compatibility_profile`);
+  failWhen(errors, !hasText(pin.compatibility_profile.profile_id), `${label}.kernel_pin.compatibility_profile: profile_id must be a non-empty string`);
+  failWhen(errors, !hasText(pin.compatibility_profile.consumer_stage), `${label}.kernel_pin.compatibility_profile: consumer_stage must be a non-empty string`);
+}
+
 function validateProjectGatePacket(record) {
   const errors = [];
   requireFields(record, ['packet_id', 'kernel_pin', 'input_artifact_refs', 'validation_reports', 'lineage', 'gate_decision'], errors, 'project_gate_acceptance_packet');
   failWhen(errors, 'selected_element_id' in record || 'selected_position' in record || 'candidate_elements' in record, 'Project Gate packet must not contain design-choice fields');
+  if (record.kernel_pin) validateKernelPin(record.kernel_pin, errors, 'project_gate_acceptance_packet');
   if (record.gate_decision === 'accept') {
     failWhen(errors, !record.kernel_pin, 'accept requires kernel_pin');
     failWhen(errors, !hasItems(record.validation_reports) || !record.validation_reports.some((report) => report.status === 'passed'), 'accept requires at least one passed validation report');
