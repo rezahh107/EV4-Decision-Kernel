@@ -43,16 +43,16 @@ npm run validate:mvk
 node tools/audit-behavioral-coverage.mjs --mode advisory
 ```
 
-`npm run validate:mvk` now runs the repaired Prompt 2.5 validator first, then the Prompt 3 source/card validator. Expected source/card portion:
+`npm run validate:mvk` runs the repaired Prompt 2.5 validator first, then the Prompt 3 source/card validator. Expected source/card portion:
 
 ```text
 Source/card validator summary
 Schema setup: PASS (2/2 schemas compiled)
 Source/card integrity: PASS
-Schema validation: PASS (executed 9/9; valid fixtures schema-clean 3/3)
-Valid fixtures passed schema + semantic validation: 3/3
-Invalid fixtures failed with expected diagnostics: 6/6
-Expected diagnostic assertions: PASS (6/6)
+Schema validation: PASS (executed 11/11; valid fixtures schema-clean 4/4)
+Valid fixtures passed schema + semantic validation: 4/4
+Invalid fixtures failed with expected diagnostics: 7/7
+Expected diagnostic assertions: PASS (7/7)
 Result: PASS
 ```
 
