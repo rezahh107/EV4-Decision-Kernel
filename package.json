@@ -1,1 +1,14 @@
-{"name":"ev4-decision-kernel","version":"0.1.0-mvk","private":true,"type":"module","scripts":{"validate:mvk":"node kernel/validator/validate-mvk.mjs"},"description":"Kernel-local MVK schema, fixture, and validator package."}
+{
+  "name": "ev4-decision-kernel",
+  "version": "0.1.0-mvk",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate:mvk": "node kernel/validator/validate-mvk.mjs"
+  },
+  "dependencies": {
+    "ajv": "8.17.1",
+    "ajv-formats": "3.0.1"
+  },
+  "description": "Kernel-local MVK schema, fixture, and validator package."
+}
