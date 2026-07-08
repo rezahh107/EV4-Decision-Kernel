@@ -1,7 +1,7 @@
 # MVK Validation Repair Notes — Prompt 2.5
 
 **Status:** implementation note for MVK validation repair  
-**Scope:** local schema conformance, structured diagnostics, fixture expectations, and coverage alignment  
+**Scope:** local schema conformance, structured diagnostics, fixture expectations, npm dependency locking, and coverage alignment  
 **Owner:** `EV4-Decision-Kernel`
 
 ## What changed
@@ -13,6 +13,9 @@
 - Invalid fixtures assert expected diagnostic codes.
 - R-MVK-003 is present in `kernel/rules/mvk-hard-gates.v0.json` and the coverage matrix.
 - R-MVK-005 now has a valid `position_decision_record` fixture matching the invalid absolute-position fixture.
+- `package-lock.json` pins the npm dependency tree.
+- `Validate MVK` installs dependencies with `npm ci`.
+- `Behavioral Coverage Audit` runs both advisory and strict modes in CI.
 ```
 
 ## Schema map
@@ -52,7 +55,15 @@ Schema diagnostics use `SCHEMA_CONFORMANCE` unless a later prompt intentionally 
 
 Ajv documentation states that Draft 2020-12 support uses a separate Ajv class and that Draft 2020-12 cannot be mixed with previous JSON Schema versions in the same Ajv instance. The MVK schemas use Draft 2020-12, so the validator uses `ajv/dist/2020.js`.
 
-Source: https://ajv.js.org/json-schema.html
+npm documentation states that `package-lock.json` describes the exact dependency tree and is intended to be committed so teammates, deployments, and CI install the same dependencies. npm documentation also defines `npm ci` as the clean-install command intended for automated environments with an existing lockfile.
+
+Sources:
+
+```text
+https://ajv.js.org/json-schema.html
+https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json
+https://docs.npmjs.com/cli/v10/commands/npm-ci
+```
 
 ## Explicitly not included
 
