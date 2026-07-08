@@ -1,0 +1,1 @@
+{"fixture_id":"invalid_builder_ready_with_unproven_capability","expected_diagnostics":["DGOV_BUILDER_READY_REQUIRES_CAPABILITY_PROOF"],"records":[{"record_id":"invalid.builder.ready","selected_target_scope":"elementor_v4","claim_type":"documented_capability","capability_proof_status":"unproven","builder_ready":true}]}
