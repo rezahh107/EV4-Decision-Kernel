@@ -3,13 +3,13 @@
 ## Status
 
 - **KROAD:** `KROAD-001 — Cross-Repository Adoption Report`
-- **Status:** read-only adoption report
-- **Repository state:** not complete on `main` until this PR is merged
+- **Status:** completed read-only adoption report
+- **Repository state:** completed on `main` when PR #13 merged this report
 - **Scope:** planning evidence only; no code import, no automation, no external repository modification
 
 ## Scope
 
-This report inspected selected repository documents and contracts only. It did not audit full repository trees, run CI, execute tests, inspect every fixture, or validate current release artifacts.
+This report inspected selected repository documents and contracts only. It did not audit full repository trees, run CI, execute tests, inspect every fixture, or validate release artifacts.
 
 | Repository | Inspected paths / document types | Not inspected |
 |---|---|---|
@@ -22,18 +22,17 @@ This report inspected selected repository documents and contracts only. It did n
 
 ## KROAD-001 Source of Truth
 
-`KROAD-001` is a read-only roadmap step. Its purpose is to discover which knowledge, contracts, schemas, evidence boundaries, validation patterns, and diagnostics patterns from related repositories should be adopted, adapted, referenced, or excluded.
+`KROAD-001` was a read-only roadmap step. Its purpose was to discover which knowledge, contracts, schemas, evidence boundaries, validation patterns, and diagnostics patterns from related repositories should be adopted, adapted, referenced, or excluded.
 
-Expected output:
+The required output was this committed adoption report with:
 
-- a committed adoption report such as `planning/CROSS_REPO_ADOPTION_REPORT.md`;
 - explicit classification for every inspected repository;
 - source or path references for findings;
 - separation of source truth, runtime truth, project truth, and documentation truth;
 - identification of what must not be imported;
 - recommendation about whether roadmap order should change.
 
-Do-not rules:
+Do-not rules preserved by this report:
 
 - do not modify external repositories;
 - do not copy large systems into Kernel;
@@ -62,8 +61,8 @@ Boundary rules:
 
 ## Classification Vocabulary
 
-- `adopt_now`: Small principle, contract, vocabulary, or boundary immediately useful for the Kernel roadmap. It does not mean code import, platform import, or implementation in this PR.
-- `adapt_later`: Useful pattern for a future KROAD item, but not implemented now.
+- `adopt_now`: Small principle, contract, vocabulary, or boundary immediately useful for the Kernel roadmap. It does not mean code import, platform import, or implementation in this report.
+- `adapt_later`: Useful pattern for a future KROAD item, but not implemented here.
 - `reference_only`: Useful for comparison or inspiration only; no direct contract transfer.
 - `do_not_import`: Explicitly forbidden, unsafe, out of scope, or likely to create false authority in Kernel.
 
@@ -71,13 +70,11 @@ Boundary rules:
 
 The inspected repositories contain useful evidence-boundary, source-precedence, schema, diagnostics, fixture, and producer-boundary patterns. Kernel should adopt only small governance principles now, keep implementation patterns for later KROAD items, and avoid importing platforms, collectors, exporters, scoring engines, or V3 design semantics.
 
-Current roadmap order should remain unchanged. After this report is merged and repository memory is updated, the next recommended roadmap step is `KROAD-003 — Decision Record Schema v2 + Migration Plan`.
+Current roadmap order remains unchanged. After KROAD-001, the next recommended roadmap step is `KROAD-003 — Decision Record Schema v2 + Migration Plan`.
 
 ## Repository Findings
 
 ### `rezahh107/EDAS-v4`
-
-**Inspected scope:** `README.md`, `SSOT.md`, `PLANS.md`, `pyproject.toml`, `schemas/truth-report.schema.json`.
 
 **adopt_now**
 
@@ -88,7 +85,7 @@ Current roadmap order should remain unchanged. After this report is merged and r
 **adapt_later**
 
 - `TruthReport` shape, including coverage, findings, formula projections, diagnostics, and deterministic hash concepts, for `KROAD-003`, `KROAD-007`, and `KROAD-018`.
-- Atomic V4 / Legacy V3 / Hybrid / Unknown classification as evidence-context vocabulary only, for source-boundary discussions.
+- Atomic V4 / Legacy V3 / Hybrid / Unknown classification as evidence-context vocabulary only.
 - Fixture-blocked capability policy for `KROAD-008`.
 
 **reference_only**
@@ -100,15 +97,13 @@ Current roadmap order should remain unchanged. After this report is merged and r
 
 - Do not make V3 a valid Kernel design target.
 - Do not copy EDAS code, full schemas, GUI, CLI, or registry implementation into Kernel.
-- Do not claim runtime/browser proof from EDAS-v4; inspected material reports runtime browser evidence as intentionally not implemented.
+- Do not claim runtime/browser proof from EDAS-v4.
 
 **Kernel implications**
 
 Useful for decision-record vocabulary, resolver no-guess behavior, fixture-blocked status, and future release-gate concepts. It should not shift Kernel from V4 decision governance into an EDAS-style evidence compiler.
 
 ### `rezahh107/elementor-v4-knowledge-base`
-
-**Inspected scope:** `README.md`, `QUALITY_POLICY.md`, `CONTRIBUTING.md`, `manifests/stages.yaml`.
 
 **adopt_now**
 
@@ -119,7 +114,7 @@ Useful for decision-record vocabulary, resolver no-guess behavior, fixture-block
 **adapt_later**
 
 - Source freshness, content fingerprint, coverage manifest, and official-doc backlog patterns for `KROAD-017`.
-- Generated artifact drift checks as a future release/readiness idea, not this PR.
+- Generated artifact drift checks as a future release/readiness idea.
 
 **reference_only**
 
@@ -130,15 +125,13 @@ Useful for decision-record vocabulary, resolver no-guess behavior, fixture-block
 
 - Do not treat KB documents as runtime truth, project truth, active license proof, or production readiness.
 - Do not mirror the full Elementor documentation corpus inside Kernel.
-- Do not treat `storage_status: committed` or committed markdown as complete product truth.
+- Do not treat committed markdown as complete product truth.
 
 **Kernel implications**
 
 Useful for official-source governance and freshness planning. It should support Kernel source labels and evidence refs, not replace downstream project/runtime evidence.
 
 ### `rezahh107/EV4-Workbook-Jinja`
-
-**Inspected scope:** `README.md`, `AGENTS.md`, `llm/model-contract.yaml`, `llm/TASK_TEMPLATE_FA.md`.
 
 **adopt_now**
 
@@ -166,8 +159,6 @@ Useful for official-source governance and freshness planning. It should support 
 Useful for process discipline, especially source precedence and scoped edit rules. It should not make Kernel depend on complete-repository ZIP handoff mechanics.
 
 ### `rezahh107/EDIS-Browser-Runtime-Evidence-Collector`
-
-**Inspected scope:** `README.md`, `docs/schema-reference.md`, `docs/determinism.md`.
 
 **adopt_now**
 
@@ -197,8 +188,6 @@ Useful runtime-boundary pattern among the inspected files. It should shape futur
 
 ### `rezahh107/EDIS-WordPress-Evidence-Exporter`
 
-**Inspected scope:** `README.md`, `docs/export-workflow.md`, `docs/quality-gates.md`.
-
 **adopt_now**
 
 - Saved-source producer boundary: WordPress exporter may prove saved source evidence, registries, provenance, and source snapshots only.
@@ -225,8 +214,6 @@ Useful runtime-boundary pattern among the inspected files. It should shape futur
 Useful for external evidence producer contracts and saved-source boundaries. It should inform `KROAD-012` without moving producer implementation into Kernel.
 
 ### `rezahh107/Elementor-Design-Audit-System`
-
-**Inspected scope:** `README.md`, `pyproject.toml`, `schemas/audit_report.schema.json`.
 
 **adopt_now**
 
@@ -262,14 +249,12 @@ Useful only as a reporting-shape reference and diagnostics vocabulary input. It 
 | Source/Evidence/Claim/Synthesis separation | `elementor-v4-knowledge-base` | `adopt_now` | `KROAD-003`, `KROAD-004`, `KROAD-017` | Helps keep documentation truth separate from project/runtime truth. | Official docs are not project availability or runtime proof. |
 | Source freshness and content fingerprints | `elementor-v4-knowledge-base` | `adapt_later` | `KROAD-017` | Useful for official docs freshness monitor. | Do not turn Kernel into a docs mirror. |
 | Always-read and source precedence rules | `EV4-Workbook-Jinja` | `adopt_now` | `KROAD-003`, `KROAD-010`, `KROAD-016` | Strengthens downstream task discipline and sequence consistency. | Workbook rules are not Elementor truth. |
-| Allowed paths and scoped edits | `EV4-Workbook-Jinja` | `adopt_now` | `KROAD-010`, `KROAD-016` | Helps prevent downstream contract bypass and silent mutation. | Do not import full ZIP workflow. |
 | Runtime/source boundary | `EDIS-Browser-Runtime-Evidence-Collector` | `adopt_now` | `KROAD-013` | Separates rendered runtime facts from source/project evidence. | Do not claim runtime proof before integration. |
 | Runtime package layout and privacy defaults | `EDIS-Browser-Runtime-Evidence-Collector` | `adapt_later` | `KROAD-013`, `KROAD-018` | Useful future runtime-evidence contract shape. | No collector implementation or monitor is imported now. |
 | Saved source producer boundary | `EDIS-WordPress-Evidence-Exporter` | `adopt_now` | `KROAD-012` | Defines what WordPress source evidence can and cannot prove. | Source export is not runtime truth. |
 | Semantic/instance hashes and package manifests | `EDIS-WordPress-Evidence-Exporter` | `adapt_later` | `KROAD-011`, `KROAD-012`, `KROAD-018` | Useful future package integrity and intake evidence. | Do not import storage, REST, Cron, or ZIP implementation. |
 | Workflow definition is not executed evidence | `EDIS-WordPress-Evidence-Exporter` | `adapt_later` | `KROAD-018` | Supports release-gate evidence discipline. | CI definition is not CI pass evidence. |
 | Diagnostics/violation report vocabulary | `Elementor-Design-Audit-System` | `adapt_later` | `KROAD-007` | Useful for L2 audit reporting. | Scores/fixes/confidence are not decision authority. |
-| Element-tree report projection | `Elementor-Design-Audit-System` | `reference_only` | `KROAD-007`, `KROAD-009` | May help display audit context. | Do not use as resolver correctness proof. |
 | Downstream consumer source-precedence discipline | `EV4-Workbook-Jinja`, Kernel rules | `adapt_later` | `KROAD-010` | Helps Architect/CE know when Kernel references are mandatory. | Do not claim downstream enforcement until downstream rejection evidence exists. |
 | Cross-turn mutation guard idea | `EV4-Workbook-Jinja`, Kernel rules | `adapt_later` | `KROAD-016` | Helps prevent downstream stages from silently rewriting upstream decisions. | Sequence enforcement requires replay/diff tests or equivalent. |
 
@@ -295,33 +280,30 @@ Useful only as a reporting-shape reference and diagnostics vocabulary input. It 
 
 ## Roadmap Impact
 
-Current roadmap order should remain unchanged. This report supports the existing sequence: adoption report first, then `KROAD-003 — Decision Record Schema v2 + Migration Plan`.
-
-After this report is merged, the next recommended task is:
+Current roadmap order remains unchanged. The next recommended task after this completed report is:
 
 ```text
 KROAD-003 — Decision Record Schema v2 + Migration Plan
 ```
 
-No KROAD meaning, dependency, scope, acceptance criteria, or evidence requirement changes are proposed by this report. `planning/KERNEL_EXECUTION_PLAN.md` does not need to change for roadmap-design reasons; if repository status is recorded there, it should be updated only to avoid status drift after merge.
+No KROAD meaning, dependency, scope, acceptance criteria, or evidence requirement changes are proposed by this report.
 
-## Completion Rule
+## Completion Evidence
 
-`KROAD-001` is not complete on `main` until this report is committed and the PR containing it is merged.
+`KROAD-001` is complete on `main` because PR #13 merged this report at `planning/CROSS_REPO_ADOPTION_REPORT.md`.
 
-This PR may update `planning/NEXT_WORK.md` to represent the expected post-merge state. The PR body must clearly state that completion takes effect only after merge.
+Completion evidence:
 
-After merge, `KROAD-001` may be marked complete because the repository will contain:
-
-- a committed adoption report;
+- committed adoption report;
 - inspected repository/path references;
 - explicit classifications for every listed repository;
-- a recommendation that roadmap order remains unchanged;
+- Four Truths Framework;
+- recommendation that roadmap order remains unchanged;
 - explicit limitations and do-not-import guards.
 
 ## Limitations / Not Verified
 
-- CI/check status was not verified.
+- CI/check status for the inspected external repositories was not verified by this report.
 - Full repository trees were not fully audited.
 - Full tests and fixtures were not run.
 - No external repository was modified.
