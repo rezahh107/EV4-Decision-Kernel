@@ -1,0 +1,37 @@
+{
+  "record_type": "position_decision_record",
+  "decision_id": "PDR-MVK-SVG-ABS-001",
+  "node_id": "node.decorative_svg",
+  "selected_position": "absolute",
+  "candidates": [
+    "static",
+    "relative",
+    "absolute"
+  ],
+  "rejected_positions": [
+    {
+      "position": "static",
+      "reason": "does not match locked visual placement"
+    },
+    {
+      "position": "relative",
+      "reason": "offset behavior is not the selected constructability path"
+    }
+  ],
+  "containing_block_required": true,
+  "containing_block_proof": {
+    "proof_present": true,
+    "parent_node_id": "node.root_wrapper",
+    "parent_node_ref": "node.root_wrapper",
+    "parent_position": "relative",
+    "parent_positioning_strategy": "relative",
+    "proof_type": "fixture_constructability_proof",
+    "evidence_refs": [
+      "EV-MVK-FIXTURE-001"
+    ]
+  },
+  "evidence_refs": [
+    "EV-MVK-FIXTURE-001"
+  ],
+  "decision_status": "locked"
+}
