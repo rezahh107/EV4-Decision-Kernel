@@ -1,1 +1,7 @@
-{"fixture_case":"v3_v4_difference_source_missing","purpose":"Expected diagnostic: V3_V4_DIFFERENCE_SOURCE_MISSING"}
+{
+  "purpose": "Real invalid fixture: remove the official V3/V4 differences source from the evaluated manifest.",
+  "mutations": {
+    "remove_source_refs": ["src.elementor.v4.v3_v4_differences"]
+  },
+  "expected_diagnostics": ["UNKNOWN_SOURCE_REF", "V3_V4_DIFFERENCE_SOURCE_MISSING"]
+}
