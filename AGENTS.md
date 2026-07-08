@@ -15,8 +15,8 @@ Agents working here must not implement a full platform unless explicitly instruc
 Current safe operating mode:
 
 ```text
-Kernel-local MVK implementation, validation hardening, source manifests, decision cards, Architect/CE source-card consumption boundaries, and Behavioral Rule Coverage v0.4.1 advisory audit governance.
-Full registry expansion, release automation, reusable workflows, cross-repo integration, runtime evidence, target-project availability evidence, Builder execution proof, external evidence contracts, and production readiness remain out of scope until explicitly prompted.
+Kernel-local MVK implementation, validation hardening, source manifests, decision cards, Architect/CE source-card consumption boundaries, external evidence workspace contracts, and Behavioral Rule Coverage v0.4.1 advisory audit governance.
+Full registry expansion, release automation, reusable workflows, cross-repo integration, runtime collectors, target-project availability exporters, Builder execution proof, downstream enforcement, and production readiness remain out of scope until explicitly prompted.
 ```
 
 ---
@@ -28,13 +28,13 @@ Do not weaken these boundaries:
 ```text
 Architect:
   owns candidate generation, comparison, selection, and decision records.
-  Architect may consume Kernel source/cards only as bounded candidate guidance.
-  Architect must not treat source/cards as proof of project availability or correct design choice.
+  Architect may consume Kernel source/cards and evidence workspace packages only as bounded evidence/context.
+  Architect must not treat source/cards, official docs, or schema-valid project evidence as proof of correct design choice.
 
 CE:
   owns constructability proof, dependency proof, and decision closure.
-  CE may consume Kernel source/cards only with required-evidence checks and limitations.
-  CE must not treat source/cards as proof of Builder execution or runtime validation.
+  CE may consume evidence packages only with required-evidence checks and limitations.
+  CE must not treat evidence workspace fixtures as Builder execution, runtime validation, downstream acceptance, or production readiness.
 
 Builder:
   owns execution resolution and safe action batches only.
@@ -42,13 +42,14 @@ Builder:
 
 Responsive:
   owns runtime responsive validation.
+  Runtime snapshot evidence supports only the captured context.
 
 Project Gate:
   owns lineage, hash, pin, schema, provenance, and handoff acceptance.
-  Project Gate must not become an Elementor design-decision owner.
+  Project Gate integration is not implemented by Prompt 5.
 
 Kernel:
-  owns shared vocabulary, schemas, evidence model, source manifests, decision cards, source/card consumption-boundary contracts, behavioral coverage governance, hard gates, fixtures, and validation-pack shape.
+  owns shared vocabulary, schemas, evidence model, source manifests, decision cards, source/card consumption-boundary contracts, evidence workspace contracts, behavioral coverage governance, hard gates, fixtures, and validation-pack shape.
   Kernel must not choose a section-specific design.
 ```
 
@@ -62,12 +63,14 @@ Agents must preserve these rules:
 Documented capability != enabled project capability.
 Schema valid != semantic valid.
 Semantic valid != runtime valid.
+provided_schema_valid != runtime_validated.
+validated_fixture != real project/runtime proof.
+collected_runtime_evidence != production_ready.
 Workbook-derived rule != official Elementor capability.
 Decision card guidance != correct design choice proof.
 CE constructability status != Builder execution.
 Builder missing evidence -> ask/repair, not guess.
 Project Gate verifies evidence and authority; it does not design.
-Critical behavioral gates must not remain prose-only without being reported as gaps.
 Invalid fixtures must assert expected diagnostics, not just any failure.
 Advisory CI != ci_enforced.
 CI success != production readiness.
@@ -97,13 +100,13 @@ Do not create these until an explicit later wave asks for them:
 - Builder repo integration
 - Responsive repo integration
 - Project Gate integration
-- runtime proof carriers
-- target-project availability proof carriers
-- external evidence contracts
-- browser/runtime evidence schemas
+- external exporter implementation
+- browser/runtime collector implementation
+- downstream runtime enforcement claims
+- production readiness proof carriers
 ```
 
-The current target is a small, enforceable MVK plus source/card consumption boundaries and an honest v0.4.1 behavioral audit model. Keep validation local, deterministic, and fixture-proven.
+The current target is a small, enforceable Kernel-local MVK plus source/card consumption boundaries, external evidence contracts, and an honest v0.4.1 behavioral audit model. Keep validation local, deterministic, and fixture-proven.
 
 ---
 
@@ -143,28 +146,9 @@ system_level_enforcement:
 
 A prompt instruction is not an enforcement carrier. A documentation audit workflow is not equivalent to rule-level CI enforcement unless the exact rule validator/test fails the build on violation.
 
-Minimum thresholds:
-
-```text
-Critical + per_artifact:
-  minimum: ci_enforced
-  target: downstream_contract_enforced
-
-Critical + cross_turn:
-  minimum: sequence_ci_enforced OR runtime_monitor_enforced
-  target: downstream_contract_enforced when a downstream boundary exists
-
-Critical + execution-only observability:
-  minimum: runtime_monitor_enforced
-
-High:
-  minimum: validator_backed
-  preferred: fixture_tested or ci_enforced
-```
-
 `advisory_ci_observed` never satisfies any Critical or High minimum by itself.
 
-A rule may be `fixture_tested` only when the local validator and valid/invalid fixtures prove the intended behavior and invalid fixtures assert the expected diagnostic codes.
+A rule may be `fixture_tested` only when the local validator and valid/invalid fixtures prove the intended behavior and invalid fixtures assert expected diagnostic codes.
 
 A rule may be `ci_enforced` only after the exact relevant workflow run is observed failing on violation and passing for valid artifacts.
 
@@ -172,50 +156,27 @@ A rule may be `downstream_contract_enforced` only after an inspected downstream 
 
 ---
 
-## 7. Local Profile Rule
+## 7. Evidence Workspace Rule
 
-Future EV4 repo profiles may contain:
-
-```text
-- KERNEL_PIN.json
-- profile.yaml
-- adapter-map.yaml
-- local CI wrapper
-- compatibility notes
-```
-
-They must not contain:
+Prompt 5 may add only Kernel-local evidence contracts:
 
 ```text
-- forked rule logic
-- weaker local evidence vocabulary
-- local override that lets Builder invent architecture
-- local override that lets Gate make domain decisions
+- evidence status vocabulary
+- evidence workspace envelope
+- project environment profile schema
+- WordPress context evidence schema
+- Elementor project availability evidence schema
+- runtime snapshot evidence schema
+- responsive runtime evidence schema
+- valid and invalid fixtures
+- deterministic validator diagnostics
 ```
+
+Prompt 5 must not implement exporters, collectors, downstream adapters, Project Gate intake, or production readiness proof.
 
 ---
 
-## 8. UX Boundary
-
-UX guidance belongs primarily to Builder-facing protocols, not to core Elementor capability logic.
-
-Use UX rules for:
-
-```text
-- user-facing batch formatting
-- correction flow
-- screenshot request shape
-- UI vocabulary sync
-- active silence after confirmation
-- escape hatch after repeated failure
-- no hidden-state claims
-```
-
-Do not mix UX tone rules into Kernel domain validation.
-
----
-
-## 9. Safe Patch Types Now
+## 8. Safe Patch Types Now
 
 Allowed now:
 
@@ -228,6 +189,7 @@ Allowed now:
 - source manifests and evidence labels
 - Element Decision Cards
 - Architect/CE source-card consumption-boundary schemas, fixtures, validators, and docs
+- external evidence workspace schemas, fixtures, validator, docs, and registry entries
 - UX boundary docs
 - kernel ownership and distribution decision docs
 ```
@@ -239,19 +201,18 @@ Not allowed yet:
 - validators that claim complete coverage
 - release packaging
 - cross-repo CI coupling
-- Project Gate domain validation logic
+- Project Gate domain validation logic or intake
 - downstream runtime enforcement claims
 - target-project availability proof claims
 - Builder execution proof claims
-- Responsive runtime validation proof claims
-- external evidence contracts
-- project availability schemas
-- runtime/browser evidence schemas
+- Responsive runtime global-proof claims
+- external exporter implementation
+- browser/runtime collector implementation
 ```
 
 ---
 
-## 10. Required Self-Check Before Finalizing a Patch
+## 9. Required Self-Check Before Finalizing a Patch
 
 Before opening or merging a patch, answer:
 
@@ -266,6 +227,7 @@ Before opening or merging a patch, answer:
 8. Did coverage status avoid downstream or CI claims without evidence?
 9. Did it avoid treating advisory CI as ci_enforced?
 10. Did it avoid treating cross_turn Critical rules as satisfied by single-artifact CI?
+11. Did evidence workspace fixtures avoid real-world evidence claims?
 ```
 
 If any answer is no, revise the patch before finalizing.

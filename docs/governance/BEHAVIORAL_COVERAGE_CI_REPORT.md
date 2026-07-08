@@ -29,9 +29,13 @@ advisory pass:
 
 strict fail:
   one or more v0.4.1 Critical/High thresholds are still unmet;
-  this can be expected while rules remain below ci_enforced, sequence_ci_enforced,
+  this can be expected while rows remain below ci_enforced, sequence_ci_enforced,
   runtime_monitor_enforced, or downstream_contract_enforced as applicable.
 ```
+
+## Prompt 5 Report Boundary
+
+Prompt 5 adds evidence workspace rows and may increase rule count. The report still does not prove exporter implementation, runtime collection, Project Gate integration, downstream rejection, Builder execution, or production readiness.
 
 ## Required v0.4.1 Report Sections
 
