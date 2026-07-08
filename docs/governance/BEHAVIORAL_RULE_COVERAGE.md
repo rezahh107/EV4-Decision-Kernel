@@ -1,6 +1,6 @@
 # Behavioral Rule Coverage — EV4 Decision Kernel
 
-**Version:** 0.3.0-source-cards  
+**Version:** 0.3.1-source-cards-repair  
 **Status:** Kernel-local schema / semantic validator / expected diagnostic fixture coverage for Prompt 3
 
 ## Enforcement Status
@@ -30,7 +30,7 @@ No rule is marked `ci_enforced` until a PR workflow run confirms `npm run valida
 | `R-MVK-SRC-001` | Official Elementor capability claims require official source refs. | Critical | `docs/sources/OFFICIAL_SOURCE_MANIFEST.md` | `official-source-manifest.sources[].claims`, `element-decision-card.official_source_refs` | `validate-source-cards.mjs` checks card refs against the source manifest | `official_source_manifest_valid.json`, `element_decision_cards_core_valid.json` | `official_source_missing_url_invalid.json` | `Validate MVK` / `npm run validate:mvk` | not_enforced | `fixture_tested` |
 | `R-MVK-SRC-002` | Workbook-derived educational models must not be promoted to official Elementor rules. | Critical | `docs/sources/OFFICIAL_SOURCE_MANIFEST.md` | `official-source-manifest.sources[].source_class`, `claims[].claim_type` | `validate-source-cards.mjs` rejects workbook-derived official platform capability proof | `official_source_manifest_valid.json` | `official_source_workbook_claims_official_invalid.json` | `Validate MVK` / `npm run validate:mvk` | not_enforced | `fixture_tested` |
 | `R-MVK-CARD-001` | Every MVK core element must have a decision card with minimum semantic children. | Critical | `docs/decision-cards/ELEMENT_DECISION_CARDS.md` | `element-decision-card.cards[]`, `minimum_semantic_children` | `validate-source-cards.mjs` requires exactly one card for every core element and semantic child depth | `element_decision_cards_core_valid.json` | `decision_card_unknown_element_id_invalid.json`, `decision_card_shallow_semantic_children_invalid.json` | `Validate MVK` / `npm run validate:mvk` | not_enforced | `fixture_tested` |
-| `R-MVK-CARD-002` | Decision cards must not claim project availability or runtime proof from official docs alone. | Critical | `docs/decision-cards/ELEMENT_DECISION_CARDS.md` | `element-decision-card.not_proven_by_official_docs`, forbidden proof claim scanner | `validate-source-cards.mjs` rejects project availability, runtime proof, Builder execution, and production readiness claims outside limitations | `element_decision_card_svg_valid.json` | `decision_card_claims_project_availability_invalid.json`, `decision_card_missing_evidence_invalid.json` | `Validate MVK` / `npm run validate:mvk` | not_enforced | `fixture_tested` |
+| `R-MVK-CARD-002` | Decision cards must not claim project availability or runtime proof from official docs alone. | Critical | `docs/decision-cards/ELEMENT_DECISION_CARDS.md` | `element-decision-card.not_proven_by_official_docs`, forbidden proof claim scanner | `validate-source-cards.mjs` rejects project availability, runtime proof, Builder execution, and production readiness claims in non-allowed paths | `element_decision_card_svg_valid.json` | `decision_card_claims_project_availability_invalid.json`, `decision_card_missing_evidence_invalid.json`, `decision_card_forbidden_token_in_summary_invalid.json` | `Validate MVK` / `npm run validate:mvk` | not_enforced | `fixture_tested` |
 
 ## Deferred Out-of-Scope Rules
 
