@@ -29,7 +29,8 @@ const fixturePlan = [
   ['invalid/builder_button_with_clickable_descendant_invalid.json', 'builder_resolution_result', true],
   ['invalid/builder_missing_interaction_topology_invalid.json', 'builder_resolution_result', true],
   ['invalid/builder_linked_image_inside_clickable_ancestor_invalid.json', 'builder_resolution_result', true],
-  ['invalid/project_gate_malformed_kernel_pin_invalid.json', 'project_gate_acceptance_packet', true]
+  ['invalid/project_gate_malformed_kernel_pin_invalid.json', 'project_gate_acceptance_packet', true],
+  ['invalid/element_decision_selected_candidate_mismatch_invalid.json', 'element_decision_record', true]
 ];
 
 const elementRegistryById = new Map();
