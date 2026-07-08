@@ -1,0 +1,1 @@
+{"fixture_id":"valid_v4_only_taxonomy_foundation","expected_diagnostics":[],"records":[{"record_id":"valid.v4.svg.documented","selected_target_scope":"elementor_v4","target_option":"v4.svg","source_tier":"official_elementor_help","claim_type":"documented_capability","capability_proof_status":"documented_only","builder_ready":false}]}
