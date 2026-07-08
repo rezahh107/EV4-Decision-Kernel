@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   audit:
-    name: Advisory behavioral coverage
+    name: Behavioral coverage
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -41,6 +41,9 @@ jobs:
 
       - name: Run advisory coverage audit
         run: node tools/audit-behavioral-coverage.mjs --mode advisory
+
+      - name: Run strict coverage audit
+        run: node tools/audit-behavioral-coverage.mjs --mode strict
 
       - name: Upload coverage reports
         if: always()
