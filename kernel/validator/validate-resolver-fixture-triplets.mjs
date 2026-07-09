@@ -114,57 +114,127 @@ function policyTripletKey(entry) {
   return `${entry.rule_id}@${entry.rule_version}:${entry.decision_family_id}`;
 }
 
+function isValidActiveRuleEntry(rule) {
+  return isPlainObject(rule)
+    && typeof rule.rule_id === 'string'
+    && rule.rule_id.trim().length > 0
+    && typeof rule.rule_version === 'string'
+    && rule.rule_version.trim().length > 0
+    && typeof rule.decision_family_id === 'string'
+    && rule.decision_family_id.trim().length > 0;
+}
+
+function isValidPolicyEntry(entry) {
+  return isPlainObject(entry)
+    && typeof entry.rule_id === 'string'
+    && entry.rule_id.trim().length > 0
+    && typeof entry.rule_version === 'string'
+    && entry.rule_version.trim().length > 0
+    && typeof entry.decision_family_id === 'string'
+    && entry.decision_family_id.trim().length > 0;
+}
+
+function indexedPolicyPath(index, suffix = '') {
+  return `active_rule_triplets[${index}]${suffix ? `.${suffix}` : ''}`;
+}
+
 function assertPolicyCoversActiveRules(registry, policy) {
   const diagnostics = [];
   const activeRules = Array.isArray(registry?.active_rules) ? registry.active_rules : [];
   const policyEntries = Array.isArray(policy?.active_rule_triplets) ? policy.active_rule_triplets : [];
-  const entriesByKey = new Map(policyEntries.map((entry) => [policyTripletKey(entry), entry]));
+  const activeKeys = new Set();
+  const entriesByKey = new Map();
 
   for (const [index, rule] of activeRules.entries()) {
     if (!isPlainObject(rule)) {
       diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_ACTIVE_RULE_INVALID', 'Active rule entry must be a JSON object before fixture coverage can be evaluated.', `active_rules[${index}]`));
       continue;
     }
+
+    if (!isValidActiveRuleEntry(rule)) {
+      diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_ACTIVE_RULE_KEY_FIELDS_REQUIRED', 'Active rule entry requires non-empty rule_id, rule_version, and decision_family_id before fixture coverage can be evaluated.', `active_rules[${index}]`));
+      continue;
+    }
+
+    activeKeys.add(activeRuleKey(rule));
+  }
+
+  for (const [index, entry] of policyEntries.entries()) {
+    if (!isPlainObject(entry)) {
+      diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_POLICY_ENTRY_INVALID', 'Policy triplet entry must be a JSON object.', indexedPolicyPath(index)));
+      continue;
+    }
+
+    if (!isValidPolicyEntry(entry)) {
+      diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_POLICY_ENTRY_KEY_FIELDS_REQUIRED', 'Policy triplet entry requires non-empty rule_id, rule_version, and decision_family_id.', indexedPolicyPath(index)));
+      continue;
+    }
+
+    const key = policyTripletKey(entry);
+    if (entriesByKey.has(key)) {
+      diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_DUPLICATE_POLICY_ENTRY', `Policy contains duplicate fixture triplet entry for ${key}.`, indexedPolicyPath(index)));
+      continue;
+    }
+
+    entriesByKey.set(key, { entry, index });
+  }
+
+  for (const [index, rule] of activeRules.entries()) {
+    if (!isValidActiveRuleEntry(rule)) continue;
+
     const key = activeRuleKey(rule);
     if (!entriesByKey.has(key)) {
       diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_MISSING_FOR_ACTIVE_RULE', `Active resolver rule ${key} has no fixture triplet policy entry.`, `active_rules[${index}]`));
       continue;
     }
 
-    const entry = entriesByKey.get(key);
+    const { entry, index: policyIndex } = entriesByKey.get(key);
     if (entry.coverage_status !== 'complete') {
-      diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_INCOMPLETE_STATUS', `Active resolver rule ${key} fixture coverage must be marked complete only after triplet validation passes.`, `active_rule_triplets.${key}.coverage_status`));
+      diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_INCOMPLETE_STATUS', `Active resolver rule ${key} fixture coverage must be marked complete only after triplet validation passes.`, indexedPolicyPath(policyIndex, 'coverage_status')));
     }
     if (entry.rule_ref !== rule.path) {
-      diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_RULE_REF_MISMATCH', `Policy rule_ref must match active registry path for ${key}.`, `active_rule_triplets.${key}.rule_ref`));
+      diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_RULE_REF_MISMATCH', `Policy rule_ref must match active registry path for ${key}.`, indexedPolicyPath(policyIndex, 'rule_ref')));
     }
     if (entry.fixture_scope_only !== true || entry.synthetic_fixture_evidence_only !== true || entry.real_target_project_proof_claimed !== false) {
-      diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_RULE_EVIDENCE_BOUNDARY_INVALID', `Policy entry for ${key} must remain fixture-scoped and synthetic-only.`, `active_rule_triplets.${key}`));
+      diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_RULE_EVIDENCE_BOUNDARY_INVALID', `Policy entry for ${key} must remain fixture-scoped and synthetic-only.`, indexedPolicyPath(policyIndex)));
+    }
+  }
+
+  for (const [key, { index }] of entriesByKey.entries()) {
+    if (!activeKeys.has(key)) {
+      diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_ORPHANED_POLICY_ENTRY', `Policy triplet entry ${key} has no matching active resolver rule in ${registryPath}.`, indexedPolicyPath(index)));
     }
   }
 
   return diagnostics;
 }
 
-function validateTripletEntry(entry) {
+function validateTripletEntry(entry, entryIndex) {
   const diagnostics = [];
   const inputHashesByKind = new Map();
+  const entryPath = indexedPolicyPath(entryIndex);
+  const tripletPath = indexedPolicyPath(entryIndex, 'triplet');
+
+  if (!isPlainObject(entry)) {
+    return [diagnostic('RESOLVER_FIXTURE_TRIPLET_POLICY_ENTRY_INVALID', 'Policy triplet entry must be a JSON object.', entryPath)];
+  }
 
   if (!isPlainObject(entry.triplet)) {
-    return [diagnostic('RESOLVER_FIXTURE_TRIPLET_OBJECT_REQUIRED', 'Policy entry requires a triplet object.', `active_rule_triplets.${policyTripletKey(entry)}.triplet`)];
+    return [diagnostic('RESOLVER_FIXTURE_TRIPLET_OBJECT_REQUIRED', 'Policy entry requires a triplet object.', tripletPath)];
   }
 
   for (const kind of REQUIRED_KINDS) {
     const fixtures = entry.triplet[kind];
+    const kindPath = indexedPolicyPath(entryIndex, `triplet.${kind}`);
     if (!Array.isArray(fixtures) || fixtures.length === 0) {
-      diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_KIND_MISSING', `${policyTripletKey(entry)} is missing ${kind} fixture coverage.`, `active_rule_triplets.${policyTripletKey(entry)}.triplet.${kind}`));
+      diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_KIND_MISSING', `${policyTripletKey(entry)} is missing ${kind} fixture coverage.`, kindPath));
       continue;
     }
 
     inputHashesByKind.set(kind, []);
 
     for (const [fixtureIndex, fixtureMeta] of fixtures.entries()) {
-      const basePath = `active_rule_triplets.${policyTripletKey(entry)}.triplet.${kind}[${fixtureIndex}]`;
+      const basePath = `${kindPath}[${fixtureIndex}]`;
       diagnostics.push(...validateFixtureMeta(entry, fixtureMeta, kind, basePath, inputHashesByKind));
     }
   }
@@ -174,11 +244,11 @@ function validateTripletEntry(entry) {
   const adversarialHashes = new Set(inputHashesByKind.get('adversarial') || []);
 
   for (const hash of validHashes) {
-    if (invalidHashes.has(hash)) diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_VALID_INVALID_NOT_DISTINCT', 'Valid and invalid triplet fixtures must not have identical resolver input.', 'active_rule_triplets.triplet'));
-    if (adversarialHashes.has(hash)) diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_VALID_ADVERSARIAL_NOT_DISTINCT', 'Valid and adversarial triplet fixtures must not have identical resolver input.', 'active_rule_triplets.triplet'));
+    if (invalidHashes.has(hash)) diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_VALID_INVALID_NOT_DISTINCT', 'Valid and invalid triplet fixtures must not have identical resolver input.', tripletPath));
+    if (adversarialHashes.has(hash)) diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_VALID_ADVERSARIAL_NOT_DISTINCT', 'Valid and adversarial triplet fixtures must not have identical resolver input.', tripletPath));
   }
   for (const hash of adversarialHashes) {
-    if (invalidHashes.has(hash)) diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_ADVERSARIAL_INVALID_NOT_DISTINCT', 'Adversarial and ordinary invalid triplet fixtures must not have identical resolver input.', 'active_rule_triplets.triplet'));
+    if (invalidHashes.has(hash)) diagnostics.push(diagnostic('RESOLVER_FIXTURE_TRIPLET_ADVERSARIAL_INVALID_NOT_DISTINCT', 'Adversarial and ordinary invalid triplet fixtures must not have identical resolver input.', tripletPath));
   }
 
   return diagnostics;
@@ -320,6 +390,40 @@ function validateFixtureMeta(entry, fixtureMeta, kind, basePath, inputHashesByKi
   return diagnostics;
 }
 
+function assertOrphanedPolicyRegression(registry, policy) {
+  if (!Array.isArray(registry?.active_rules) || !Array.isArray(policy?.active_rule_triplets) || policy.active_rule_triplets.length === 0) {
+    return [];
+  }
+
+  const orphanedPolicy = {
+    ...policy,
+    active_rule_triplets: [
+      ...policy.active_rule_triplets,
+      {
+        ...policy.active_rule_triplets[0],
+        rule_id: 'resolver.rule.synthetic_orphaned_policy_entry.v0',
+        decision_family_id: 'synthetic_orphaned_policy_family',
+        rule_ref: 'synthetic/orphaned-rule.json'
+      }
+    ]
+  };
+  const orphanedIndex = orphanedPolicy.active_rule_triplets.length - 1;
+  const diagnostics = assertPolicyCoversActiveRules(registry, orphanedPolicy);
+  const orphanedDiagnostic = diagnostics.find((item) => item.code === 'RESOLVER_FIXTURE_TRIPLET_ORPHANED_POLICY_ENTRY' && item.path === indexedPolicyPath(orphanedIndex));
+
+  if (!orphanedDiagnostic) {
+    return [
+      diagnostic(
+        'RESOLVER_FIXTURE_TRIPLET_ORPHANED_POLICY_REGRESSION_FAILED',
+        'Internal regression expected an orphaned policy entry to fail with indexed diagnostic path.',
+        `internal_regression.${indexedPolicyPath(orphanedIndex)}`
+      )
+    ];
+  }
+
+  return [];
+}
+
 function formatDiagnostic(item) {
   return `${item.code} [${item.severity}] ${item.path}: ${item.message}`;
 }
@@ -350,11 +454,12 @@ function runValidation() {
 
   const diagnostics = [
     ...(policy ? validatePolicyShape(policy) : []),
-    ...(registry && policy ? assertPolicyCoversActiveRules(registry, policy) : [])
+    ...(registry && policy ? assertPolicyCoversActiveRules(registry, policy) : []),
+    ...(registry && policy ? assertOrphanedPolicyRegression(registry, policy) : [])
   ];
 
   if (policy && Array.isArray(policy.active_rule_triplets)) {
-    for (const entry of policy.active_rule_triplets) diagnostics.push(...validateTripletEntry(entry));
+    for (const [entryIndex, entry] of policy.active_rule_triplets.entries()) diagnostics.push(...validateTripletEntry(entry, entryIndex));
   }
 
   if (diagnostics.length > 0) {
@@ -364,6 +469,7 @@ function runValidation() {
   } else {
     const count = Array.isArray(policy?.active_rule_triplets) ? policy.active_rule_triplets.length : 0;
     output.push(`Fixture triplet coverage: PASS (${count} active rule triplet(s))`);
+    output.push('Orphaned policy entries without matching active registry rules would fail this validator.');
     output.push('Missing valid/invalid/adversarial coverage would fail this validator.');
     output.push('Empty fixture stubs, case-kind mismatches, case-name-only coverage, and real target-project proof claims are rejected.');
   }
