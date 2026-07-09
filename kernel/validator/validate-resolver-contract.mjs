@@ -7,6 +7,7 @@ import addFormats from 'ajv-formats';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const schemaPath = 'kernel/schemas/resolver-rule.v0.schema.json';
+const p0MatrixPath = 'kernel/decision-governance/p0-decision-matrices.v0.json';
 
 const EVIDENCE_TIER_RANK = new Map([
   ['none', 0],
@@ -68,7 +69,7 @@ function tierRank(tier) {
 }
 
 function p0Index() {
-  const registry = readJson('kernel/decision-governance/p0-decision-matrices.v0.json');
+  const registry = readJson(p0MatrixPath);
   return new Map((registry.matrices || []).map((matrix) => [matrix.decision_family_id, { matrixId: matrix.matrix_id, options: new Set((matrix.candidate_options || []).map((option) => option.option_id)) }]));
 }
 
@@ -166,13 +167,24 @@ try {
   const ajv = new Ajv2020({ allErrors: true, strict: false });
   addFormats(ajv);
   validate = ajv.compile(readJson(schemaPath));
-  knownFamilies = p0Index();
   output.push('Schema setup: PASS');
 } catch (error) {
   failed = true;
   output.push('Schema setup: FAIL');
   output.push(`  - RESOLVER_RULE_SCHEMA SCHEMA_COMPILE_FAILED [schema] ${schemaPath}: ${error.message}`);
 }
+
+if (validate) {
+  try {
+    knownFamilies = p0Index();
+    output.push('P0 matrix index: PASS');
+  } catch (error) {
+    failed = true;
+    output.push('P0 matrix index: FAIL');
+    output.push(`  - RESOLVER_RULE_P0_INDEX P0_INDEX_LOAD_FAILED [index] ${p0MatrixPath}: ${error.message}`);
+  }
+}
+
 const mainDiagnostics = validate ? validateVocabularyAndRegistry() : [];
 if (mainDiagnostics.length) {
   failed = true;
@@ -186,7 +198,7 @@ const expectedValid = fixturePlan.filter(({ shouldFail }) => !shouldFail).length
 const expectedInvalid = fixturePlan.filter(({ shouldFail }) => shouldFail).length;
 const invalidDiagnosticLines = [];
 
-if (validate) {
+if (validate && knownFamilies) {
   for (const fixture of fixturePlan) {
     const fixtureRead = readFixture(fixture.path);
     const record = fixtureRead.record;
