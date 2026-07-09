@@ -1,7 +1,7 @@
 # Decision Resolver Contract
 
-**Status:** KROAD-005 contract baseline + KROAD-006 limited Resolver MVP relation  
-**Scope:** resolver-rule contract semantics and the current limited MVP boundary  
+**Status:** KROAD-005 contract baseline + KROAD-006 limited Resolver MVP + KROAD-007 L2 relation  
+**Scope:** resolver-rule contract semantics and the current limited MVP/L2 boundary  
 **Owner:** Kernel  
 **Machine-readable artifacts:**
 
@@ -12,11 +12,12 @@ kernel/decision-governance/resolver-rule-registry.v0.json
 kernel/decision-governance/resolver-rules/layout-structure.v0.json
 kernel/validator/validate-resolver-contract.mjs
 kernel/resolver-mvp/resolve-high-risk-p0.mjs
+kernel/validator/validate-l2-decision-correctness.mjs
 ```
 
 ## What this is
 
-This document defines how a `P0` decision matrix can become a resolver-backed contract and how KROAD-006 activates the first limited Resolver MVP.
+This document defines how a `P0` decision matrix can become a resolver-backed contract, how KROAD-006 activates the first limited Resolver MVP, and how KROAD-007 audits decision-record correctness against resolver output.
 
 The contract gives resolver work a deterministic shape for:
 
@@ -40,9 +41,9 @@ fixture_requirements
 
 ## What this is not
 
-This is not a full decision engine, not `KROAD-007`, not runtime validation, not Builder execution proof, not downstream enforcement, and not production readiness.
+This is not a full decision engine, not runtime validation, not Builder execution proof, not downstream enforcement, and not production readiness.
 
-The KROAD-006 MVP is limited to fixture-scoped deterministic logic for `layout_structure`. It does not assign real final target-project decisions.
+The KROAD-006 MVP and KROAD-007 L2 audit are limited to fixture-scoped deterministic logic for `layout_structure`. They do not assign or prove real final target-project semantic correctness.
 
 ## Resolver statuses
 
@@ -54,7 +55,7 @@ conditional
 unresolvable
 ```
 
-`auto_resolved` means a resolver rule selects exactly one allowed option after required rule conditions and evidence refs are satisfied.
+`auto_resolved` means a resolver rule selects exactly one allowed option only after required rule conditions and evidence refs are satisfied.
 
 `conditional` means more than one option remains valid or evidence is too weak to force one option; the decision must remain bounded and explicit.
 
@@ -128,6 +129,27 @@ human_override
 
 The resolver contract and MVP can justify those fields for covered fixture-scoped cases only. Human override remains explicit. A human or LLM free-text opinion is not resolver output.
 
+## Relation to KROAD-007 L2 Decision Correctness Audit
+
+KROAD-007 adds a deterministic L2 audit in:
+
+```text
+docs/decision-governance/L2_DECISION_CORRECTNESS_AUDIT_KROAD_007.md
+kernel/validator/validate-l2-decision-correctness.mjs
+```
+
+L2 reruns the same Resolver MVP via `resolveDecision(resolver_input)` and compares the result with a recorded `decision_record_v2`.
+
+L2 can catch schema-valid but resolver-wrong records, including resolver-status mismatch, selected option mismatch, forbidden option selection, under-tier or missing evidence refs, conditional justification gaps, hidden human overrides, rule version mismatch, and unsupported overclaims.
+
+L2 remains limited to resolver-covered families. Currently that means:
+
+```text
+layout_structure
+```
+
+Unsupported families are reported as unsupported/provisional rather than audited as fully resolver-backed.
+
 ## Fail-closed behavior
 
 Unknown decision family must produce:
@@ -148,7 +170,7 @@ Official-doc-only project-specific support must produce:
 conditional
 ```
 
-The resolver must not invent an option for an unknown `decision_family_id`.
+The resolver and L2 audit must not invent an option for an unknown `decision_family_id`.
 
 ## KROAD-006 MVP artifacts
 
@@ -159,6 +181,16 @@ kernel/resolver-mvp/resolve-high-risk-p0.mjs
 kernel/fixtures/valid/resolver_mvp/
 kernel/fixtures/invalid/resolver_mvp/
 kernel/fixtures/adversarial/resolver_mvp/
+```
+
+## KROAD-007 L2 artifacts
+
+```text
+docs/decision-governance/L2_DECISION_CORRECTNESS_AUDIT_KROAD_007.md
+kernel/validator/validate-l2-decision-correctness.mjs
+kernel/fixtures/valid/l2_decision_correctness/
+kernel/fixtures/invalid/l2_decision_correctness/
+kernel/fixtures/adversarial/l2_decision_correctness/
 ```
 
 ## Fixtures
@@ -178,15 +210,12 @@ kernel/fixtures/invalid/resolver_mvp/
 kernel/fixtures/adversarial/resolver_mvp/
 ```
 
-The KROAD-006 fixture set proves:
+KROAD-007 L2 fixtures live under:
 
 ```text
-auto_resolved for supported project_export single-axis layout
-conditional for official-doc-only support
-unresolvable for missing evidence
-fail-closed for unknown decision families
-rejection of official-doc-only auto-resolution overclaim
-rejection of grid auto-resolution without explicit grid availability
+kernel/fixtures/valid/l2_decision_correctness/
+kernel/fixtures/invalid/l2_decision_correctness/
+kernel/fixtures/adversarial/l2_decision_correctness/
 ```
 
 ## Validation
@@ -196,20 +225,22 @@ Run:
 ```bash
 npm run validate:resolver-contract
 npm run validate:resolver-mvp
+npm run validate:l2-decision-correctness
 npm run validate:mvk
 npm run validate:roadmap-memory
 ```
 
-`validate:mvk` includes both `validate:resolver-contract` and `validate:resolver-mvp`.
+`validate:mvk` includes `validate:resolver-contract`, `validate:resolver-mvp`, and `validate:l2-decision-correctness`.
 
 ## Current limitations
 
 ```text
 - only layout_structure is resolver-backed
+- KROAD-007 L2 only audits resolver-covered families as resolver-backed
 - no media_choice resolver
 - no styling_mechanism resolver
 - no positioning_safety resolver
-- no L2 audit
+- no KROAD-008 fixture expansion
 - no downstream enforcement
 - no Project Gate intake
 - no runtime/browser evidence layer
@@ -219,6 +250,6 @@ npm run validate:roadmap-memory
 
 ## Next allowed step
 
-After KROAD-006, later work may continue with the next roadmap item recorded in `planning/NEXT_WORK.md`.
+After KROAD-007 is merged, later work may continue with the next roadmap item recorded in `planning/NEXT_WORK.md`.
 
-Do not infer KROAD-007+ completion from this MVP.
+Do not infer KROAD-008+ completion from this contract, MVP, or L2 audit.
