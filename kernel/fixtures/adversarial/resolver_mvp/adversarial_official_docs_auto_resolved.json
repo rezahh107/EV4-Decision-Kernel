@@ -1,1 +1,45 @@
-{"fixture_type":"resolver_mvp_case","schema_version":"0.1.0","case_id":"layout_structure.adversarial.official_docs_auto_resolved_overclaim","case_kind":"adversarial","input":{"decision_family_id":"layout_structure","evidence_refs":[{"evidence_id":"EV-KROAD-006-LAYOUT-P0-MATRIX","evidence_tier":"official_docs","source_type":"kernel_fixture","ref":"kernel/decision-governance/p0-decision-matrices.v0.json#layout_structure","limitations":["matrix guidance only","does not prove target project availability"]}],"context":{"layout_intent":"single_axis","axis":"row","child_topology":"linear","two_axis_required":false,"simple_wrapper_only":false,"grid_availability_proven":false,"required_evidence_refs":["EV-KROAD-006-LAYOUT-P0-MATRIX"]}},"expected_result":{"resolver_status":"auto_resolved","selected_option":"flexbox","diagnostic_codes":["RESOLVER_MVP_OFFICIAL_DOCS_ONLY_CONDITIONAL"]},"notes":["controlled fixture only","not real target-project proof","not runtime validation","not Builder execution proof"]}
+{
+  "fixture_type": "resolver_mvp_case",
+  "schema_version": "0.1.0",
+  "case_id": "layout_structure.adversarial.official_docs_auto_resolved_overclaim",
+  "case_kind": "adversarial",
+  "input": {
+    "decision_family_id": "layout_structure",
+    "evidence_refs": [
+      {
+        "evidence_id": "EV-KROAD-006-LAYOUT-P0-MATRIX",
+        "evidence_tier": "official_docs",
+        "source_type": "kernel_fixture",
+        "ref": "kernel/decision-governance/p0-decision-matrices.v0.json#layout_structure",
+        "limitations": [
+          "matrix guidance only",
+          "does not prove target project availability"
+        ]
+      }
+    ],
+    "context": {
+      "layout_intent": "single_axis",
+      "axis": "row",
+      "child_topology": "linear",
+      "two_axis_required": false,
+      "simple_wrapper_only": false,
+      "grid_availability_proven": false,
+      "required_evidence_refs": [
+        "EV-KROAD-006-LAYOUT-P0-MATRIX"
+      ]
+    }
+  },
+  "expected_result": {
+    "resolver_status": "conditional",
+    "selected_option": null,
+    "diagnostic_codes": [
+      "RESOLVER_MVP_OFFICIAL_DOCS_ONLY_CONDITIONAL"
+    ]
+  },
+  "notes": [
+    "controlled fixture only",
+    "not real target-project proof",
+    "not runtime validation",
+    "not Builder execution proof"
+  ]
+}
