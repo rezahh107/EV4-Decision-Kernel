@@ -300,6 +300,28 @@
     {
       "if": {
         "properties": {
+          "trigger_source": {
+            "const": "manual_override"
+          }
+        },
+        "required": [
+          "trigger_source"
+        ]
+      },
+      "then": {
+        "required": [
+          "human_override"
+        ],
+        "properties": {
+          "decision_type": {
+            "const": "human_override"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
           "decision_type": {
             "const": "resolver_derived"
           }
@@ -348,6 +370,37 @@
     {
       "if": {
         "properties": {
+          "resolver_status": {
+            "enum": [
+              "auto_resolved",
+              "conditional"
+            ]
+          }
+        },
+        "required": [
+          "resolver_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "selected_option": {
+            "properties": {
+              "option_id": {
+                "not": {
+                  "const": "none"
+                }
+              }
+            },
+            "required": [
+              "option_id"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
           "evidence_tier": {
             "const": "none"
           }
@@ -363,6 +416,45 @@
           },
           "requires_reaudit": {
             "const": true
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "reopen_count": {
+            "const": 0
+          }
+        },
+        "required": [
+          "reopen_count"
+        ]
+      },
+      "then": {
+        "properties": {
+          "previous_decision_ref": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "reopen_count": {
+            "minimum": 1
+          }
+        },
+        "required": [
+          "reopen_count"
+        ]
+      },
+      "then": {
+        "properties": {
+          "previous_decision_ref": {
+            "type": "string",
+            "minLength": 1
           }
         }
       }
