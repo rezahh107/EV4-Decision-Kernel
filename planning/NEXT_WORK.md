@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-KROAD-003 second-pass review record
+KROAD-004 P0 decision matrices
 
 ## Status Authority
 
@@ -10,12 +10,12 @@ This file is the authoritative current-status dashboard for roadmap progress aft
 
 `planning/KERNEL_EXECUTION_PLAN.md` remains the durable detailed operating map for item meaning, scope, dependencies, acceptance criteria, evidence requirements, and do-not rules. If an item's status label in the detailed plan is stale, use this file for current roadmap status and update the detailed plan in a later maintenance PR only when changing roadmap meaning, scope, dependency, acceptance criteria, or evidence requirements.
 
-Known detailed-plan status labels: `KROAD-001` and `KROAD-003` may still show legacy `not_started` status in `planning/KERNEL_EXECUTION_PLAN.md`; those lines are non-authoritative. Current status source for `KROAD-001` and `KROAD-003` is `planning/NEXT_WORK.md`.
+Known detailed-plan status labels: `KROAD-001`, `KROAD-003`, and `KROAD-004` may still show legacy `not_started` status in `planning/KERNEL_EXECUTION_PLAN.md`; those lines are non-authoritative. Current status source for `KROAD-001`, `KROAD-003`, and `KROAD-004` is `planning/NEXT_WORK.md`.
 
 ## Status Summary
 
-Current completed milestones: KROAD-000, KROAD-001, KROAD-002, KROAD-003.
-Current next task: KROAD-004 — P0 Decision Matrices.
+Current completed milestones: KROAD-000, KROAD-001, KROAD-002, KROAD-003, KROAD-004.
+Current next task: KROAD-005 — Decision Resolver Contract.
 Detailed plan: `planning/KERNEL_EXECUTION_PLAN.md`.
 Do not continue from chat history; read this file first.
 
@@ -23,7 +23,7 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
 
 ## Next Task
 
-- [ ] KROAD-004 — P0 Decision Matrices
+- [ ] KROAD-005 — Decision Resolver Contract
 
 ## Completed
 
@@ -36,10 +36,11 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
 - [x] KROAD-003 — Decision Record Schema v2 + Migration Plan
   - Update note: PR #17 completed KROAD-003 by adding `kernel/schemas/decision-record.v2.schema.json`, valid/invalid v2 fixtures, `kernel/validator/validate-decision-record-v2.mjs`, the v2 contract documentation, the migration plan, and lifecycle field documentation without implementing the Resolver or later KROAD items.
   - Review note: The second-pass review/audit result is preserved in `planning/reviews/KROAD-003_DECISION_RECORD_V2_SECOND_PASS_REVIEW.md`; it records the merged PR #17 state, reviewed files, CI evidence, boundaries, and non-blocking follow-up.
+- [x] KROAD-004 — P0 Decision Matrices
+  - Update note: KROAD-004 added the machine-readable matrix registry `kernel/decision-governance/p0-decision-matrices.v0.json` and usage documentation `docs/decision-governance/P0_DECISION_MATRICES.md`. The registry covers the required P0 families, records candidate options, evidence requirements, evidence tiers, downstream consumers, constructability/runtime/accessibility concerns, provisional behavior, forbidden overclaims, V4-only boundaries, source/evidence refs, and explicitly states that matrix guidance is not resolver output. No Resolver, downstream enforcement, runtime proof, Builder execution proof, production readiness proof, full Elementor feature registry, or full control-level registry was implemented.
 
 ## Remaining Work
 
-- [ ] KROAD-004 — P0 Decision Matrices
 - [ ] KROAD-005 — Decision Resolver Contract
 - [ ] KROAD-006 — Resolver MVP for high-risk P0 families
 - [ ] KROAD-007 — L2 Decision Correctness Audit
@@ -81,3 +82,4 @@ If evidence is missing or uncertain, do not tick the item; add a note explaining
 - Human overrides must be explicitly marked.
 - Critical P0 provisional decisions must not pass final release.
 - Unknown decision families must fail closed with halt / insufficient evidence / no free decision.
+- KROAD-004 matrices are guidance structures only. They do not resolve decisions and do not satisfy KROAD-005+.
