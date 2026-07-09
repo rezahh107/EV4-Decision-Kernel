@@ -76,8 +76,7 @@
       "description": "A later resolver may auto-resolve to flexbox only when project_export evidence proves single-axis row/column intent and no two-axis grid requirement.",
       "required_evidence_tier": "project_export",
       "required_evidence_refs": [
-        "project_export.layout_intent",
-        "project_export.child_topology"
+        "EV-KROAD-005-LAYOUT-PROJECT-EXPORT-REQUIRED"
       ],
       "outcome_status": "auto_resolved",
       "project_ready_claim_allowed": false,
@@ -94,7 +93,7 @@
       "description": "Official-doc-only evidence may keep compared options in a bounded conditional set, but cannot make the decision project-ready.",
       "required_evidence_tier": "official_docs",
       "required_evidence_refs": [
-        "official_docs.compared_options"
+        "EV-KROAD-005-P0-LAYOUT-MATRIX"
       ],
       "outcome_status": "conditional",
       "project_ready_claim_allowed": false,
@@ -152,10 +151,18 @@
       "kernel/fixtures/invalid/resolver_contract/invalid_missing_evidence_refs.json",
       "kernel/fixtures/invalid/resolver_contract/invalid_unknown_family_auto_resolved.json",
       "kernel/fixtures/invalid/resolver_contract/invalid_official_docs_project_ready_auto_condition.json",
-      "kernel/fixtures/invalid/resolver_contract/invalid_matrix_guidance_as_output.json"
+      "kernel/fixtures/invalid/resolver_contract/invalid_matrix_guidance_as_output.json",
+      "kernel/fixtures/invalid/resolver_contract/invalid_project_export_with_official_docs_only.json",
+      "kernel/fixtures/invalid/resolver_contract/invalid_runtime_browser_with_project_export_only.json",
+      "kernel/fixtures/invalid/resolver_contract/invalid_downstream_validated_with_runtime_only.json",
+      "kernel/fixtures/invalid/resolver_contract/invalid_auto_condition_unresolvable_status.json",
+      "kernel/fixtures/invalid/resolver_contract/invalid_conditional_condition_auto_status.json",
+      "kernel/fixtures/invalid/resolver_contract/invalid_unresolvable_condition_conditional_status.json"
     ],
     "adversarial_fixture_plan": [
       "official_docs_only_must_not_be_project_ready",
+      "under_tier_evidence_must_not_satisfy_declared_tier",
+      "condition_bucket_status_must_match_bucket",
       "unknown_family_must_not_auto_resolve",
       "matrix_guidance_must_not_be_output",
       "free_text_opinion_must_not_be_output"
