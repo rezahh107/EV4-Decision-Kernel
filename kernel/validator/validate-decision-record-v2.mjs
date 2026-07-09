@@ -15,12 +15,52 @@ const fixturePlan = [
     expectedCodes: []
   },
   {
+    path: 'valid/decision_record_v2_downstream_validated_ref_shape_valid.json',
+    shouldFail: false,
+    expectedCodes: []
+  },
+  {
     path: 'invalid/decision_record_v2_missing_required_fields_invalid.json',
     shouldFail: true,
     expectedCodes: [
       'SCHEMA_REQUIRED_RESOLVER_STATUS',
       'SCHEMA_REQUIRED_RULE_VERSION',
       'SCHEMA_REQUIRED_PROVISIONAL_STATUS'
+    ]
+  },
+  {
+    path: 'invalid/decision_record_v2_manual_override_trigger_mismatch_invalid.json',
+    shouldFail: true,
+    expectedCodes: [
+      'SCHEMA_CONST'
+    ]
+  },
+  {
+    path: 'invalid/decision_record_v2_downstream_validated_missing_ref_invalid.json',
+    shouldFail: true,
+    expectedCodes: [
+      'DOWNSTREAM_TIER_REQUIRES_DOWNSTREAM_EVIDENCE_REF'
+    ]
+  },
+  {
+    path: 'invalid/decision_record_v2_conditional_selected_none_invalid.json',
+    shouldFail: true,
+    expectedCodes: [
+      'SELECTED_OPTION_NONE_REQUIRES_UNRESOLVABLE'
+    ]
+  },
+  {
+    path: 'invalid/decision_record_v2_initial_previous_ref_invalid.json',
+    shouldFail: true,
+    expectedCodes: [
+      'PREVIOUS_DECISION_REF_MUST_BE_NULL_FOR_INITIAL_DECISION'
+    ]
+  },
+  {
+    path: 'invalid/decision_record_v2_reopened_missing_previous_ref_invalid.json',
+    shouldFail: true,
+    expectedCodes: [
+      'PREVIOUS_DECISION_REF_REQUIRED_FOR_REOPEN'
     ]
   }
 ];
@@ -105,7 +145,19 @@ function validateDecisionRecordV2(record) {
 
   pushWhen(
     diagnostics,
-    record.resolver_status !== 'unresolvable' && Boolean(selectedOptionId) && !allowedOptionIds.includes(selectedOptionId),
+    record.resolver_status !== 'unresolvable' && selectedOptionId === 'none',
+    {
+      rule_id: 'DECISION_RECORD_V2_OPTION_BOUNDARY',
+      code: 'SELECTED_OPTION_NONE_REQUIRES_UNRESOLVABLE',
+      message: 'selected_option.option_id=none is only valid when resolver_status is unresolvable',
+      source: 'semantic',
+      path: 'selected_option.option_id'
+    }
+  );
+
+  pushWhen(
+    diagnostics,
+    record.resolver_status !== 'unresolvable' && Boolean(selectedOptionId) && selectedOptionId !== 'none' && !allowedOptionIds.includes(selectedOptionId),
     {
       rule_id: 'DECISION_RECORD_V2_OPTION_BOUNDARY',
       code: 'SELECTED_OPTION_MUST_BE_ALLOWED',
@@ -124,6 +176,18 @@ function validateDecisionRecordV2(record) {
       message: 'reopen_count must not exceed max_reopen_count',
       source: 'semantic',
       path: 'reopen_count'
+    }
+  );
+
+  pushWhen(
+    diagnostics,
+    Number.isInteger(record.reopen_count) && record.reopen_count === 0 && record.previous_decision_ref !== null,
+    {
+      rule_id: 'DECISION_RECORD_V2_REOPEN_LINEAGE',
+      code: 'PREVIOUS_DECISION_REF_MUST_BE_NULL_FOR_INITIAL_DECISION',
+      message: 'initial decisions with reopen_count=0 must not reference a previous decision',
+      source: 'semantic',
+      path: 'previous_decision_ref'
     }
   );
 
@@ -177,6 +241,21 @@ function validateDecisionRecordV2(record) {
         rule_id: 'DECISION_RECORD_V2_EVIDENCE_BOUNDARY',
         code: 'PROJECT_EXPORT_TIER_REQUIRES_PROJECT_EXPORT_EVIDENCE_REF',
         message: 'project_export evidence_tier requires at least one project_export evidence ref',
+        source: 'semantic',
+        path: 'evidence_refs'
+      }
+    );
+  }
+
+  if (record.evidence_tier === 'downstream_validated') {
+    pushWhen(
+      diagnostics,
+      !hasItems(record.evidence_refs) ||
+        !record.evidence_refs.some((item) => item?.evidence_tier === 'downstream_validated' && item?.source_type === 'downstream_validation'),
+      {
+        rule_id: 'DECISION_RECORD_V2_EVIDENCE_BOUNDARY',
+        code: 'DOWNSTREAM_TIER_REQUIRES_DOWNSTREAM_EVIDENCE_REF',
+        message: 'downstream_validated evidence_tier requires at least one downstream_validation evidence ref',
         source: 'semantic',
         path: 'evidence_refs'
       }
