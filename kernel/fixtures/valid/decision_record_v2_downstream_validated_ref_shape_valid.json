@@ -1,0 +1,71 @@
+{
+  "record_type": "decision_record_v2",
+  "schema_version": "2.0.0",
+  "decision_id": "DR-V2-DOWNSTREAM-VALIDATED-SHAPE-001",
+  "decision_family_id": "element_choice.image_svg_background",
+  "resolver_status": "conditional",
+  "evidence_tier": "downstream_validated",
+  "rule_id": "KROAD-003-SCHEMA-BOOTSTRAP",
+  "rule_version": "1.0.0",
+  "decision_type": "resolver_derived",
+  "trigger_source": "initial_decision",
+  "provisional_status": {
+    "is_provisional": false,
+    "reason": "schema-shape fixture includes a matching downstream evidence ref",
+    "missing_evidence": [],
+    "blocks_final_release": false
+  },
+  "reopen_count": 0,
+  "max_reopen_count": 3,
+  "previous_decision_ref": null,
+  "requires_reaudit": false,
+  "selected_option": {
+    "option_id": "v4.svg",
+    "label": "SVG"
+  },
+  "allowed_options": [
+    {
+      "option_id": "v4.svg",
+      "label": "SVG"
+    },
+    {
+      "option_id": "v4.image",
+      "label": "Image"
+    }
+  ],
+  "rejected_options": [
+    {
+      "option_id": "v4.image",
+      "reason": "fixture keeps SVG selected for downstream evidence-ref shape validation"
+    }
+  ],
+  "forbidden_options": [
+    {
+      "option_id": "v3.widget_fallback",
+      "reason": "V3 fallback is not a valid V4 design target"
+    }
+  ],
+  "evidence_refs": [
+    {
+      "evidence_id": "EV-DOWNSTREAM-VALIDATION-SHAPE-001",
+      "evidence_tier": "downstream_validated",
+      "source_type": "downstream_validation",
+      "ref": "kernel/fixtures/valid/decision_record_v2_downstream_validated_ref_shape_valid.json",
+      "limitations": [
+        "schema-shape fixture only",
+        "not real downstream repository enforcement evidence",
+        "does not prove Project Gate intake"
+      ]
+    }
+  ],
+  "forbidden_overclaims": [
+    "fixture_does_not_prove_real_downstream_enforcement",
+    "fixture_does_not_prove_project_gate_validation",
+    "decision_record_v2_does_not_prove_builder_execution",
+    "decision_record_v2_does_not_prove_production_readiness"
+  ],
+  "downstream_owner": "architect",
+  "notes": [
+    "This fixture validates the matching evidence-ref shape only; it is not inspected downstream enforcement evidence."
+  ]
+}
