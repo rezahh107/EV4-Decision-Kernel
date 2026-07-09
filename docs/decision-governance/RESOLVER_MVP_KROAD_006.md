@@ -36,7 +36,6 @@ unresolvable
 
 ```text
 - not a full decision engine
-- not KROAD-007 L2 audit
 - not downstream consumer enforcement
 - not Project Gate intake
 - not runtime/browser evidence
@@ -44,6 +43,8 @@ unresolvable
 - not production readiness
 - not semantic correctness proof outside covered cases
 ```
+
+KROAD-007 adds a separate L2 audit on top of this MVP. That L2 audit does not expand Resolver MVP family coverage and does not turn this MVP into a full decision engine.
 
 ## Covered family
 
@@ -179,17 +180,29 @@ kernel/fixtures/adversarial/resolver_mvp/adversarial_absent_context_required_evi
 
 All Resolver MVP fixtures declare the correct expected resolver output. Invalid and adversarial fixtures no longer encode the adversary's overclaim as the expected result.
 
+## KROAD-007 relation
+
+KROAD-007 lives in:
+
+```text
+kernel/validator/l2-decision-correctness-audit.mjs
+docs/decision-governance/L2_DECISION_CORRECTNESS_AUDIT_KROAD_007.md
+```
+
+It reruns this resolver and compares resolver output to recorded decision fields. It does not expand Resolver MVP coverage beyond `layout_structure`.
+
 ## Validation
 
 Run:
 
 ```bash
 npm run validate:resolver-mvp
+npm run validate:l2-decision-audit
 npm run validate:mvk
 npm run validate:roadmap-memory
 ```
 
-`validate:mvk` includes `validate:resolver-mvp`.
+`validate:mvk` includes `validate:resolver-mvp` and `validate:l2-decision-audit`.
 
 ## Unsupported families
 
@@ -206,7 +219,6 @@ Other P0 families also remain unsupported as resolver-backed MVP families.
 ## Boundaries preserved
 
 ```text
-- no L2 audit
 - no downstream enforcement
 - no Project Gate intake
 - no runtime/browser evidence implementation
@@ -218,10 +230,10 @@ Other P0 families also remain unsupported as resolver-backed MVP families.
 
 ## Next allowed step
 
-The next roadmap step is:
+The next roadmap step is maintained in:
 
 ```text
-KROAD-007 — L2 Decision Correctness Audit
+planning/NEXT_WORK.md
 ```
 
-KROAD-007 is not implemented by this MVP. The next session must still inspect `planning/NEXT_WORK.md` before continuing.
+Do not infer KROAD-008+ completion from this MVP or from the KROAD-007 L2 audit.
