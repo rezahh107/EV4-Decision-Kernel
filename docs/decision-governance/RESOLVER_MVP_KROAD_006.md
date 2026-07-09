@@ -77,9 +77,22 @@ kernel/resolver-mvp/resolve-high-risk-p0.mjs
 
 ## Resolver behavior
 
+### Evidence-ref binding rule
+
+Before any non-`unresolvable` output, the resolver must bind the active condition to exact evidence IDs:
+
+```text
+active condition required_evidence_refs
+  -> input.context.required_evidence_refs
+  -> input.evidence_refs
+  -> required evidence tier
+```
+
+An unrelated `project_export` evidence ref is not enough. Missing, undeclared, unrelated, or under-tier required refs return `unresolvable`.
+
 ### `auto_resolved`
 
-The resolver may emit `auto_resolved` only for controlled fixture contexts with `project_export` evidence.
+The resolver may emit `auto_resolved` only for controlled fixture contexts with the exact condition-required `project_export` evidence ref.
 
 Current deterministic auto-resolution cases:
 
@@ -120,6 +133,10 @@ The resolver emits `unresolvable` for fail-closed cases, including:
 ```text
 unknown decision_family_id
 missing evidence_refs
+missing context.required_evidence_refs
+required evidence ref not present in input.evidence_refs
+context.required_evidence_refs not matching the active condition
+matched required evidence refs under the required tier
 invalid or unsupported required_evidence_tier
 malformed active rule registry entries
 active rule files that parse to null, arrays, or non-object values
@@ -155,6 +172,9 @@ Adversarial overclaim behavior:
 ```text
 kernel/fixtures/adversarial/resolver_mvp/adversarial_official_docs_auto_resolved.json
 kernel/fixtures/adversarial/resolver_mvp/adversarial_grid_without_availability.json
+kernel/fixtures/adversarial/resolver_mvp/adversarial_unrelated_project_export_ref.json
+kernel/fixtures/adversarial/resolver_mvp/adversarial_missing_context_required_evidence_refs.json
+kernel/fixtures/adversarial/resolver_mvp/adversarial_absent_context_required_evidence_ref.json
 ```
 
 All Resolver MVP fixtures declare the correct expected resolver output. Invalid and adversarial fixtures no longer encode the adversary's overclaim as the expected result.
