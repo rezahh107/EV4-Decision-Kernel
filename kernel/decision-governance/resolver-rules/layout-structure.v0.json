@@ -183,13 +183,44 @@
     "KROAD-006 Resolver MVP covers only layout_structure.",
     "The implementation is deterministic and fixture-scoped.",
     "It is not an L2 decision-correctness audit.",
-    "It is not downstream enforcement, runtime proof, Builder execution proof, or production readiness."
+    "It is not downstream enforcement, runtime proof, Builder execution proof, or production readiness.",
+    "Non-unresolvable outputs require exact evidence-ref binding between the active condition, input.context.required_evidence_refs, and input.evidence_refs."
   ],
   "diagnostics": [
     {
       "code": "RESOLVER_RULE_MISSING_REQUIRED_EVIDENCE",
       "severity": "error",
       "when_emitted": "Required evidence refs are absent or under-tier.",
+      "result_status": "unresolvable"
+    },
+    {
+      "code": "RESOLVER_MVP_REQUIRED_EVIDENCE_REFS_REQUIRED",
+      "severity": "error",
+      "when_emitted": "context.required_evidence_refs is absent or empty before a non-unresolvable output.",
+      "result_status": "unresolvable"
+    },
+    {
+      "code": "RESOLVER_MVP_REQUIRED_EVIDENCE_REF_NOT_FOUND",
+      "severity": "error",
+      "when_emitted": "A required evidence ref declared by the active condition or context is absent from input.evidence_refs.",
+      "result_status": "unresolvable"
+    },
+    {
+      "code": "RESOLVER_MVP_REQUIRED_EVIDENCE_REF_NOT_ALLOWED",
+      "severity": "error",
+      "when_emitted": "context.required_evidence_refs declares an evidence ID that is not required by the active resolver condition.",
+      "result_status": "unresolvable"
+    },
+    {
+      "code": "RESOLVER_MVP_REQUIRED_EVIDENCE_REF_NOT_DECLARED",
+      "severity": "error",
+      "when_emitted": "The active resolver condition requires an evidence ID that is not declared in context.required_evidence_refs.",
+      "result_status": "unresolvable"
+    },
+    {
+      "code": "RESOLVER_MVP_REQUIRED_EVIDENCE_REF_TIER_UNSATISFIED",
+      "severity": "error",
+      "when_emitted": "The exact matched required evidence refs do not satisfy the active condition required tier.",
       "result_status": "unresolvable"
     },
     {
@@ -221,7 +252,10 @@
       "kernel/fixtures/invalid/resolver_mvp/invalid_malformed_active_rule_entry_string.json",
       "kernel/fixtures/invalid/resolver_mvp/invalid_malformed_active_rule_file_null.json",
       "kernel/fixtures/adversarial/resolver_mvp/adversarial_official_docs_auto_resolved.json",
-      "kernel/fixtures/adversarial/resolver_mvp/adversarial_grid_without_availability.json"
+      "kernel/fixtures/adversarial/resolver_mvp/adversarial_grid_without_availability.json",
+      "kernel/fixtures/adversarial/resolver_mvp/adversarial_unrelated_project_export_ref.json",
+      "kernel/fixtures/adversarial/resolver_mvp/adversarial_missing_context_required_evidence_refs.json",
+      "kernel/fixtures/adversarial/resolver_mvp/adversarial_absent_context_required_evidence_ref.json"
     ],
     "adversarial_fixture_plan": [
       "official_docs_only_must_not_auto_resolve",
@@ -229,7 +263,10 @@
       "unsupported_required_evidence_tier_must_fail_closed",
       "malformed_registry_must_not_crash",
       "malformed_rule_file_must_not_crash",
-      "grid_requires_explicit_grid_availability"
+      "grid_requires_explicit_grid_availability",
+      "unrelated_project_export_ref_must_not_auto_resolve",
+      "missing_context_required_evidence_refs_must_not_auto_resolve",
+      "absent_context_required_evidence_ref_must_not_auto_resolve"
     ]
   },
   "output_contract": {
