@@ -1,0 +1,57 @@
+{
+  "vocabulary_id": "resolver-status-vocabulary.v0",
+  "version": "0.1.0",
+  "status": "kroad_005_contract_baseline",
+  "scope": "Kernel-local resolver status vocabulary for KROAD-005. This file defines status semantics only; it is not a Resolver MVP and does not resolve real decisions.",
+  "allowed_resolver_statuses": [
+    {
+      "status_id": "auto_resolved",
+      "meaning": "A future resolver rule may select exactly one allowed option only when the rule and required evidence are satisfied.",
+      "selected_option_policy": "exactly_one_allowed_option_required",
+      "evidence_policy": "required evidence tier and required evidence refs must be satisfied before the status can be emitted",
+      "finality_policy": "not production_ready and not downstream_validated unless separate downstream/runtime evidence exists"
+    },
+    {
+      "status_id": "conditional",
+      "meaning": "A future resolver rule may leave more than one allowed option valid and require bounded Architect or downstream choice inside the allowed set.",
+      "selected_option_policy": "allowed_option_set_required; final selected option may remain provisional",
+      "evidence_policy": "explicit missing evidence and limitations must be recorded",
+      "finality_policy": "not a forced answer"
+    },
+    {
+      "status_id": "unresolvable",
+      "meaning": "The rule or evidence is insufficient; the pipeline must halt, ask for repair, or return insufficient evidence instead of guessing.",
+      "selected_option_policy": "no final selected option; decision records should use option_id none",
+      "evidence_policy": "missing evidence must be explicit",
+      "finality_policy": "blocking/fail-closed"
+    }
+  ],
+  "evidence_tiers": [
+    "none",
+    "official_docs",
+    "project_export",
+    "runtime_browser",
+    "downstream_validated"
+  ],
+  "global_fail_closed_policy": {
+    "unknown_decision_family": "unresolvable",
+    "missing_required_evidence": "unresolvable",
+    "free_text_opinion": "forbidden_as_resolver_output",
+    "matrix_guidance": "not_resolver_output"
+  },
+  "forbidden_overclaims": [
+    "resolver_contract_is_resolver_mvp",
+    "resolver_contract_assigns_real_final_decision",
+    "official_docs_prove_project_availability",
+    "official_docs_prove_active_pro_license",
+    "official_docs_prove_current_user_permission",
+    "official_docs_prove_constructability",
+    "official_docs_prove_builder_execution",
+    "official_docs_prove_runtime_behavior",
+    "official_docs_prove_downstream_acceptance",
+    "official_docs_prove_production_readiness",
+    "matrix_guidance_is_resolver_result",
+    "human_or_llm_free_text_is_resolver_output"
+  ],
+  "next_allowed_step": "KROAD-006 may implement a small Resolver MVP for high-risk P0 families after this contract is merged and validated."
+}

@@ -1,0 +1,37 @@
+{
+  "registry_id": "resolver-rule-registry.v0",
+  "version": "0.1.0",
+  "status": "kroad_005_contract_baseline_no_resolver_mvp",
+  "scope": "Initial Kernel-local resolver contract registry placeholder. It records resolver contract policy and intentionally contains no active resolver MVP rules.",
+  "resolver_mvp_implemented": false,
+  "matrix_guidance_is_not_resolver_result": true,
+  "human_or_llm_free_text_opinion_is_not_resolver_output": true,
+  "assigns_real_final_decisions": false,
+  "status_vocabulary_ref": "kernel/decision-governance/resolver-status-vocabulary.v0.json",
+  "resolver_rule_schema_ref": "kernel/schemas/resolver-rule.v0.schema.json",
+  "p0_matrix_registry_ref": "kernel/decision-governance/p0-decision-matrices.v0.json",
+  "decision_record_v2_schema_ref": "kernel/schemas/decision-record.v2.schema.json",
+  "unknown_decision_family_policy": {
+    "outcome": "unresolvable",
+    "diagnostic_code": "RESOLVER_RULE_UNKNOWN_DECISION_FAMILY",
+    "note": "Future resolver execution must halt/fail closed for unknown decision_family_id rather than inventing an option."
+  },
+  "official_docs_policy": "Official docs may support documented platform/editor capability only; they do not prove target-project availability, active Pro license, current user permission, constructability, Builder execution, runtime behavior, downstream acceptance, or production readiness.",
+  "active_rules": [],
+  "example_rule_fixtures": [
+    "kernel/fixtures/valid/resolver_contract/valid_layout_structure_rule_contract.json"
+  ],
+  "invalid_rule_fixtures": [
+    "kernel/fixtures/invalid/resolver_contract/invalid_missing_evidence_refs.json",
+    "kernel/fixtures/invalid/resolver_contract/invalid_unknown_family_auto_resolved.json",
+    "kernel/fixtures/invalid/resolver_contract/invalid_official_docs_project_ready_auto_condition.json",
+    "kernel/fixtures/invalid/resolver_contract/invalid_matrix_guidance_as_output.json",
+    "kernel/fixtures/invalid/resolver_contract/invalid_project_export_with_official_docs_only.json",
+    "kernel/fixtures/invalid/resolver_contract/invalid_runtime_browser_with_project_export_only.json",
+    "kernel/fixtures/invalid/resolver_contract/invalid_downstream_validated_with_runtime_only.json",
+    "kernel/fixtures/invalid/resolver_contract/invalid_auto_condition_unresolvable_status.json",
+    "kernel/fixtures/invalid/resolver_contract/invalid_conditional_condition_auto_status.json",
+    "kernel/fixtures/invalid/resolver_contract/invalid_unresolvable_condition_conditional_status.json"
+  ],
+  "next_allowed_step": "KROAD-006 may implement a small resolver MVP after this contract baseline is merged and validated."
+}

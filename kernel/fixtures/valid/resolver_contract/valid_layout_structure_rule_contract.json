@@ -1,0 +1,194 @@
+{
+  "artifact_type": "resolver_rule_contract",
+  "schema_version": "0.1.0",
+  "contract_id": "resolver.contract.layout_structure.project_export.v0.example",
+  "status": "kroad_005_contract_example",
+  "rule_id": "resolver.rule.layout_structure.project_export.v0",
+  "rule_version": "0.1.0",
+  "decision_family_id": "layout_structure",
+  "matrix_ref": {
+    "registry_id": "p0-decision-matrices.v0",
+    "matrix_id": "p0.matrix.layout_structure.v0",
+    "decision_family_id": "layout_structure"
+  },
+  "input_context": {
+    "context_type": "project_export_layout_decision_context",
+    "required_fields": [
+      "decision_family_id",
+      "candidate_options",
+      "layout_intent",
+      "child_topology",
+      "required_evidence_refs"
+    ],
+    "free_text_only_allowed": false,
+    "context_schema_ref": "future/KROAD-006 resolver input context schema"
+  },
+  "required_evidence_tier": "project_export",
+  "evidence_refs": [
+    {
+      "evidence_id": "EV-KROAD-005-P0-LAYOUT-MATRIX",
+      "evidence_tier": "official_docs",
+      "source_type": "kernel_fixture",
+      "ref": "kernel/decision-governance/p0-decision-matrices.v0.json#layout_structure",
+      "limitations": [
+        "matrix guidance only",
+        "does not prove resolver output",
+        "does not prove target project availability"
+      ]
+    },
+    {
+      "evidence_id": "EV-KROAD-005-LAYOUT-PROJECT-EXPORT-REQUIRED",
+      "evidence_tier": "project_export",
+      "source_type": "kernel_fixture",
+      "ref": "kernel/fixtures/valid/resolver_contract/valid_layout_structure_rule_contract.json#required-evidence-contract",
+      "limitations": [
+        "controlled fixture requirement only",
+        "not real target-project evidence",
+        "not Builder execution proof"
+      ]
+    }
+  ],
+  "option_set": [
+    {
+      "option_id": "div_block",
+      "display_name": "Div Block"
+    },
+    {
+      "option_id": "flexbox",
+      "display_name": "Flexbox"
+    },
+    {
+      "option_id": "grid",
+      "display_name": "Grid"
+    }
+  ],
+  "allowed_options": [
+    "div_block",
+    "flexbox",
+    "grid"
+  ],
+  "forbidden_options": [
+    "elementor_v3_container_fallback"
+  ],
+  "auto_resolution_conditions": [
+    {
+      "condition_id": "layout_structure.auto_resolve.flexbox.single_axis_project_export",
+      "description": "A later resolver may auto-resolve to flexbox only when project_export evidence proves single-axis row/column intent and no two-axis grid requirement.",
+      "required_evidence_tier": "project_export",
+      "required_evidence_refs": [
+        "EV-KROAD-005-LAYOUT-PROJECT-EXPORT-REQUIRED"
+      ],
+      "outcome_status": "auto_resolved",
+      "project_ready_claim_allowed": false,
+      "limitations": [
+        "auto_resolved is a rule output only after evidence is attached",
+        "does not prove runtime behavior",
+        "does not prove Builder execution"
+      ]
+    }
+  ],
+  "conditional_conditions": [
+    {
+      "condition_id": "layout_structure.conditional.official_docs_only",
+      "description": "Official-doc-only evidence may keep compared options in a bounded conditional set, but cannot make the decision project-ready.",
+      "required_evidence_tier": "official_docs",
+      "required_evidence_refs": [
+        "EV-KROAD-005-P0-LAYOUT-MATRIX"
+      ],
+      "outcome_status": "conditional",
+      "project_ready_claim_allowed": false,
+      "limitations": [
+        "documents platform/editor capability only",
+        "project availability remains missing"
+      ]
+    }
+  ],
+  "unresolvable_conditions": [
+    {
+      "condition_id": "layout_structure.unresolvable.missing_project_export",
+      "description": "If project_export layout intent or child topology evidence is missing for a project-specific decision, return unresolvable instead of guessing.",
+      "required_evidence_tier": "none",
+      "required_evidence_refs": [
+        "missing.project_export.layout_intent",
+        "missing.project_export.child_topology"
+      ],
+      "outcome_status": "unresolvable",
+      "project_ready_claim_allowed": false,
+      "limitations": [
+        "halt or ask for repair",
+        "no final selected option may be emitted"
+      ]
+    }
+  ],
+  "limitations": [
+    "This is a KROAD-005 contract fixture, not Resolver MVP logic.",
+    "It defines resolver rule shape and diagnostics only.",
+    "It assigns no real target-project final decision."
+  ],
+  "diagnostics": [
+    {
+      "code": "RESOLVER_RULE_MISSING_REQUIRED_EVIDENCE",
+      "severity": "error",
+      "when_emitted": "Required evidence refs for a condition are absent.",
+      "result_status": "unresolvable"
+    },
+    {
+      "code": "RESOLVER_RULE_UNKNOWN_DECISION_FAMILY",
+      "severity": "error",
+      "when_emitted": "decision_family_id is absent from the P0 matrix registry.",
+      "result_status": "unresolvable"
+    },
+    {
+      "code": "RESOLVER_RULE_OFFICIAL_DOCS_NOT_PROJECT_READY",
+      "severity": "error",
+      "when_emitted": "official_docs evidence is used to claim project-ready, runtime-ready, Builder execution, downstream acceptance, or production readiness.",
+      "result_status": "unresolvable"
+    }
+  ],
+  "fixture_requirements": {
+    "valid_fixture_path": "kernel/fixtures/valid/resolver_contract/valid_layout_structure_rule_contract.json",
+    "invalid_fixture_paths": [
+      "kernel/fixtures/invalid/resolver_contract/invalid_missing_evidence_refs.json",
+      "kernel/fixtures/invalid/resolver_contract/invalid_unknown_family_auto_resolved.json",
+      "kernel/fixtures/invalid/resolver_contract/invalid_official_docs_project_ready_auto_condition.json",
+      "kernel/fixtures/invalid/resolver_contract/invalid_matrix_guidance_as_output.json",
+      "kernel/fixtures/invalid/resolver_contract/invalid_project_export_with_official_docs_only.json",
+      "kernel/fixtures/invalid/resolver_contract/invalid_runtime_browser_with_project_export_only.json",
+      "kernel/fixtures/invalid/resolver_contract/invalid_downstream_validated_with_runtime_only.json",
+      "kernel/fixtures/invalid/resolver_contract/invalid_auto_condition_unresolvable_status.json",
+      "kernel/fixtures/invalid/resolver_contract/invalid_conditional_condition_auto_status.json",
+      "kernel/fixtures/invalid/resolver_contract/invalid_unresolvable_condition_conditional_status.json"
+    ],
+    "adversarial_fixture_plan": [
+      "official_docs_only_must_not_be_project_ready",
+      "under_tier_evidence_must_not_satisfy_declared_tier",
+      "condition_bucket_status_must_match_bucket",
+      "unknown_family_must_not_auto_resolve",
+      "matrix_guidance_must_not_be_output",
+      "free_text_opinion_must_not_be_output"
+    ]
+  },
+  "output_contract": {
+    "resolver_statuses": [
+      "auto_resolved",
+      "conditional",
+      "unresolvable"
+    ],
+    "unknown_decision_family_outcome": "unresolvable",
+    "missing_required_evidence_outcome": "unresolvable",
+    "human_or_llm_free_text_opinion_allowed": false,
+    "matrix_guidance_is_resolver_output": false,
+    "assigns_real_final_decision": false
+  },
+  "forbidden_overclaims": [
+    "resolver_contract_is_resolver_mvp",
+    "resolver_contract_assigns_real_final_decision",
+    "official_docs_prove_project_availability",
+    "official_docs_prove_runtime_behavior",
+    "official_docs_prove_builder_execution",
+    "official_docs_prove_downstream_acceptance",
+    "official_docs_prove_production_readiness",
+    "matrix_guidance_is_resolver_result",
+    "human_or_llm_free_text_is_resolver_output"
+  ]
+}
