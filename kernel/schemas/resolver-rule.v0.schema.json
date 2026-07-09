@@ -1,0 +1,433 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/resolver-rule.v0.schema.json",
+  "title": "EV4 Resolver Rule Contract Schema v0",
+  "description": "KROAD-005 Kernel-local resolver rule contract. This schema defines executable/semi-executable rule shape only; it does not implement the Resolver MVP.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "schema_version",
+    "contract_id",
+    "status",
+    "rule_id",
+    "rule_version",
+    "decision_family_id",
+    "matrix_ref",
+    "input_context",
+    "required_evidence_tier",
+    "evidence_refs",
+    "option_set",
+    "allowed_options",
+    "forbidden_options",
+    "auto_resolution_conditions",
+    "conditional_conditions",
+    "unresolvable_conditions",
+    "limitations",
+    "diagnostics",
+    "fixture_requirements",
+    "output_contract",
+    "forbidden_overclaims"
+  ],
+  "properties": {
+    "artifact_type": {
+      "const": "resolver_rule_contract"
+    },
+    "schema_version": {
+      "const": "0.1.0"
+    },
+    "contract_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "kroad_005_contract_example",
+        "kroad_005_contract_plan",
+        "kroad_005_contract_baseline"
+      ]
+    },
+    "rule_id": {
+      "type": "string",
+      "pattern": "^resolver\\.rule\\.[a-z0-9_\\-.]+$"
+    },
+    "rule_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "decision_family_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "matrix_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "registry_id",
+        "matrix_id",
+        "decision_family_id"
+      ],
+      "properties": {
+        "registry_id": {
+          "const": "p0-decision-matrices.v0"
+        },
+        "matrix_id": {
+          "type": "string",
+          "pattern": "^p0\\.matrix\\.[a-z0-9_\\-.]+\\.v[0-9]+$"
+        },
+        "decision_family_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "input_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "context_type",
+        "required_fields",
+        "free_text_only_allowed"
+      ],
+      "properties": {
+        "context_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required_fields": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "free_text_only_allowed": {
+          "const": false
+        },
+        "context_schema_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "required_evidence_tier": {
+      "enum": [
+        "none",
+        "official_docs",
+        "project_export",
+        "runtime_browser",
+        "downstream_validated"
+      ]
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidenceRef"
+      }
+    },
+    "option_set": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/option"
+      }
+    },
+    "allowed_options": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "forbidden_options": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "auto_resolution_conditions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/condition"
+      }
+    },
+    "conditional_conditions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/condition"
+      }
+    },
+    "unresolvable_conditions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/condition"
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      }
+    },
+    "fixture_requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "valid_fixture_path",
+        "invalid_fixture_paths",
+        "adversarial_fixture_plan"
+      ],
+      "properties": {
+        "valid_fixture_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "invalid_fixture_paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "adversarial_fixture_plan": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "output_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resolver_statuses",
+        "unknown_decision_family_outcome",
+        "missing_required_evidence_outcome",
+        "human_or_llm_free_text_opinion_allowed",
+        "matrix_guidance_is_resolver_output",
+        "assigns_real_final_decision"
+      ],
+      "properties": {
+        "resolver_statuses": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "const": "auto_resolved"
+            },
+            {
+              "const": "conditional"
+            },
+            {
+              "const": "unresolvable"
+            }
+          ],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "unknown_decision_family_outcome": {
+          "const": "unresolvable"
+        },
+        "missing_required_evidence_outcome": {
+          "const": "unresolvable"
+        },
+        "human_or_llm_free_text_opinion_allowed": {
+          "const": false
+        },
+        "matrix_guidance_is_resolver_output": {
+          "const": false
+        },
+        "assigns_real_final_decision": {
+          "const": false
+        }
+      }
+    },
+    "forbidden_overclaims": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$defs": {
+    "option": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "option_id",
+        "display_name"
+      ],
+      "properties": {
+        "option_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "condition_id",
+        "description",
+        "required_evidence_tier",
+        "required_evidence_refs",
+        "outcome_status",
+        "project_ready_claim_allowed",
+        "limitations"
+      ],
+      "properties": {
+        "condition_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required_evidence_tier": {
+          "enum": [
+            "none",
+            "official_docs",
+            "project_export",
+            "runtime_browser",
+            "downstream_validated"
+          ]
+        },
+        "required_evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "outcome_status": {
+          "enum": [
+            "auto_resolved",
+            "conditional",
+            "unresolvable"
+          ]
+        },
+        "project_ready_claim_allowed": {
+          "type": "boolean"
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "severity",
+        "when_emitted",
+        "result_status"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^RESOLVER_RULE_[A-Z0-9_]+$"
+        },
+        "severity": {
+          "enum": [
+            "error",
+            "warning"
+          ]
+        },
+        "when_emitted": {
+          "type": "string",
+          "minLength": 1
+        },
+        "result_status": {
+          "enum": [
+            "auto_resolved",
+            "conditional",
+            "unresolvable"
+          ]
+        }
+      }
+    },
+    "evidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "evidence_tier",
+        "source_type",
+        "ref",
+        "limitations"
+      ],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_tier": {
+          "enum": [
+            "none",
+            "official_docs",
+            "project_export",
+            "runtime_browser",
+            "downstream_validated"
+          ]
+        },
+        "source_type": {
+          "enum": [
+            "official_elementor_docs",
+            "kernel_fixture",
+            "project_export",
+            "runtime_browser",
+            "downstream_validation",
+            "manual_note"
+          ]
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}
