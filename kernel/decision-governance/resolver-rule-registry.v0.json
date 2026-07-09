@@ -25,7 +25,13 @@
     "kernel/fixtures/invalid/resolver_contract/invalid_missing_evidence_refs.json",
     "kernel/fixtures/invalid/resolver_contract/invalid_unknown_family_auto_resolved.json",
     "kernel/fixtures/invalid/resolver_contract/invalid_official_docs_project_ready_auto_condition.json",
-    "kernel/fixtures/invalid/resolver_contract/invalid_matrix_guidance_as_output.json"
+    "kernel/fixtures/invalid/resolver_contract/invalid_matrix_guidance_as_output.json",
+    "kernel/fixtures/invalid/resolver_contract/invalid_project_export_with_official_docs_only.json",
+    "kernel/fixtures/invalid/resolver_contract/invalid_runtime_browser_with_project_export_only.json",
+    "kernel/fixtures/invalid/resolver_contract/invalid_downstream_validated_with_runtime_only.json",
+    "kernel/fixtures/invalid/resolver_contract/invalid_auto_condition_unresolvable_status.json",
+    "kernel/fixtures/invalid/resolver_contract/invalid_conditional_condition_auto_status.json",
+    "kernel/fixtures/invalid/resolver_contract/invalid_unresolvable_condition_conditional_status.json"
   ],
   "next_allowed_step": "KROAD-006 may implement a small resolver MVP after this contract baseline is merged and validated."
 }
