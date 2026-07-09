@@ -1,6 +1,6 @@
 # P0 Decision Matrices
 
-**Status:** KROAD-004 foundation / Kernel-local  
+**Status:** KROAD-004 foundation / Kernel-local; KROAD-006 has a limited resolver-backed subset  
 **Scope:** high-value Elementor V4 comparison matrices only  
 **Owner:** Kernel  
 **Machine-readable artifact:** `kernel/decision-governance/p0-decision-matrices.v0.json`
@@ -13,9 +13,9 @@ The matrix registry gives Architect, CE, Builder, and Responsive a shared compar
 
 ## What this is not
 
-This is not a Resolver, not `KROAD-005`, not a final design decision, not a full Elementor feature registry, and not a control-level registry.
+The matrix file itself is not the Resolver, not a final design decision, not a full Elementor feature registry, and not a control-level registry.
 
-A matrix does not produce:
+A matrix by itself does not produce:
 
 ```text
 resolver_status
@@ -28,21 +28,39 @@ runtime_validated
 production_ready
 ```
 
+## Relation to KROAD-006 Resolver MVP
+
+KROAD-006 adds a separate limited Resolver MVP for one high-risk family:
+
+```text
+layout_structure
+```
+
+The active resolver artifacts live outside the matrix file:
+
+```text
+kernel/decision-governance/resolver-rules/layout-structure.v0.json
+kernel/resolver-mvp/resolve-high-risk-p0.mjs
+docs/decision-governance/RESOLVER_MVP_KROAD_006.md
+```
+
+The matrix remains comparison guidance. The resolver must explicitly reference the matrix and must still satisfy rule/evidence/fixture validation.
+
 ## Required P0 families covered
 
 `p0-decision-matrices.v0.json` covers the KROAD-004 required families:
 
-| Matrix | Candidate options | Primary owner/consumers |
+| Matrix | Candidate options | Current resolver-backed status |
 |---|---|---|
-| `layout_structure` | `div_block`, `flexbox`, `grid` | Kernel → Architect / CE / Builder / Responsive |
-| `media_choice` | `image`, `svg`, `background_image` | Kernel → Architect / CE / Builder / Responsive |
-| `text_semantics` | `heading`, `paragraph` | Kernel → Architect / CE / Builder / Responsive |
-| `interaction_link_topology` | `button`, `link`, `clickable_container` | Kernel → Architect / CE / Builder / Responsive |
-| `positioning_safety` | `normal_flow`, `relative`, `absolute` | Kernel → Architect / CE / Builder / Responsive |
-| `styling_mechanism` | `native_control`, `custom_css` | Kernel → Architect / CE / Builder / Responsive |
-| `class_scope` | `local_class`, `global_class` | Kernel → Architect / CE / Builder |
-| `value_binding` | `variable`, `literal` | Kernel → Architect / CE / Builder |
-| `unit_decision` | `px`, `rem`, `percent`, `auto`, `variable` | Kernel → Architect / CE / Builder / Responsive |
+| `layout_structure` | `div_block`, `flexbox`, `grid` | limited KROAD-006 MVP |
+| `media_choice` | `image`, `svg`, `background_image` | not resolver-backed yet |
+| `text_semantics` | `heading`, `paragraph` | not resolver-backed yet |
+| `interaction_link_topology` | `button`, `link`, `clickable_container` | not resolver-backed yet |
+| `positioning_safety` | `normal_flow`, `relative`, `absolute` | not resolver-backed yet |
+| `styling_mechanism` | `native_control`, `custom_css` | not resolver-backed yet |
+| `class_scope` | `local_class`, `global_class` | not resolver-backed yet |
+| `value_binding` | `variable`, `literal` | not resolver-backed yet |
+| `unit_decision` | `px`, `rem`, `percent`, `auto`, `variable` | not resolver-backed yet |
 
 ## Evidence model
 
@@ -56,7 +74,7 @@ Architect may use the matrices to compare options and record rejected alternativ
 
 CE may use the matrices to identify constructability questions and required evidence, but must not treat the matrix as Builder execution proof.
 
-Builder may use the matrices only as a locked-decision context once a valid decision record or later resolver output exists. Builder must not infer a selected option directly from this matrix.
+Builder may use the matrices only as locked-decision context once a valid decision record or resolver output exists. Builder must not infer a selected option directly from this matrix.
 
 Responsive may use runtime concern fields to identify what later browser/runtime validation must check. The matrices do not validate runtime behavior.
 
@@ -78,23 +96,22 @@ The matrix artifact is intentionally small and source-ref based. It does not cop
 
 ## Validation
 
-No new schema or validator is added in KROAD-004. Existing repository validation should still be run for regression:
+Run:
 
 ```bash
 npm run validate:mvk
 npm run validate:roadmap-memory
 ```
 
-Because this KROAD adds a machine-readable guidance artifact without a new validator path, schema/fixture enforcement remains a follow-up candidate only if a later roadmap item explicitly asks for a matrix contract or resolver contract.
+For the limited KROAD-006 Resolver MVP, also run:
 
-## Next allowed step
-
-The next roadmap item remains `KROAD-005 — Decision Resolver Contract` after KROAD-004 is merged and validated. KROAD-005 must define how a matrix becomes an executable or semi-executable resolver contract; it must not be treated as implemented by this file.
+```bash
+npm run validate:resolver-mvp
+```
 
 ## Must not be done yet
 
-- Do not build the Resolver.
-- Do not emit resolver results from these matrices.
+- Do not infer resolver output for families that have no active resolver rule.
 - Do not claim downstream enforcement.
 - Do not claim runtime proof.
 - Do not claim Builder execution proof.
