@@ -78,6 +78,16 @@ runtime_browser
 downstream_validated
 ```
 
+The validator treats those tiers as ordered evidence levels:
+
+```text
+none < official_docs < project_export < runtime_browser < downstream_validated
+```
+
+A rule-level `required_evidence_tier` is satisfied only when at least one `evidence_refs` entry is at or above that tier.
+
+For non-`unresolvable` conditions, each `required_evidence_refs` item must match an `evidence_refs.evidence_id`, and the matched refs must satisfy that condition's `required_evidence_tier`.
+
 Official Elementor documentation can support documented platform/editor capability only. It cannot prove:
 
 ```text
@@ -92,6 +102,18 @@ production readiness
 ```
 
 Therefore, official-doc-only evidence may keep a rule `conditional` or `unresolvable`, but it must not be treated as project-ready.
+
+## Condition bucket contract
+
+The three condition buckets are not interchangeable:
+
+```text
+auto_resolution_conditions -> auto_resolved
+conditional_conditions -> conditional
+unresolvable_conditions -> unresolvable
+```
+
+A condition whose `outcome_status` contradicts its bucket is invalid. The validator emits `RESOLVER_RULE_CONDITION_BUCKET_STATUS_MISMATCH` on the exact bucket path.
 
 ## Relation to P0 decision matrices
 
@@ -149,6 +171,9 @@ The validator checks this through the P0 matrix registry and emits diagnostics s
 ```text
 RESOLVER_RULE_UNKNOWN_DECISION_FAMILY
 RESOLVER_RULE_EVIDENCE_REFS_REQUIRED
+RESOLVER_RULE_EVIDENCE_TIER_UNSATISFIED
+RESOLVER_RULE_CONDITION_EVIDENCE_TIER_UNSATISFIED
+RESOLVER_RULE_CONDITION_BUCKET_STATUS_MISMATCH
 RESOLVER_RULE_OFFICIAL_DOCS_NOT_PROJECT_READY
 RESOLVER_RULE_MATRIX_GUIDANCE_NOT_RESOLVER_OUTPUT
 RESOLVER_RULE_FREE_TEXT_OPINION_FORBIDDEN
@@ -171,6 +196,8 @@ Invalid fixtures assert that:
 missing evidence refs fail
 unknown family fails closed
 official-doc-only evidence cannot become project-ready
+under-tier evidence cannot satisfy a higher declared evidence tier
+condition bucket outcome_status must match its bucket
 matrix guidance and free-text opinion are not resolver output
 ```
 
