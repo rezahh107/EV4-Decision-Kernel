@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-Decision Record Schema v2 contract and migration plan
+KROAD-003 second-pass review record
 
 ## Status Authority
 
@@ -34,7 +34,8 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
 - [x] KROAD-002 — Taxonomy + Execution-Risk Boundaries
   - Update note: PR #11 completed the decision governance taxonomy and execution-risk boundary foundation.
 - [x] KROAD-003 — Decision Record Schema v2 + Migration Plan
-  - Update note: This change adds `kernel/schemas/decision-record.v2.schema.json`, valid/invalid v2 fixtures, `kernel/validator/validate-decision-record-v2.mjs`, the v2 contract documentation, the migration plan, and lifecycle field documentation without implementing the Resolver or later KROAD items.
+  - Update note: PR #17 completed KROAD-003 by adding `kernel/schemas/decision-record.v2.schema.json`, valid/invalid v2 fixtures, `kernel/validator/validate-decision-record-v2.mjs`, the v2 contract documentation, the migration plan, and lifecycle field documentation without implementing the Resolver or later KROAD items.
+  - Review note: The second-pass review/audit result is preserved in `planning/reviews/KROAD-003_DECISION_RECORD_V2_SECOND_PASS_REVIEW.md`; it records the merged PR #17 state, reviewed files, CI evidence, boundaries, and non-blocking follow-up.
 
 ## Remaining Work
 
