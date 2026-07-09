@@ -29,6 +29,7 @@ const fixturePlan = [
   { path: 'invalid/l2_decision_correctness/layout_structure_evidence_tier_too_low_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_EVIDENCE_TIER_BELOW_RESOLVER_OUTPUT'] },
   { path: 'invalid/l2_decision_correctness/layout_structure_missing_required_evidence_ref_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_DECISION_MISSING_REQUIRED_EVIDENCE_REF'] },
   { path: 'invalid/l2_decision_correctness/layout_structure_conditional_missing_justification_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_CONDITIONAL_JUSTIFICATION_REQUIRED'] },
+  { path: 'invalid/l2_decision_correctness/layout_structure_conditional_missing_limitations_acknowledged_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_CONDITIONAL_LIMITATIONS_ACKNOWLEDGED_REQUIRED'] },
   { path: 'invalid/l2_decision_correctness/layout_structure_human_override_not_marked_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_HUMAN_OVERRIDE_REQUIRED'] },
   { path: 'invalid/l2_decision_correctness/layout_structure_rule_version_mismatch_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_RULE_VERSION_MISMATCH'] },
   { path: 'invalid/l2_decision_correctness/layout_structure_requires_reaudit_final_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_DECISION_REQUIRES_REAUDIT'] },
@@ -132,6 +133,10 @@ function validateConditionalJustification(record, resolverInput, auditContext, d
   if (!Array.isArray(justification.evidence_refs) || justification.evidence_refs.length === 0) {
     diagnostics.push(diagnostic('L2_CONDITIONAL_JUSTIFICATION_EVIDENCE_REFS_REQUIRED', 'Conditional justification requires at least one evidence ref.', 'semantic', 'audit_context.conditional_justification.evidence_refs'));
     return;
+  }
+
+  if (!Array.isArray(justification.limitations_acknowledged) || justification.limitations_acknowledged.length === 0 || justification.limitations_acknowledged.some((item) => typeof item !== 'string' || item.trim().length === 0)) {
+    diagnostics.push(diagnostic('L2_CONDITIONAL_LIMITATIONS_ACKNOWLEDGED_REQUIRED', 'Conditional justification requires limitations_acknowledged as a non-empty array of non-empty strings.', 'semantic', 'audit_context.conditional_justification.limitations_acknowledged'));
   }
 
   const recordEvidenceIds = evidenceIds(record.evidence_refs);
