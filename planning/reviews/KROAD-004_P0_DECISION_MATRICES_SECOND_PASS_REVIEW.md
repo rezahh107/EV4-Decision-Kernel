@@ -204,7 +204,7 @@ This was not a blocker for KROAD-004 because the roadmap item allowed matrix JSO
 
 ## Final Conclusion
 
-KROAD-004 review stage was safe enough and does not require another critic pass.
+KROAD-004 review stage was safe enough and does not require another critique pass.
 
 KROAD-004 is complete on `main` through PR #19.
 
