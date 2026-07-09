@@ -19,76 +19,20 @@ const EVIDENCE_TIER_RANK = new Map([
 ]);
 
 const fixturePlan = [
-  {
-    path: 'valid/l2_decision_correctness/layout_structure_auto_resolved_flexbox_pass.json',
-    expectedStatus: 'pass',
-    expectedCodes: []
-  },
-  {
-    path: 'valid/l2_decision_correctness/layout_structure_conditional_official_docs_pass.json',
-    expectedStatus: 'pass',
-    expectedCodes: ['L2_DECISION_REQUIRES_REAUDIT']
-  },
-  {
-    path: 'valid/l2_decision_correctness/layout_structure_human_override_visible_pass.json',
-    expectedStatus: 'pass',
-    expectedCodes: ['L2_HUMAN_OVERRIDE_OBSERVED']
-  },
-  {
-    path: 'valid/l2_decision_correctness/unsupported_family_not_fully_audited.json',
-    expectedStatus: 'unsupported',
-    expectedCodes: ['L2_DECISION_FAMILY_NOT_RESOLVER_COVERED']
-  },
-  {
-    path: 'invalid/l2_decision_correctness/layout_structure_resolver_result_mismatch_invalid.json',
-    expectedStatus: 'fail',
-    expectedCodes: ['L2_RESOLVER_STATUS_MISMATCH', 'L2_SELECTED_OPTION_RESOLVER_MISMATCH']
-  },
-  {
-    path: 'invalid/l2_decision_correctness/layout_structure_selected_outside_allowed_invalid.json',
-    expectedStatus: 'fail',
-    expectedCodes: ['L2_SELECTED_OPTION_OUTSIDE_RESOLVER_ALLOWED_SET', 'L2_ALLOWED_OPTIONS_OUTSIDE_RESOLVER_OUTPUT']
-  },
-  {
-    path: 'invalid/l2_decision_correctness/layout_structure_forbidden_option_selected_invalid.json',
-    expectedStatus: 'fail',
-    expectedCodes: ['L2_FORBIDDEN_OPTION_SELECTED']
-  },
-  {
-    path: 'invalid/l2_decision_correctness/layout_structure_evidence_tier_too_low_invalid.json',
-    expectedStatus: 'fail',
-    expectedCodes: ['L2_EVIDENCE_TIER_BELOW_RESOLVER_OUTPUT']
-  },
-  {
-    path: 'invalid/l2_decision_correctness/layout_structure_missing_required_evidence_ref_invalid.json',
-    expectedStatus: 'fail',
-    expectedCodes: ['L2_DECISION_MISSING_REQUIRED_EVIDENCE_REF']
-  },
-  {
-    path: 'invalid/l2_decision_correctness/layout_structure_conditional_missing_justification_invalid.json',
-    expectedStatus: 'fail',
-    expectedCodes: ['L2_CONDITIONAL_JUSTIFICATION_REQUIRED']
-  },
-  {
-    path: 'invalid/l2_decision_correctness/layout_structure_human_override_not_marked_invalid.json',
-    expectedStatus: 'fail',
-    expectedCodes: ['L2_HUMAN_OVERRIDE_REQUIRED']
-  },
-  {
-    path: 'invalid/l2_decision_correctness/layout_structure_rule_version_mismatch_invalid.json',
-    expectedStatus: 'fail',
-    expectedCodes: ['L2_RULE_VERSION_MISMATCH']
-  },
-  {
-    path: 'invalid/l2_decision_correctness/layout_structure_requires_reaudit_final_invalid.json',
-    expectedStatus: 'fail',
-    expectedCodes: ['L2_DECISION_REQUIRES_REAUDIT']
-  },
-  {
-    path: 'adversarial/l2_decision_correctness/layout_structure_production_ready_overclaim_invalid.json',
-    expectedStatus: 'fail',
-    expectedCodes: ['L2_UNSUPPORTED_OVERCLAIM']
-  }
+  { path: 'valid/l2_decision_correctness/layout_structure_auto_resolved_flexbox_pass.json', expectedStatus: 'pass', expectedCodes: [] },
+  { path: 'valid/l2_decision_correctness/layout_structure_conditional_official_docs_pass.json', expectedStatus: 'pass', expectedCodes: ['L2_DECISION_REQUIRES_REAUDIT'] },
+  { path: 'valid/l2_decision_correctness/layout_structure_human_override_visible_pass.json', expectedStatus: 'pass', expectedCodes: ['L2_HUMAN_OVERRIDE_OBSERVED'] },
+  { path: 'valid/l2_decision_correctness/unsupported_family_not_fully_audited.json', expectedStatus: 'unsupported', expectedCodes: ['L2_DECISION_FAMILY_NOT_RESOLVER_COVERED'] },
+  { path: 'invalid/l2_decision_correctness/layout_structure_resolver_result_mismatch_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_RESOLVER_STATUS_MISMATCH', 'L2_SELECTED_OPTION_RESOLVER_MISMATCH'] },
+  { path: 'invalid/l2_decision_correctness/layout_structure_selected_outside_allowed_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_SELECTED_OPTION_OUTSIDE_RESOLVER_ALLOWED_SET', 'L2_ALLOWED_OPTIONS_OUTSIDE_RESOLVER_OUTPUT'] },
+  { path: 'invalid/l2_decision_correctness/layout_structure_forbidden_option_selected_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_FORBIDDEN_OPTION_SELECTED'] },
+  { path: 'invalid/l2_decision_correctness/layout_structure_evidence_tier_too_low_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_EVIDENCE_TIER_BELOW_RESOLVER_OUTPUT'] },
+  { path: 'invalid/l2_decision_correctness/layout_structure_missing_required_evidence_ref_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_DECISION_MISSING_REQUIRED_EVIDENCE_REF'] },
+  { path: 'invalid/l2_decision_correctness/layout_structure_conditional_missing_justification_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_CONDITIONAL_JUSTIFICATION_REQUIRED'] },
+  { path: 'invalid/l2_decision_correctness/layout_structure_human_override_not_marked_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_HUMAN_OVERRIDE_REQUIRED'] },
+  { path: 'invalid/l2_decision_correctness/layout_structure_rule_version_mismatch_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_RULE_VERSION_MISMATCH'] },
+  { path: 'invalid/l2_decision_correctness/layout_structure_requires_reaudit_final_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_DECISION_REQUIRES_REAUDIT'] },
+  { path: 'adversarial/l2_decision_correctness/layout_structure_production_ready_overclaim_invalid.json', expectedStatus: 'fail', expectedCodes: ['L2_UNSUPPORTED_OVERCLAIM'] }
 ];
 
 function readJson(pathFromRoot) {
@@ -135,6 +79,8 @@ function loadCoveredFamilies() {
   if (!isPlainObject(registry) || !Array.isArray(registry.active_rules)) return new Set();
   return new Set(registry.active_rules.map((entry) => entry?.decision_family_id).filter(Boolean));
 }
+
+const DEFAULT_COVERED_FAMILIES = loadCoveredFamilies();
 
 function pathFromAjvError(error) {
   const basePath = error.instancePath ? error.instancePath.slice(1).replaceAll('/', '.') : '(root)';
@@ -237,7 +183,7 @@ function validateUnsupportedOverclaims(auditContext, diagnostics) {
   }
 }
 
-export function auditDecisionRecord({ decisionRecord, resolverInput, auditContext = {}, validateDecisionRecordSchema = null, coveredFamilies = loadCoveredFamilies() }) {
+export function auditDecisionRecord({ decisionRecord, resolverInput, auditContext = {}, validateDecisionRecordSchema = null, coveredFamilies = DEFAULT_COVERED_FAMILIES }) {
   const diagnostics = [];
 
   if (!isPlainObject(decisionRecord)) {
@@ -426,6 +372,6 @@ function runValidation() {
   process.exit(failed ? 1 : 0);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (fileURLToPath(import.meta.url) === process.argv[1]) {
   runValidation();
 }
