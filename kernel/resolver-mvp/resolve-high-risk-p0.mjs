@@ -24,7 +24,10 @@ const fixturePlan = [
   'invalid/resolver_mvp/invalid_malformed_active_rule_entry_string.json',
   'invalid/resolver_mvp/invalid_malformed_active_rule_file_null.json',
   'adversarial/resolver_mvp/adversarial_official_docs_auto_resolved.json',
-  'adversarial/resolver_mvp/adversarial_grid_without_availability.json'
+  'adversarial/resolver_mvp/adversarial_grid_without_availability.json',
+  'adversarial/resolver_mvp/adversarial_unrelated_project_export_ref.json',
+  'adversarial/resolver_mvp/adversarial_missing_context_required_evidence_refs.json',
+  'adversarial/resolver_mvp/adversarial_absent_context_required_evidence_ref.json'
 ];
 
 function readJson(pathFromRoot) {
@@ -49,6 +52,14 @@ function diagnostic(code, message, path, severity = 'error') {
 
 function evidenceRefs(input) {
   return Array.isArray(input?.evidence_refs) ? input.evidence_refs : [];
+}
+
+function evidenceById(refs) {
+  const indexed = new Map();
+  for (const ref of refs) {
+    if (typeof ref?.evidence_id === 'string') indexed.set(ref.evidence_id, ref);
+  }
+  return indexed;
 }
 
 function highestEvidenceTier(refs) {
@@ -180,6 +191,67 @@ function fallbackRule() {
   return { rule_id: 'resolver.rule.unknown', rule_version: '0.0.0', forbidden_options: [], allowed_options: ['none'], option_set: [] };
 }
 
+function findCondition(rule, bucketName, conditionId) {
+  const bucket = Array.isArray(rule?.[bucketName]) ? rule[bucketName] : [];
+  return bucket.find((condition) => condition?.condition_id === conditionId) || null;
+}
+
+function failClosed(rule, diagnostics, evidenceTier) {
+  return result({ rule, status: 'unresolvable', selectedOption: null, allowedOptions: ['none'], diagnostics, evidenceTier });
+}
+
+function validateConditionEvidenceBinding({ rule, refs, context, condition, diagnostics, evidenceTier }) {
+  if (!condition || !isPlainObject(condition)) {
+    diagnostics.push(diagnostic('RESOLVER_MVP_CONDITION_NOT_FOUND', 'Active resolver condition must exist before non-unresolvable output.', 'rule.conditions'));
+    return { ok: false, response: failClosed(rule, diagnostics, evidenceTier) };
+  }
+
+  if (!Array.isArray(context.required_evidence_refs) || context.required_evidence_refs.length === 0) {
+    diagnostics.push(diagnostic('RESOLVER_MVP_REQUIRED_EVIDENCE_REFS_REQUIRED', 'context.required_evidence_refs must be a non-empty array before non-unresolvable output.', 'input.context.required_evidence_refs'));
+    return { ok: false, response: failClosed(rule, diagnostics, evidenceTier) };
+  }
+
+  const conditionRequiredRefs = Array.isArray(condition.required_evidence_refs) ? condition.required_evidence_refs : [];
+  if (conditionRequiredRefs.length === 0) {
+    diagnostics.push(diagnostic('RESOLVER_MVP_CONDITION_REQUIRED_EVIDENCE_REFS_REQUIRED', 'Resolver condition must declare required_evidence_refs before non-unresolvable output.', `rule.conditions.${condition.condition_id}.required_evidence_refs`));
+    return { ok: false, response: failClosed(rule, diagnostics, evidenceTier) };
+  }
+
+  const byId = evidenceById(refs);
+  const contextRequiredSet = new Set(context.required_evidence_refs);
+  const conditionRequiredSet = new Set(conditionRequiredRefs);
+  const matchedRefs = [];
+
+  for (const requiredId of contextRequiredSet) {
+    if (!conditionRequiredSet.has(requiredId)) {
+      diagnostics.push(diagnostic('RESOLVER_MVP_REQUIRED_EVIDENCE_REF_NOT_ALLOWED', `context.required_evidence_refs contains ${requiredId}, which is not required by the active resolver condition.`, 'input.context.required_evidence_refs'));
+    }
+    if (!byId.has(requiredId)) {
+      diagnostics.push(diagnostic('RESOLVER_MVP_REQUIRED_EVIDENCE_REF_NOT_FOUND', `Required evidence ref ${requiredId} is not present in input.evidence_refs.`, 'input.evidence_refs'));
+    }
+  }
+
+  for (const requiredId of conditionRequiredSet) {
+    if (!contextRequiredSet.has(requiredId)) {
+      diagnostics.push(diagnostic('RESOLVER_MVP_REQUIRED_EVIDENCE_REF_NOT_DECLARED', `Active resolver condition requires ${requiredId}, but input.context.required_evidence_refs does not declare it.`, 'input.context.required_evidence_refs'));
+      continue;
+    }
+    const matched = byId.get(requiredId);
+    if (matched) matchedRefs.push(matched);
+  }
+
+  const requiredTier = condition.required_evidence_tier || rule.required_evidence_tier;
+  if (!hasEvidenceAtOrAbove(matchedRefs, requiredTier)) {
+    diagnostics.push(diagnostic('RESOLVER_MVP_REQUIRED_EVIDENCE_REF_TIER_UNSATISFIED', `Matched required evidence refs do not satisfy required tier ${requiredTier}.`, 'input.evidence_refs'));
+  }
+
+  if (diagnostics.some((item) => item.severity === 'error')) {
+    return { ok: false, response: failClosed(rule, diagnostics, evidenceTier) };
+  }
+
+  return { ok: true, response: null };
+}
+
 function resolveLayoutStructure(input, rule, inheritedDiagnostics = []) {
   const diagnostics = [...inheritedDiagnostics];
   const refs = evidenceRefs(input);
@@ -188,29 +260,32 @@ function resolveLayoutStructure(input, rule, inheritedDiagnostics = []) {
 
   if (!isKnownEvidenceTier(rule.required_evidence_tier)) {
     diagnostics.push(diagnostic('RESOLVER_MVP_REQUIRED_EVIDENCE_TIER_INVALID', 'Resolver rule required_evidence_tier must be one of the known evidence tiers.', 'rule.required_evidence_tier'));
-    return result({ rule, status: 'unresolvable', selectedOption: null, allowedOptions: ['none'], diagnostics, evidenceTier });
+    return failClosed(rule, diagnostics, evidenceTier);
   }
 
   if (refs.length === 0) {
     diagnostics.push(diagnostic('RESOLVER_MVP_MISSING_EVIDENCE_REFS', 'Resolver MVP input must include evidence_refs.', 'input.evidence_refs'));
     diagnostics.push(diagnostic('RESOLVER_MVP_REQUIRED_EVIDENCE_TIER_UNSATISFIED', 'layout_structure requires project_export evidence for auto_resolved output.', 'input.evidence_refs'));
-    return result({ rule, status: 'unresolvable', selectedOption: null, allowedOptions: ['none'], diagnostics, evidenceTier });
-  }
-
-  if (!hasEvidenceAtOrAbove(refs, rule.required_evidence_tier)) {
-    if (hasOfficialDocs(refs)) {
-      diagnostics.push(diagnostic('RESOLVER_MVP_OFFICIAL_DOCS_ONLY_CONDITIONAL', 'Official-doc-only evidence supports documented capability only; project-specific layout remains conditional.', 'input.evidence_refs', 'warning'));
-      return result({ rule, status: 'conditional', selectedOption: null, allowedOptions: allowedAll, diagnostics, evidenceTier });
-    }
-
-    diagnostics.push(diagnostic('RESOLVER_MVP_REQUIRED_EVIDENCE_TIER_UNSATISFIED', 'layout_structure requires project_export evidence for project-specific resolution.', 'input.evidence_refs'));
-    return result({ rule, status: 'unresolvable', selectedOption: null, allowedOptions: ['none'], diagnostics, evidenceTier });
+    return failClosed(rule, diagnostics, evidenceTier);
   }
 
   const context = input?.context;
   if (!isPlainObject(context)) {
     diagnostics.push(diagnostic('RESOLVER_MVP_UNSUPPORTED_CONTEXT', 'layout_structure requires a structured context object.', 'input.context'));
-    return result({ rule, status: 'unresolvable', selectedOption: null, allowedOptions: ['none'], diagnostics, evidenceTier });
+    return failClosed(rule, diagnostics, evidenceTier);
+  }
+
+  if (!hasEvidenceAtOrAbove(refs, rule.required_evidence_tier)) {
+    if (hasOfficialDocs(refs)) {
+      const condition = findCondition(rule, 'conditional_conditions', 'layout_structure.conditional.official_docs_only');
+      const binding = validateConditionEvidenceBinding({ rule, refs, context, condition, diagnostics, evidenceTier });
+      if (!binding.ok) return binding.response;
+      diagnostics.push(diagnostic('RESOLVER_MVP_OFFICIAL_DOCS_ONLY_CONDITIONAL', 'Official-doc-only evidence supports documented capability only; project-specific layout remains conditional.', 'input.evidence_refs', 'warning'));
+      return result({ rule, status: 'conditional', selectedOption: null, allowedOptions: allowedAll, diagnostics, evidenceTier });
+    }
+
+    diagnostics.push(diagnostic('RESOLVER_MVP_REQUIRED_EVIDENCE_TIER_UNSATISFIED', 'layout_structure requires project_export evidence for project-specific resolution.', 'input.evidence_refs'));
+    return failClosed(rule, diagnostics, evidenceTier);
   }
 
   const layoutIntent = context.layout_intent;
@@ -221,21 +296,33 @@ function resolveLayoutStructure(input, rule, inheritedDiagnostics = []) {
   const gridAvailabilityProven = context.grid_availability_proven === true;
 
   if (layoutIntent === 'wrapper' && simpleWrapperOnly && !twoAxisRequired) {
+    const condition = findCondition(rule, 'auto_resolution_conditions', 'layout_structure.auto_resolve.div_block.simple_wrapper_project_export');
+    const binding = validateConditionEvidenceBinding({ rule, refs, context, condition, diagnostics, evidenceTier });
+    if (!binding.ok) return binding.response;
     return result({ rule, status: 'auto_resolved', selectedOption: 'div_block', allowedOptions: ['div_block'], diagnostics, evidenceTier });
   }
 
   if (layoutIntent === 'single_axis' && ['row', 'column'].includes(axis) && ['linear', 'wrapping'].includes(childTopology) && !twoAxisRequired) {
+    const condition = findCondition(rule, 'auto_resolution_conditions', 'layout_structure.auto_resolve.flexbox.single_axis_project_export');
+    const binding = validateConditionEvidenceBinding({ rule, refs, context, condition, diagnostics, evidenceTier });
+    if (!binding.ok) return binding.response;
     return result({ rule, status: 'auto_resolved', selectedOption: 'flexbox', allowedOptions: ['flexbox'], diagnostics, evidenceTier });
   }
 
   if (layoutIntent === 'two_axis' || twoAxisRequired) {
+    const condition = findCondition(rule, 'auto_resolution_conditions', 'layout_structure.auto_resolve.grid.two_axis_project_export');
+    const binding = validateConditionEvidenceBinding({ rule, refs, context, condition, diagnostics, evidenceTier });
+    if (!binding.ok) return binding.response;
     if (childTopology === 'two_dimensional' && gridAvailabilityProven) {
       return result({ rule, status: 'auto_resolved', selectedOption: 'grid', allowedOptions: ['grid'], diagnostics, evidenceTier });
     }
     diagnostics.push(diagnostic('RESOLVER_MVP_GRID_REQUIRES_AVAILABILITY', 'Grid may not be auto_resolved unless two-dimensional topology and grid availability are both evidenced.', 'input.context.grid_availability_proven'));
-    return result({ rule, status: 'unresolvable', selectedOption: null, allowedOptions: ['none'], diagnostics, evidenceTier });
+    return failClosed(rule, diagnostics, evidenceTier);
   }
 
+  const condition = findCondition(rule, 'conditional_conditions', 'layout_structure.conditional.ambiguous_project_export');
+  const binding = validateConditionEvidenceBinding({ rule, refs, context, condition, diagnostics, evidenceTier });
+  if (!binding.ok) return binding.response;
   diagnostics.push(diagnostic('RESOLVER_MVP_AMBIGUOUS_PROJECT_EXPORT_CONDITIONAL', 'Project_export evidence is present but does not satisfy a single deterministic layout rule.', 'input.context', 'warning'));
   return result({ rule, status: 'conditional', selectedOption: null, allowedOptions: allowedAll, diagnostics, evidenceTier });
 }
