@@ -1,0 +1,54 @@
+{
+  "fixture_type": "resolver_mvp_case",
+  "schema_version": "0.1.0",
+  "case_id": "layout_structure.auto_resolved.flexbox.single_axis",
+  "case_kind": "valid",
+  "input": {
+    "decision_family_id": "layout_structure",
+    "evidence_refs": [
+      {
+        "evidence_id": "EV-KROAD-006-LAYOUT-P0-MATRIX",
+        "evidence_tier": "official_docs",
+        "source_type": "kernel_fixture",
+        "ref": "kernel/decision-governance/p0-decision-matrices.v0.json#layout_structure",
+        "limitations": [
+          "matrix guidance only",
+          "does not prove target project availability"
+        ]
+      },
+      {
+        "evidence_id": "EV-KROAD-006-LAYOUT-CONTROLLED-PROJECT-EXPORT",
+        "evidence_tier": "project_export",
+        "source_type": "kernel_fixture",
+        "ref": "kernel/fixtures/valid/resolver_mvp/layout_structure_auto_resolved_flexbox.json#input.context",
+        "limitations": [
+          "controlled fixture evidence only",
+          "not real target-project evidence",
+          "not runtime validation"
+        ]
+      }
+    ],
+    "context": {
+      "layout_intent": "single_axis",
+      "axis": "row",
+      "child_topology": "linear",
+      "two_axis_required": false,
+      "simple_wrapper_only": false,
+      "grid_availability_proven": false,
+      "required_evidence_refs": [
+        "EV-KROAD-006-LAYOUT-CONTROLLED-PROJECT-EXPORT"
+      ]
+    }
+  },
+  "expected_result": {
+    "resolver_status": "auto_resolved",
+    "selected_option": "flexbox",
+    "diagnostic_codes": []
+  },
+  "notes": [
+    "controlled fixture only",
+    "not real target-project proof",
+    "not runtime validation",
+    "not Builder execution proof"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "fixture_type": "resolver_mvp_case",
+  "schema_version": "0.1.0",
+  "case_id": "layout_structure.adversarial.unrelated_project_export_ref",
+  "case_kind": "adversarial",
+  "input": {
+    "decision_family_id": "layout_structure",
+    "evidence_refs": [
+      {
+        "evidence_id": "EV-KROAD-006-UNRELATED-PROJECT-EXPORT",
+        "evidence_tier": "project_export",
+        "source_type": "kernel_fixture",
+        "ref": "kernel/fixtures/adversarial/resolver_mvp/adversarial_unrelated_project_export_ref.json#input.context",
+        "limitations": [
+          "unrelated controlled fixture evidence only",
+          "not the required layout_structure resolver evidence ref",
+          "not real target-project evidence"
+        ]
+      }
+    ],
+    "context": {
+      "layout_intent": "single_axis",
+      "axis": "row",
+      "child_topology": "linear",
+      "two_axis_required": false,
+      "simple_wrapper_only": false,
+      "grid_availability_proven": false,
+      "required_evidence_refs": [
+        "EV-KROAD-006-LAYOUT-CONTROLLED-PROJECT-EXPORT"
+      ]
+    }
+  },
+  "expected_result": {
+    "resolver_status": "unresolvable",
+    "selected_option": null,
+    "diagnostic_codes": [
+      "RESOLVER_MVP_REQUIRED_EVIDENCE_REF_NOT_FOUND",
+      "RESOLVER_MVP_REQUIRED_EVIDENCE_REF_TIER_UNSATISFIED"
+    ]
+  },
+  "notes": [
+    "Regression fixture: any project_export-tier evidence is not enough; the exact required evidence ID must be present.",
+    "controlled fixture only",
+    "not real target-project proof"
+  ]
+}

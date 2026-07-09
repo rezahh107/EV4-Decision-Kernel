@@ -41,6 +41,14 @@ function readJson(pathFromRoot) {
   return JSON.parse(readFileSync(join(root, pathFromRoot), 'utf8'));
 }
 
+function isPlainObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isKnownEvidenceTier(tier) {
+  return typeof tier === 'string' && EVIDENCE_TIER_RANK.has(tier);
+}
+
 function diagnostic(rule_id, code, message, source, path) {
   return { rule_id, code, message, source, ...(path ? { path } : {}) };
 }
@@ -65,7 +73,7 @@ function schemaDiagnostics(record, validate) {
 }
 
 function tierRank(tier) {
-  return EVIDENCE_TIER_RANK.get(tier) ?? -1;
+  return isKnownEvidenceTier(tier) ? EVIDENCE_TIER_RANK.get(tier) : -1;
 }
 
 function p0Index() {
@@ -74,33 +82,25 @@ function p0Index() {
 }
 
 function evidenceIndex(record) {
-  return new Map((record.evidence_refs || []).map((ref) => [ref.evidence_id, ref]));
+  return new Map((Array.isArray(record?.evidence_refs) ? record.evidence_refs : []).map((ref) => [ref.evidence_id, ref]));
 }
 
 function hasEvidenceAtOrAbove(refs, requiredTier) {
+  if (!isKnownEvidenceTier(requiredTier)) return false;
   if (requiredTier === 'none') return true;
   const requiredRank = tierRank(requiredTier);
-  return (refs || []).some((ref) => tierRank(ref?.evidence_tier) >= requiredRank);
-}
-
-function validateVocabularyAndRegistry() {
-  const diagnostics = [];
-  const vocabulary = readJson('kernel/decision-governance/resolver-status-vocabulary.v0.json');
-  const registry = readJson('kernel/decision-governance/resolver-rule-registry.v0.json');
-  const statuses = (vocabulary.allowed_resolver_statuses || []).map((item) => item.status_id);
-  const expected = ['auto_resolved', 'conditional', 'unresolvable'];
-  if (JSON.stringify(statuses) !== JSON.stringify(expected)) diagnostics.push(diagnostic('RESOLVER_STATUS_VOCABULARY', 'RESOLVER_STATUS_VOCABULARY_MUST_BE_EXACT', 'Resolver status vocabulary must contain exactly auto_resolved, conditional, unresolvable in stable order.', 'semantic', 'allowed_resolver_statuses'));
-  if (registry.resolver_mvp_implemented !== false) diagnostics.push(diagnostic('RESOLVER_REGISTRY_BOUNDARY', 'RESOLVER_REGISTRY_MUST_NOT_CLAIM_MVP', 'KROAD-005 registry must not claim Resolver MVP implementation.', 'semantic', 'resolver_mvp_implemented'));
-  if (registry.matrix_guidance_is_not_resolver_result !== true) diagnostics.push(diagnostic('RESOLVER_REGISTRY_BOUNDARY', 'RESOLVER_REGISTRY_MATRIX_GUIDANCE_BOUNDARY_REQUIRED', 'Registry must state matrix guidance is not resolver output.', 'semantic', 'matrix_guidance_is_not_resolver_result'));
-  if (registry.unknown_decision_family_policy?.outcome !== 'unresolvable') diagnostics.push(diagnostic('RESOLVER_REGISTRY_FAIL_CLOSED', 'RESOLVER_REGISTRY_UNKNOWN_FAMILY_MUST_BE_UNRESOLVABLE', 'Unknown decision family must fail closed as unresolvable.', 'semantic', 'unknown_decision_family_policy.outcome'));
-  if (Array.isArray(registry.active_rules) && registry.active_rules.length > 0) diagnostics.push(diagnostic('RESOLVER_REGISTRY_BOUNDARY', 'RESOLVER_REGISTRY_ACTIVE_RULES_DEFERRED_TO_KROAD_006', 'KROAD-005 may define examples and contracts but must not register active Resolver MVP rules.', 'semantic', 'active_rules'));
-  return diagnostics;
+  return Array.isArray(refs) && refs.some((ref) => isKnownEvidenceTier(ref?.evidence_tier) && tierRank(ref.evidence_tier) >= requiredRank);
 }
 
 function validateConditionBucket({ conditions, bucketName, expectedStatus, evidenceById }) {
   const diagnostics = [];
-  for (const [index, condition] of (conditions || []).entries()) {
+  if (!Array.isArray(conditions)) return diagnostics;
+  for (const [index, condition] of conditions.entries()) {
     const path = `${bucketName}[${index}]`;
+    if (!isPlainObject(condition)) {
+      diagnostics.push(diagnostic('RESOLVER_RULE_CONDITION_BUCKET', 'RESOLVER_RULE_CONDITION_INVALID_OBJECT', `${bucketName} entries must be JSON objects.`, 'semantic', path));
+      continue;
+    }
     if (condition.outcome_status !== expectedStatus) {
       diagnostics.push(diagnostic('RESOLVER_RULE_CONDITION_BUCKET', 'RESOLVER_RULE_CONDITION_BUCKET_STATUS_MISMATCH', `${bucketName} entries must use outcome_status=${expectedStatus}.`, 'semantic', `${path}.outcome_status`));
     }
@@ -122,6 +122,10 @@ function validateConditionBucket({ conditions, bucketName, expectedStatus, evide
 
 function validateRuleContract(record, knownFamilies) {
   const diagnostics = [];
+  if (!isPlainObject(record)) {
+    return [diagnostic('RESOLVER_RULE_SCHEMA', 'RESOLVER_RULE_INVALID_OBJECT', 'Resolver rule contract fixture must be a JSON object.', 'semantic', '(root)')];
+  }
+
   const family = knownFamilies.get(record.decision_family_id);
   const refs = Array.isArray(record.evidence_refs) ? record.evidence_refs : [];
   const evidenceById = evidenceIndex(record);
@@ -134,19 +138,84 @@ function validateRuleContract(record, knownFamilies) {
     diagnostics.push(diagnostic('RESOLVER_RULE_FAIL_CLOSED', 'RESOLVER_RULE_UNKNOWN_DECISION_FAMILY', 'Unknown decision_family_id must fail closed as unresolvable; do not invent resolver output.', 'semantic', 'decision_family_id'));
   } else {
     if (record.matrix_ref?.matrix_id !== family.matrixId) diagnostics.push(diagnostic('RESOLVER_RULE_MATRIX_ALIGNMENT', 'RESOLVER_RULE_MATRIX_ID_MISMATCH', 'matrix_ref.matrix_id must match the P0 matrix registry entry for the decision family.', 'semantic', 'matrix_ref.matrix_id'));
-    const optionIds = new Set((record.option_set || []).map((option) => option.option_id));
+    const optionIds = new Set((Array.isArray(record.option_set) ? record.option_set : []).map((option) => option.option_id));
     for (const optionId of optionIds) if (!family.options.has(optionId)) diagnostics.push(diagnostic('RESOLVER_RULE_OPTION_SET', 'RESOLVER_RULE_OPTION_NOT_IN_P0_MATRIX', `Option ${optionId} is not in the P0 matrix option set for ${record.decision_family_id}.`, 'semantic', 'option_set'));
     for (const optionId of record.allowed_options || []) if (!optionIds.has(optionId)) diagnostics.push(diagnostic('RESOLVER_RULE_OPTION_SET', 'RESOLVER_RULE_ALLOWED_OPTION_NOT_IN_OPTION_SET', `Allowed option ${optionId} is missing from option_set.`, 'semantic', 'allowed_options'));
   }
 
   if (record.output_contract?.human_or_llm_free_text_opinion_allowed !== false) diagnostics.push(diagnostic('RESOLVER_RULE_OUTPUT_BOUNDARY', 'RESOLVER_RULE_FREE_TEXT_OPINION_FORBIDDEN', 'Human/LLM free-text opinion must not be treated as resolver output.', 'semantic', 'output_contract.human_or_llm_free_text_opinion_allowed'));
   if (record.output_contract?.matrix_guidance_is_resolver_output !== false) diagnostics.push(diagnostic('RESOLVER_RULE_OUTPUT_BOUNDARY', 'RESOLVER_RULE_MATRIX_GUIDANCE_NOT_RESOLVER_OUTPUT', 'P0 matrix guidance must not be treated as resolver output.', 'semantic', 'output_contract.matrix_guidance_is_resolver_output'));
-  if (record.output_contract?.assigns_real_final_decision !== false) diagnostics.push(diagnostic('RESOLVER_RULE_OUTPUT_BOUNDARY', 'RESOLVER_RULE_MUST_NOT_ASSIGN_REAL_FINAL_DECISION', 'KROAD-005 contract artifacts must not assign real final target-project decisions.', 'semantic', 'output_contract.assigns_real_final_decision'));
+  if (record.output_contract?.assigns_real_final_decision !== false) diagnostics.push(diagnostic('RESOLVER_RULE_OUTPUT_BOUNDARY', 'RESOLVER_RULE_MUST_NOT_ASSIGN_REAL_FINAL_DECISION', 'Resolver contract artifacts must not assign real final target-project decisions.', 'semantic', 'output_contract.assigns_real_final_decision'));
 
   for (const [bucketName, expectedStatus] of CONDITION_BUCKETS) {
     diagnostics.push(...validateConditionBucket({ conditions: record[bucketName], bucketName, expectedStatus, evidenceById }));
   }
 
+  return diagnostics;
+}
+
+function validateActiveMvpRule(rule, knownFamilies, path) {
+  const diagnostics = [];
+  if (!isPlainObject(rule)) {
+    diagnostics.push(diagnostic('RESOLVER_MVP_RULE_SHAPE', 'RESOLVER_MVP_RULE_INVALID_OBJECT', 'Active Resolver MVP rule must be a JSON object.', 'semantic', path));
+    return diagnostics;
+  }
+
+  const required = ['artifact_type', 'rule_id', 'rule_version', 'decision_family_id', 'required_evidence_tier', 'evidence_refs', 'allowed_options', 'forbidden_options', 'diagnostics', 'fixture_requirements', 'output_contract'];
+  for (const field of required) {
+    if (!(field in rule)) diagnostics.push(diagnostic('RESOLVER_MVP_RULE_SHAPE', `RESOLVER_MVP_RULE_${field.toUpperCase()}_REQUIRED`, `Active Resolver MVP rule requires ${field}.`, 'semantic', `${path}.${field}`));
+  }
+  if (rule.artifact_type !== 'resolver_mvp_rule') diagnostics.push(diagnostic('RESOLVER_MVP_RULE_SHAPE', 'RESOLVER_MVP_RULE_ARTIFACT_TYPE_REQUIRED', 'Active Resolver MVP rule artifact_type must be resolver_mvp_rule.', 'semantic', `${path}.artifact_type`));
+  if (!knownFamilies.has(rule.decision_family_id)) diagnostics.push(diagnostic('RESOLVER_MVP_RULE_FAIL_CLOSED', 'RESOLVER_MVP_RULE_UNKNOWN_DECISION_FAMILY', 'Active Resolver MVP rule must reference a known P0 decision family.', 'semantic', `${path}.decision_family_id`));
+  if (!Array.isArray(rule.evidence_refs) || rule.evidence_refs.length === 0) diagnostics.push(diagnostic('RESOLVER_MVP_RULE_EVIDENCE', 'RESOLVER_MVP_RULE_EVIDENCE_REFS_REQUIRED', 'Active Resolver MVP rule requires non-empty evidence_refs.', 'semantic', `${path}.evidence_refs`));
+  if (!hasEvidenceAtOrAbove(rule.evidence_refs || [], rule.required_evidence_tier)) diagnostics.push(diagnostic('RESOLVER_MVP_RULE_EVIDENCE', 'RESOLVER_MVP_RULE_EVIDENCE_TIER_UNSATISFIED', 'Active Resolver MVP rule evidence_refs must satisfy required_evidence_tier.', 'semantic', `${path}.required_evidence_tier`));
+  if (rule.output_contract?.human_or_llm_free_text_opinion_allowed !== false) diagnostics.push(diagnostic('RESOLVER_MVP_RULE_OUTPUT_BOUNDARY', 'RESOLVER_MVP_RULE_FREE_TEXT_OPINION_FORBIDDEN', 'Active Resolver MVP rule must not allow free-text opinion as resolver output.', 'semantic', `${path}.output_contract.human_or_llm_free_text_opinion_allowed`));
+  if (rule.output_contract?.matrix_guidance_is_resolver_output !== false) diagnostics.push(diagnostic('RESOLVER_MVP_RULE_OUTPUT_BOUNDARY', 'RESOLVER_MVP_RULE_MATRIX_GUIDANCE_NOT_RESOLVER_OUTPUT', 'Active Resolver MVP rule must not treat matrix guidance as resolver output.', 'semantic', `${path}.output_contract.matrix_guidance_is_resolver_output`));
+  if (rule.output_contract?.assigns_real_final_decision !== false) diagnostics.push(diagnostic('RESOLVER_MVP_RULE_OUTPUT_BOUNDARY', 'RESOLVER_MVP_RULE_NO_REAL_FINAL_DECISION_CLAIM', 'Active Resolver MVP rule remains fixture-scoped and must not claim real final target-project decisions.', 'semantic', `${path}.output_contract.assigns_real_final_decision`));
+  return diagnostics;
+}
+
+function validateVocabularyAndRegistry(knownFamilies) {
+  const diagnostics = [];
+  const vocabulary = readJson('kernel/decision-governance/resolver-status-vocabulary.v0.json');
+  const registry = readJson('kernel/decision-governance/resolver-rule-registry.v0.json');
+  const statuses = (vocabulary.allowed_resolver_statuses || []).map((item) => item.status_id);
+  const expected = ['auto_resolved', 'conditional', 'unresolvable'];
+  if (JSON.stringify(statuses) !== JSON.stringify(expected)) diagnostics.push(diagnostic('RESOLVER_STATUS_VOCABULARY', 'RESOLVER_STATUS_VOCABULARY_MUST_BE_EXACT', 'Resolver status vocabulary must contain exactly auto_resolved, conditional, unresolvable in stable order.', 'semantic', 'allowed_resolver_statuses'));
+  if (registry.matrix_guidance_is_not_resolver_result !== true) diagnostics.push(diagnostic('RESOLVER_REGISTRY_BOUNDARY', 'RESOLVER_REGISTRY_MATRIX_GUIDANCE_BOUNDARY_REQUIRED', 'Registry must state matrix guidance is not resolver output.', 'semantic', 'matrix_guidance_is_not_resolver_result'));
+  if (registry.unknown_decision_family_policy?.outcome !== 'unresolvable') diagnostics.push(diagnostic('RESOLVER_REGISTRY_FAIL_CLOSED', 'RESOLVER_REGISTRY_UNKNOWN_FAMILY_MUST_BE_UNRESOLVABLE', 'Unknown decision family must fail closed as unresolvable.', 'semantic', 'unknown_decision_family_policy.outcome'));
+
+  const activeRules = Array.isArray(registry.active_rules) ? registry.active_rules : [];
+  if (!Array.isArray(registry.active_rules)) {
+    diagnostics.push(diagnostic('RESOLVER_REGISTRY_MVP', 'RESOLVER_REGISTRY_ACTIVE_RULES_ARRAY_REQUIRED', 'active_rules must be an array when the Resolver MVP registry is present.', 'semantic', 'active_rules'));
+  }
+  if (registry.resolver_mvp_implemented === false && activeRules.length > 0) {
+    diagnostics.push(diagnostic('RESOLVER_REGISTRY_BOUNDARY', 'RESOLVER_REGISTRY_ACTIVE_RULES_REQUIRE_MVP', 'active_rules may be non-empty only after KROAD-006 enables Resolver MVP.', 'semantic', 'active_rules'));
+  }
+  if (registry.resolver_mvp_implemented === true) {
+    if (activeRules.length === 0) diagnostics.push(diagnostic('RESOLVER_REGISTRY_MVP', 'RESOLVER_REGISTRY_ACTIVE_RULES_REQUIRED', 'KROAD-006 Resolver MVP must register at least one active rule.', 'semantic', 'active_rules'));
+    if (registry.resolver_mvp_scope?.l2_audit_implemented !== false) diagnostics.push(diagnostic('RESOLVER_REGISTRY_BOUNDARY', 'RESOLVER_REGISTRY_MUST_NOT_CLAIM_L2_AUDIT', 'KROAD-006 must not claim KROAD-007 L2 audit.', 'semantic', 'resolver_mvp_scope.l2_audit_implemented'));
+    if (registry.resolver_mvp_scope?.downstream_enforcement_implemented !== false) diagnostics.push(diagnostic('RESOLVER_REGISTRY_BOUNDARY', 'RESOLVER_REGISTRY_MUST_NOT_CLAIM_DOWNSTREAM_ENFORCEMENT', 'KROAD-006 must not claim downstream enforcement.', 'semantic', 'resolver_mvp_scope.downstream_enforcement_implemented'));
+    if (registry.resolver_mvp_scope?.runtime_browser_evidence_implemented !== false) diagnostics.push(diagnostic('RESOLVER_REGISTRY_BOUNDARY', 'RESOLVER_REGISTRY_MUST_NOT_CLAIM_RUNTIME_PROOF', 'KROAD-006 must not claim runtime/browser evidence implementation.', 'semantic', 'resolver_mvp_scope.runtime_browser_evidence_implemented'));
+    if (registry.resolver_mvp_scope?.production_readiness_claimed !== false) diagnostics.push(diagnostic('RESOLVER_REGISTRY_BOUNDARY', 'RESOLVER_REGISTRY_MUST_NOT_CLAIM_PRODUCTION_READINESS', 'KROAD-006 must not claim production readiness.', 'semantic', 'resolver_mvp_scope.production_readiness_claimed'));
+    for (const [index, entry] of activeRules.entries()) {
+      if (!isPlainObject(entry)) {
+        diagnostics.push(diagnostic('RESOLVER_REGISTRY_MVP', 'RESOLVER_REGISTRY_ACTIVE_RULE_INVALID', 'Active rule registry entry must be a JSON object.', 'semantic', `active_rules[${index}]`));
+        continue;
+      }
+      for (const field of ['rule_id', 'rule_version', 'decision_family_id', 'path', 'implementation_ref', 'produces_statuses']) {
+        if (!(field in entry)) diagnostics.push(diagnostic('RESOLVER_REGISTRY_MVP', `RESOLVER_REGISTRY_ACTIVE_RULE_${field.toUpperCase()}_REQUIRED`, `Active rule registry entry requires ${field}.`, 'semantic', `active_rules[${index}].${field}`));
+      }
+      if (typeof entry.path !== 'string' || entry.path.trim().length === 0) continue;
+      try {
+        const rule = readJson(entry.path);
+        diagnostics.push(...validateActiveMvpRule(rule, knownFamilies, entry.path));
+      } catch (error) {
+        diagnostics.push(diagnostic('RESOLVER_REGISTRY_MVP', 'RESOLVER_REGISTRY_ACTIVE_RULE_READ_FAILED', `Active rule file failed to read or parse: ${error.message}`, 'fixture', `active_rules[${index}].path`));
+      }
+    }
+  }
+  if (![true, false].includes(registry.resolver_mvp_implemented)) diagnostics.push(diagnostic('RESOLVER_REGISTRY_MVP', 'RESOLVER_REGISTRY_MVP_FLAG_REQUIRED', 'resolver_mvp_implemented must be boolean.', 'semantic', 'resolver_mvp_implemented'));
   return diagnostics;
 }
 
@@ -185,7 +254,7 @@ if (validate) {
   }
 }
 
-const mainDiagnostics = validate ? validateVocabularyAndRegistry() : [];
+const mainDiagnostics = validate && knownFamilies ? validateVocabularyAndRegistry(knownFamilies) : [];
 if (mainDiagnostics.length) {
   failed = true;
   output.push('Resolver vocabulary/registry: FAIL', ...mainDiagnostics.map((item) => `  - ${formatDiagnostic(item)}`));

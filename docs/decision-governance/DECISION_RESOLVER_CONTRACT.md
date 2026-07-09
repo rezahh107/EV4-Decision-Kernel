@@ -1,7 +1,7 @@
 # Decision Resolver Contract
 
-**Status:** KROAD-005 contract baseline / Kernel-local  
-**Scope:** resolver-rule contract semantics only  
+**Status:** KROAD-005 contract baseline + KROAD-006 limited Resolver MVP relation  
+**Scope:** resolver-rule contract semantics and the current limited MVP boundary  
 **Owner:** Kernel  
 **Machine-readable artifacts:**
 
@@ -9,14 +9,16 @@
 kernel/schemas/resolver-rule.v0.schema.json
 kernel/decision-governance/resolver-status-vocabulary.v0.json
 kernel/decision-governance/resolver-rule-registry.v0.json
+kernel/decision-governance/resolver-rules/layout-structure.v0.json
 kernel/validator/validate-resolver-contract.mjs
+kernel/resolver-mvp/resolve-high-risk-p0.mjs
 ```
 
 ## What this is
 
-This document defines how a `P0` decision matrix can become an executable or semi-executable resolver-rule contract.
+This document defines how a `P0` decision matrix can become a resolver-backed contract and how KROAD-006 activates the first limited Resolver MVP.
 
-The contract gives future resolver work a deterministic shape for:
+The contract gives resolver work a deterministic shape for:
 
 ```text
 rule_id
@@ -38,9 +40,9 @@ fixture_requirements
 
 ## What this is not
 
-This is not `KROAD-006`, not a Resolver MVP, not runtime validation, not Builder execution proof, not downstream enforcement, and not production readiness.
+This is not a full decision engine, not `KROAD-007`, not runtime validation, not Builder execution proof, not downstream enforcement, and not production readiness.
 
-The contract does not assign a real final target-project decision. It defines the shape, vocabulary, diagnostics, examples, and fail-closed boundaries that later resolver logic must use.
+The KROAD-006 MVP is limited to fixture-scoped deterministic logic for `layout_structure`. It does not assign real final target-project decisions.
 
 ## Resolver statuses
 
@@ -52,17 +54,11 @@ conditional
 unresolvable
 ```
 
-`auto_resolved` means a future resolver rule may select exactly one allowed option only after the required rule conditions and evidence refs are satisfied.
+`auto_resolved` means a resolver rule selects exactly one allowed option after required rule conditions and evidence refs are satisfied.
 
-`conditional` means more than one option remains valid, and a bounded downstream or Architect choice may be needed inside the allowed set.
+`conditional` means more than one option remains valid or evidence is too weak to force one option; the decision must remain bounded and explicit.
 
 `unresolvable` means the rule or evidence is insufficient. The pipeline must halt, ask for repair, or return insufficient evidence instead of guessing.
-
-The status vocabulary lives in:
-
-```text
-kernel/decision-governance/resolver-status-vocabulary.v0.json
-```
 
 ## Evidence tier and evidence refs
 
@@ -84,10 +80,6 @@ The validator treats those tiers as ordered evidence levels:
 none < official_docs < project_export < runtime_browser < downstream_validated
 ```
 
-A rule-level `required_evidence_tier` is satisfied only when at least one `evidence_refs` entry is at or above that tier.
-
-For non-`unresolvable` conditions, each `required_evidence_refs` item must match an `evidence_refs.evidence_id`, and the matched refs must satisfy that condition's `required_evidence_tier`.
-
 Official Elementor documentation can support documented platform/editor capability only. It cannot prove:
 
 ```text
@@ -101,19 +93,7 @@ downstream acceptance
 production readiness
 ```
 
-Therefore, official-doc-only evidence may keep a rule `conditional` or `unresolvable`, but it must not be treated as project-ready.
-
-## Condition bucket contract
-
-The three condition buckets are not interchangeable:
-
-```text
-auto_resolution_conditions -> auto_resolved
-conditional_conditions -> conditional
-unresolvable_conditions -> unresolvable
-```
-
-A condition whose `outcome_status` contradicts its bucket is invalid. The validator emits `RESOLVER_RULE_CONDITION_BUCKET_STATUS_MISMATCH` on the exact bucket path.
+Therefore, official-doc-only evidence may produce `conditional` output in the KROAD-006 MVP, but it must not produce `auto_resolved` project-specific output.
 
 ## Relation to P0 decision matrices
 
@@ -121,17 +101,17 @@ A condition whose `outcome_status` contradicts its bucket is invalid. The valida
 
 A matrix is not resolver output. A resolver rule must explicitly reference a matrix and define rule conditions, diagnostics, evidence requirements, and fail-closed behavior.
 
-The registry baseline records this boundary:
+KROAD-006 activates only this family:
 
 ```text
-matrix_guidance_is_not_resolver_result: true
-resolver_mvp_implemented: false
-active_rules: []
+layout_structure -> Div / Flexbox / Grid
 ```
+
+All other P0 families remain unsupported by the Resolver MVP until a later scoped task adds active rules and fixtures.
 
 ## Relation to Decision Record v2
 
-`Decision Record v2` already carries:
+`Decision Record v2` carries:
 
 ```text
 resolver_status
@@ -146,9 +126,7 @@ decision_type
 human_override
 ```
 
-KROAD-005 defines the rule contract that can later justify those fields. It does not replace `Decision Record v2`; it explains how future resolver-derived records should be backed by a rule.
-
-Human override remains explicit in `Decision Record v2`. A human or LLM free-text opinion is not resolver output.
+The resolver contract and MVP can justify those fields for covered fixture-scoped cases only. Human override remains explicit. A human or LLM free-text opinion is not resolver output.
 
 ## Fail-closed behavior
 
@@ -164,41 +142,51 @@ Missing required evidence must produce:
 unresolvable
 ```
 
-A resolver rule must not invent an option for an unknown `decision_family_id`.
-
-The validator checks this through the P0 matrix registry and emits diagnostics such as:
+Official-doc-only project-specific support must produce:
 
 ```text
-RESOLVER_RULE_UNKNOWN_DECISION_FAMILY
-RESOLVER_RULE_EVIDENCE_REFS_REQUIRED
-RESOLVER_RULE_EVIDENCE_TIER_UNSATISFIED
-RESOLVER_RULE_CONDITION_EVIDENCE_TIER_UNSATISFIED
-RESOLVER_RULE_CONDITION_BUCKET_STATUS_MISMATCH
-RESOLVER_RULE_OFFICIAL_DOCS_NOT_PROJECT_READY
-RESOLVER_RULE_MATRIX_GUIDANCE_NOT_RESOLVER_OUTPUT
-RESOLVER_RULE_FREE_TEXT_OPINION_FORBIDDEN
+conditional
+```
+
+The resolver must not invent an option for an unknown `decision_family_id`.
+
+## KROAD-006 MVP artifacts
+
+```text
+docs/decision-governance/RESOLVER_MVP_KROAD_006.md
+kernel/decision-governance/resolver-rules/layout-structure.v0.json
+kernel/resolver-mvp/resolve-high-risk-p0.mjs
+kernel/fixtures/valid/resolver_mvp/
+kernel/fixtures/invalid/resolver_mvp/
+kernel/fixtures/adversarial/resolver_mvp/
 ```
 
 ## Fixtures
 
-Valid and invalid example artifacts live under:
+KROAD-005 contract fixtures remain under:
 
 ```text
 kernel/fixtures/valid/resolver_contract/
 kernel/fixtures/invalid/resolver_contract/
 ```
 
-The current valid fixture is an example contract for `layout_structure`. It is intentionally a contract fixture, not a real target-project decision.
-
-Invalid fixtures assert that:
+KROAD-006 Resolver MVP fixtures live under:
 
 ```text
-missing evidence refs fail
-unknown family fails closed
-official-doc-only evidence cannot become project-ready
-under-tier evidence cannot satisfy a higher declared evidence tier
-condition bucket outcome_status must match its bucket
-matrix guidance and free-text opinion are not resolver output
+kernel/fixtures/valid/resolver_mvp/
+kernel/fixtures/invalid/resolver_mvp/
+kernel/fixtures/adversarial/resolver_mvp/
+```
+
+The KROAD-006 fixture set proves:
+
+```text
+auto_resolved for supported project_export single-axis layout
+conditional for official-doc-only support
+unresolvable for missing evidence
+fail-closed for unknown decision families
+rejection of official-doc-only auto-resolution overclaim
+rejection of grid auto-resolution without explicit grid availability
 ```
 
 ## Validation
@@ -207,18 +195,30 @@ Run:
 
 ```bash
 npm run validate:resolver-contract
+npm run validate:resolver-mvp
 npm run validate:mvk
 npm run validate:roadmap-memory
 ```
 
-`validate:mvk` includes `validate:resolver-contract` after this KROAD.
+`validate:mvk` includes both `validate:resolver-contract` and `validate:resolver-mvp`.
+
+## Current limitations
+
+```text
+- only layout_structure is resolver-backed
+- no media_choice resolver
+- no styling_mechanism resolver
+- no positioning_safety resolver
+- no L2 audit
+- no downstream enforcement
+- no Project Gate intake
+- no runtime/browser evidence layer
+- no Builder execution proof
+- no production-readiness claim
+```
 
 ## Next allowed step
 
-After this baseline is merged, the next roadmap item is:
+After KROAD-006, later work may continue with the next roadmap item recorded in `planning/NEXT_WORK.md`.
 
-```text
-KROAD-006 — Resolver MVP for high-risk P0 families
-```
-
-KROAD-006 may implement a small scoped resolver. KROAD-005 must remain contract/schema/documentation/fixture baseline only.
+Do not infer KROAD-007+ completion from this MVP.

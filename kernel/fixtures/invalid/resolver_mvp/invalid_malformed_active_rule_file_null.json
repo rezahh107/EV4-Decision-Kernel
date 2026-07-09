@@ -1,0 +1,56 @@
+{
+  "fixture_type": "resolver_mvp_case",
+  "schema_version": "0.1.0",
+  "case_id": "resolver_mvp.invalid.malformed_active_rule_file_null",
+  "case_kind": "invalid",
+  "registry_override": {
+    "active_rules": [
+      {
+        "path": "synthetic/null-rule.json"
+      }
+    ]
+  },
+  "rule_file_overrides": {
+    "synthetic/null-rule.json": null
+  },
+  "input": {
+    "decision_family_id": "layout_structure",
+    "evidence_refs": [
+      {
+        "evidence_id": "EV-KROAD-006-LAYOUT-CONTROLLED-PROJECT-EXPORT",
+        "evidence_tier": "project_export",
+        "source_type": "kernel_fixture",
+        "ref": "kernel/fixtures/valid/resolver_mvp/layout_structure_auto_resolved_flexbox.json#input.context",
+        "limitations": [
+          "controlled fixture evidence only",
+          "not real target-project evidence",
+          "not runtime validation"
+        ]
+      }
+    ],
+    "context": {
+      "layout_intent": "single_axis",
+      "axis": "row",
+      "child_topology": "linear",
+      "two_axis_required": false,
+      "simple_wrapper_only": false,
+      "grid_availability_proven": false,
+      "required_evidence_refs": [
+        "EV-KROAD-006-LAYOUT-CONTROLLED-PROJECT-EXPORT"
+      ]
+    }
+  },
+  "expected_result": {
+    "resolver_status": "unresolvable",
+    "selected_option": null,
+    "diagnostic_codes": [
+      "RESOLVER_MVP_ACTIVE_RULE_FILE_INVALID_OBJECT",
+      "RESOLVER_MVP_UNKNOWN_DECISION_FAMILY"
+    ]
+  },
+  "notes": [
+    "Regression fixture: active rule files that parse to null must fail closed without throwing TypeError.",
+    "controlled fixture only",
+    "not real target-project proof"
+  ]
+}
