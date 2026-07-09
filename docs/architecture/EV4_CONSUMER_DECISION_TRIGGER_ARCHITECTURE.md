@@ -487,10 +487,10 @@ derived_status_rules:
   resolved:
     Critical_per_artifact:
       true_only_if:
-        - enforcement_status in [ci_enforced, downstream_contract_enforced]
+        - enforcement_status in [ci_enforced, sequence_ci_enforced, runtime_monitor_enforced, os_harness_enforced, downstream_contract_enforced]
     Critical_cross_turn:
       true_only_if:
-        - enforcement_status in [sequence_ci_enforced, runtime_monitor_enforced, downstream_contract_enforced]
+        - enforcement_status in [sequence_ci_enforced, runtime_monitor_enforced, os_harness_enforced, downstream_contract_enforced]
     High:
       true_only_if:
         - enforcement_status in [validator_backed, fixture_tested, ci_enforced, sequence_ci_enforced, runtime_monitor_enforced, os_harness_enforced, downstream_contract_enforced]
