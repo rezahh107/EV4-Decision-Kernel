@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-KROAD-006 Resolver MVP for high-risk P0 families
+KROAD-006 Resolver MVP review repair
 
 ## Status Authority
 
@@ -15,7 +15,7 @@ Known detailed-plan status labels: `KROAD-001`, `KROAD-003`, `KROAD-004`, `KROAD
 ## Status Summary
 
 Current completed milestones: KROAD-000, KROAD-001, KROAD-002, KROAD-003, KROAD-004, KROAD-005, KROAD-006.
-Current next task: KROAD-008 — Resolver Fixtures: valid / invalid / adversarial.
+Current next task: KROAD-007 — L2 Decision Correctness Audit.
 Detailed plan: `planning/KERNEL_EXECUTION_PLAN.md`.
 Do not continue from chat history; read this file first.
 
@@ -23,7 +23,7 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
 
 ## Next Task
 
-- [ ] KROAD-008 — Resolver Fixtures: valid / invalid / adversarial
+- [ ] KROAD-007 — L2 Decision Correctness Audit
 
 ## Completed
 
@@ -44,12 +44,12 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
   - Repair note: Same-PR repair hardening added ordered evidence-tier satisfaction checks, condition-level evidence-ref/tier checks for non-`unresolvable` outcomes, bucket-specific outcome checks for `auto_resolution_conditions`, `conditional_conditions`, and `unresolvable_conditions`, precise bucket diagnostic paths, and adversarial invalid fixtures for under-tier evidence and condition-bucket status mismatch. This remains KROAD-005 contract validation only; no active resolver rules or KROAD-006 Resolver MVP were added.
   - Review note: The second-pass review/audit result is preserved in `planning/reviews/KROAD-005_DECISION_RESOLVER_CONTRACT_SECOND_PASS_REVIEW.md`; it records the merged PR #21 state, reviewed files, CI evidence, resolved review threads, boundaries, and non-blocking follow-up that KROAD-006 may later implement a small Resolver MVP for high-risk P0 families.
 - [x] KROAD-006 — Resolver MVP for high-risk P0 families
-  - Update note: This PR completed KROAD-006 by adding a limited deterministic Resolver MVP for `layout_structure` only. Evidence includes `kernel/decision-governance/resolver-rules/layout-structure.v0.json`, the active registry entry in `kernel/decision-governance/resolver-rule-registry.v0.json`, `kernel/resolver-mvp/resolve-high-risk-p0.mjs`, valid/invalid/adversarial Resolver MVP fixtures, `docs/decision-governance/RESOLVER_MVP_KROAD_006.md`, and `npm run validate:resolver-mvp` wired into `npm run validate:mvk`. The MVP can emit `auto_resolved`, `conditional`, and `unresolvable`, rejects insufficient evidence, treats official-doc-only support as conditional, and fails closed for unknown families. KROAD-007+ remain incomplete.
+  - Update note: This PR completed KROAD-006 by adding a limited deterministic Resolver MVP for `layout_structure` only. Evidence includes `kernel/decision-governance/resolver-rules/layout-structure.v0.json`, the active registry entry in `kernel/decision-governance/resolver-rule-registry.v0.json`, `kernel/resolver-mvp/resolve-high-risk-p0.mjs`, valid/invalid/adversarial Resolver MVP fixtures, `docs/decision-governance/RESOLVER_MVP_KROAD_006.md`, and `npm run validate:resolver-mvp` wired into `npm run validate:mvk`. The MVP can emit `auto_resolved`, `conditional`, and `unresolvable`, rejects insufficient evidence, treats official-doc-only support as conditional, and fails closed for unknown families. Review repair added fail-closed handling for unsupported evidence tiers and malformed registry/rule inputs, direct expected-output matching for invalid/adversarial fixtures, and readable 2-space JSON fixtures. KROAD-007+ remain incomplete.
 
 ## Remaining Work
 
-- [ ] KROAD-008 — Resolver Fixtures: valid / invalid / adversarial
 - [ ] KROAD-007 — L2 Decision Correctness Audit
+- [ ] KROAD-008 — Resolver Fixtures: valid / invalid / adversarial
 - [ ] KROAD-009 — Vertical Slice
 - [ ] KROAD-010 — Downstream Consumer Contract
 - [ ] KROAD-011 — Project Gate Intake
@@ -85,7 +85,7 @@ If evidence is missing or uncertain, do not tick the item; add a note explaining
 - Decision Record Schema v2 is contract-backed by `kernel/schemas/decision-record.v2.schema.json`; legacy MVK decision-record schemas are not v2-compliant unless explicitly migrated.
 - KROAD-005 resolver-contract artifacts are not Resolver MVP logic and do not assign real final decisions.
 - KROAD-006 Resolver MVP is limited to `layout_structure`; unsupported families must fail closed.
-- L2 Audit must rerun the resolver, not act as a second free-text opinion.
+- KROAD-007 remains the next roadmap item after KROAD-006 and must rerun the resolver, not act as a second free-text opinion.
 - Human overrides must be explicitly marked.
 - Critical P0 provisional decisions must not pass final release.
 - Unknown decision families must fail closed with halt / insufficient evidence / no free decision.
