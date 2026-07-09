@@ -1,1 +1,33 @@
-{"fixture_type":"resolver_mvp_case","schema_version":"0.1.0","case_id":"layout_structure.unresolvable.no_evidence","case_kind":"valid","input":{"decision_family_id":"layout_structure","evidence_refs":[],"context":{"layout_intent":"single_axis","axis":"row","child_topology":"linear","two_axis_required":false,"simple_wrapper_only":false,"grid_availability_proven":false,"required_evidence_refs":[]}},"expected_result":{"resolver_status":"unresolvable","selected_option":null,"diagnostic_codes":["RESOLVER_MVP_MISSING_EVIDENCE_REFS","RESOLVER_MVP_REQUIRED_EVIDENCE_TIER_UNSATISFIED"]},"notes":["controlled fixture only","not real target-project proof","not runtime validation","not Builder execution proof"]}
+{
+  "fixture_type": "resolver_mvp_case",
+  "schema_version": "0.1.0",
+  "case_id": "layout_structure.unresolvable.no_evidence",
+  "case_kind": "valid",
+  "input": {
+    "decision_family_id": "layout_structure",
+    "evidence_refs": [],
+    "context": {
+      "layout_intent": "single_axis",
+      "axis": "row",
+      "child_topology": "linear",
+      "two_axis_required": false,
+      "simple_wrapper_only": false,
+      "grid_availability_proven": false,
+      "required_evidence_refs": []
+    }
+  },
+  "expected_result": {
+    "resolver_status": "unresolvable",
+    "selected_option": null,
+    "diagnostic_codes": [
+      "RESOLVER_MVP_MISSING_EVIDENCE_REFS",
+      "RESOLVER_MVP_REQUIRED_EVIDENCE_TIER_UNSATISFIED"
+    ]
+  },
+  "notes": [
+    "controlled fixture only",
+    "not real target-project proof",
+    "not runtime validation",
+    "not Builder execution proof"
+  ]
+}
