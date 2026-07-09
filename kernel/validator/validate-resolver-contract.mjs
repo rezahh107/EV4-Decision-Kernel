@@ -8,12 +8,32 @@ import addFormats from 'ajv-formats';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const schemaPath = 'kernel/schemas/resolver-rule.v0.schema.json';
 
+const EVIDENCE_TIER_RANK = new Map([
+  ['none', 0],
+  ['official_docs', 1],
+  ['project_export', 2],
+  ['runtime_browser', 3],
+  ['downstream_validated', 4]
+]);
+
+const CONDITION_BUCKETS = [
+  ['auto_resolution_conditions', 'auto_resolved'],
+  ['conditional_conditions', 'conditional'],
+  ['unresolvable_conditions', 'unresolvable']
+];
+
 const fixturePlan = [
   { path: 'valid/resolver_contract/valid_layout_structure_rule_contract.json', shouldFail: false, expectedCodes: [] },
-  { path: 'invalid/resolver_contract/invalid_missing_evidence_refs.json', shouldFail: true, expectedCodes: ['SCHEMA_MIN_ITEMS', 'RESOLVER_RULE_EVIDENCE_REFS_REQUIRED'] },
+  { path: 'invalid/resolver_contract/invalid_missing_evidence_refs.json', shouldFail: true, expectedCodes: ['SCHEMA_MIN_ITEMS', 'RESOLVER_RULE_EVIDENCE_REFS_REQUIRED', 'RESOLVER_RULE_EVIDENCE_TIER_UNSATISFIED'] },
   { path: 'invalid/resolver_contract/invalid_unknown_family_auto_resolved.json', shouldFail: true, expectedCodes: ['RESOLVER_RULE_UNKNOWN_DECISION_FAMILY'] },
   { path: 'invalid/resolver_contract/invalid_official_docs_project_ready_auto_condition.json', shouldFail: true, expectedCodes: ['RESOLVER_RULE_OFFICIAL_DOCS_NOT_PROJECT_READY'] },
-  { path: 'invalid/resolver_contract/invalid_matrix_guidance_as_output.json', shouldFail: true, expectedCodes: ['SCHEMA_CONST', 'RESOLVER_RULE_FREE_TEXT_OPINION_FORBIDDEN', 'RESOLVER_RULE_MATRIX_GUIDANCE_NOT_RESOLVER_OUTPUT'] }
+  { path: 'invalid/resolver_contract/invalid_matrix_guidance_as_output.json', shouldFail: true, expectedCodes: ['SCHEMA_CONST', 'RESOLVER_RULE_FREE_TEXT_OPINION_FORBIDDEN', 'RESOLVER_RULE_MATRIX_GUIDANCE_NOT_RESOLVER_OUTPUT'] },
+  { path: 'invalid/resolver_contract/invalid_project_export_with_official_docs_only.json', shouldFail: true, expectedCodes: ['RESOLVER_RULE_EVIDENCE_TIER_UNSATISFIED', 'RESOLVER_RULE_CONDITION_EVIDENCE_TIER_UNSATISFIED'] },
+  { path: 'invalid/resolver_contract/invalid_runtime_browser_with_project_export_only.json', shouldFail: true, expectedCodes: ['RESOLVER_RULE_EVIDENCE_TIER_UNSATISFIED', 'RESOLVER_RULE_CONDITION_EVIDENCE_TIER_UNSATISFIED'] },
+  { path: 'invalid/resolver_contract/invalid_downstream_validated_with_runtime_only.json', shouldFail: true, expectedCodes: ['RESOLVER_RULE_EVIDENCE_TIER_UNSATISFIED', 'RESOLVER_RULE_CONDITION_EVIDENCE_TIER_UNSATISFIED'] },
+  { path: 'invalid/resolver_contract/invalid_auto_condition_unresolvable_status.json', shouldFail: true, expectedCodes: ['RESOLVER_RULE_CONDITION_BUCKET_STATUS_MISMATCH'] },
+  { path: 'invalid/resolver_contract/invalid_conditional_condition_auto_status.json', shouldFail: true, expectedCodes: ['RESOLVER_RULE_CONDITION_BUCKET_STATUS_MISMATCH'] },
+  { path: 'invalid/resolver_contract/invalid_unresolvable_condition_conditional_status.json', shouldFail: true, expectedCodes: ['RESOLVER_RULE_CONDITION_BUCKET_STATUS_MISMATCH'] }
 ];
 
 function readJson(pathFromRoot) {
@@ -43,9 +63,23 @@ function schemaDiagnostics(record, validate) {
   return (validate.errors || []).map((error) => diagnostic('RESOLVER_RULE_SCHEMA', codeFromAjvError(error), `resolver_rule_contract: ${error.message}`, 'schema', pathFromAjvError(error)));
 }
 
+function tierRank(tier) {
+  return EVIDENCE_TIER_RANK.get(tier) ?? -1;
+}
+
 function p0Index() {
   const registry = readJson('kernel/decision-governance/p0-decision-matrices.v0.json');
   return new Map((registry.matrices || []).map((matrix) => [matrix.decision_family_id, { matrixId: matrix.matrix_id, options: new Set((matrix.candidate_options || []).map((option) => option.option_id)) }]));
+}
+
+function evidenceIndex(record) {
+  return new Map((record.evidence_refs || []).map((ref) => [ref.evidence_id, ref]));
+}
+
+function hasEvidenceAtOrAbove(refs, requiredTier) {
+  if (requiredTier === 'none') return true;
+  const requiredRank = tierRank(requiredTier);
+  return (refs || []).some((ref) => tierRank(ref?.evidence_tier) >= requiredRank);
 }
 
 function validateVocabularyAndRegistry() {
@@ -62,11 +96,39 @@ function validateVocabularyAndRegistry() {
   return diagnostics;
 }
 
+function validateConditionBucket({ conditions, bucketName, expectedStatus, evidenceById }) {
+  const diagnostics = [];
+  for (const [index, condition] of (conditions || []).entries()) {
+    const path = `${bucketName}[${index}]`;
+    if (condition.outcome_status !== expectedStatus) {
+      diagnostics.push(diagnostic('RESOLVER_RULE_CONDITION_BUCKET', 'RESOLVER_RULE_CONDITION_BUCKET_STATUS_MISMATCH', `${bucketName} entries must use outcome_status=${expectedStatus}.`, 'semantic', `${path}.outcome_status`));
+    }
+    if (condition.required_evidence_tier === 'official_docs' && condition.project_ready_claim_allowed === true) {
+      diagnostics.push(diagnostic('RESOLVER_RULE_EVIDENCE_BOUNDARY', 'RESOLVER_RULE_OFFICIAL_DOCS_NOT_PROJECT_READY', 'official_docs-only evidence cannot make a resolver condition project-ready.', 'semantic', `${path}.project_ready_claim_allowed`));
+    }
+    if (condition.outcome_status === 'unresolvable') continue;
+    const refs = condition.required_evidence_refs || [];
+    const matchedRefs = refs.map((refId) => evidenceById.get(refId)).filter(Boolean);
+    for (const refId of refs) {
+      if (!evidenceById.has(refId)) diagnostics.push(diagnostic('RESOLVER_RULE_CONDITION_EVIDENCE', 'RESOLVER_RULE_CONDITION_EVIDENCE_REF_NOT_FOUND', `Condition evidence ref ${refId} must match an evidence_refs.evidence_id entry.`, 'semantic', `${path}.required_evidence_refs`));
+    }
+    if (!hasEvidenceAtOrAbove(matchedRefs, condition.required_evidence_tier)) {
+      diagnostics.push(diagnostic('RESOLVER_RULE_CONDITION_EVIDENCE', 'RESOLVER_RULE_CONDITION_EVIDENCE_TIER_UNSATISFIED', `${bucketName} requires evidence tier ${condition.required_evidence_tier}, but matching refs do not satisfy it.`, 'semantic', `${path}.required_evidence_tier`));
+    }
+  }
+  return diagnostics;
+}
+
 function validateRuleContract(record, knownFamilies) {
   const diagnostics = [];
   const family = knownFamilies.get(record.decision_family_id);
+  const refs = Array.isArray(record.evidence_refs) ? record.evidence_refs : [];
+  const evidenceById = evidenceIndex(record);
+
   if (!Array.isArray(record.evidence_refs) || record.evidence_refs.length === 0) diagnostics.push(diagnostic('RESOLVER_RULE_EVIDENCE', 'RESOLVER_RULE_EVIDENCE_REFS_REQUIRED', 'Resolver rules must include at least one evidence reference.', 'semantic', 'evidence_refs'));
+  if (!hasEvidenceAtOrAbove(refs, record.required_evidence_tier)) diagnostics.push(diagnostic('RESOLVER_RULE_EVIDENCE', 'RESOLVER_RULE_EVIDENCE_TIER_UNSATISFIED', `required_evidence_tier=${record.required_evidence_tier} must be satisfied by at least one evidence_ref at or above that tier.`, 'semantic', 'required_evidence_tier'));
   if (record.matrix_ref?.decision_family_id !== record.decision_family_id) diagnostics.push(diagnostic('RESOLVER_RULE_MATRIX_ALIGNMENT', 'RESOLVER_RULE_MATRIX_REF_FAMILY_MISMATCH', 'matrix_ref.decision_family_id must match decision_family_id.', 'semantic', 'matrix_ref.decision_family_id'));
+
   if (!family) {
     diagnostics.push(diagnostic('RESOLVER_RULE_FAIL_CLOSED', 'RESOLVER_RULE_UNKNOWN_DECISION_FAMILY', 'Unknown decision_family_id must fail closed as unresolvable; do not invent resolver output.', 'semantic', 'decision_family_id'));
   } else {
@@ -75,13 +137,15 @@ function validateRuleContract(record, knownFamilies) {
     for (const optionId of optionIds) if (!family.options.has(optionId)) diagnostics.push(diagnostic('RESOLVER_RULE_OPTION_SET', 'RESOLVER_RULE_OPTION_NOT_IN_P0_MATRIX', `Option ${optionId} is not in the P0 matrix option set for ${record.decision_family_id}.`, 'semantic', 'option_set'));
     for (const optionId of record.allowed_options || []) if (!optionIds.has(optionId)) diagnostics.push(diagnostic('RESOLVER_RULE_OPTION_SET', 'RESOLVER_RULE_ALLOWED_OPTION_NOT_IN_OPTION_SET', `Allowed option ${optionId} is missing from option_set.`, 'semantic', 'allowed_options'));
   }
+
   if (record.output_contract?.human_or_llm_free_text_opinion_allowed !== false) diagnostics.push(diagnostic('RESOLVER_RULE_OUTPUT_BOUNDARY', 'RESOLVER_RULE_FREE_TEXT_OPINION_FORBIDDEN', 'Human/LLM free-text opinion must not be treated as resolver output.', 'semantic', 'output_contract.human_or_llm_free_text_opinion_allowed'));
   if (record.output_contract?.matrix_guidance_is_resolver_output !== false) diagnostics.push(diagnostic('RESOLVER_RULE_OUTPUT_BOUNDARY', 'RESOLVER_RULE_MATRIX_GUIDANCE_NOT_RESOLVER_OUTPUT', 'P0 matrix guidance must not be treated as resolver output.', 'semantic', 'output_contract.matrix_guidance_is_resolver_output'));
   if (record.output_contract?.assigns_real_final_decision !== false) diagnostics.push(diagnostic('RESOLVER_RULE_OUTPUT_BOUNDARY', 'RESOLVER_RULE_MUST_NOT_ASSIGN_REAL_FINAL_DECISION', 'KROAD-005 contract artifacts must not assign real final target-project decisions.', 'semantic', 'output_contract.assigns_real_final_decision'));
-  const allConditions = [...(record.auto_resolution_conditions || []), ...(record.conditional_conditions || []), ...(record.unresolvable_conditions || [])];
-  for (const [index, condition] of allConditions.entries()) {
-    if (condition.required_evidence_tier === 'official_docs' && condition.project_ready_claim_allowed === true) diagnostics.push(diagnostic('RESOLVER_RULE_EVIDENCE_BOUNDARY', 'RESOLVER_RULE_OFFICIAL_DOCS_NOT_PROJECT_READY', 'official_docs-only evidence cannot make a resolver condition project-ready.', 'semantic', `conditions[${index}].project_ready_claim_allowed`));
+
+  for (const [bucketName, expectedStatus] of CONDITION_BUCKETS) {
+    diagnostics.push(...validateConditionBucket({ conditions: record[bucketName], bucketName, expectedStatus, evidenceById }));
   }
+
   return diagnostics;
 }
 
