@@ -120,6 +120,9 @@ The resolver emits `unresolvable` for fail-closed cases, including:
 ```text
 unknown decision_family_id
 missing evidence_refs
+invalid or unsupported required_evidence_tier
+malformed active rule registry entries
+active rule files that parse to null, arrays, or non-object values
 under-tier evidence with no official-doc conditional path
 missing structured context
 unsupported layout context
@@ -141,6 +144,10 @@ Invalid/fail-closed behavior:
 ```text
 kernel/fixtures/invalid/resolver_mvp/invalid_missing_evidence_refs.json
 kernel/fixtures/invalid/resolver_mvp/invalid_unknown_family_auto_resolved.json
+kernel/fixtures/invalid/resolver_mvp/invalid_unsupported_required_evidence_tier.json
+kernel/fixtures/invalid/resolver_mvp/invalid_malformed_registry_active_rules_not_array.json
+kernel/fixtures/invalid/resolver_mvp/invalid_malformed_active_rule_entry_string.json
+kernel/fixtures/invalid/resolver_mvp/invalid_malformed_active_rule_file_null.json
 ```
 
 Adversarial overclaim behavior:
@@ -149,6 +156,8 @@ Adversarial overclaim behavior:
 kernel/fixtures/adversarial/resolver_mvp/adversarial_official_docs_auto_resolved.json
 kernel/fixtures/adversarial/resolver_mvp/adversarial_grid_without_availability.json
 ```
+
+All Resolver MVP fixtures declare the correct expected resolver output. Invalid and adversarial fixtures no longer encode the adversary's overclaim as the expected result.
 
 ## Validation
 
@@ -189,6 +198,10 @@ Other P0 families also remain unsupported as resolver-backed MVP families.
 
 ## Next allowed step
 
-The next roadmap step should not mark later KROADs complete.
+The next roadmap step is:
 
-A later task may either broaden resolver fixture coverage (`KROAD-008`) or add L2 decision correctness audit (`KROAD-007`) only after inspecting `planning/NEXT_WORK.md`.
+```text
+KROAD-007 — L2 Decision Correctness Audit
+```
+
+KROAD-007 is not implemented by this MVP. The next session must still inspect `planning/NEXT_WORK.md` before continuing.
