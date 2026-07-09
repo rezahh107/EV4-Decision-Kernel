@@ -24,7 +24,7 @@ const CONDITION_BUCKETS = [
 
 const fixturePlan = [
   { path: 'valid/resolver_contract/valid_layout_structure_rule_contract.json', shouldFail: false, expectedCodes: [] },
-  { path: 'invalid/resolver_contract/invalid_missing_evidence_refs.json', shouldFail: true, expectedCodes: ['SCHEMA_MIN_ITEMS', 'RESOLVER_RULE_EVIDENCE_REFS_REQUIRED', 'RESOLVER_RULE_EVIDENCE_TIER_UNSATISFIED'] },
+  { path: 'invalid/resolver_contract/invalid_missing_evidence_refs.json', shouldFail: true, expectedCodes: ['SCHEMA_MINITEMS', 'RESOLVER_RULE_EVIDENCE_REFS_REQUIRED', 'RESOLVER_RULE_EVIDENCE_TIER_UNSATISFIED'] },
   { path: 'invalid/resolver_contract/invalid_unknown_family_auto_resolved.json', shouldFail: true, expectedCodes: ['RESOLVER_RULE_UNKNOWN_DECISION_FAMILY'] },
   { path: 'invalid/resolver_contract/invalid_official_docs_project_ready_auto_condition.json', shouldFail: true, expectedCodes: ['RESOLVER_RULE_OFFICIAL_DOCS_NOT_PROJECT_READY'] },
   { path: 'invalid/resolver_contract/invalid_matrix_guidance_as_output.json', shouldFail: true, expectedCodes: ['SCHEMA_CONST', 'RESOLVER_RULE_FREE_TEXT_OPINION_FORBIDDEN', 'RESOLVER_RULE_MATRIX_GUIDANCE_NOT_RESOLVER_OUTPUT'] },
