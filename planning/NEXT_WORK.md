@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-KROAD-007 L2 Decision Correctness Audit
+KROAD-007 L2 Decision Correctness Audit second-pass review record
 
 ## Status Authority
 
@@ -48,6 +48,7 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
   - Review note: The second-pass review/audit result is preserved in `planning/reviews/KROAD-006_RESOLVER_MVP_SECOND_PASS_REVIEW.md`; it records the merged PR #23 state, reviewed files, CI evidence, unresolved/outdated review-thread disposition, boundaries, and the conclusion that KROAD-006 is complete on `main` and does not need another critic pass before moving to KROAD-007.
 - [x] KROAD-007 — L2 Decision Correctness Audit
   - Update note: This PR completed KROAD-007 by adding `kernel/validator/validate-l2-decision-correctness.mjs`, `docs/decision-governance/L2_DECISION_CORRECTNESS_AUDIT_KROAD_007.md`, valid/invalid/adversarial L2 fixtures under `kernel/fixtures/*/l2_decision_correctness/`, and `npm run validate:l2-decision-correctness` wired into `npm run validate:mvk`. The L2 audit reruns the deterministic Resolver MVP through `resolveDecision(resolver_input)`, compares resolver output with `decision_record_v2`, detects resolver-status/selected-option/allowed-option/forbidden-option/evidence/rule-version/reaudit/human-override/overclaim issues, and keeps active resolver-backed coverage limited to `layout_structure`. KROAD-008+ remain incomplete.
+  - Review note: The second-pass review/audit result is preserved in `planning/reviews/KROAD-007_L2_DECISION_CORRECTNESS_AUDIT_SECOND_PASS_REVIEW.md`; it records the merged PR #26 state, reviewed files, CI evidence, unresolved/outdated review-thread disposition, direct-run portability repair, conditional `limitations_acknowledged` enforcement repair, registry status alignment, boundaries, and the conclusion that KROAD-007 is complete on `main` and does not need another critic pass before moving to KROAD-008.
 
 ## Remaining Work
 
