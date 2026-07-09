@@ -1,0 +1,39 @@
+{
+  "record_type": "decision_record_v2",
+  "schema_version": "2.0.0",
+  "decision_id": "DR-V2-MISSING-REQUIRED-INVALID-001",
+  "decision_family_id": "element_choice.image_svg_background",
+  "evidence_tier": "official_docs",
+  "rule_id": "KROAD-003-SCHEMA-BOOTSTRAP",
+  "decision_type": "resolver_derived",
+  "trigger_source": "initial_decision",
+  "reopen_count": 0,
+  "max_reopen_count": 3,
+  "previous_decision_ref": null,
+  "requires_reaudit": true,
+  "selected_option": {
+    "option_id": "v4.svg",
+    "label": "SVG"
+  },
+  "allowed_options": [
+    {
+      "option_id": "v4.svg",
+      "label": "SVG"
+    }
+  ],
+  "rejected_options": [],
+  "forbidden_options": [],
+  "evidence_refs": [
+    {
+      "evidence_id": "EV-OFFICIAL-DOCS-SVG-CAPABILITY-001",
+      "evidence_tier": "official_docs",
+      "source_type": "official_elementor_docs",
+      "ref": "kernel/official-sources/elementor-v4-source-manifest.v0.json"
+    }
+  ],
+  "forbidden_overclaims": [
+    "official_docs_do_not_prove_project_availability",
+    "official_docs_do_not_prove_runtime_behavior"
+  ],
+  "downstream_owner": "architect"
+}

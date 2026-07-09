@@ -1,0 +1,55 @@
+{
+  "record_type": "decision_record_v2",
+  "schema_version": "2.0.0",
+  "decision_id": "DR-V2-MANUAL-OVERRIDE-MISMATCH-INVALID-001",
+  "decision_family_id": "element_choice.image_svg_background",
+  "resolver_status": "conditional",
+  "evidence_tier": "official_docs",
+  "rule_id": "KROAD-003-SCHEMA-BOOTSTRAP",
+  "rule_version": "1.0.0",
+  "decision_type": "resolver_derived",
+  "trigger_source": "manual_override",
+  "provisional_status": {
+    "is_provisional": true,
+    "reason": "official documentation only is insufficient for final project-specific readiness",
+    "missing_evidence": [
+      "project_export",
+      "runtime_browser"
+    ],
+    "blocks_final_release": true
+  },
+  "reopen_count": 0,
+  "max_reopen_count": 3,
+  "previous_decision_ref": null,
+  "requires_reaudit": true,
+  "selected_option": {
+    "option_id": "v4.svg",
+    "label": "SVG"
+  },
+  "allowed_options": [
+    {
+      "option_id": "v4.svg",
+      "label": "SVG"
+    }
+  ],
+  "rejected_options": [],
+  "forbidden_options": [
+    {
+      "option_id": "v3.widget_fallback",
+      "reason": "V3 fallback is not a valid V4 design target"
+    }
+  ],
+  "evidence_refs": [
+    {
+      "evidence_id": "EV-OFFICIAL-DOCS-SVG-CAPABILITY-001",
+      "evidence_tier": "official_docs",
+      "source_type": "official_elementor_docs",
+      "ref": "kernel/official-sources/elementor-v4-source-manifest.v0.json"
+    }
+  ],
+  "forbidden_overclaims": [
+    "official_docs_do_not_prove_project_availability",
+    "official_docs_do_not_prove_runtime_behavior"
+  ],
+  "downstream_owner": "architect"
+}

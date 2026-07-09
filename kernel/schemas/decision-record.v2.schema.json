@@ -1,0 +1,547 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/decision-record.v2.schema.json",
+  "title": "EV4 Decision Record Schema v2",
+  "description": "Kernel-local Decision Record v2 contract for future resolver, L2 audit, provisional policy, rule versioning, human override, and reopen-loop work. This schema does not implement a resolver.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_type",
+    "schema_version",
+    "decision_id",
+    "decision_family_id",
+    "resolver_status",
+    "evidence_tier",
+    "rule_id",
+    "rule_version",
+    "decision_type",
+    "trigger_source",
+    "provisional_status",
+    "reopen_count",
+    "max_reopen_count",
+    "previous_decision_ref",
+    "requires_reaudit",
+    "selected_option",
+    "allowed_options",
+    "rejected_options",
+    "forbidden_options",
+    "evidence_refs",
+    "forbidden_overclaims",
+    "downstream_owner"
+  ],
+  "properties": {
+    "record_type": {
+      "const": "decision_record_v2"
+    },
+    "schema_version": {
+      "const": "2.0.0"
+    },
+    "decision_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "decision_family_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "resolver_status": {
+      "enum": [
+        "auto_resolved",
+        "conditional",
+        "unresolvable"
+      ]
+    },
+    "evidence_tier": {
+      "enum": [
+        "none",
+        "official_docs",
+        "project_export",
+        "runtime_browser",
+        "downstream_validated"
+      ]
+    },
+    "rule_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rule_version": {
+      "type": "string",
+      "pattern": "^v?[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "decision_type": {
+      "enum": [
+        "resolver_derived",
+        "human_override"
+      ]
+    },
+    "trigger_source": {
+      "enum": [
+        "initial_decision",
+        "evidence_change",
+        "downstream_failure",
+        "rule_revision",
+        "manual_override"
+      ]
+    },
+    "provisional_status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "is_provisional",
+        "reason",
+        "missing_evidence",
+        "blocks_final_release"
+      ],
+      "properties": {
+        "is_provisional": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "missing_evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "blocks_final_release": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "is_provisional": {
+                "const": true
+              }
+            },
+            "required": [
+              "is_provisional"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason": {
+                "minLength": 1
+              },
+              "missing_evidence": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "is_provisional": {
+                "const": false
+              }
+            },
+            "required": [
+              "is_provisional"
+            ]
+          },
+          "then": {
+            "properties": {
+              "missing_evidence": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "reopen_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "max_reopen_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "previous_decision_ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "requires_reaudit": {
+      "type": "boolean"
+    },
+    "selected_option": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "option_id",
+        "label"
+      ],
+      "properties": {
+        "option_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "allowed_options": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/decisionOption"
+      }
+    },
+    "rejected_options": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/optionDecision"
+      }
+    },
+    "forbidden_options": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/optionDecision"
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidenceRef"
+      }
+    },
+    "forbidden_overclaims": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "downstream_owner": {
+      "enum": [
+        "architect",
+        "ce",
+        "builder",
+        "responsive",
+        "project_gate",
+        "none"
+      ]
+    },
+    "human_override": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "override_id",
+        "override_actor",
+        "override_reason",
+        "accepted_limitations"
+      ],
+      "properties": {
+        "override_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "override_actor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "override_reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accepted_limitations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "decision_type": {
+            "const": "human_override"
+          }
+        },
+        "required": [
+          "decision_type"
+        ]
+      },
+      "then": {
+        "required": [
+          "human_override"
+        ],
+        "properties": {
+          "trigger_source": {
+            "const": "manual_override"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "trigger_source": {
+            "const": "manual_override"
+          }
+        },
+        "required": [
+          "trigger_source"
+        ]
+      },
+      "then": {
+        "required": [
+          "human_override"
+        ],
+        "properties": {
+          "decision_type": {
+            "const": "human_override"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision_type": {
+            "const": "resolver_derived"
+          }
+        },
+        "required": [
+          "decision_type"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "human_override"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "resolver_status": {
+            "const": "unresolvable"
+          }
+        },
+        "required": [
+          "resolver_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "selected_option": {
+            "properties": {
+              "option_id": {
+                "const": "none"
+              }
+            },
+            "required": [
+              "option_id"
+            ]
+          },
+          "requires_reaudit": {
+            "const": true
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "resolver_status": {
+            "enum": [
+              "auto_resolved",
+              "conditional"
+            ]
+          }
+        },
+        "required": [
+          "resolver_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "selected_option": {
+            "properties": {
+              "option_id": {
+                "not": {
+                  "const": "none"
+                }
+              }
+            },
+            "required": [
+              "option_id"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "evidence_tier": {
+            "const": "none"
+          }
+        },
+        "required": [
+          "evidence_tier"
+        ]
+      },
+      "then": {
+        "properties": {
+          "resolver_status": {
+            "const": "unresolvable"
+          },
+          "requires_reaudit": {
+            "const": true
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "reopen_count": {
+            "const": 0
+          }
+        },
+        "required": [
+          "reopen_count"
+        ]
+      },
+      "then": {
+        "properties": {
+          "previous_decision_ref": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "reopen_count": {
+            "minimum": 1
+          }
+        },
+        "required": [
+          "reopen_count"
+        ]
+      },
+      "then": {
+        "properties": {
+          "previous_decision_ref": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "decisionOption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "option_id",
+        "label"
+      ],
+      "properties": {
+        "option_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "optionDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "option_id",
+        "reason"
+      ],
+      "properties": {
+        "option_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "evidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "evidence_tier",
+        "source_type",
+        "ref"
+      ],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_tier": {
+          "enum": [
+            "none",
+            "official_docs",
+            "project_export",
+            "runtime_browser",
+            "downstream_validated"
+          ]
+        },
+        "source_type": {
+          "enum": [
+            "official_elementor_docs",
+            "kernel_fixture",
+            "project_export",
+            "runtime_browser",
+            "downstream_validation",
+            "manual_note"
+          ]
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}
