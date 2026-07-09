@@ -1,0 +1,116 @@
+{
+  "policy_id": "resolver-fixture-triplet-policy.v0",
+  "version": "0.1.0",
+  "status": "kroad_008_active",
+  "scope": "Kernel-local policy for active Resolver MVP rule fixture triplet coverage. It does not add resolver families, downstream enforcement, runtime proof, Builder proof, Project Gate intake, or production readiness.",
+  "owner": "Kernel",
+  "validator_ref": "kernel/validator/validate-resolver-fixture-triplets.mjs",
+  "registry_ref": "kernel/decision-governance/resolver-rule-registry.v0.json",
+  "rule_completion_policy": {
+    "active_resolver_rule_requires_triplet": true,
+    "required_fixture_kinds": [
+      "valid",
+      "invalid",
+      "adversarial"
+    ],
+    "missing_triplet_blocks_complete": true,
+    "empty_fixture_stub_counts": false,
+    "case_name_dispatch_allowed": false,
+    "synthetic_fixture_evidence_only": true,
+    "real_target_project_proof_claimed": false,
+    "production_readiness_claimed": false
+  },
+  "fixture_kind_policy": {
+    "valid": {
+      "must_match_expected_result": true,
+      "may_emit_statuses": [
+        "auto_resolved",
+        "conditional",
+        "unresolvable"
+      ],
+      "requires_expected_result": true
+    },
+    "invalid": {
+      "must_fail_clearly": true,
+      "requires_non_empty_expected_diagnostic_codes": true,
+      "may_emit_statuses": [
+        "unresolvable"
+      ],
+      "requires_expected_result": true
+    },
+    "adversarial": {
+      "must_be_close_to_valid_but_not_valid": true,
+      "requires_non_empty_expected_diagnostic_codes": true,
+      "allowed_outcomes": [
+        "conditional",
+        "unresolvable"
+      ],
+      "must_be_distinct_from_invalid_fixtures": true,
+      "requires_expected_result": true
+    }
+  },
+  "active_rule_triplets": [
+    {
+      "rule_id": "resolver.rule.layout_structure.mvp.v0",
+      "rule_version": "0.1.0",
+      "decision_family_id": "layout_structure",
+      "rule_ref": "kernel/decision-governance/resolver-rules/layout-structure.v0.json",
+      "coverage_status": "complete",
+      "fixture_scope_only": true,
+      "synthetic_fixture_evidence_only": true,
+      "real_target_project_proof_claimed": false,
+      "triplet": {
+        "valid": [
+          {
+            "path": "kernel/fixtures/valid/resolver_mvp/layout_structure_auto_resolved_flexbox.json",
+            "case_kind": "valid",
+            "expected_status": "auto_resolved",
+            "coverage_assertion": "Accepts exact project_export evidence-ref-bound single-axis layout and resolves to flexbox."
+          }
+        ],
+        "invalid": [
+          {
+            "path": "kernel/fixtures/invalid/resolver_mvp/invalid_missing_evidence_refs.json",
+            "case_kind": "invalid",
+            "expected_status": "unresolvable",
+            "expected_diagnostic_codes": [
+              "RESOLVER_MVP_MISSING_EVIDENCE_REFS",
+              "RESOLVER_MVP_REQUIRED_EVIDENCE_TIER_UNSATISFIED"
+            ],
+            "coverage_assertion": "Rejects missing evidence refs with explicit fail-closed diagnostics."
+          }
+        ],
+        "adversarial": [
+          {
+            "path": "kernel/fixtures/adversarial/resolver_mvp/adversarial_grid_without_availability.json",
+            "case_kind": "adversarial",
+            "expected_status": "unresolvable",
+            "expected_diagnostic_codes": [
+              "RESOLVER_MVP_GRID_REQUIRES_AVAILABILITY"
+            ],
+            "adversarial_distinction_from_invalid": {
+              "mutation_kind": "near-valid project_export two-axis grid request",
+              "differs_from_invalid_by": [
+                "has project_export evidence",
+                "has exact required evidence ref",
+                "has structured two-axis context",
+                "fails only because grid_availability_proven is false"
+              ]
+            },
+            "coverage_assertion": "Looks close to a valid grid auto-resolution but must fail without explicit grid availability evidence."
+          }
+        ]
+      }
+    }
+  ],
+  "boundaries": {
+    "new_resolver_families_added": false,
+    "kroad_009_vertical_slice_implemented": false,
+    "downstream_consumer_contract_implemented": false,
+    "project_gate_intake_implemented": false,
+    "runtime_browser_evidence_implemented": false,
+    "builder_execution_proof_claimed": false,
+    "production_readiness_claimed": false
+  },
+  "next_allowed_step": "KROAD-009 — Vertical Slice"
+}

@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-KROAD-007 L2 Decision Correctness Audit second-pass review record
+KROAD-008 Resolver Fixture Triplet coverage
 
 ## Status Authority
 
@@ -10,12 +10,12 @@ This file is the authoritative current-status dashboard for roadmap progress aft
 
 `planning/KERNEL_EXECUTION_PLAN.md` remains the durable detailed operating map for item meaning, scope, dependencies, acceptance criteria, evidence requirements, and do-not rules. If an item's status label in the detailed plan is stale, use this file for current roadmap status and update the detailed plan in a later maintenance PR only when changing roadmap meaning, scope, dependency, acceptance criteria, or evidence requirements.
 
-Known detailed-plan status labels: `KROAD-001`, `KROAD-003`, `KROAD-004`, `KROAD-005`, `KROAD-006`, and `KROAD-007` may still show legacy `not_started` status in `planning/KERNEL_EXECUTION_PLAN.md`; those lines are non-authoritative. Current status source for `KROAD-001`, `KROAD-003`, `KROAD-004`, `KROAD-005`, `KROAD-006`, and `KROAD-007` is `planning/NEXT_WORK.md`.
+Known detailed-plan status labels: `KROAD-001`, `KROAD-003`, `KROAD-004`, `KROAD-005`, `KROAD-006`, `KROAD-007`, and `KROAD-008` may still show legacy `not_started` status in `planning/KERNEL_EXECUTION_PLAN.md`; those lines are non-authoritative. Current status source for `KROAD-001`, `KROAD-003`, `KROAD-004`, `KROAD-005`, `KROAD-006`, `KROAD-007`, and `KROAD-008` is `planning/NEXT_WORK.md`.
 
 ## Status Summary
 
-Current completed milestones: KROAD-000, KROAD-001, KROAD-002, KROAD-003, KROAD-004, KROAD-005, KROAD-006, KROAD-007.
-Current next task: KROAD-008 — Resolver Fixtures: valid / invalid / adversarial.
+Current completed milestones: KROAD-000, KROAD-001, KROAD-002, KROAD-003, KROAD-004, KROAD-005, KROAD-006, KROAD-007, KROAD-008.
+Current next task: KROAD-009 — Vertical Slice.
 Detailed plan: `planning/KERNEL_EXECUTION_PLAN.md`.
 Do not continue from chat history; read this file first.
 
@@ -23,7 +23,7 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
 
 ## Next Task
 
-- [ ] KROAD-008 — Resolver Fixtures: valid / invalid / adversarial
+- [ ] KROAD-009 — Vertical Slice
 
 ## Completed
 
@@ -49,10 +49,11 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
 - [x] KROAD-007 — L2 Decision Correctness Audit
   - Update note: This PR completed KROAD-007 by adding `kernel/validator/validate-l2-decision-correctness.mjs`, `docs/decision-governance/L2_DECISION_CORRECTNESS_AUDIT_KROAD_007.md`, valid/invalid/adversarial L2 fixtures under `kernel/fixtures/*/l2_decision_correctness/`, and `npm run validate:l2-decision-correctness` wired into `npm run validate:mvk`. The L2 audit reruns the deterministic Resolver MVP through `resolveDecision(resolver_input)`, compares resolver output with `decision_record_v2`, detects resolver-status/selected-option/allowed-option/forbidden-option/evidence/rule-version/reaudit/human-override/overclaim issues, and keeps active resolver-backed coverage limited to `layout_structure`. KROAD-008+ remain incomplete.
   - Review note: The second-pass review/audit result is preserved in `planning/reviews/KROAD-007_L2_DECISION_CORRECTNESS_AUDIT_SECOND_PASS_REVIEW.md`; it records the merged PR #26 state, reviewed files, CI evidence, unresolved/outdated review-thread disposition, direct-run portability repair, conditional `limitations_acknowledged` enforcement repair, registry status alignment, boundaries, and the conclusion that KROAD-007 is complete on `main` and does not need another critic pass before moving to KROAD-008.
+- [x] KROAD-008 — Resolver Fixtures: valid / invalid / adversarial
+  - Update note: This PR completed KROAD-008 by adding `kernel/decision-governance/resolver-fixture-triplet-policy.v0.json`, `kernel/validator/validate-resolver-fixture-triplets.mjs`, `docs/decision-governance/RESOLVER_FIXTURE_TRIPLET_POLICY_KROAD_008.md`, registry triplet coverage for `resolver.rule.layout_structure.mvp.v0@0.1.0`, and `npm run validate:resolver-fixture-triplets` wired into `npm run validate:mvk`. The validator requires valid/invalid/adversarial coverage for every active Resolver MVP rule, reruns deterministic resolver output rather than trusting case names, rejects empty fixture stubs, checks expected diagnostics, requires adversarial distinction metadata, keeps evidence refs synthetic-only, and does not implement KROAD-009+, downstream enforcement, Project Gate intake, runtime/browser evidence, Builder proof, or production readiness.
 
 ## Remaining Work
 
-- [ ] KROAD-008 — Resolver Fixtures: valid / invalid / adversarial
 - [ ] KROAD-009 — Vertical Slice
 - [ ] KROAD-010 — Downstream Consumer Contract
 - [ ] KROAD-011 — Project Gate Intake
@@ -89,6 +90,7 @@ If evidence is missing or uncertain, do not tick the item; add a note explaining
 - KROAD-005 resolver-contract artifacts are not Resolver MVP logic and do not assign real final decisions.
 - KROAD-006 Resolver MVP is limited to `layout_structure`; unsupported families must fail closed.
 - KROAD-007 L2 Decision Correctness Audit is limited to resolver-covered families and must rerun the resolver, not act as a second free-text opinion.
+- KROAD-008 fixture triplet coverage is limited to active Resolver MVP rules. The only active family remains `layout_structure`.
 - Human overrides must be explicitly marked.
 - Critical P0 provisional decisions must not pass final release.
 - Unknown decision families must fail closed with halt / insufficient evidence / no free decision.
