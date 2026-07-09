@@ -41,6 +41,14 @@ function readJson(pathFromRoot) {
   return JSON.parse(readFileSync(join(root, pathFromRoot), 'utf8'));
 }
 
+function isPlainObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isKnownEvidenceTier(tier) {
+  return typeof tier === 'string' && EVIDENCE_TIER_RANK.has(tier);
+}
+
 function diagnostic(rule_id, code, message, source, path) {
   return { rule_id, code, message, source, ...(path ? { path } : {}) };
 }
@@ -65,7 +73,7 @@ function schemaDiagnostics(record, validate) {
 }
 
 function tierRank(tier) {
-  return EVIDENCE_TIER_RANK.get(tier) ?? -1;
+  return isKnownEvidenceTier(tier) ? EVIDENCE_TIER_RANK.get(tier) : -1;
 }
 
 function p0Index() {
@@ -74,19 +82,25 @@ function p0Index() {
 }
 
 function evidenceIndex(record) {
-  return new Map((record.evidence_refs || []).map((ref) => [ref.evidence_id, ref]));
+  return new Map((Array.isArray(record?.evidence_refs) ? record.evidence_refs : []).map((ref) => [ref.evidence_id, ref]));
 }
 
 function hasEvidenceAtOrAbove(refs, requiredTier) {
+  if (!isKnownEvidenceTier(requiredTier)) return false;
   if (requiredTier === 'none') return true;
   const requiredRank = tierRank(requiredTier);
-  return (refs || []).some((ref) => tierRank(ref?.evidence_tier) >= requiredRank);
+  return Array.isArray(refs) && refs.some((ref) => isKnownEvidenceTier(ref?.evidence_tier) && tierRank(ref.evidence_tier) >= requiredRank);
 }
 
 function validateConditionBucket({ conditions, bucketName, expectedStatus, evidenceById }) {
   const diagnostics = [];
-  for (const [index, condition] of (conditions || []).entries()) {
+  if (!Array.isArray(conditions)) return diagnostics;
+  for (const [index, condition] of conditions.entries()) {
     const path = `${bucketName}[${index}]`;
+    if (!isPlainObject(condition)) {
+      diagnostics.push(diagnostic('RESOLVER_RULE_CONDITION_BUCKET', 'RESOLVER_RULE_CONDITION_INVALID_OBJECT', `${bucketName} entries must be JSON objects.`, 'semantic', path));
+      continue;
+    }
     if (condition.outcome_status !== expectedStatus) {
       diagnostics.push(diagnostic('RESOLVER_RULE_CONDITION_BUCKET', 'RESOLVER_RULE_CONDITION_BUCKET_STATUS_MISMATCH', `${bucketName} entries must use outcome_status=${expectedStatus}.`, 'semantic', `${path}.outcome_status`));
     }
@@ -108,6 +122,10 @@ function validateConditionBucket({ conditions, bucketName, expectedStatus, evide
 
 function validateRuleContract(record, knownFamilies) {
   const diagnostics = [];
+  if (!isPlainObject(record)) {
+    return [diagnostic('RESOLVER_RULE_SCHEMA', 'RESOLVER_RULE_INVALID_OBJECT', 'Resolver rule contract fixture must be a JSON object.', 'semantic', '(root)')];
+  }
+
   const family = knownFamilies.get(record.decision_family_id);
   const refs = Array.isArray(record.evidence_refs) ? record.evidence_refs : [];
   const evidenceById = evidenceIndex(record);
@@ -120,7 +138,7 @@ function validateRuleContract(record, knownFamilies) {
     diagnostics.push(diagnostic('RESOLVER_RULE_FAIL_CLOSED', 'RESOLVER_RULE_UNKNOWN_DECISION_FAMILY', 'Unknown decision_family_id must fail closed as unresolvable; do not invent resolver output.', 'semantic', 'decision_family_id'));
   } else {
     if (record.matrix_ref?.matrix_id !== family.matrixId) diagnostics.push(diagnostic('RESOLVER_RULE_MATRIX_ALIGNMENT', 'RESOLVER_RULE_MATRIX_ID_MISMATCH', 'matrix_ref.matrix_id must match the P0 matrix registry entry for the decision family.', 'semantic', 'matrix_ref.matrix_id'));
-    const optionIds = new Set((record.option_set || []).map((option) => option.option_id));
+    const optionIds = new Set((Array.isArray(record.option_set) ? record.option_set : []).map((option) => option.option_id));
     for (const optionId of optionIds) if (!family.options.has(optionId)) diagnostics.push(diagnostic('RESOLVER_RULE_OPTION_SET', 'RESOLVER_RULE_OPTION_NOT_IN_P0_MATRIX', `Option ${optionId} is not in the P0 matrix option set for ${record.decision_family_id}.`, 'semantic', 'option_set'));
     for (const optionId of record.allowed_options || []) if (!optionIds.has(optionId)) diagnostics.push(diagnostic('RESOLVER_RULE_OPTION_SET', 'RESOLVER_RULE_ALLOWED_OPTION_NOT_IN_OPTION_SET', `Allowed option ${optionId} is missing from option_set.`, 'semantic', 'allowed_options'));
   }
@@ -138,6 +156,11 @@ function validateRuleContract(record, knownFamilies) {
 
 function validateActiveMvpRule(rule, knownFamilies, path) {
   const diagnostics = [];
+  if (!isPlainObject(rule)) {
+    diagnostics.push(diagnostic('RESOLVER_MVP_RULE_SHAPE', 'RESOLVER_MVP_RULE_INVALID_OBJECT', 'Active Resolver MVP rule must be a JSON object.', 'semantic', path));
+    return diagnostics;
+  }
+
   const required = ['artifact_type', 'rule_id', 'rule_version', 'decision_family_id', 'required_evidence_tier', 'evidence_refs', 'allowed_options', 'forbidden_options', 'diagnostics', 'fixture_requirements', 'output_contract'];
   for (const field of required) {
     if (!(field in rule)) diagnostics.push(diagnostic('RESOLVER_MVP_RULE_SHAPE', `RESOLVER_MVP_RULE_${field.toUpperCase()}_REQUIRED`, `Active Resolver MVP rule requires ${field}.`, 'semantic', `${path}.${field}`));
@@ -163,6 +186,9 @@ function validateVocabularyAndRegistry(knownFamilies) {
   if (registry.unknown_decision_family_policy?.outcome !== 'unresolvable') diagnostics.push(diagnostic('RESOLVER_REGISTRY_FAIL_CLOSED', 'RESOLVER_REGISTRY_UNKNOWN_FAMILY_MUST_BE_UNRESOLVABLE', 'Unknown decision family must fail closed as unresolvable.', 'semantic', 'unknown_decision_family_policy.outcome'));
 
   const activeRules = Array.isArray(registry.active_rules) ? registry.active_rules : [];
+  if (!Array.isArray(registry.active_rules)) {
+    diagnostics.push(diagnostic('RESOLVER_REGISTRY_MVP', 'RESOLVER_REGISTRY_ACTIVE_RULES_ARRAY_REQUIRED', 'active_rules must be an array when the Resolver MVP registry is present.', 'semantic', 'active_rules'));
+  }
   if (registry.resolver_mvp_implemented === false && activeRules.length > 0) {
     diagnostics.push(diagnostic('RESOLVER_REGISTRY_BOUNDARY', 'RESOLVER_REGISTRY_ACTIVE_RULES_REQUIRE_MVP', 'active_rules may be non-empty only after KROAD-006 enables Resolver MVP.', 'semantic', 'active_rules'));
   }
@@ -173,9 +199,14 @@ function validateVocabularyAndRegistry(knownFamilies) {
     if (registry.resolver_mvp_scope?.runtime_browser_evidence_implemented !== false) diagnostics.push(diagnostic('RESOLVER_REGISTRY_BOUNDARY', 'RESOLVER_REGISTRY_MUST_NOT_CLAIM_RUNTIME_PROOF', 'KROAD-006 must not claim runtime/browser evidence implementation.', 'semantic', 'resolver_mvp_scope.runtime_browser_evidence_implemented'));
     if (registry.resolver_mvp_scope?.production_readiness_claimed !== false) diagnostics.push(diagnostic('RESOLVER_REGISTRY_BOUNDARY', 'RESOLVER_REGISTRY_MUST_NOT_CLAIM_PRODUCTION_READINESS', 'KROAD-006 must not claim production readiness.', 'semantic', 'resolver_mvp_scope.production_readiness_claimed'));
     for (const [index, entry] of activeRules.entries()) {
+      if (!isPlainObject(entry)) {
+        diagnostics.push(diagnostic('RESOLVER_REGISTRY_MVP', 'RESOLVER_REGISTRY_ACTIVE_RULE_INVALID', 'Active rule registry entry must be a JSON object.', 'semantic', `active_rules[${index}]`));
+        continue;
+      }
       for (const field of ['rule_id', 'rule_version', 'decision_family_id', 'path', 'implementation_ref', 'produces_statuses']) {
         if (!(field in entry)) diagnostics.push(diagnostic('RESOLVER_REGISTRY_MVP', `RESOLVER_REGISTRY_ACTIVE_RULE_${field.toUpperCase()}_REQUIRED`, `Active rule registry entry requires ${field}.`, 'semantic', `active_rules[${index}].${field}`));
       }
+      if (typeof entry.path !== 'string' || entry.path.trim().length === 0) continue;
       try {
         const rule = readJson(entry.path);
         diagnostics.push(...validateActiveMvpRule(rule, knownFamilies, entry.path));
