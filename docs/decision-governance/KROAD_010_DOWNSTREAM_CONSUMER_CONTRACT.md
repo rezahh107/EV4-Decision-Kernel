@@ -70,10 +70,10 @@ The second gate is intentionally separate so snapshot mechanics and semantic lin
 The final lineage execution stack is anchored at:
 
 ```text
-fa30a07ed6316c1c82adeb8639ab8442b93b6a11
+e298c2544d16156a813af3be2f32f5c5d483340e
 ```
 
-That commit contains the final lineage policy and validator plus the package scripts, lockfile, downstream contract validator, contract/schema, Decision Record schema, resolver registry and rule, Resolver MVP, and L2 validator. Consumer fixtures were updated only in later commits and pin this earlier anchor, avoiding a self-referential commit hash.
+That commit contains the final lineage policy and validator, both direct execution-snapshot failure fixtures, the package scripts, lockfile, downstream contract validator, contract/schema, Decision Record schema, resolver registry and rule, Resolver MVP, and L2 validator. Consumer records were updated only in later commits and pin this earlier anchor, avoiding a self-referential commit hash.
 
 The lineage validator has a hard-coded execution-file set. The policy independently enumerates the same set. For every evaluated record, each required file must:
 
@@ -170,13 +170,17 @@ invalid/adversarial:
   same-envelope wrong L2 fragment
   wrong matrix fragment
   missing required provenance
+  pinned commit missing the lineage execution stack
+  pinned execution stack with byte drift
 ```
 
-The two direct L2 fixtures are:
+Direct L2 and execution-snapshot fixtures include:
 
 ```text
 kernel/fixtures/lineage/downstream_consumer/rerun_l2_status_mismatch_invalid.json
 kernel/fixtures/lineage/downstream_consumer/same_envelope_wrong_l2_fragment_invalid.json
+kernel/fixtures/lineage/downstream_consumer/missing_pinned_execution_stack_invalid.json
+kernel/fixtures/lineage/downstream_consumer/pinned_execution_byte_drift_invalid.json
 ```
 
 Fixtures use a full valid KROAD-010 consumer record as their base and apply explicit machine-readable mutations. This keeps each case focused while the validator still evaluates a complete consumer record and pinned Decision Record envelope.
