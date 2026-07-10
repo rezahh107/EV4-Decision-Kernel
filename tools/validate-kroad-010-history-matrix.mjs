@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import {existsSync, mkdtempSync, rmSync} from 'node:fs';
+import {existsSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {
@@ -50,6 +50,23 @@ function main() {
       matrixResults,
       roles,
       config,
+    );
+    writeFileSync(
+      join(ROOT, 'kroad-010-history-matrix-report.json'),
+      `${JSON.stringify({
+        schema_version: '0.1.0',
+        result: 'PASS',
+        methods: matrixResults.map((item) => ({
+          method: item.method,
+          ordinary_records: item.ordinary_records,
+          byte_drift_diagnostic: item.byte_drift_diagnostic,
+          missing_stack_diagnostic: item.missing_stack_diagnostic,
+          working_tree_only_diagnostic: item.working_tree_only_diagnostic,
+          clean_worktree: item.clean_worktree,
+          head: item.head,
+        })),
+        mutation_guards: mutationResults,
+      }, null, 2)}\n`,
     );
     printSummary(matrixResults, mutationResults);
   } finally {

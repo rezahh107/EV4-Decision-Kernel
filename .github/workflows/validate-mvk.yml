@@ -58,5 +58,15 @@ jobs:
         run: node tools/validate-kroad-010-prototype-integrity.mjs
 
       - name: Validate KROAD-010 merge/squash/rebase history matrix
+        id: history-matrix
         if: ${{ always() }}
         run: npm run validate:kroad-010-history-matrix
+
+      - name: Upload KROAD-010 history matrix evidence
+        if: ${{ always() && steps.history-matrix.outcome == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: kroad-010-history-matrix
+          path: kroad-010-history-matrix-report.json
+          if-no-files-found: error
+          retention-days: 14
