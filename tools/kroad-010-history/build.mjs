@@ -22,7 +22,7 @@ import {
   copyPath,
   git,
   readJson,
-  sourceMainSha,
+  sourceIncompleteAnchor,
   unique,
   writeJson,
 } from './common.mjs';
@@ -57,7 +57,7 @@ export function createBuilder(tempRoot) {
   git(ROOT, ['clone', '--no-hardlinks', ROOT, repository]);
   configureRepository(repository);
 
-  const incompleteAnchor = sourceMainSha();
+  const incompleteAnchor = sourceIncompleteAnchor();
   try {
     git(repository, ['cat-file', '-e', `${incompleteAnchor}^{commit}`]);
   } catch {
