@@ -11,20 +11,31 @@ import {auditDecisionRecord} from './validate-l2-decision-correctness.mjs';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const POLICY_PATH = 'kernel/decision-governance/downstream-consumer-lineage-binding.v0.json';
 const VALIDATOR_PATH = 'kernel/validator/validate-downstream-consumer-lineage.mjs';
+const LOCK_VALIDATOR_PATH = 'kernel/validator/validate-downstream-consumer-canonical-lock.mjs';
 
 const REQUIRED_EXECUTION_SNAPSHOT_FILES = Object.freeze([
-  'package.json',
-  'package-lock.json',
   'kernel/decision-governance/downstream-consumer-contract.v0.json',
   'kernel/schemas/downstream-consumer-contract.v0.schema.json',
   'kernel/validator/validate-downstream-consumer-contract.mjs',
   POLICY_PATH,
   VALIDATOR_PATH,
+  LOCK_VALIDATOR_PATH,
   'kernel/schemas/decision-record.v2.schema.json',
   'kernel/decision-governance/resolver-rule-registry.v0.json',
   'kernel/decision-governance/resolver-rules/layout-structure.v0.json',
   'kernel/resolver-mvp/resolve-high-risk-p0.mjs',
   'kernel/validator/validate-l2-decision-correctness.mjs',
+]);
+
+const REQUIRED_BINDINGS = Object.freeze([
+  'provisional_status',
+  'downstream_owner',
+  'evidence_identity_tier_source_ref',
+  'evidence_limitations',
+  'l2_rerun_status',
+  'same_envelope_l2_result',
+  'matrix_fragment',
+  'contract_decision_vertical_slice_provenance',
 ]);
 
 function readText(path) {
@@ -92,7 +103,7 @@ function sameStringSet(left, right) {
   return a.size === b.size && [...a].every((item) => b.has(item));
 }
 
-function canonicalEvidence(item) {
+function canonicalEvidenceIdentity(item) {
   return JSON.stringify([
     item?.evidence_id ?? null,
     item?.evidence_tier ?? null,
@@ -101,10 +112,34 @@ function canonicalEvidence(item) {
   ]);
 }
 
-function evidenceLineageMatches(consumerEvidence, decisionEvidence) {
-  const left = (consumerEvidence || []).map(canonicalEvidence).sort();
-  const right = (decisionEvidence || []).map(canonicalEvidence).sort();
+function normalizedLimitations(value) {
+  return [...new Set((Array.isArray(value) ? value : [])
+    .filter((item) => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter(Boolean))].sort();
+}
+
+function evidenceIdentityMatches(consumerEvidence, decisionEvidence) {
+  const left = (consumerEvidence || []).map(canonicalEvidenceIdentity).sort();
+  const right = (decisionEvidence || []).map(canonicalEvidenceIdentity).sort();
   return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function evidenceLimitationsMatch(consumerEvidence, decisionEvidence) {
+  if (!evidenceIdentityMatches(consumerEvidence, decisionEvidence)) return false;
+
+  const decisionByIdentity = new Map((decisionEvidence || []).map((item) => [
+    canonicalEvidenceIdentity(item),
+    normalizedLimitations(item?.limitations),
+  ]));
+
+  for (const item of consumerEvidence || []) {
+    const identity = canonicalEvidenceIdentity(item);
+    const consumerLimitations = normalizedLimitations(item?.limitations);
+    const decisionLimitations = decisionByIdentity.get(identity);
+    if (JSON.stringify(consumerLimitations) !== JSON.stringify(decisionLimitations)) return false;
+  }
+  return true;
 }
 
 function decisionSiblingFragment(decisionFragment, sibling) {
@@ -120,7 +155,7 @@ function validateExecutionSnapshot(commit, policy) {
     diagnostics.push(diagnostic(
       'DOWNSTREAM_CONSUMER_LINEAGE_EXECUTION_SET_INVALID',
       'snapshot_execution_files',
-      'Lineage policy must enumerate the complete hard-coded execution snapshot set.',
+      'Lineage policy must enumerate the complete hard-coded acceptance-semantics snapshot set.',
     ));
     return diagnostics;
   }
@@ -249,9 +284,14 @@ function validateBinding(record, policy, envelopeOverride = null) {
     ));
   }
 
-  if (!evidenceLineageMatches(record.evidence_refs, decisionRecord.evidence_refs)) {
+  if (!evidenceIdentityMatches(record.evidence_refs, decisionRecord.evidence_refs)) {
     diagnostics.push(diagnostic(
       'DOWNSTREAM_CONSUMER_EVIDENCE_LINEAGE_MISMATCH',
+      'evidence_refs',
+    ));
+  } else if (!evidenceLimitationsMatch(record.evidence_refs, decisionRecord.evidence_refs)) {
+    diagnostics.push(diagnostic(
+      'DOWNSTREAM_CONSUMER_EVIDENCE_LIMITATIONS_MISMATCH',
       'evidence_refs',
     ));
   }
@@ -342,6 +382,11 @@ function main() {
 
   if (!sameStringSet(policy.snapshot_execution_files, REQUIRED_EXECUTION_SNAPSHOT_FILES)) {
     console.error('Lineage policy execution snapshot set is invalid.');
+    process.exit(1);
+  }
+
+  if (!sameStringSet(policy.required_bindings, REQUIRED_BINDINGS)) {
+    console.error('Lineage policy required binding set is invalid.');
     process.exit(1);
   }
 
