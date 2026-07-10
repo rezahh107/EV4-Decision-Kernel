@@ -4,6 +4,20 @@
   "selected_consumer": "rezahh107/EV4-Architect-Repo",
   "scope": "Supplemental Kernel-local lineage gate for KROAD-010. It does not claim live downstream enforcement.",
   "base_record_fixture": "kernel/fixtures/valid/downstream_consumer/architect_layout_structure_kernel_consumed_valid.json",
+  "snapshot_execution_files": [
+    "package.json",
+    "package-lock.json",
+    "kernel/decision-governance/downstream-consumer-contract.v0.json",
+    "kernel/schemas/downstream-consumer-contract.v0.schema.json",
+    "kernel/validator/validate-downstream-consumer-contract.mjs",
+    "kernel/decision-governance/downstream-consumer-lineage-binding.v0.json",
+    "kernel/validator/validate-downstream-consumer-lineage.mjs",
+    "kernel/schemas/decision-record.v2.schema.json",
+    "kernel/decision-governance/resolver-rule-registry.v0.json",
+    "kernel/decision-governance/resolver-rules/layout-structure.v0.json",
+    "kernel/resolver-mvp/resolve-high-risk-p0.mjs",
+    "kernel/validator/validate-l2-decision-correctness.mjs"
+  ],
   "required_bindings": [
     "provisional_status",
     "downstream_owner",
