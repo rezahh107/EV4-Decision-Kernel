@@ -62,7 +62,10 @@ export class MatrixError extends Error {
 }
 
 export function run(command, args, cwd, {capture = false, env = {}} = {}) {
-  return execFileSync(command, args, {
+  const resolvedCommand = process.platform === 'win32' && command === 'npm'
+    ? 'npm.cmd'
+    : command;
+  return execFileSync(resolvedCommand, args, {
     cwd,
     encoding: 'utf8',
     stdio: capture ? ['ignore', 'pipe', 'pipe'] : 'inherit',
@@ -139,7 +142,7 @@ export function sourceMainSha() {
     try {
       return git(ROOT, ['rev-parse', ref], {capture: true}).trim();
     } catch {
-      // Try the next local ref.
+      // Try the next authoritative main ref.
     }
   }
   throw new MatrixError(
@@ -256,7 +259,8 @@ export function createWorktree(repository, tempRoot, method, head) {
   const path = join(tempRoot, `worktree-${method}`);
   git(repository, ['worktree', 'add', '--detach', path, head]);
   if (existsSync(join(ROOT, 'node_modules'))) {
-    symlinkSync(join(ROOT, 'node_modules'), join(path, 'node_modules'), 'dir');
+    const linkType = process.platform === 'win32' ? 'junction' : 'dir';
+    symlinkSync(join(ROOT, 'node_modules'), join(path, 'node_modules'), linkType);
   }
   return path;
 }
