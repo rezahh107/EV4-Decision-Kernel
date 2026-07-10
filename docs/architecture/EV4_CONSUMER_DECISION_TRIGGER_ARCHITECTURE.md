@@ -87,6 +87,25 @@ required_kernel_decision_fields:
   - evidence_state
 ```
 
+Receipt-success semantics add a stricter presentation trace-closure requirement:
+
+```yaml
+receipt_success_trace_closure:
+  authority: docs/architecture/EV4_KERNEL_DECISION_RECEIPT_SAFETY_PROFILE.md
+  machine_profile: kernel/decision-governance/consumer-decision-receipt-safety-profile.v1.json
+  required_fields:
+    - decision_family
+    - decision_card_ref
+    - selected_option
+    - rejected_options
+    - evidence_refs
+    - evidence_state
+    - consumer_stage
+  evidence_state_required_for_success: validated
+```
+
+The six fields above remain the compact base Kernel decision structure. The seven-field closure is mandatory only when authorizing a human-readable Wave 5 success receipt. `consumer_stage` may come from an authoritative machine-readable enclosing carrier only when its exact source is retained and its binding to the trace is deterministic. This receipt-safety authority does not complete Wave 5, consumer adoption, downstream enforcement, runtime enforcement, or production/release readiness.
+
 A decision escape route is not closed by documentation, prompt instruction, patch claims, schema presence, fixture presence, advisory audit output, or model assertion. It is closed only when its required Behavioral Rule Coverage threshold is met and the conclusion is derived from inspected evidence.
 
 ---

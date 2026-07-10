@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-KROAD-009 Layout Structure Vertical Slice
+Wave 5 Receipt Safety Profile — bounded repair; KROAD-010 unchanged
 
 ## Status Authority
 
@@ -24,6 +24,12 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
 ## Next Task
 
 - [ ] KROAD-010 — Downstream Consumer Contract
+
+## Bounded Repair Note
+
+- This repair defines `ev4.kernel.consumer-decision-receipt-safety-profile@1.0.0` as the canonical authority for Wave 5 receipt-safety semantics, with a schema, deterministic validator, stable diagnostics, and valid/invalid fixtures.
+- It resolves the six-field base decision structure versus seven-field receipt-success closure ambiguity by requiring `consumer_stage` for success, directly or through an authoritative deterministic carrier binding.
+- It does not complete Wave 5, consumer adoption, downstream enforcement, Project Gate intake, runtime enforcement, or any KROAD item. `KROAD-010` remains the next incomplete roadmap item.
 
 ## Completed
 

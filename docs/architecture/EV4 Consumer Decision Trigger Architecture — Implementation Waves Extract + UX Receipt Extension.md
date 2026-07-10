@@ -7,6 +7,11 @@ language: English-structured / Persian explanatory compatible
 status: draft_for_repository_review
 canonical_base_source: docs/architecture/EV4_CONSUMER_DECISION_TRIGGER_ARCHITECTURE.md
 extension_source: سند مادر — طراحی UX پاسخ‌های مدل زبانی
+receipt_safety_authority:
+  normative_document: docs/architecture/EV4_KERNEL_DECISION_RECEIPT_SAFETY_PROFILE.md
+  machine_profile: kernel/decision-governance/consumer-decision-receipt-safety-profile.v1.json
+  scope: wave_5_receipt_safety_semantics_only
+  wave_5_remaining_status: proposed_extension
 ```
 
 ------
@@ -739,10 +744,13 @@ Wave 4 explicitly targets `sequence_ci_enforced` and `downstream_contract_enforc
 wave:
   number: 5
   name: UX-Safe Human-Readable Kernel Decision Receipts
-  canonical_status: not_present_in_current_canonical_document
+  canonical_status: receipt_safety_profile_canonical_wave_5_remaining_extension
   classification: proposed_extension
   ux_alignment: سند مادر — طراحی UX پاسخ‌های مدل زبانی
 ```
+
+The canonical authority for receipt-success safety semantics is now
+`docs/architecture/EV4_KERNEL_DECISION_RECEIPT_SAFETY_PROFILE.md` and its versioned machine profile. Wave 5 consumer adoption, downstream integration, runtime enforcement, and completion remain proposed and unproven.
 
 ### 10.1 Purpose
 
@@ -1062,7 +1070,8 @@ required_user_facing_states:
       - selected_option_present
       - rejected_options_present
       - evidence_refs_present
-      - evidence_state_is_not_insufficient_evidence
+      - evidence_state_is_validated
+      - consumer_stage_present_or_authoritatively_and_deterministically_bound
       - validator_or_gate_accepts_trace
     pattern: "✅ تصمیم به decision card کرنل وصل شده است؛ <selected_option> انتخاب شد چون <short_reason>."
   insufficient_evidence_receipt:
@@ -1344,8 +1353,9 @@ open_questions_or_insufficient_evidence:
   exact_Persian_companion_document_path:
     status: insufficient_evidence
   wave_5_canonical_adoption:
-    status: insufficient_evidence
-    note: Wave 5 is proposed by this document and is not present in the current canonical architecture document.
+    status: receipt_safety_semantics_only
+    authority: docs/architecture/EV4_KERNEL_DECISION_RECEIPT_SAFETY_PROFILE.md
+    note: The receipt-safety profile is canonical; Wave 5 adoption and enforcement remain proposed and require consumer evidence.
 ```
 
 ------

@@ -25,6 +25,9 @@ jobs:
       - name: Install MVK validator dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
 
+      - name: Validate consumer decision receipt safety profile
+        run: npm run validate:consumer-receipt-profile
+
       - name: Validate MVK fixtures and gates
         run: npm run validate:mvk
 

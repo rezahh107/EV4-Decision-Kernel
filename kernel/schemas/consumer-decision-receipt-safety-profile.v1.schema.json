@@ -1,0 +1,337 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/consumer-decision-receipt-safety-profile.v1.schema.json",
+  "title": "EV4 Consumer Decision Receipt Safety Profile v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "profile_id",
+    "version",
+    "lifecycle",
+    "authority",
+    "presentation_boundary",
+    "trace_closure",
+    "success_policy",
+    "conditions",
+    "multi_entry_aggregation",
+    "execution_evidence_boundary",
+    "role_boundaries",
+    "forbidden_status_upgrades",
+    "technical_detail_visibility",
+    "non_claims"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://json-schema.org/draft/2020-12/schema"
+    },
+    "profile_id": {
+      "const": "ev4.kernel.consumer-decision-receipt-safety-profile"
+    },
+    "version": {
+      "const": "1.0.0"
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "authority_scope",
+        "wave_5_implementation_status",
+        "consumer_adoption_status"
+      ],
+      "properties": {
+        "status": {
+          "const": "canonical"
+        },
+        "authority_scope": {
+          "const": "wave_5_receipt_safety_semantics_only"
+        },
+        "wave_5_implementation_status": {
+          "const": "extension_not_complete"
+        },
+        "consumer_adoption_status": {
+          "const": "not_claimed"
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "normative_document",
+        "machine_profile",
+        "schema",
+        "validator"
+      ],
+      "properties": {
+        "owner": {
+          "const": "rezahh107/EV4-Decision-Kernel"
+        },
+        "normative_document": {
+          "const": "docs/architecture/EV4_KERNEL_DECISION_RECEIPT_SAFETY_PROFILE.md"
+        },
+        "machine_profile": {
+          "const": "kernel/decision-governance/consumer-decision-receipt-safety-profile.v1.json"
+        },
+        "schema": {
+          "const": "kernel/schemas/consumer-decision-receipt-safety-profile.v1.schema.json"
+        },
+        "validator": {
+          "const": "kernel/validator/validate-consumer-decision-receipt-safety-profile.mjs"
+        }
+      }
+    },
+    "presentation_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layer",
+        "receipt_never_replaces_machine_trace",
+        "receipt_never_repairs_machine_trace",
+        "receipt_never_mutates_machine_trace"
+      ],
+      "properties": {
+        "layer": { "const": "presentation_extension" },
+        "receipt_never_replaces_machine_trace": { "const": true },
+        "receipt_never_repairs_machine_trace": { "const": true },
+        "receipt_never_mutates_machine_trace": { "const": true }
+      }
+    },
+    "trace_closure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required_fields",
+        "consumer_stage_binding"
+      ],
+      "properties": {
+        "required_fields": {
+          "type": "array",
+          "prefixItems": [
+            { "const": "decision_family" },
+            { "const": "decision_card_ref" },
+            { "const": "selected_option" },
+            { "const": "rejected_options" },
+            { "const": "evidence_refs" },
+            { "const": "evidence_state" },
+            { "const": "consumer_stage" }
+          ],
+          "items": false,
+          "minItems": 7,
+          "maxItems": 7
+        },
+        "consumer_stage_binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "direct_trace_value_preferred",
+            "authoritative_enclosing_carrier_allowed",
+            "source_ref_required",
+            "deterministic_trace_binding_required",
+            "prose_or_receipt_inference_forbidden",
+            "missing_or_ambiguous_result"
+          ],
+          "properties": {
+            "direct_trace_value_preferred": { "const": true },
+            "authoritative_enclosing_carrier_allowed": { "const": true },
+            "source_ref_required": { "const": true },
+            "deterministic_trace_binding_required": { "const": true },
+            "prose_or_receipt_inference_forbidden": { "const": true },
+            "missing_or_ambiguous_result": { "enum": ["warning", "blocked"] }
+          }
+        }
+      }
+    },
+    "success_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allowed_evidence_states",
+        "forbidden_evidence_states",
+        "authoritative_validation_result"
+      ],
+      "properties": {
+        "allowed_evidence_states": {
+          "type": "array",
+          "prefixItems": [
+            { "const": "validated" }
+          ],
+          "items": false,
+          "minItems": 1,
+          "maxItems": 1
+        },
+        "forbidden_evidence_states": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 6,
+          "contains": { "const": "insufficient_evidence" }
+        },
+        "authoritative_validation_result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "required",
+            "allowed_authority_types",
+            "accepted_result",
+            "authority_id_required",
+            "artifact_ref_required",
+            "exact_trace_binding_required",
+            "binding_method",
+            "raw_status_accepted_is_sufficient"
+          ],
+          "properties": {
+            "required": { "const": true },
+            "allowed_authority_types": {
+              "type": "array",
+              "prefixItems": [
+                { "const": "kernel_validator" },
+                { "const": "project_gate" }
+              ],
+              "items": false,
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "accepted_result": { "const": "accepted" },
+            "authority_id_required": { "const": true },
+            "artifact_ref_required": { "const": true },
+            "exact_trace_binding_required": { "const": true },
+            "binding_method": { "const": "canonical_json_equality" },
+            "raw_status_accepted_is_sufficient": { "const": false }
+          }
+        }
+      }
+    },
+    "conditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "warning_or_blocked",
+        "fail_closed"
+      ],
+      "properties": {
+        "warning_or_blocked": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 3,
+          "contains": { "const": "missing_consumer_stage" }
+        },
+        "fail_closed": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 8,
+          "contains": { "const": "mixed_lineage_partial_success" }
+        }
+      }
+    },
+    "multi_entry_aggregation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preferred_mode",
+        "aggregate_success_allowed",
+        "aggregate_success_quantifier",
+        "any_complete_trace_authorizes_success",
+        "all_applicable_traces_must_be_referenced",
+        "all_applicable_traces_must_be_complete_validated_and_bound"
+      ],
+      "properties": {
+        "preferred_mode": { "const": "distinct_receipt_per_trace" },
+        "aggregate_success_allowed": { "const": true },
+        "aggregate_success_quantifier": { "const": "every" },
+        "any_complete_trace_authorizes_success": { "const": false },
+        "all_applicable_traces_must_be_referenced": { "const": true },
+        "all_applicable_traces_must_be_complete_validated_and_bound": { "const": true }
+      }
+    },
+    "execution_evidence_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "builder_execution_claim_requires_separately_inspected_evidence",
+        "fallback_execution_claim_requires_separately_inspected_evidence",
+        "runtime_mismatch_effect",
+        "runtime_mismatch_creates_responsive_design_authority"
+      ],
+      "properties": {
+        "builder_execution_claim_requires_separately_inspected_evidence": { "const": true },
+        "fallback_execution_claim_requires_separately_inspected_evidence": { "const": true },
+        "runtime_mismatch_effect": { "const": "warning_or_reopen_only" },
+        "runtime_mismatch_creates_responsive_design_authority": { "const": false }
+      }
+    },
+    "role_boundaries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Architect",
+        "CE",
+        "Builder",
+        "Responsive",
+        "Project Gate",
+        "Kernel"
+      ],
+      "properties": {
+        "Architect": { "$ref": "#/$defs/nonEmptyString" },
+        "CE": { "$ref": "#/$defs/nonEmptyString" },
+        "Builder": { "$ref": "#/$defs/nonEmptyString" },
+        "Responsive": { "$ref": "#/$defs/nonEmptyString" },
+        "Project Gate": { "$ref": "#/$defs/nonEmptyString" },
+        "Kernel": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "forbidden_status_upgrades": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "ci_enforced" },
+        { "const": "sequence_ci_enforced" },
+        { "const": "downstream_contract_enforced" },
+        { "const": "runtime_monitor_enforced" },
+        { "const": "os_harness_enforced" },
+        { "const": "resolved" },
+        { "const": "production_ready" },
+        { "const": "release_ready" }
+      ],
+      "items": false,
+      "minItems": 8,
+      "maxItems": 8
+    },
+    "technical_detail_visibility": {
+      "$ref": "#/$defs/allTrueObject"
+    },
+    "non_claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wave_5_complete",
+        "consumer_adoption_complete",
+        "downstream_enforcement_complete",
+        "runtime_enforcement_complete",
+        "production_ready",
+        "release_ready"
+      ],
+      "properties": {
+        "wave_5_complete": { "const": false },
+        "consumer_adoption_complete": { "const": false },
+        "downstream_enforcement_complete": { "const": false },
+        "runtime_enforcement_complete": { "const": false },
+        "production_ready": { "const": false },
+        "release_ready": { "const": false }
+      }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "allTrueObject": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "const": true
+      }
+    }
+  }
+}

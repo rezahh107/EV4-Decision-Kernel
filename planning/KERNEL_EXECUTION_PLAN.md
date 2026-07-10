@@ -40,6 +40,16 @@ Important architectural truth:
 - V4 is the valid design target. V3 may appear only as legacy risk, migration boundary, unsupported target, forbidden fallback, or compatibility warning.
 - The Kernel must evolve from decision documentation into rule-backed, evidence-backed, resolver-audited decision governance.
 
+### Receipt-Safety Authority Note
+
+`docs/architecture/EV4_KERNEL_DECISION_RECEIPT_SAFETY_PROFILE.md` and
+`kernel/decision-governance/consumer-decision-receipt-safety-profile.v1.json`
+are authoritative only for Wave 5 receipt-safety semantics. They require a
+seven-field success closure, including `consumer_stage`, validated evidence,
+and exact authoritative trace acceptance. They do not implement consumer
+adoption, downstream rejection, Project Gate intake, runtime enforcement, or
+KROAD-010.
+
 ---
 
 ## Core Anti-Boutique Rules
@@ -935,6 +945,11 @@ A complete example showing how future families should be implemented.
 - **Purpose:** Make downstream EV4 repositories enforce when and how to consult the Kernel.
 - **Depends on:** KROAD-009
 - **Primary question:** How does Architect or CE know it must use the Kernel instead of deciding freely?
+
+Receipt-safety dependency boundary: a downstream consumer that renders Wave 5
+success receipts must conform to the canonical receipt-safety profile, but the
+Kernel-local profile alone is not downstream enforcement and does not satisfy
+this KROAD item.
 
 ### Candidate downstream consumers
 

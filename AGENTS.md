@@ -200,6 +200,23 @@ Prompt 5 and this PR #9 repair must not implement exporters, collectors, downstr
 
 ## 9. Safe Patch Types Now
 
+### Wave 5 Receipt-Safety Boundary
+
+When a patch creates or changes a human-readable Kernel decision receipt, use
+`docs/architecture/EV4_KERNEL_DECISION_RECEIPT_SAFETY_PROFILE.md` and
+`kernel/decision-governance/consumer-decision-receipt-safety-profile.v1.json`
+as the receipt-safety authority.
+
+A success receipt requires a complete seven-field closure including
+`consumer_stage`, `evidence_state: validated`, and authoritative acceptance
+bound to the exact trace. Receipt text must not replace, repair, or mutate the
+machine trace; invent Builder/fallback execution; or upgrade enforcement,
+resolution, production, or release status.
+
+The profile is canonical only for receipt-safety semantics. Do not infer Wave 5
+completion, consumer adoption, downstream rejection, runtime enforcement, or
+`KROAD-010` completion from its presence.
+
 Allowed now:
 
 ```text
@@ -256,6 +273,9 @@ Before opening or merging a patch, answer:
 11. Did evidence workspace fixtures avoid real-world evidence claims?
 12. Did doc coverage fixtures avoid synthetic fixture-case dispatch?
 13. Did source quality notes preserve ambiguity instead of hiding it?
+14. Did every success receipt require the seven-field trace closure?
+15. Did receipt validation prove exact authoritative trace acceptance?
+16. Did the patch avoid claiming Wave 5, downstream, runtime, or readiness completion?
 ```
 
 If any answer is no, revise the patch before finalizing.

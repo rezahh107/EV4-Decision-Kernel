@@ -1,0 +1,83 @@
+{
+  "fixture_id": "consumer_receipt_complete_trace_valid",
+  "expected": {
+    "result": "success",
+    "diagnostics": []
+  },
+  "input": {
+    "receipt": {
+      "visible_state": "success",
+      "aggregation_mode": "per_trace",
+      "trace_ids": [
+        "trace-layout-001"
+      ],
+      "text": "The Kernel-linked decision selected Flexbox because the validated evidence supports a one-axis layout.",
+      "execution_claims": [],
+      "claimed_status_upgrades": [],
+      "machine_trace_action": "preserve",
+      "technical_details_visible_by_default": false,
+      "technical_details_actionable": false
+    },
+    "traces": [
+      {
+        "trace_id": "trace-layout-001",
+        "decision_family": "layout_structure",
+        "decision_card_ref": "kernel/decision-cards/layout-structure.v1.json",
+        "selected_option": {
+          "option_id": "flexbox",
+          "label": "Flexbox"
+        },
+        "rejected_options": [
+          {
+            "option_id": "grid",
+            "reason": "No two-axis requirement was validated."
+          }
+        ],
+        "evidence_refs": [
+          {
+            "evidence_id": "evidence-layout-001",
+            "ref": "fixture://project-export/layout-001"
+          }
+        ],
+        "evidence_state": "validated",
+        "consumer_stage": "architect.section_plan"
+      }
+    ],
+    "validation_result": {
+      "authority_type": "kernel_validator",
+      "authority_id": "ev4.kernel.fixture-validator",
+      "result": "accepted",
+      "artifact_ref": "fixture://validator-result/receipt-001",
+      "trace_bindings": [
+        {
+          "trace_id": "trace-layout-001",
+          "accepted_trace": {
+            "trace_id": "trace-layout-001",
+            "decision_family": "layout_structure",
+            "decision_card_ref": "kernel/decision-cards/layout-structure.v1.json",
+            "selected_option": {
+              "option_id": "flexbox",
+              "label": "Flexbox"
+            },
+            "rejected_options": [
+              {
+                "option_id": "grid",
+                "reason": "No two-axis requirement was validated."
+              }
+            ],
+            "evidence_refs": [
+              {
+                "evidence_id": "evidence-layout-001",
+                "ref": "fixture://project-export/layout-001"
+              }
+            ],
+            "evidence_state": "validated",
+            "consumer_stage": "architect.section_plan"
+          }
+        }
+      ]
+    },
+    "execution_evidence": []
+  }
+}
+

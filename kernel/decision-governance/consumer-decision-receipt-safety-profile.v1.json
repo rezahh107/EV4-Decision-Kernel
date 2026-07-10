@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "profile_id": "ev4.kernel.consumer-decision-receipt-safety-profile",
+  "version": "1.0.0",
+  "lifecycle": {
+    "status": "canonical",
+    "authority_scope": "wave_5_receipt_safety_semantics_only",
+    "wave_5_implementation_status": "extension_not_complete",
+    "consumer_adoption_status": "not_claimed"
+  },
+  "authority": {
+    "owner": "rezahh107/EV4-Decision-Kernel",
+    "normative_document": "docs/architecture/EV4_KERNEL_DECISION_RECEIPT_SAFETY_PROFILE.md",
+    "machine_profile": "kernel/decision-governance/consumer-decision-receipt-safety-profile.v1.json",
+    "schema": "kernel/schemas/consumer-decision-receipt-safety-profile.v1.schema.json",
+    "validator": "kernel/validator/validate-consumer-decision-receipt-safety-profile.mjs"
+  },
+  "presentation_boundary": {
+    "layer": "presentation_extension",
+    "receipt_never_replaces_machine_trace": true,
+    "receipt_never_repairs_machine_trace": true,
+    "receipt_never_mutates_machine_trace": true
+  },
+  "trace_closure": {
+    "required_fields": [
+      "decision_family",
+      "decision_card_ref",
+      "selected_option",
+      "rejected_options",
+      "evidence_refs",
+      "evidence_state",
+      "consumer_stage"
+    ],
+    "consumer_stage_binding": {
+      "direct_trace_value_preferred": true,
+      "authoritative_enclosing_carrier_allowed": true,
+      "source_ref_required": true,
+      "deterministic_trace_binding_required": true,
+      "prose_or_receipt_inference_forbidden": true,
+      "missing_or_ambiguous_result": "blocked"
+    }
+  },
+  "success_policy": {
+    "allowed_evidence_states": [
+      "validated"
+    ],
+    "forbidden_evidence_states": [
+      "provided",
+      "expected_unverified",
+      "unverified",
+      "proposed",
+      "derived",
+      "insufficient_evidence"
+    ],
+    "authoritative_validation_result": {
+      "required": true,
+      "allowed_authority_types": [
+        "kernel_validator",
+        "project_gate"
+      ],
+      "accepted_result": "accepted",
+      "authority_id_required": true,
+      "artifact_ref_required": true,
+      "exact_trace_binding_required": true,
+      "binding_method": "canonical_json_equality",
+      "raw_status_accepted_is_sufficient": false
+    }
+  },
+  "conditions": {
+    "warning_or_blocked": [
+      "missing_consumer_stage",
+      "ambiguous_consumer_stage",
+      "technical_details_visible_when_not_actionable"
+    ],
+    "fail_closed": [
+      "missing_trace_closure_field",
+      "non_validated_evidence_state",
+      "missing_authoritative_validation_result",
+      "missing_exact_trace_binding",
+      "mixed_lineage_partial_success",
+      "execution_claim_without_inspected_execution_evidence",
+      "forbidden_status_upgrade",
+      "receipt_replaces_repairs_or_mutates_trace"
+    ]
+  },
+  "multi_entry_aggregation": {
+    "preferred_mode": "distinct_receipt_per_trace",
+    "aggregate_success_allowed": true,
+    "aggregate_success_quantifier": "every",
+    "any_complete_trace_authorizes_success": false,
+    "all_applicable_traces_must_be_referenced": true,
+    "all_applicable_traces_must_be_complete_validated_and_bound": true
+  },
+  "execution_evidence_boundary": {
+    "builder_execution_claim_requires_separately_inspected_evidence": true,
+    "fallback_execution_claim_requires_separately_inspected_evidence": true,
+    "runtime_mismatch_effect": "warning_or_reopen_only",
+    "runtime_mismatch_creates_responsive_design_authority": false
+  },
+  "role_boundaries": {
+    "Architect": "owns selected design choices and decision records",
+    "CE": "owns constructability proof and decision closure",
+    "Builder": "owns execution of locked decisions only",
+    "Responsive": "owns responsive runtime validation without redesign authority",
+    "Project Gate": "owns lineage and acceptance checks without design authority",
+    "Kernel": "owns shared receipt-safety semantics without choosing section-specific design"
+  },
+  "forbidden_status_upgrades": [
+    "ci_enforced",
+    "sequence_ci_enforced",
+    "downstream_contract_enforced",
+    "runtime_monitor_enforced",
+    "os_harness_enforced",
+    "resolved",
+    "production_ready",
+    "release_ready"
+  ],
+  "technical_detail_visibility": {
+    "show_identifiers_by_default_only_when_actionable": true,
+    "otherwise_retain_in_optional_technical_details": true
+  },
+  "non_claims": {
+    "wave_5_complete": false,
+    "consumer_adoption_complete": false,
+    "downstream_enforcement_complete": false,
+    "runtime_enforcement_complete": false,
+    "production_ready": false,
+    "release_ready": false
+  }
+}
