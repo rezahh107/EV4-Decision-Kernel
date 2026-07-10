@@ -1,0 +1,80 @@
+{
+  "manifest_id": "kroad-009.layout-structure.vertical-slice.v0",
+  "version": "0.1.0",
+  "status": "kroad_009_kernel_local_vertical_slice",
+  "scope": "One Kernel-local end-to-end vertical slice for the existing resolver-covered layout_structure family.",
+  "decision_family_id": "layout_structure",
+  "matrix_ref": {
+    "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+    "registry_id": "p0-decision-matrices.v0",
+    "matrix_id": "p0.matrix.layout_structure.v0"
+  },
+  "resolver_rule_ref": {
+    "path": "kernel/decision-governance/resolver-rules/layout-structure.v0.json",
+    "rule_id": "resolver.rule.layout_structure.mvp.v0",
+    "rule_version": "0.1.0"
+  },
+  "resolver_registry_ref": "kernel/decision-governance/resolver-rule-registry.v0.json",
+  "resolver_entrypoint": "kernel/resolver-mvp/resolve-high-risk-p0.mjs#resolveDecision",
+  "decision_record_schema_ref": "kernel/schemas/decision-record.v2.schema.json",
+  "fixture_triplet_policy_ref": "kernel/decision-governance/resolver-fixture-triplet-policy.v0.json",
+  "l2_audit_ref": "kernel/validator/validate-l2-decision-correctness.mjs#auditDecisionRecord",
+  "validator_ref": "kernel/validator/validate-kroad-009-vertical-slice.mjs",
+  "documentation_ref": "docs/decision-governance/KROAD_009_LAYOUT_STRUCTURE_VERTICAL_SLICE.md",
+  "required_existing_validators": [
+    "kernel/validator/validate-decision-record-v2.mjs",
+    "kernel/validator/validate-resolver-contract.mjs",
+    "kernel/resolver-mvp/resolve-high-risk-p0.mjs",
+    "kernel/validator/validate-resolver-fixture-triplets.mjs",
+    "kernel/validator/validate-l2-decision-correctness.mjs"
+  ],
+  "fixture_triplet_anchors": {
+    "valid": "kernel/fixtures/valid/resolver_mvp/layout_structure_auto_resolved_flexbox.json",
+    "invalid": "kernel/fixtures/invalid/resolver_mvp/invalid_missing_evidence_refs.json",
+    "adversarial": "kernel/fixtures/adversarial/resolver_mvp/adversarial_grid_without_availability.json"
+  },
+  "vertical_slice_cases": [
+    {
+      "case_kind": "valid",
+      "path": "kernel/fixtures/valid/vertical_slice/layout_structure_flexbox_vertical_slice_valid.json",
+      "acceptance_assertion": "Schema-valid Decision Record v2 agrees with deterministic flexbox resolver output and passes L2."
+    },
+    {
+      "case_kind": "invalid",
+      "path": "kernel/fixtures/invalid/vertical_slice/layout_structure_schema_valid_resolver_wrong_vertical_slice_invalid.json",
+      "acceptance_assertion": "Schema-valid Decision Record v2 selects grid while the resolver selects flexbox; L2 rejects it with stable diagnostics."
+    },
+    {
+      "case_kind": "adversarial",
+      "path": "kernel/fixtures/adversarial/vertical_slice/layout_structure_grid_without_availability_vertical_slice_adversarial.json",
+      "acceptance_assertion": "Near-valid two-axis grid context remains unresolvable without explicit grid availability evidence."
+    }
+  ],
+  "source_evidence_boundary": {
+    "fixture_evidence_source_type": "kernel_fixture",
+    "synthetic_fixture_evidence_only": true,
+    "real_target_project_proof_claimed": false,
+    "runtime_validation_claimed": false,
+    "downstream_enforcement_claimed": false,
+    "builder_execution_proof_claimed": false,
+    "project_gate_acceptance_claimed": false,
+    "production_readiness_claimed": false
+  },
+  "validation_commands": [
+    "npm run validate:kroad-009-vertical-slice",
+    "npm run validate:mvk",
+    "npm run validate:roadmap-memory"
+  ],
+  "boundaries": {
+    "new_resolver_mvp_families_added": false,
+    "kroad_010_downstream_consumer_contract_implemented": false,
+    "project_gate_intake_implemented": false,
+    "runtime_browser_evidence_implemented": false,
+    "reaudit_policy_implemented": false,
+    "all_p0_coverage_claimed": false,
+    "downstream_enforcement_claimed": false,
+    "builder_execution_proof_claimed": false,
+    "production_readiness_claimed": false
+  },
+  "next_allowed_step": "KROAD-010 — Downstream Consumer Contract; not implemented by this vertical slice."
+}
