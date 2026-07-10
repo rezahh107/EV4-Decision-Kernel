@@ -4,15 +4,18 @@ import {existsSync, readFileSync} from 'node:fs';
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const MODULE_PATH = fileURLToPath(import.meta.url);
+const ROOT = join(dirname(MODULE_PATH), '..', '..');
 const MANIFEST_PATH = 'kernel/decision-governance/downstream-consumer-contract.v0.json';
 const POLICY_PATH = 'kernel/decision-governance/downstream-consumer-lineage-binding.v0.json';
 const PRIMARY_VALIDATOR_PATH = 'kernel/validator/validate-downstream-consumer-contract.mjs';
 const LINEAGE_VALIDATOR_PATH = 'kernel/validator/validate-downstream-consumer-lineage.mjs';
 const LOCK_VALIDATOR_PATH = 'kernel/validator/validate-downstream-consumer-canonical-lock.mjs';
 const LOCK_CASES_PATH = 'kernel/fixtures/contract-lock/downstream_consumer/canonical_lock_mutations.json';
+const LIFECYCLE_NEUTRAL_STATUS = 'kroad_010_contract_definition_v0';
+const LIFECYCLE_NEUTRAL_NEXT_STEP = 'Activation and roadmap progression are governed by planning/NEXT_WORK.md. This contract version does not implement KROAD-011.';
 
-const REQUIRED_EXECUTION_SNAPSHOT_FILES = Object.freeze([
+export const REQUIRED_EXECUTION_SNAPSHOT_FILES = Object.freeze([
   MANIFEST_PATH,
   'kernel/schemas/downstream-consumer-contract.v0.schema.json',
   PRIMARY_VALIDATOR_PATH,
@@ -26,7 +29,7 @@ const REQUIRED_EXECUTION_SNAPSHOT_FILES = Object.freeze([
   'kernel/validator/validate-l2-decision-correctness.mjs',
 ]);
 
-const REQUIRED_BINDINGS = Object.freeze([
+export const REQUIRED_BINDINGS = Object.freeze([
   'provisional_status',
   'downstream_owner',
   'evidence_identity_tier_source_ref',
@@ -75,7 +78,20 @@ function diagnostic(code, message) {
   return {code, message};
 }
 
-function validateState(manifest, policy, pkg) {
+export function makeActivatedPackage(basePackage = {}) {
+  const pkg = deepClone(basePackage);
+  pkg.scripts = {...(pkg.scripts || {})};
+  pkg.scripts['validate:downstream-consumer-contract'] = PRIMARY_COMMAND;
+  pkg.scripts['validate:downstream-consumer-canonical-lock'] = LOCK_COMMAND;
+  pkg.scripts['validate:downstream-consumer-lineage'] = LINEAGE_COMMAND;
+
+  const existing = splitCommands(pkg.scripts['validate:mvk'])
+    .filter((command) => ![PRIMARY_COMMAND, LOCK_COMMAND, LINEAGE_COMMAND].includes(command));
+  pkg.scripts['validate:mvk'] = [...existing, PRIMARY_COMMAND, LOCK_COMMAND, LINEAGE_COMMAND].join(' && ');
+  return pkg;
+}
+
+export function validateState(manifest, policy, pkg, {checkArtifacts = true} = {}) {
   const diagnostics = [];
   const scripts = pkg?.scripts || {};
   const mvkParts = splitCommands(scripts['validate:mvk']);
@@ -86,7 +102,6 @@ function validateState(manifest, policy, pkg) {
     canonical_lock_validator_ref: LOCK_VALIDATOR_PATH,
     canonical_lock_cases_ref: LOCK_CASES_PATH,
   };
-
   for (const [field, expected] of Object.entries(expectedRefs)) {
     if (manifest?.[field] !== expected) {
       diagnostics.push(diagnostic(
@@ -96,20 +111,31 @@ function validateState(manifest, policy, pkg) {
     }
   }
 
+  if (manifest?.status !== LIFECYCLE_NEUTRAL_STATUS) {
+    diagnostics.push(diagnostic(
+      'DOWNSTREAM_CONSUMER_CANONICAL_LIFECYCLE_STATUS_INVALID',
+      'Pinned manifest status must be lifecycle-neutral.',
+    ));
+  }
+  if (manifest?.next_allowed_step !== LIFECYCLE_NEUTRAL_NEXT_STEP) {
+    diagnostics.push(diagnostic(
+      'DOWNSTREAM_CONSUMER_CANONICAL_LIFECYCLE_NEXT_STEP_INVALID',
+      'Pinned manifest must not encode mutable roadmap progression state.',
+    ));
+  }
+
   if (!sameStringSet(manifest?.lineage_cases, policy?.cases)) {
     diagnostics.push(diagnostic(
       'DOWNSTREAM_CONSUMER_CANONICAL_LINEAGE_CASE_SET_MISMATCH',
       'Manifest lineage_cases must exactly match policy cases.',
     ));
   }
-
   if (!sameStringSet(policy?.snapshot_execution_files, REQUIRED_EXECUTION_SNAPSHOT_FILES)) {
     diagnostics.push(diagnostic(
       'DOWNSTREAM_CONSUMER_CANONICAL_EXECUTION_SET_MISMATCH',
       'Policy snapshot_execution_files must exactly match the acceptance-semantics set.',
     ));
   }
-
   if (!sameStringSet(policy?.required_bindings, REQUIRED_BINDINGS)) {
     diagnostics.push(diagnostic(
       'DOWNSTREAM_CONSUMER_CANONICAL_BINDING_SET_MISMATCH',
@@ -118,11 +144,9 @@ function validateState(manifest, policy, pkg) {
   }
 
   const excluded = policy?.orchestration_wiring?.excluded_files;
-  if (
-    policy?.orchestration_wiring?.pinned_as_acceptance_semantics !== false
+  if (policy?.orchestration_wiring?.pinned_as_acceptance_semantics !== false
     || !sameStringSet(excluded, ['package.json', 'package-lock.json'])
-    || policy?.orchestration_wiring?.guarded_by !== LOCK_VALIDATOR_PATH
-  ) {
+    || policy?.orchestration_wiring?.guarded_by !== LOCK_VALIDATOR_PATH) {
     diagnostics.push(diagnostic(
       'DOWNSTREAM_CONSUMER_CANONICAL_ORCHESTRATION_POLICY_INVALID',
       'Package orchestration must be excluded from the immutable semantic snapshot and guarded by the canonical lock.',
@@ -171,20 +195,22 @@ function validateState(manifest, policy, pkg) {
     }
   }
 
-  for (const path of [
-    MANIFEST_PATH,
-    POLICY_PATH,
-    PRIMARY_VALIDATOR_PATH,
-    LINEAGE_VALIDATOR_PATH,
-    LOCK_VALIDATOR_PATH,
-    LOCK_CASES_PATH,
-    ...(manifest?.lineage_cases || []),
-  ]) {
-    if (!existsSync(join(ROOT, path))) {
-      diagnostics.push(diagnostic(
-        'DOWNSTREAM_CONSUMER_CANONICAL_REFERENCED_ARTIFACT_MISSING',
-        `Referenced artifact is missing: ${path}`,
-      ));
+  if (checkArtifacts) {
+    for (const path of [
+      MANIFEST_PATH,
+      POLICY_PATH,
+      PRIMARY_VALIDATOR_PATH,
+      LINEAGE_VALIDATOR_PATH,
+      LOCK_VALIDATOR_PATH,
+      LOCK_CASES_PATH,
+      ...(manifest?.lineage_cases || []),
+    ]) {
+      if (!existsSync(join(ROOT, path))) {
+        diagnostics.push(diagnostic(
+          'DOWNSTREAM_CONSUMER_CANONICAL_REFERENCED_ARTIFACT_MISSING',
+          `Referenced artifact is missing: ${path}`,
+        ));
+      }
     }
   }
 
@@ -225,6 +251,9 @@ function mutateState(kind, manifest, policy, pkg) {
     case 'snapshot_execution_set_drift':
       next.policy.snapshot_execution_files = [...(next.policy.snapshot_execution_files || []), 'package.json'];
       break;
+    case 'lifecycle_status_drift':
+      next.manifest.status = 'kroad_010_staged_blocked_pending_main_anchor';
+      break;
     default:
       throw new Error(`Unknown canonical-lock mutation kind: ${kind}`);
   }
@@ -232,13 +261,16 @@ function mutateState(kind, manifest, policy, pkg) {
   return next;
 }
 
-function runMutationSuite(manifest, policy, pkg) {
-  const suite = readJson(LOCK_CASES_PATH);
+export function runMutationSuite(manifest, policy, pkg, suite, {checkArtifacts = true} = {}) {
   const failures = [];
-
   for (const testCase of suite.cases || []) {
     const mutated = mutateState(testCase.mutation_kind, manifest, policy, pkg);
-    const codes = new Set(validateState(mutated.manifest, mutated.policy, mutated.pkg).map((item) => item.code));
+    const codes = new Set(validateState(
+      mutated.manifest,
+      mutated.policy,
+      mutated.pkg,
+      {checkArtifacts},
+    ).map((item) => item.code));
     if (!codes.has(testCase.expected_diagnostic)) {
       failures.push(diagnostic(
         'DOWNSTREAM_CONSUMER_CANONICAL_MUTATION_NOT_DETECTED',
@@ -246,26 +278,35 @@ function runMutationSuite(manifest, policy, pkg) {
       ));
     }
   }
-
   return failures;
+}
+
+export function runBootstrapSelfTest() {
+  const manifest = readJson(MANIFEST_PATH);
+  const policy = readJson(POLICY_PATH);
+  const suite = readJson(LOCK_CASES_PATH);
+  const pkg = makeActivatedPackage(readJson('package.json'));
+  return [
+    ...validateState(manifest, policy, pkg, {checkArtifacts: false}),
+    ...runMutationSuite(manifest, policy, pkg, suite, {checkArtifacts: false}),
+  ];
 }
 
 function main() {
   const manifest = readJson(MANIFEST_PATH);
   const policy = readJson(POLICY_PATH);
   const pkg = readJson('package.json');
-
+  const suite = readJson(LOCK_CASES_PATH);
   const diagnostics = [
     ...validateState(manifest, policy, pkg),
-    ...runMutationSuite(manifest, policy, pkg),
+    ...runMutationSuite(manifest, policy, pkg, suite),
   ];
 
   if (diagnostics.length > 0) {
     for (const item of diagnostics) console.error(`${item.code}: ${item.message}`);
     process.exit(1);
   }
-
   console.log('KROAD-010 canonical lineage lock: PASS');
 }
 
-main();
+if (process.argv[1] === MODULE_PATH) main();
