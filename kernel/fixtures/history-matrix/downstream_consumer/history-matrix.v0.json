@@ -1,0 +1,47 @@
+{
+  "fixture_type": "kroad_010_git_history_matrix_contract",
+  "schema_version": "0.1.0",
+  "scope": "Test-only runtime Git history construction. No synthetic SHA is a production or canonical record pin.",
+  "methods": [
+    "merge_commit",
+    "squash",
+    "rebase"
+  ],
+  "runtime_roles": {
+    "incomplete_anchor": "existing main commit before KROAD-010 bootstrap",
+    "stale_anchor": "runtime-created complete but stale acceptance-semantics commit",
+    "bootstrap_anchor": "runtime-created lifecycle-neutral current bootstrap commit",
+    "activation": "runtime-created activation-only commit"
+  },
+  "expected_diagnostics": {
+    "byte_drift": "DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_DRIFT",
+    "missing_execution_stack": "DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_FILE_MISSING",
+    "working_tree_only_artifact": "DOWNSTREAM_CONSUMER_PINNED_ARTIFACT_MISSING"
+  },
+  "mutation_guards": [
+    "skip_history_method",
+    "stale_anchor_non_ancestor",
+    "bootstrap_anchor_feature_sha",
+    "dirty_worktree",
+    "weaken_byte_drift_to_pin_unavailable",
+    "ordinary_record_wrong_anchor",
+    "lifecycle_status_drift",
+    "canonical_gate_removed_or_reordered",
+    "forbidden_prototype_segment_accepted"
+  ],
+  "prototype_integrity_cases": [
+    "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_record_patch_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_record_constructor_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_record_prototype_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_envelope_patch_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_envelope_constructor_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_envelope_prototype_invalid.json"
+  ],
+  "boundaries": {
+    "production_validator_ancestor_check_weakened": false,
+    "feature_branch_sha_committed_as_canonical_pin": false,
+    "dirty_worktree_accepted_as_evidence": false,
+    "downstream_enforcement_claimed": false,
+    "production_readiness_claimed": false
+  }
+}
