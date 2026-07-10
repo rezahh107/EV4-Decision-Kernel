@@ -1,0 +1,23 @@
+{
+  "fixture_type": "kroad_010_downstream_consumer_lineage_case",
+  "schema_version": "0.1.0",
+  "case_id": "kroad_010.lineage.evidence_limitations_reordered_equivalent.valid",
+  "base_record_fixture": "kernel/fixtures/valid/downstream_consumer/architect_layout_structure_kernel_consumed_valid.json",
+  "record_patch": {
+    "evidence_refs.0.limitations": [
+      "not runtime validation",
+      "matrix guidance only",
+      "does not prove target project availability",
+      "not real target-project evidence",
+      "matrix guidance only"
+    ]
+  },
+  "expected_result": {
+    "validation_status": "pass",
+    "diagnostic_codes": []
+  },
+  "notes": [
+    "Reorders and duplicates equivalent evidence limitations.",
+    "Normalization treats limitation order and duplicates as non-semantic while preserving the exact normalized set."
+  ]
+}
