@@ -1,7 +1,7 @@
 {
   "contract_id": "kroad-010.downstream-consumer-contract.v0",
   "version": "0.1.0",
-  "status": "kroad_010_kernel_local_contract_hardened",
+  "status": "kroad_010_staged_blocked_pending_main_anchor",
   "owner": "Kernel",
   "scope": "Kernel-owned snapshot-bound contract and simulated fixtures for one initial downstream consumer. No downstream repository is modified and no live downstream enforcement is claimed.",
   "selected_consumer": {
@@ -19,6 +19,7 @@
   "lineage_policy_ref": "kernel/decision-governance/downstream-consumer-lineage-binding.v0.json",
   "lineage_validator_ref": "kernel/validator/validate-downstream-consumer-lineage.mjs",
   "canonical_lock_validator_ref": "kernel/validator/validate-downstream-consumer-canonical-lock.mjs",
+  "canonical_lock_cases_ref": "kernel/fixtures/contract-lock/downstream_consumer/canonical_lock_mutations.json",
   "documentation_ref": "docs/decision-governance/KROAD_010_DOWNSTREAM_CONSUMER_CONTRACT.md",
   "decision_record_schema_ref": "kernel/schemas/decision-record.v2.schema.json",
   "resolver_registry_ref": "kernel/decision-governance/resolver-rule-registry.v0.json",
@@ -49,6 +50,12 @@
     "contract_must_exist_at_pinned_commit": true,
     "all_referenced_artifacts_read_from_pinned_commit": true,
     "current_execution_files_must_match_pinned_snapshot": true,
+    "acceptance_semantics_only": true,
+    "orchestration_files_excluded": [
+      "package.json",
+      "package-lock.json"
+    ],
+    "orchestration_wiring_guard": "kernel/validator/validate-downstream-consumer-canonical-lock.mjs",
     "shallow_checkout_allowed": false
   },
   "insufficient_evidence_policy": {
@@ -94,9 +101,11 @@
   },
   "lineage_cases": [
     "kernel/fixtures/lineage/downstream_consumer/conditional_provisional_valid.json",
+    "kernel/fixtures/lineage/downstream_consumer/evidence_limitations_reordered_equivalent_valid.json",
     "kernel/fixtures/lineage/downstream_consumer/provisional_downgrade_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/wrong_downstream_owner_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/evidence_lineage_mismatch_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/evidence_limitations_mismatch_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/unrelated_l2_result_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/rerun_l2_status_mismatch_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/same_envelope_wrong_l2_fragment_invalid.json",
@@ -104,9 +113,6 @@
     "kernel/fixtures/lineage/downstream_consumer/missing_provenance_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/missing_pinned_execution_stack_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/pinned_execution_byte_drift_invalid.json"
-  ],
-  "evidence_semantics_cases": [
-    "kernel/fixtures/lineage/downstream_consumer/evidence_limitations_mismatch_invalid.json"
   ],
   "no_overclaim_boundaries": {
     "consumer_repository_modified": false,
@@ -127,5 +133,5 @@
     "npm run validate:mvk",
     "npm run validate:roadmap-memory"
   ],
-  "next_allowed_step": "KROAD-011 — Project Gate Intake; not implemented by this contract."
+  "next_allowed_step": "Finish KROAD-010 bootstrap, main-history pinning, exact-head CI, and post-merge-history validation. KROAD-011 is not yet available."
 }
