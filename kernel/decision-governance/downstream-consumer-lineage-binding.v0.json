@@ -36,7 +36,9 @@
     "kernel/fixtures/lineage/downstream_consumer/rerun_l2_status_mismatch_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/same_envelope_wrong_l2_fragment_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/wrong_matrix_fragment_invalid.json",
-    "kernel/fixtures/lineage/downstream_consumer/missing_provenance_invalid.json"
+    "kernel/fixtures/lineage/downstream_consumer/missing_provenance_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/missing_pinned_execution_stack_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/pinned_execution_byte_drift_invalid.json"
   ],
   "boundaries": {
     "downstream_repository_modified": false,
