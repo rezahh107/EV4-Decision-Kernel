@@ -35,7 +35,7 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
   - Activation evidence: PR #34 merged as `60836283d9a5ae98c3c3819c7ab33a6f40206289`.
   - Reviewed activation head: `f61fbf931e585b50403be2b015d34fee3a206a17`.
   - Git comparison confirms the activation merge commit is one commit ahead of the reviewed activation head and contains no file differences from it.
-  - Exact-head PR validation passed: `Validate MVK` run 372 and `Behavioral Coverage Audit` run 340.
+  - PR #34 workflow provenance: `Validate MVK` run 372 checked out and tested exact PR head `f61fbf931e585b50403be2b015d34fee3a206a17`; `Behavioral Coverage Audit` run 340 succeeded against synthetic integration ref `refs/pull/34/merge` at `ac0cb0f513486c65907c262188f2d4d0a38d2cab` and is not exact-head evidence.
   - Ordinary Consumer Records pin merged bootstrap commit `aa0317a07c10acf4e398dc9e5869f4e6966569f9`; feature-branch, PR-head, floating, or synthetic test SHAs remain forbidden production pins.
   - Package wiring activates `primary -> canonical-lock -> lineage` exactly once and in that order.
   - The deterministic history matrix passed merge commit, squash, and rebase with clean worktrees and exact drift/missing diagnostics.
