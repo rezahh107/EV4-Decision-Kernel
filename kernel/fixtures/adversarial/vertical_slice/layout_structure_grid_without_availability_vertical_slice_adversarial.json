@@ -1,0 +1,156 @@
+{
+  "fixture_type": "kroad_009_vertical_slice_case",
+  "schema_version": "0.1.0",
+  "case_id": "kroad_009.layout_structure.grid_without_availability.adversarial",
+  "case_kind": "adversarial",
+  "decision_family_id": "layout_structure",
+  "resolver_input": {
+    "decision_family_id": "layout_structure",
+    "evidence_refs": [
+      {
+        "evidence_id": "EV-KROAD-006-LAYOUT-P0-MATRIX",
+        "evidence_tier": "official_docs",
+        "source_type": "kernel_fixture",
+        "ref": "kernel/decision-governance/p0-decision-matrices.v0.json#layout_structure",
+        "limitations": [
+          "matrix guidance only",
+          "not real target-project evidence",
+          "not runtime validation",
+          "does not prove target project availability"
+        ]
+      },
+      {
+        "evidence_id": "EV-KROAD-006-LAYOUT-CONTROLLED-PROJECT-EXPORT",
+        "evidence_tier": "project_export",
+        "source_type": "kernel_fixture",
+        "ref": "kernel/fixtures/adversarial/vertical_slice/layout_structure_grid_without_availability_vertical_slice_adversarial.json#resolver_input.context",
+        "limitations": [
+          "controlled fixture evidence only",
+          "not real target-project evidence",
+          "not runtime validation",
+          "not Builder execution proof"
+        ]
+      }
+    ],
+    "context": {
+      "layout_intent": "two_axis",
+      "axis": null,
+      "child_topology": "two_dimensional",
+      "two_axis_required": true,
+      "simple_wrapper_only": false,
+      "grid_availability_proven": false,
+      "required_evidence_refs": [
+        "EV-KROAD-006-LAYOUT-CONTROLLED-PROJECT-EXPORT"
+      ]
+    }
+  },
+  "decision_record": {
+    "record_type": "decision_record_v2",
+    "schema_version": "2.0.0",
+    "decision_id": "DR-KROAD-009-LAYOUT-GRID-UNRESOLVABLE-ADV-001",
+    "decision_family_id": "layout_structure",
+    "resolver_status": "unresolvable",
+    "evidence_tier": "project_export",
+    "rule_id": "resolver.rule.layout_structure.mvp.v0",
+    "rule_version": "0.1.0",
+    "decision_type": "resolver_derived",
+    "trigger_source": "initial_decision",
+    "provisional_status": {
+      "is_provisional": true,
+      "reason": "Grid-like topology is present but explicit grid availability is not proven.",
+      "missing_evidence": [
+        "grid_availability_proven"
+      ],
+      "blocks_final_release": true
+    },
+    "reopen_count": 0,
+    "max_reopen_count": 3,
+    "previous_decision_ref": null,
+    "requires_reaudit": true,
+    "selected_option": {
+      "option_id": "none",
+      "label": "No resolved option"
+    },
+    "allowed_options": [
+      {
+        "option_id": "none",
+        "label": "No resolved option"
+      }
+    ],
+    "rejected_options": [],
+    "forbidden_options": [
+      {
+        "option_id": "elementor_v3_container_fallback",
+        "reason": "V3 fallback is not a valid Elementor V4 target option."
+      }
+    ],
+    "evidence_refs": [
+      {
+        "evidence_id": "EV-KROAD-006-LAYOUT-P0-MATRIX",
+        "evidence_tier": "official_docs",
+        "source_type": "kernel_fixture",
+        "ref": "kernel/decision-governance/p0-decision-matrices.v0.json#layout_structure",
+        "limitations": [
+          "matrix guidance only",
+          "not real target-project evidence",
+          "not runtime validation",
+          "does not prove target project availability"
+        ]
+      },
+      {
+        "evidence_id": "EV-KROAD-006-LAYOUT-CONTROLLED-PROJECT-EXPORT",
+        "evidence_tier": "project_export",
+        "source_type": "kernel_fixture",
+        "ref": "kernel/fixtures/adversarial/vertical_slice/layout_structure_grid_without_availability_vertical_slice_adversarial.json#resolver_input.context",
+        "limitations": [
+          "controlled fixture evidence only",
+          "not real target-project evidence",
+          "not runtime validation",
+          "not Builder execution proof"
+        ]
+      }
+    ],
+    "forbidden_overclaims": [
+      "fixture_does_not_prove_real_target_project_correctness",
+      "decision_record_v2_does_not_prove_runtime_behavior",
+      "decision_record_v2_does_not_prove_builder_execution",
+      "decision_record_v2_does_not_prove_downstream_acceptance",
+      "decision_record_v2_does_not_prove_production_readiness"
+    ],
+    "downstream_owner": "architect",
+    "notes": [
+      "KROAD-009 Kernel-local controlled fixture only.",
+      "Not real target-project proof and not runtime validation."
+    ]
+  },
+  "audit_context": {
+    "claims": []
+  },
+  "expected_result": {
+    "schema_valid": true,
+    "resolver_status": "unresolvable",
+    "resolver_selected_option": null,
+    "resolver_diagnostic_codes": [
+      "RESOLVER_MVP_GRID_REQUIRES_AVAILABILITY"
+    ],
+    "l2_audit_status": "pass",
+    "l2_diagnostic_codes": [
+      "L2_DECISION_REQUIRES_REAUDIT"
+    ]
+  },
+  "boundaries": {
+    "synthetic_fixture_evidence_only": true,
+    "real_target_project_proof_claimed": false,
+    "runtime_validation_claimed": false,
+    "downstream_enforcement_claimed": false,
+    "builder_execution_proof_claimed": false,
+    "project_gate_acceptance_claimed": false,
+    "production_readiness_claimed": false
+  },
+  "notes": [
+    "Near-valid two-axis case is downgraded to unresolvable because grid availability is not proven.",
+    "The matching Decision Record v2 preserves provisional and re-audit state.",
+    "Not real target-project proof.",
+    "Not runtime validation."
+  ]
+}
