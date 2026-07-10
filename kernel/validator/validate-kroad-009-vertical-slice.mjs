@@ -14,6 +14,7 @@ const registryPath = 'kernel/decision-governance/resolver-rule-registry.v0.json'
 const rulePath = 'kernel/decision-governance/resolver-rules/layout-structure.v0.json';
 const tripletPolicyPath = 'kernel/decision-governance/resolver-fixture-triplet-policy.v0.json';
 const decisionRecordSchemaPath = 'kernel/schemas/decision-record.v2.schema.json';
+const malformedNullFixturePath = 'kernel/fixtures/invalid/vertical_slice/malformed_null_vertical_slice_invalid.json';
 const REQUIRED_CASE_KINDS = ['valid', 'invalid', 'adversarial'];
 const FORBIDDEN_TRUE_BOUNDARIES = [
   'real_target_project_proof_claimed',
@@ -108,16 +109,23 @@ function validateArtifactGraph(manifest, matrixRegistry, registry, rule, policy)
   return diagnostics;
 }
 
-function validateCase(caseMeta, validateDecisionRecordSchema) {
+function validateCase(caseMeta, validateDecisionRecordSchema, readCase = readJson) {
   const diagnostics = [];
   let fixture;
   try {
-    fixture = readJson(caseMeta.path);
+    fixture = readCase(caseMeta.path);
   } catch (error) {
     return { diagnostics: [diagnostic('KROAD_009_CASE_READ_FAILED', error.message, caseMeta.path)], summary: null };
   }
 
-  if (!isPlainObject(fixture) || fixture.fixture_type !== 'kroad_009_vertical_slice_case') diagnostics.push(diagnostic('KROAD_009_CASE_SHAPE_INVALID', 'Vertical slice case must be a kroad_009_vertical_slice_case object.', caseMeta.path));
+  if (!isPlainObject(fixture)) {
+    return {
+      diagnostics: [diagnostic('KROAD_009_CASE_SHAPE_INVALID', 'Vertical slice case must be a plain object.', caseMeta.path)],
+      summary: null
+    };
+  }
+
+  if (fixture.fixture_type !== 'kroad_009_vertical_slice_case') diagnostics.push(diagnostic('KROAD_009_CASE_SHAPE_INVALID', 'Vertical slice case must be a kroad_009_vertical_slice_case object.', caseMeta.path));
   if (fixture.case_kind !== caseMeta.case_kind) diagnostics.push(diagnostic('KROAD_009_CASE_KIND_MISMATCH', 'Manifest case_kind must match fixture case_kind.', `${caseMeta.path}.case_kind`));
   if (fixture.decision_family_id !== 'layout_structure' || fixture.resolver_input?.decision_family_id !== 'layout_structure' || fixture.decision_record?.decision_family_id !== 'layout_structure') diagnostics.push(diagnostic('KROAD_009_CASE_FAMILY_SCOPE_INVALID', 'Every vertical slice layer must remain layout_structure.', caseMeta.path));
 
@@ -133,9 +141,10 @@ function validateCase(caseMeta, validateDecisionRecordSchema) {
     if (!hasSyntheticLimitations(ref)) diagnostics.push(diagnostic('KROAD_009_DECISION_EVIDENCE_BOUNDARY_INVALID', 'Decision record evidence must remain source_type=kernel_fixture, synthetic, not target-project proof, and not runtime validation.', `${caseMeta.path}.decision_record.evidence_refs[${index}]`));
   }
 
+  const expectedSchemaValid = fixture.expected_result?.schema_valid;
   const schemaValid = validateDecisionRecordSchema(fixture.decision_record);
-  if (schemaValid !== fixture.expected_result?.schema_valid) diagnostics.push(diagnostic('KROAD_009_SCHEMA_EXPECTATION_MISMATCH', `Expected schema_valid=${fixture.expected_result?.schema_valid}, observed ${schemaValid}.`, `${caseMeta.path}.decision_record`));
-  if (!schemaValid) {
+  if (schemaValid !== expectedSchemaValid) diagnostics.push(diagnostic('KROAD_009_SCHEMA_EXPECTATION_MISMATCH', `Expected schema_valid=${expectedSchemaValid}, observed ${schemaValid}.`, `${caseMeta.path}.decision_record`));
+  if (!schemaValid && expectedSchemaValid !== false) {
     for (const error of validateDecisionRecordSchema.errors || []) diagnostics.push(diagnostic('KROAD_009_DECISION_RECORD_SCHEMA_INVALID', error.message || 'Decision Record v2 schema validation failed.', `${caseMeta.path}.decision_record${error.instancePath || ''}`));
   }
 
@@ -155,8 +164,8 @@ function validateCase(caseMeta, validateDecisionRecordSchema) {
   assertExpectedCodes(auditResult.diagnostics, fixture.expected_result?.l2_diagnostic_codes, `${caseMeta.path}.expected_result.l2_diagnostic_codes`, diagnostics);
 
   if (caseMeta.case_kind === 'valid' && (!schemaValid || resolverOutput.resolver_status !== 'auto_resolved' || auditResult.audit_status !== 'pass')) diagnostics.push(diagnostic('KROAD_009_VALID_PATH_NOT_DETERMINISTIC_PASS', 'Valid vertical slice must pass schema, resolver, and L2 deterministically.', caseMeta.path));
-  if (caseMeta.case_kind === 'invalid') {
-    if (!schemaValid) diagnostics.push(diagnostic('KROAD_009_INVALID_CASE_MUST_BE_SCHEMA_VALID', 'Invalid vertical slice must be schema-valid so L2 proves semantic rejection.', caseMeta.path));
+  if (caseMeta.case_kind === 'invalid' && expectedSchemaValid === true) {
+    if (!schemaValid) diagnostics.push(diagnostic('KROAD_009_INVALID_CASE_MUST_BE_SCHEMA_VALID', 'The resolver-wrong invalid vertical slice must remain schema-valid so L2 proves semantic rejection.', caseMeta.path));
     if (auditResult.audit_status !== 'fail' || !codes(auditResult.diagnostics).has('L2_SELECTED_OPTION_RESOLVER_MISMATCH')) diagnostics.push(diagnostic('KROAD_009_SCHEMA_VALID_RESOLVER_WRONG_NOT_REJECTED', 'Schema-valid resolver-wrong decision must fail L2 with selected-option mismatch.', caseMeta.path));
   }
   if (caseMeta.case_kind === 'adversarial' && !['conditional', 'unresolvable'].includes(resolverOutput.resolver_status)) diagnostics.push(diagnostic('KROAD_009_ADVERSARIAL_CASE_OVER_RESOLVED', 'Adversarial near-valid case must become conditional or unresolvable.', caseMeta.path));
@@ -172,11 +181,38 @@ function validateCase(caseMeta, validateDecisionRecordSchema) {
   };
 }
 
+function validateMalformedNullFixtureRegression(validateDecisionRecordSchema) {
+  let result;
+  try {
+    result = validateCase(
+      { case_kind: 'invalid', path: malformedNullFixturePath },
+      validateDecisionRecordSchema
+    );
+  } catch (error) {
+    return [diagnostic('KROAD_009_NULL_FIXTURE_REGRESSION_CRASHED', `Malformed null fixture caused an unexpected exception: ${error.message}`, malformedNullFixturePath)];
+  }
+
+  const regressionDiagnostics = [];
+  const observedCodes = codes(result.diagnostics);
+  if (!observedCodes.has('KROAD_009_CASE_SHAPE_INVALID')) {
+    regressionDiagnostics.push(diagnostic('KROAD_009_NULL_FIXTURE_REGRESSION_DIAGNOSTIC_MISSING', 'Malformed null fixture must return KROAD_009_CASE_SHAPE_INVALID.', malformedNullFixturePath));
+  }
+  if (result.summary !== null) {
+    regressionDiagnostics.push(diagnostic('KROAD_009_NULL_FIXTURE_REGRESSION_SUMMARY_INVALID', 'Malformed null fixture must not produce a case summary.', malformedNullFixturePath));
+  }
+  if ((result.diagnostics || []).some((item) => !isPlainObject(item) || typeof item.code !== 'string' || item.code.length === 0)) {
+    regressionDiagnostics.push(diagnostic('KROAD_009_NULL_FIXTURE_REGRESSION_DIAGNOSTIC_NOT_MACHINE_READABLE', 'Malformed null fixture diagnostics must remain machine-readable objects with stable codes.', malformedNullFixturePath));
+  }
+
+  return regressionDiagnostics;
+}
+
 function runValidation() {
   const output = ['KROAD-009 layout_structure vertical slice validator summary'];
   const diagnostics = [];
   let manifest;
   let validateDecisionRecordSchema;
+  let malformedNullRegressionPassed = false;
 
   try {
     manifest = readJson(manifestPath);
@@ -205,11 +241,16 @@ function runValidation() {
       diagnostics.push(...result.diagnostics);
       if (result.summary) caseSummaries.push(result.summary);
     }
+
+    const regressionDiagnostics = validateMalformedNullFixtureRegression(validateDecisionRecordSchema);
+    malformedNullRegressionPassed = regressionDiagnostics.length === 0;
+    diagnostics.push(...regressionDiagnostics);
   }
 
   if (diagnostics.length === 0) {
     output.push('Artifact graph: PASS');
     for (const summary of caseSummaries) output.push(`${summary.case_kind}: PASS [schema=${summary.schema_valid ? 'valid' : 'invalid'} resolver=${summary.resolver_status} l2=${summary.l2_audit_status}]`);
+    if (malformedNullRegressionPassed) output.push('Malformed null fixture fail-closed regression: PASS [KROAD_009_CASE_SHAPE_INVALID]');
     output.push('Synthetic evidence boundary: PASS');
     output.push('KROAD-010+ boundary: PASS');
     output.push('Result: PASS');
