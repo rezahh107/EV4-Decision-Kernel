@@ -1,6 +1,6 @@
 # KROAD-010 Tested-Tree Evidence Equivalence Decision
 
-**Status:** proposed / not yet authoritative  
+**Status:** proposed / application evaluated fail-closed / not yet authoritative  
 **Decision owner:** Kernel governance  
 **Applies to:** KROAD-010 closure evidence only  
 **Proposed evidence mode:** `equivalent_tested_tree`  
@@ -159,3 +159,180 @@ completion_evidence_mode: not_satisfied
 ```
 
 This document does not itself close KROAD-010.
+
+---
+
+## Application evaluation — 2026-07-10
+
+### Evaluated repository state
+
+```text
+current_main_head: 56a730fc3bbf6939bdb49dd81e25ae0421c376e2
+pr_36_merge_commit: 56a730fc3bbf6939bdb49dd81e25ae0421c376e2
+historical_target_commit: 60836283d9a5ae98c3c3819c7ab33a6f40206289
+reviewed_activation_head: f61fbf931e585b50403be2b015d34fee3a206a17
+behavioral_coverage_synthetic_merge: ac0cb0f513486c65907c262188f2d4d0a38d2cab
+bootstrap_anchor: aa0317a07c10acf4e398dc9e5869f4e6966569f9
+direct_historical_actions_retrieval: unavailable
+```
+
+The synthetic merge commit remains retrievable as a GitHub commit object and through repository comparison. Its root tree OID is not exposed by the available connector capability.
+
+### Workflow provenance used
+
+#### Validate MVK
+
+```text
+workflow: Validate MVK
+run_id: 29111998786
+run_number: 372
+event: pull_request
+run_metadata_head_sha: f61fbf931e585b50403be2b015d34fee3a206a17
+checked_out_ref_type: explicit_pr_head
+checked_out_sha: f61fbf931e585b50403be2b015d34fee3a206a17
+job_id: 86426315610
+status: completed
+conclusion: success
+```
+
+All reported job steps succeeded, including exact-head checkout, source/JSON validation, MVK fixtures and gates, roadmap-memory validation, prototype integrity, merge/squash/rebase history matrix, and artifact upload.
+
+#### Behavioral Coverage Audit
+
+```text
+workflow: Behavioral Coverage Audit
+run_id: 29111998776
+run_number: 340
+event: pull_request
+run_metadata_head_sha: f61fbf931e585b50403be2b015d34fee3a206a17
+checked_out_ref_type: pull_request_synthetic_merge
+checked_out_ref: refs/pull/34/merge
+checked_out_sha: ac0cb0f513486c65907c262188f2d4d0a38d2cab
+job_id: 86426315565
+status: completed
+conclusion: success
+```
+
+All reported job steps succeeded. This remains synthetic-merge integration evidence, not exact PR-head evidence.
+
+### Workflow and package-wiring blob comparison
+
+The repository blob OIDs are identical across the historical target, reviewed activation head, and synthetic merge object:
+
+```text
+.github/workflows/validate-mvk.yml
+  blob_oid: 839d31bde67de02244fa45b1660534f3d11a4ab8
+
+.github/workflows/behavioral-coverage.yml
+  blob_oid: bbbfdf43fefcbba223549f8a1d11e77b4ae3beb9
+
+package.json
+  blob_oid: c9f05ad31b623ae7727f408de5ff3b552456c79c
+
+package-lock.json
+  blob_oid: 2ff0905552ee0b0563a5fdd0fbcc9e1e1a256543
+```
+
+This satisfies the bounded file-level byte-identity criterion, but it does not establish complete root tree identity.
+
+### History-matrix artifact
+
+```text
+run_id: 29111998786
+artifact_id: 8235134860
+artifact_name: kroad-010-history-matrix
+digest: sha256:0f3b2370957958aab14cc826355b5c45158edf4bf8847c123338e5bd5e9cd607
+created_at: 2026-07-10T17:44:07Z
+expires_at: 2026-07-24T17:44:07Z
+expired: false
+artifact_head_sha: f61fbf931e585b50403be2b015d34fee3a206a17
+```
+
+### Ancestry and comparisons
+
+Repository comparison established:
+
+```text
+bootstrap aa0317a... -> activation 60836283...
+  status: ahead
+  merge_base: aa0317a07c10acf4e398dc9e5869f4e6966569f9
+  result: bootstrap ancestry confirmed
+
+reviewed head f61fbf... -> activation 60836283...
+  status: ahead by 1
+  files: []
+
+synthetic merge ac0cb0... <-> activation 60836283...
+  status: diverged by one commit on each side
+  merge_base: f61fbf931e585b50403be2b015d34fee3a206a17
+  files: []
+```
+
+The zero-file comparisons are supporting evidence only. They are not substituted for the required root tree OIDs.
+
+### Post-activation change classification
+
+The activation commit is nine commits behind evaluated current `main`. The only changed paths are:
+
+```text
+docs/decision-governance/KROAD_010_DOWNSTREAM_CONSUMER_CONTRACT.md
+  classification: documentation
+
+planning/NEXT_WORK.md
+  classification: roadmap/status documentation
+
+planning/reviews/KROAD-010_DOWNSTREAM_CONSUMER_POST_MERGE_REVIEW.md
+  classification: evidence/review documentation
+```
+
+No executable Kernel, schema, validator, fixture, package-wiring, or workflow path changed after the activation merge.
+
+### Root tree OID retrieval result
+
+The following required values remain unavailable:
+
+```text
+tree_oid(60836283d9a5ae98c3c3819c7ab33a6f40206289)
+tree_oid(f61fbf931e585b50403be2b015d34fee3a206a17)
+tree_oid(ac0cb0f513486c65907c262188f2d4d0a38d2cab)
+```
+
+Observed capability limits:
+
+- the connected `fetch_commit` response exposes commit identity and diff but not the root tree OID;
+- a verified local clone and authenticated `gh` client are unavailable;
+- direct external GitHub API access is unavailable from the execution container;
+- GitHub Git Database `create_tree` correctly rejected commit SHAs as invalid `base_tree` values with HTTP 422, so no tree OID was inferred or manufactured.
+
+### Criterion results
+
+```text
+1  historical target identity: PASS
+2  direct retrieval disposition recorded: PASS (unavailable)
+3  Validate MVK root tree equality: UNAVAILABLE / BLOCKING
+4  Behavioral Coverage root tree equality: UNAVAILABLE / BLOCKING
+5  separate workflow provenance: PASS
+6  workflow and package-wiring blob identity: PASS
+7  Validate MVK artifact identity: PASS
+8  merge/squash/rebase history evidence: PASS
+9  bootstrap ancestry: PASS
+10 post-activation change classification: PASS
+11 fail-closed uncertainty handling: PASS / INVOKED
+12 bounded claim surface: PASS
+```
+
+### Equivalence decision
+
+```text
+equivalence_result: not_satisfied
+blocking_criteria:
+  - criterion_3_validate_mvk_root_tree_oid
+  - criterion_4_behavioral_coverage_root_tree_oid
+KROAD-010: needs_audit
+KROAD-011: blocked
+completion_evidence_mode: not_satisfied
+```
+
+The bounded equivalence rule is not weakened. Direct historical Actions evidence remains a valid closure path under the current roadmap requirement. The proposed equivalence path can become usable only when the three repository-authoritative root tree OIDs are retrieved and proved identical.
+
+No downstream enforcement, runtime/browser proof, Builder execution, Project Gate acceptance, ecosystem readiness, or production readiness is claimed.
