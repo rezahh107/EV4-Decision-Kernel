@@ -8,12 +8,13 @@ import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import {auditDecisionRecord} from './validate-l2-decision-correctness.mjs';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const MODULE_PATH = fileURLToPath(import.meta.url);
+const ROOT = join(dirname(MODULE_PATH), '..', '..');
 const POLICY_PATH = 'kernel/decision-governance/downstream-consumer-lineage-binding.v0.json';
 const VALIDATOR_PATH = 'kernel/validator/validate-downstream-consumer-lineage.mjs';
 const LOCK_VALIDATOR_PATH = 'kernel/validator/validate-downstream-consumer-canonical-lock.mjs';
 
-const REQUIRED_EXECUTION_SNAPSHOT_FILES = Object.freeze([
+export const REQUIRED_EXECUTION_SNAPSHOT_FILES = Object.freeze([
   'kernel/decision-governance/downstream-consumer-contract.v0.json',
   'kernel/schemas/downstream-consumer-contract.v0.schema.json',
   'kernel/validator/validate-downstream-consumer-contract.mjs',
@@ -27,7 +28,7 @@ const REQUIRED_EXECUTION_SNAPSHOT_FILES = Object.freeze([
   'kernel/validator/validate-l2-decision-correctness.mjs',
 ]);
 
-const REQUIRED_BINDINGS = Object.freeze([
+export const REQUIRED_BINDINGS = Object.freeze([
   'provisional_status',
   'downstream_owner',
   'evidence_identity_tier_source_ref',
@@ -37,6 +38,34 @@ const REQUIRED_BINDINGS = Object.freeze([
   'matrix_fragment',
   'contract_decision_vertical_slice_provenance',
 ]);
+
+const RECORD_PATCH_ROOTS = new Set([
+  'record_type',
+  'schema_version',
+  'consumer_record_id',
+  'consumer',
+  'kernel_pin',
+  'decision_family_id',
+  'consumption_status',
+  'kernel_artifact_refs',
+  'decision_output',
+  'evidence_refs',
+  'provenance_refs',
+  'handling',
+  'missing_kernel_refs',
+  'forbidden_overclaims_acknowledged',
+  'claims',
+  'limitations',
+]);
+const ENVELOPE_PATCH_ROOTS = new Set([
+  'resolver_input',
+  'decision_record',
+  'audit_context',
+  'expected_result',
+]);
+const FORBIDDEN_PATCH_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor']);
+const COMMIT_SHA_PATTERN = /^[0-9a-f]{40}$/;
+const ARRAY_INDEX_PATTERN = /^(0|[1-9][0-9]*)$/;
 
 function readText(path) {
   return readFileSync(join(ROOT, path), 'utf8');
@@ -78,23 +107,178 @@ function deepClone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function setPath(target, dottedPath, value) {
-  const parts = dottedPath.split('.');
-  let current = target;
-  for (const part of parts.slice(0, -1)) {
-    if (!current[part] || typeof current[part] !== 'object') current[part] = {};
-    current = current[part];
-  }
-  current[parts.at(-1)] = deepClone(value);
+function isPlainObject(value) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
 }
 
-function applyPatch(target, patch = {}) {
-  for (const [path, value] of Object.entries(patch)) setPath(target, path, value);
+class FixturePatchError extends Error {
+  constructor(code, path, message) {
+    super(message);
+    this.code = code;
+    this.path = path;
+  }
+}
+
+function parsePatchPath(dottedPath, allowedRoots) {
+  if (typeof dottedPath !== 'string' || dottedPath.length === 0) {
+    throw new FixturePatchError(
+      'DOWNSTREAM_CONSUMER_FIXTURE_PATCH_PATH_INVALID',
+      String(dottedPath),
+      'Fixture patch path must be a non-empty dotted string.',
+    );
+  }
+
+  const parts = dottedPath.split('.');
+  if (parts.some((part) => part.length === 0)) {
+    throw new FixturePatchError(
+      'DOWNSTREAM_CONSUMER_FIXTURE_PATCH_PATH_INVALID',
+      dottedPath,
+      'Fixture patch path must not contain empty segments.',
+    );
+  }
+
+  const forbidden = parts.find((part) => FORBIDDEN_PATCH_SEGMENTS.has(part));
+  if (forbidden) {
+    throw new FixturePatchError(
+      'DOWNSTREAM_CONSUMER_FIXTURE_PATCH_PATH_FORBIDDEN',
+      dottedPath,
+      `Fixture patch path contains forbidden segment: ${forbidden}.`,
+    );
+  }
+
+  if (!allowedRoots.has(parts[0])) {
+    throw new FixturePatchError(
+      'DOWNSTREAM_CONSUMER_FIXTURE_PATCH_ROOT_FORBIDDEN',
+      dottedPath,
+      `Fixture patch root is not allowlisted: ${parts[0]}.`,
+    );
+  }
+
+  return parts;
+}
+
+function makeContainer(nextSegment) {
+  return ARRAY_INDEX_PATTERN.test(nextSegment) ? [] : Object.create(null);
+}
+
+function readOwnChild(current, segment, nextSegment, dottedPath) {
+  if (Array.isArray(current)) {
+    if (!ARRAY_INDEX_PATTERN.test(segment)) {
+      throw new FixturePatchError(
+        'DOWNSTREAM_CONSUMER_FIXTURE_PATCH_TARGET_INVALID',
+        dottedPath,
+        `Array traversal requires a numeric index, received: ${segment}.`,
+      );
+    }
+    const index = Number(segment);
+    if (!Object.hasOwn(current, index) || current[index] === null || current[index] === undefined) {
+      current[index] = makeContainer(nextSegment);
+    }
+    if (!Array.isArray(current[index]) && !isPlainObject(current[index])) {
+      throw new FixturePatchError(
+        'DOWNSTREAM_CONSUMER_FIXTURE_PATCH_TARGET_INVALID',
+        dottedPath,
+        `Patch traversal reached a non-container at segment: ${segment}.`,
+      );
+    }
+    return current[index];
+  }
+
+  if (!isPlainObject(current)) {
+    throw new FixturePatchError(
+      'DOWNSTREAM_CONSUMER_FIXTURE_PATCH_TARGET_INVALID',
+      dottedPath,
+      `Patch traversal reached a non-plain object at segment: ${segment}.`,
+    );
+  }
+
+  if (!Object.hasOwn(current, segment) || current[segment] === null || current[segment] === undefined) {
+    Object.defineProperty(current, segment, {
+      value: makeContainer(nextSegment),
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    });
+  }
+
+  if (!Array.isArray(current[segment]) && !isPlainObject(current[segment])) {
+    throw new FixturePatchError(
+      'DOWNSTREAM_CONSUMER_FIXTURE_PATCH_TARGET_INVALID',
+      dottedPath,
+      `Patch traversal reached a non-container at segment: ${segment}.`,
+    );
+  }
+  return current[segment];
+}
+
+function writeOwnValue(current, segment, value, dottedPath) {
+  const cloned = deepClone(value);
+  if (Array.isArray(current)) {
+    if (!ARRAY_INDEX_PATTERN.test(segment)) {
+      throw new FixturePatchError(
+        'DOWNSTREAM_CONSUMER_FIXTURE_PATCH_TARGET_INVALID',
+        dottedPath,
+        `Array assignment requires a numeric index, received: ${segment}.`,
+      );
+    }
+    current[Number(segment)] = cloned;
+    return;
+  }
+
+  if (!isPlainObject(current)) {
+    throw new FixturePatchError(
+      'DOWNSTREAM_CONSUMER_FIXTURE_PATCH_TARGET_INVALID',
+      dottedPath,
+      'Patch assignment target must be an own plain object or array.',
+    );
+  }
+
+  Object.defineProperty(current, segment, {
+    value: cloned,
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  });
+}
+
+export function setPath(target, dottedPath, value, allowedRoots = RECORD_PATCH_ROOTS) {
+  const parts = parsePatchPath(dottedPath, allowedRoots);
+  let current = target;
+
+  for (let index = 0; index < parts.length - 1; index += 1) {
+    current = readOwnChild(current, parts[index], parts[index + 1], dottedPath);
+  }
+
+  writeOwnValue(current, parts.at(-1), value, dottedPath);
+}
+
+export function applyPatch(target, patch = {}, allowedRoots = RECORD_PATCH_ROOTS) {
+  if (!isPlainObject(patch)) {
+    throw new FixturePatchError(
+      'DOWNSTREAM_CONSUMER_FIXTURE_PATCH_OBJECT_REQUIRED',
+      '(patch)',
+      'Fixture patch must be a plain JSON object.',
+    );
+  }
+  for (const [path, value] of Object.entries(patch)) setPath(target, path, value, allowedRoots);
   return target;
 }
 
 function diagnostic(code, path, message = code) {
   return {code, path, severity: 'error', source: 'lineage', message};
+}
+
+function patchDiagnostic(error) {
+  if (error instanceof FixturePatchError) {
+    return diagnostic(error.code, error.path, error.message);
+  }
+  return diagnostic(
+    'DOWNSTREAM_CONSUMER_FIXTURE_PATCH_FAILED',
+    '(patch)',
+    error instanceof Error ? error.message : String(error),
+  );
 }
 
 function sameStringSet(left, right) {
@@ -135,9 +319,8 @@ function evidenceLimitationsMatch(consumerEvidence, decisionEvidence) {
 
   for (const item of consumerEvidence || []) {
     const identity = canonicalEvidenceIdentity(item);
-    const consumerLimitations = normalizedLimitations(item?.limitations);
-    const decisionLimitations = decisionByIdentity.get(identity);
-    if (JSON.stringify(consumerLimitations) !== JSON.stringify(decisionLimitations)) return false;
+    if (JSON.stringify(normalizedLimitations(item?.limitations))
+      !== JSON.stringify(decisionByIdentity.get(identity))) return false;
   }
   return true;
 }
@@ -150,14 +333,12 @@ function decisionSiblingFragment(decisionFragment, sibling) {
 
 function validateExecutionSnapshot(commit, policy) {
   const diagnostics = [];
-
   if (!sameStringSet(policy.snapshot_execution_files, REQUIRED_EXECUTION_SNAPSHOT_FILES)) {
-    diagnostics.push(diagnostic(
+    return [diagnostic(
       'DOWNSTREAM_CONSUMER_LINEAGE_EXECUTION_SET_INVALID',
       'snapshot_execution_files',
       'Lineage policy must enumerate the complete hard-coded acceptance-semantics snapshot set.',
-    ));
-    return diagnostics;
+    )];
   }
 
   for (const path of REQUIRED_EXECUTION_SNAPSHOT_FILES) {
@@ -193,13 +374,19 @@ function validateExecutionSnapshot(commit, policy) {
       ));
     }
   }
-
   return diagnostics;
 }
 
-function validateBinding(record, policy, envelopeOverride = null) {
+export function validateBinding(record, policy, envelopeOverride = null) {
   const diagnostics = [];
   const commit = record?.kernel_pin?.kernel_ref;
+  if (!COMMIT_SHA_PATTERN.test(commit || '')) {
+    return [diagnostic(
+      'DOWNSTREAM_CONSUMER_LINEAGE_PIN_INVALID',
+      'kernel_pin.kernel_ref',
+      'Lineage validation requires a full lowercase 40-character commit SHA.',
+    )];
+  }
 
   try {
     git(['cat-file', '-e', `${commit}^{commit}`]);
@@ -217,7 +404,6 @@ function validateBinding(record, policy, envelopeOverride = null) {
 
   const decisionRef = splitRef(record.kernel_artifact_refs?.decision_record_ref);
   let envelope;
-
   try {
     envelope = readPinnedJson(commit, decisionRef.path);
   } catch {
@@ -227,7 +413,13 @@ function validateBinding(record, policy, envelopeOverride = null) {
     )];
   }
 
-  if (envelopeOverride) applyPatch(envelope, envelopeOverride);
+  if (envelopeOverride) {
+    try {
+      applyPatch(envelope, envelopeOverride, ENVELOPE_PATCH_ROOTS);
+    } catch (error) {
+      return [patchDiagnostic(error)];
+    }
+  }
 
   const decisionRecord = resolveFragment(envelope, decisionRef.fragment);
   const resolverInput = resolveFragment(
@@ -267,10 +459,8 @@ function validateBinding(record, policy, envelopeOverride = null) {
     validateDecisionRecordSchema,
   });
 
-  if (
-    record.decision_output?.provisional
-    !== Boolean(decisionRecord.provisional_status?.is_provisional)
-  ) {
+  if (record.decision_output?.provisional
+    !== Boolean(decisionRecord.provisional_status?.is_provisional)) {
     diagnostics.push(diagnostic(
       'DOWNSTREAM_CONSUMER_PROVISIONAL_STATUS_MISMATCH',
       'decision_output.provisional',
@@ -336,13 +526,7 @@ function validateBinding(record, policy, envelopeOverride = null) {
   }
 
   const verticalRef = splitRef(record.kernel_artifact_refs?.vertical_slice_ref);
-  const requiredProvenance = [
-    record.kernel_pin.contract_ref,
-    decisionRef.path,
-    verticalRef.path,
-  ];
-
-  for (const required of requiredProvenance) {
+  for (const required of [record.kernel_pin.contract_ref, decisionRef.path, verticalRef.path]) {
     if (!(record.provenance_refs || []).includes(required)) {
       diagnostics.push(diagnostic(
         'DOWNSTREAM_CONSUMER_PROVENANCE_REF_MISSING',
@@ -358,12 +542,76 @@ function validateBinding(record, policy, envelopeOverride = null) {
 function loadCase(casePath) {
   const testCase = readJson(casePath);
   const baseFixture = readJson(testCase.base_record_fixture);
-  const record = applyPatch(deepClone(baseFixture.record), testCase.record_patch);
+  let record = deepClone(baseFixture.record);
+  const patchDiagnostics = [];
+  try {
+    record = applyPatch(record, testCase.record_patch || {}, RECORD_PATCH_ROOTS);
+  } catch (error) {
+    patchDiagnostics.push(patchDiagnostic(error));
+  }
   return {
     testCase,
     record,
     envelopePatch: testCase.envelope_patch || null,
+    patchDiagnostics,
   };
+}
+
+export function runBootstrapSelfTest() {
+  const before = Object.prototype.polluted;
+  const diagnostics = [];
+  const record = {evidence_refs: [{limitations: ['a', 'b']}]};
+
+  for (const path of [
+    '__proto__.polluted',
+    'evidence_refs.0.__proto__.polluted',
+    'constructor.prototype.polluted',
+    'evidence_refs.0.constructor.polluted',
+  ]) {
+    try {
+      applyPatch(record, {[path]: 'yes'}, RECORD_PATCH_ROOTS);
+      diagnostics.push(diagnostic(
+        'DOWNSTREAM_CONSUMER_BOOTSTRAP_PROTOTYPE_GUARD_FAILED',
+        path,
+        'Forbidden patch path was accepted.',
+      ));
+    } catch (error) {
+      if (!(error instanceof FixturePatchError)
+        || error.code !== 'DOWNSTREAM_CONSUMER_FIXTURE_PATCH_PATH_FORBIDDEN') {
+        diagnostics.push(patchDiagnostic(error));
+      }
+    }
+  }
+
+  try {
+    applyPatch(record, {'evidence_refs.0.limitations': ['b', 'a', 'a']}, RECORD_PATCH_ROOTS);
+  } catch (error) {
+    diagnostics.push(patchDiagnostic(error));
+  }
+
+  if (Object.prototype.polluted !== before) {
+    diagnostics.push(diagnostic(
+      'DOWNSTREAM_CONSUMER_BOOTSTRAP_PROTOTYPE_INTEGRITY_FAILED',
+      'Object.prototype',
+      'Prototype state changed during fixture patch self-test.',
+    ));
+  }
+
+  const policy = readJson(POLICY_PATH);
+  if (!sameStringSet(policy.snapshot_execution_files, REQUIRED_EXECUTION_SNAPSHOT_FILES)) {
+    diagnostics.push(diagnostic(
+      'DOWNSTREAM_CONSUMER_LINEAGE_EXECUTION_SET_INVALID',
+      'snapshot_execution_files',
+    ));
+  }
+  if (!sameStringSet(policy.required_bindings, REQUIRED_BINDINGS)) {
+    diagnostics.push(diagnostic(
+      'DOWNSTREAM_CONSUMER_LINEAGE_BINDING_SET_INVALID',
+      'required_bindings',
+    ));
+  }
+
+  return diagnostics;
 }
 
 function main() {
@@ -371,22 +619,16 @@ function main() {
   const output = ['KROAD-010 downstream consumer lineage validator summary'];
   let failed = false;
 
-  if (
-    policy.policy_id !== 'kroad-010.downstream-consumer-lineage-binding.v0'
+  if (policy.policy_id !== 'kroad-010.downstream-consumer-lineage-binding.v0'
     || policy.version !== '0.1.0'
-    || policy.selected_consumer !== 'rezahh107/EV4-Architect-Repo'
-  ) {
+    || policy.selected_consumer !== 'rezahh107/EV4-Architect-Repo') {
     console.error('Lineage policy identity is invalid.');
     process.exit(1);
   }
 
-  if (!sameStringSet(policy.snapshot_execution_files, REQUIRED_EXECUTION_SNAPSHOT_FILES)) {
-    console.error('Lineage policy execution snapshot set is invalid.');
-    process.exit(1);
-  }
-
-  if (!sameStringSet(policy.required_bindings, REQUIRED_BINDINGS)) {
-    console.error('Lineage policy required binding set is invalid.');
+  const bootstrapDiagnostics = runBootstrapSelfTest();
+  if (bootstrapDiagnostics.length > 0) {
+    for (const item of bootstrapDiagnostics) console.error(`${item.code}: ${item.message}`);
     process.exit(1);
   }
 
@@ -400,7 +642,9 @@ function main() {
       continue;
     }
 
-    const diagnostics = validateBinding(loaded.record, policy, loaded.envelopePatch);
+    const diagnostics = loaded.patchDiagnostics.length > 0
+      ? loaded.patchDiagnostics
+      : validateBinding(loaded.record, policy, loaded.envelopePatch);
     const observedCodes = new Set(diagnostics.map((item) => item.code));
     const expected = loaded.testCase.expected_result;
     const observedStatus = diagnostics.length === 0 ? 'pass' : 'fail';
@@ -416,9 +660,7 @@ function main() {
     } else {
       output.push(
         `${casePath}: PASS [${observedStatus}]`
-        + (expected.diagnostic_codes.length
-          ? ` ${expected.diagnostic_codes.join(', ')}`
-          : ''),
+        + (expected.diagnostic_codes.length ? ` ${expected.diagnostic_codes.join(', ')}` : ''),
       );
     }
   }
@@ -428,4 +670,4 @@ function main() {
   process.exit(failed ? 1 : 0);
 }
 
-main();
+if (process.argv[1] === MODULE_PATH) main();
