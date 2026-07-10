@@ -981,12 +981,62 @@ Possible artifacts:
 - Modified downstream repository or explicit Kernel-local consumer contract.
 - Fixture showing invalid missing-Kernel-reference rejection.
 - Documentation explaining when Kernel must be consulted.
+- Merged activation commit `60836283d9a5ae98c3c3819c7ab33a6f40206289` descended from bootstrap anchor `aa0317a07c10acf4e398dc9e5869f4e6966569f9`.
+- Either direct successful exact-activation push evidence under the historical rule, or the KROAD-010-specific `current_main_post_activation_validation` mode after its governance decision is independently reviewed and merged.
+
+### Current-main post-activation validation mode
+
+This mode is an explicit KROAD-010 evidence option. It does not change KROAD-010 scope, ownership, downstream target, or the KROAD-011 dependency.
+
+A separate evidence-only closure PR may mark KROAD-010 complete only when all of the following pass:
+
+1. activation commit `60836283d9a5ae98c3c3819c7ab33a6f40206289` is an ancestor of the evaluated current `main` commit;
+2. bootstrap anchor `aa0317a07c10acf4e398dc9e5869f4e6966569f9` remains an ancestor of activation;
+3. every path changed after activation is enumerated and semantically classified;
+4. no unreviewed change affects the protected implementation surface:
+
+   ```text
+   .github/workflows/
+   package.json
+   package-lock.json
+   kernel/
+   tools/validate-kroad-010-*
+   tools/kroad-010-history/
+   ```
+
+5. `Validate MVK` and `Behavioral Coverage Audit` each have a direct successful `push`-event run whose exact run-record `head_sha` equals the evaluated current `main` merge commit;
+6. each qualifying run records workflow name, run ID and number, event, head SHA, status, conclusion, creation/update timestamps, URL, job IDs, and relevant step conclusions;
+7. the qualifying `Validate MVK` run produces `kroad-010-history-matrix`, with artifact ID, name, digest, creation/expiration timestamps, expired state, and run association recorded;
+8. PR #34 evidence remains supporting evidence with accurate provenance: `Validate MVK` tested exact PR head `f61fbf931e585b50403be2b015d34fee3a206a17`, while `Behavioral Coverage Audit` tested synthetic merge `ac0cb0f513486c65907c262188f2d4d0a38d2cab`;
+9. the deterministic merge/squash/rebase history matrix remains mandatory and separate from current-main validation;
+10. any missing, failed, cancelled, inaccessible, ambiguous, or mismatched qualifying run or artifact fails closed.
+
+Successful use of this mode proves only the Kernel-local KROAD-010 consumer-contract gate. It does not prove live downstream-repository enforcement, runtime/browser behavior, Builder execution, Project Gate acceptance, ecosystem readiness, or production readiness.
+
+### Two-step closure sequence
+
+1. Governance adoption PR:
+   - adopts `current_main_post_activation_validation`;
+   - keeps KROAD-010 `needs_audit`;
+   - keeps KROAD-011 blocked;
+   - does not complete KROAD-010.
+2. Separate post-merge evidence closure PR:
+   - evaluates the governance PR merge commit on `main`;
+   - records both qualifying push runs and the history-matrix artifact;
+   - marks KROAD-010 complete only when every condition passes;
+   - makes KROAD-011 next allowed without implementing it.
+
+### Historical governance note
+
+Direct exact-activation Actions retrieval was attempted but unavailable; no historical success was invented. Mandatory root tree OID equality was a valid but operationally inaccessible proposal and is superseded by the explicit direct current-main push-validation rule. Root tree evidence is not represented as incorrect and is no longer a mandatory operational closure condition.
 
 ### Do not
 
 - Do not patch all downstream repos at once.
 - Do not claim downstream enforcement if only Kernel-local docs exist.
 - Do not make Kernel responsible for auto-detecting downstream decisions.
+- Do not substitute pull-request, synthetic-merge, later-head, local, or content-similarity evidence for the required current-main push runs.
+- Do not start KROAD-011 before KROAD-010 is actually closed by a separate evidence record.
 
 ---
 
