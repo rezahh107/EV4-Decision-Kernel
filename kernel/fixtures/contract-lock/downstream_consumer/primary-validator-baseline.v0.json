@@ -2,10 +2,9 @@
   "fixture_type": "kroad_010_primary_validator_baseline",
   "schema_version": "0.1.0",
   "captured_from": {
-    "pr": 31,
-    "head_sha": "36556b9724870bc81c7e2fd71287aa37e485dadd",
     "validator_blob_sha": "d5cb2c8c9a21e530c72fb2c8314406580d2883b2",
-    "ci_evidence": "PR #33 Validate MVK run 359 directly executed the same primary-validator blob successfully before refactoring."
+    "evidence_kind": "pre_refactor_behavior_snapshot",
+    "scope": "Stable primary fixture ordering, statuses, and required diagnostic codes captured before the maintainability refactor. No PR head or feature-branch commit is a runtime dependency."
   },
   "stable_cases": [
     {
