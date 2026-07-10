@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-KROAD-009 Layout Structure Vertical Slice
+KROAD-010 Downstream Consumer Contract
 
 ## Status Authority
 
@@ -10,12 +10,12 @@ This file is the authoritative current-status dashboard for roadmap progress aft
 
 `planning/KERNEL_EXECUTION_PLAN.md` remains the durable detailed operating map for item meaning, scope, dependencies, acceptance criteria, evidence requirements, and do-not rules. If an item's status label in the detailed plan is stale, use this file for current roadmap status and update the detailed plan in a later maintenance PR only when changing roadmap meaning, scope, dependency, acceptance criteria, or evidence requirements.
 
-Known detailed-plan status labels: `KROAD-001`, `KROAD-003`, `KROAD-004`, `KROAD-005`, `KROAD-006`, `KROAD-007`, `KROAD-008`, and `KROAD-009` may still show legacy `not_started` status in `planning/KERNEL_EXECUTION_PLAN.md`; those lines are non-authoritative. Current status source for `KROAD-001`, `KROAD-003`, `KROAD-004`, `KROAD-005`, `KROAD-006`, `KROAD-007`, `KROAD-008`, and `KROAD-009` is `planning/NEXT_WORK.md`.
+Known detailed-plan status labels: `KROAD-001`, `KROAD-003`, `KROAD-004`, `KROAD-005`, `KROAD-006`, `KROAD-007`, `KROAD-008`, `KROAD-009`, and `KROAD-010` may still show legacy `not_started` status in `planning/KERNEL_EXECUTION_PLAN.md`; those lines are non-authoritative. Current status source for `KROAD-001`, `KROAD-003`, `KROAD-004`, `KROAD-005`, `KROAD-006`, `KROAD-007`, `KROAD-008`, `KROAD-009`, and `KROAD-010` is `planning/NEXT_WORK.md`.
 
 ## Status Summary
 
-Current completed milestones: KROAD-000, KROAD-001, KROAD-002, KROAD-003, KROAD-004, KROAD-005, KROAD-006, KROAD-007, KROAD-008, KROAD-009.
-Current next task: KROAD-010 — Downstream Consumer Contract.
+Current completed milestones: KROAD-000, KROAD-001, KROAD-002, KROAD-003, KROAD-004, KROAD-005, KROAD-006, KROAD-007, KROAD-008, KROAD-009, KROAD-010.
+Current next task: KROAD-011 — Project Gate Intake.
 Detailed plan: `planning/KERNEL_EXECUTION_PLAN.md`.
 Do not continue from chat history; read this file first.
 
@@ -23,7 +23,7 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
 
 ## Next Task
 
-- [ ] KROAD-010 — Downstream Consumer Contract
+- [ ] KROAD-011 — Project Gate Intake
 
 ## Completed
 
@@ -52,12 +52,13 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
 - [x] KROAD-008 — Resolver Fixtures: valid / invalid / adversarial
   - Update note: This PR completed KROAD-008 by adding `kernel/decision-governance/resolver-fixture-triplet-policy.v0.json`, `kernel/validator/validate-resolver-fixture-triplets.mjs`, `docs/decision-governance/RESOLVER_FIXTURE_TRIPLET_POLICY_KROAD_008.md`, registry triplet coverage for `resolver.rule.layout_structure.mvp.v0@0.1.0`, and `npm run validate:resolver-fixture-triplets` wired into `npm run validate:mvk`. The validator requires valid/invalid/adversarial coverage for every active Resolver MVP rule, reruns deterministic resolver output rather than trusting case names, rejects empty fixture stubs, checks expected diagnostics, requires adversarial distinction metadata, keeps evidence refs synthetic-only, and does not implement KROAD-009+, downstream enforcement, Project Gate intake, runtime/browser evidence, Builder proof, or production readiness.
 - [x] KROAD-009 — Vertical Slice
-  - Update note: This PR completed KROAD-009 for `layout_structure` by adding the machine-readable vertical-slice manifest, valid/schema-valid-but-resolver-wrong/adversarial case triplet, `kernel/validator/validate-kroad-009-vertical-slice.mjs`, and `docs/decision-governance/KROAD_009_LAYOUT_STRUCTURE_VERTICAL_SLICE.md`. The validator connects the existing P0 matrix, active resolver rule and registry entry, Resolver MVP, Decision Record v2 schema, KROAD-008 triplet policy, and KROAD-007 L2 audit; proves a deterministic valid pass, rejects a schema-valid resolver-wrong record with stable L2 diagnostics, keeps a near-valid Grid case unresolvable without availability evidence, and preserves synthetic-only evidence boundaries. KROAD-010+ remain incomplete.
-  - Review note: The second-pass/post-merge review record is preserved in `planning/reviews/KROAD-009_LAYOUT_STRUCTURE_VERTICAL_SLICE_SECOND_PASS_REVIEW.md`; it records merged PR #29 identity, final-head CI evidence, repair and regression verification, formal review-thread disposition, scope boundaries, and the conclusion that KROAD-009 is complete on `main` while KROAD-010 remains not started.
+  - Update note: KROAD-009 completed the `layout_structure` vertical slice by adding the machine-readable manifest, valid/schema-valid-but-resolver-wrong/adversarial case triplet, `kernel/validator/validate-kroad-009-vertical-slice.mjs`, and `docs/decision-governance/KROAD_009_LAYOUT_STRUCTURE_VERTICAL_SLICE.md`. The validator connects the existing P0 matrix, active resolver rule and registry entry, Resolver MVP, Decision Record v2 schema, KROAD-008 triplet policy, and KROAD-007 L2 audit; proves a deterministic valid pass, rejects a schema-valid resolver-wrong record with stable L2 diagnostics, keeps a near-valid Grid case unresolvable without availability evidence, and preserves synthetic-only evidence boundaries. At the time of that PR, KROAD-010+ remained incomplete.
+  - Review note: The second-pass/post-merge review record is preserved in `planning/reviews/KROAD-009_LAYOUT_STRUCTURE_VERTICAL_SLICE_SECOND_PASS_REVIEW.md`; it records merged PR #29 identity, final-head CI evidence, repair and regression verification, formal review-thread disposition, scope boundaries, and the historical conclusion that KROAD-009 was complete on `main` while KROAD-010 had not started.
+- [x] KROAD-010 — Downstream Consumer Contract
+  - Update note: KROAD-010 adds one Kernel-local downstream consumer contract for `rezahh107/EV4-Architect-Repo`: `kernel/schemas/downstream-consumer-contract.v0.schema.json`, `kernel/decision-governance/downstream-consumer-contract.v0.json`, `kernel/validator/validate-downstream-consumer-contract.mjs`, documentation, two valid fixtures, one invalid missing-ref fixture, and two adversarial fixtures. Resolver-backed `layout_structure` consumption requires an immutable Kernel pin plus matrix/card/registry/rule/Decision Record v2/L2/vertical-slice refs; unsupported families become explicit `insufficient_evidence`; synthetic evidence and downstream/runtime/Builder/Project Gate/production overclaims fail with specific diagnostics. This is a Kernel-local contract and simulated consumer evidence only; no downstream repository was modified and live downstream enforcement is not claimed.
 
 ## Remaining Work
 
-- [ ] KROAD-010 — Downstream Consumer Contract
 - [ ] KROAD-011 — Project Gate Intake
 - [ ] KROAD-012 — External Evidence Producer Boundary
 - [ ] KROAD-013 — Runtime / Browser Evidence Layer
@@ -94,6 +95,8 @@ If evidence is missing or uncertain, do not tick the item; add a note explaining
 - KROAD-007 L2 Decision Correctness Audit is limited to resolver-covered families and must rerun the resolver, not act as a second free-text opinion.
 - KROAD-008 fixture triplet coverage is limited to active Resolver MVP rules. The only active family remains `layout_structure`.
 - KROAD-009 provides one Kernel-local end-to-end `layout_structure` pattern only; it is not downstream enforcement or real target-project proof.
+- KROAD-010 selects `EV4-Architect-Repo` as the only initial consumer target and defines a Kernel-local contract only; live downstream enforcement still requires inspected downstream rejection evidence.
+- KROAD-010 requires Decision Record v2, active resolver rule, and L2 result refs for resolver-covered `layout_structure`; unsupported families remain `insufficient_evidence` and cannot borrow another family's resolver artifacts.
 - Human overrides must be explicitly marked.
 - Critical P0 provisional decisions must not pass final release.
 - Unknown decision families must fail closed with halt / insufficient evidence / no free decision.
