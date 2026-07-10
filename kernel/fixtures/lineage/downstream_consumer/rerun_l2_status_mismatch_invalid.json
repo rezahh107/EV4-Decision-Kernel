@@ -1,0 +1,20 @@
+{
+  "fixture_type": "kroad_010_downstream_consumer_lineage_case",
+  "schema_version": "0.1.0",
+  "case_id": "kroad_010.lineage.rerun_l2_status_mismatch.invalid",
+  "base_record_fixture": "kernel/fixtures/valid/downstream_consumer/architect_layout_structure_kernel_consumed_valid.json",
+  "envelope_patch": {
+    "decision_record.selected_option.option_id": "grid",
+    "expected_result.l2_audit_status": "fail"
+  },
+  "expected_result": {
+    "validation_status": "fail",
+    "diagnostic_codes": [
+      "DOWNSTREAM_CONSUMER_L2_STATUS_MISMATCH"
+    ]
+  },
+  "notes": [
+    "Makes the rerun L2 audit fail while the same-envelope result fragment also reports fail.",
+    "This isolates the consumer-declared L2 status mismatch branch."
+  ]
+}
