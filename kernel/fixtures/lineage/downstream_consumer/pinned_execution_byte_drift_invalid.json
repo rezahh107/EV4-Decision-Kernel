@@ -4,7 +4,7 @@
   "case_id": "kroad_010.lineage.pinned_execution_byte_drift.invalid",
   "base_record_fixture": "kernel/fixtures/valid/downstream_consumer/architect_layout_structure_kernel_consumed_valid.json",
   "record_patch": {
-    "kernel_pin.kernel_ref": "67d6e63965f9f12ea57428abe2d9b32dec107eb9"
+    "kernel_pin.kernel_ref": "e7e4826bafbd07709ebe08873936e160ad48a893"
   },
   "expected_result": {
     "validation_status": "fail",
@@ -13,7 +13,7 @@
     ]
   },
   "notes": [
-    "The stale pin contains a lineage gate, but its validator and policy bytes differ from the current acceptance stack.",
-    "A fixed record must not be reinterpreted by newer checkout logic."
+    "The stale pin contains the complete KROAD-010 acceptance file set, including the canonical lock, but predates lifecycle-neutral and prototype-integrity hardening.",
+    "A fixed record must fail on byte drift rather than being reinterpreted by newer checkout logic."
   ]
 }
