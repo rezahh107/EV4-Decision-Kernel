@@ -21,7 +21,7 @@ kernel/fixtures/lineage/downstream_consumer/
 
 ## What this is
 
-KROAD-010 defines a Kernel-owned contract for one simulated Architect consumer output. A resolver-backed consumer record is accepted only when its immutable Kernel pin and required artifact refs are valid and its material Decision Record lineage remains intact.
+KROAD-010 defines a Kernel-owned contract for one simulated Architect consumer output. A resolver-backed consumer record is accepted only when its immutable Kernel pin and required artifact refs are valid, the executable validation stack matches the declared snapshot, and its material Decision Record lineage remains intact.
 
 The initial consumer is exactly:
 
@@ -59,10 +59,40 @@ validate-downstream-consumer-contract.mjs
      unsupported-family misuse, and no-overclaim boundaries
 
 validate-downstream-consumer-lineage.mjs
-  -> Consumer-to-Decision-Record lineage and anti-downgrade checks
+  -> executable-snapshot integrity, Consumer-to-Decision-Record lineage,
+     and anti-downgrade checks
 ```
 
 The second gate is intentionally separate so snapshot mechanics and semantic lineage remain independently reviewable.
+
+## Non-self-referential execution anchor
+
+The final lineage execution stack is anchored at:
+
+```text
+fa30a07ed6316c1c82adeb8639ab8442b93b6a11
+```
+
+That commit contains the final lineage policy and validator plus the package scripts, lockfile, downstream contract validator, contract/schema, Decision Record schema, resolver registry and rule, Resolver MVP, and L2 validator. Consumer fixtures were updated only in later commits and pin this earlier anchor, avoiding a self-referential commit hash.
+
+The lineage validator has a hard-coded execution-file set. The policy independently enumerates the same set. For every evaluated record, each required file must:
+
+```text
+- exist in the pinned commit;
+- exist in the current checkout;
+- match byte-for-byte between the pinned commit and current checkout.
+```
+
+Representative diagnostics:
+
+```text
+DOWNSTREAM_CONSUMER_LINEAGE_EXECUTION_SET_INVALID
+DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_FILE_MISSING
+DOWNSTREAM_CONSUMER_LINEAGE_CURRENT_EXECUTION_FILE_MISSING
+DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_DRIFT
+```
+
+This makes a fixed record and fixed pin reproducible even when the surrounding checkout changes: altered acceptance logic fails closed instead of silently changing the result.
 
 ## Snapshot-bound Kernel pin
 
@@ -135,9 +165,18 @@ invalid/adversarial:
   provisional true represented as false
   wrong downstream owner
   missing or swapped evidence lineage
-  unrelated passing L2 result
+  unrelated-envelope L2 result
+  rerun-L2 status mismatch
+  same-envelope wrong L2 fragment
   wrong matrix fragment
   missing required provenance
+```
+
+The two direct L2 fixtures are:
+
+```text
+kernel/fixtures/lineage/downstream_consumer/rerun_l2_status_mismatch_invalid.json
+kernel/fixtures/lineage/downstream_consumer/same_envelope_wrong_l2_fragment_invalid.json
 ```
 
 Fixtures use a full valid KROAD-010 consumer record as their base and apply explicit machine-readable mutations. This keeps each case focused while the validator still evaluates a complete consumer record and pinned Decision Record envelope.
