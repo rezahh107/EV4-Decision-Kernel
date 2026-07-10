@@ -36,6 +36,11 @@
       "case_id": "snapshot_execution_set_drift",
       "mutation_kind": "snapshot_execution_set_drift",
       "expected_diagnostic": "DOWNSTREAM_CONSUMER_CANONICAL_EXECUTION_SET_MISMATCH"
+    },
+    {
+      "case_id": "lifecycle_status_drift",
+      "mutation_kind": "lifecycle_status_drift",
+      "expected_diagnostic": "DOWNSTREAM_CONSUMER_CANONICAL_LIFECYCLE_STATUS_INVALID"
     }
   ]
 }
