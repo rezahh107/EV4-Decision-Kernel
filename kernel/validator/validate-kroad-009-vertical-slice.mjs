@@ -24,6 +24,17 @@ const FORBIDDEN_TRUE_BOUNDARIES = [
   'project_gate_acceptance_claimed',
   'production_readiness_claimed'
 ];
+const REQUIRED_FALSE_SCOPE_BOUNDARIES = [
+  'new_resolver_mvp_families_added',
+  'kroad_010_downstream_consumer_contract_implemented',
+  'project_gate_intake_implemented',
+  'runtime_browser_evidence_implemented',
+  'reaudit_policy_implemented',
+  'all_p0_coverage_claimed',
+  'downstream_enforcement_claimed',
+  'builder_execution_proof_claimed',
+  'production_readiness_claimed'
+];
 
 function readJson(pathFromRoot) {
   return JSON.parse(readFileSync(join(root, pathFromRoot), 'utf8'));
@@ -104,6 +115,9 @@ function validateArtifactGraph(manifest, matrixRegistry, registry, rule, policy)
   if (manifest.source_evidence_boundary?.synthetic_fixture_evidence_only !== true) diagnostics.push(diagnostic('KROAD_009_SYNTHETIC_BOUNDARY_REQUIRED', 'Manifest must state that fixture evidence is synthetic only.', 'manifest.source_evidence_boundary.synthetic_fixture_evidence_only'));
   for (const field of FORBIDDEN_TRUE_BOUNDARIES) {
     if (manifest.source_evidence_boundary?.[field] !== false) diagnostics.push(diagnostic('KROAD_009_MANIFEST_OVERCLAIM_BOUNDARY_INVALID', `Manifest boundary ${field} must be false.`, `manifest.source_evidence_boundary.${field}`));
+  }
+  for (const field of REQUIRED_FALSE_SCOPE_BOUNDARIES) {
+    if (manifest.boundaries?.[field] !== false) diagnostics.push(diagnostic('KROAD_009_SCOPE_BOUNDARY_INVALID', `KROAD-009 scope boundary ${field} must remain false.`, `manifest.boundaries.${field}`));
   }
 
   return diagnostics;
