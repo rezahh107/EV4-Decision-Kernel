@@ -2,6 +2,7 @@
 
 import {execFileSync} from 'node:child_process';
 import {
+  appendFileSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -13,11 +14,19 @@ import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const ACTIVATION_REF = 'refs/remotes/origin/kroad-010/downstream-consumer-contract';
 const PRIMARY = 'kernel/validator/validate-downstream-consumer-contract.mjs';
 const LOCK = 'kernel/validator/validate-downstream-consumer-canonical-lock.mjs';
 const LINEAGE = 'kernel/validator/validate-downstream-consumer-lineage.mjs';
-const VALIDATORS = Object.freeze({primary: PRIMARY, 'canonical-lock': LOCK, lineage: LINEAGE});
+const PRIMARY_BASELINE = 'tools/validate-kroad-010-primary-baseline.mjs';
+const PROTOTYPE_INTEGRITY = 'tools/validate-kroad-010-prototype-integrity.mjs';
+const SHA_PATTERN = /^[0-9a-f]{40}$/;
+const VALIDATORS = Object.freeze({
+  primary: PRIMARY,
+  'primary-baseline': PRIMARY_BASELINE,
+  'canonical-lock': LOCK,
+  lineage: LINEAGE,
+  'prototype-integrity': PROTOTYPE_INTEGRITY,
+});
 
 const ORDINARY_FIXTURES = Object.freeze([
   'kernel/fixtures/valid/downstream_consumer/architect_layout_structure_kernel_consumed_valid.json',
@@ -29,11 +38,11 @@ const ORDINARY_FIXTURES = Object.freeze([
   'kernel/fixtures/adversarial/downstream_consumer/architect_layout_structure_insufficient_with_fake_decision_adversarial.json',
 ]);
 
-function run(command, args, cwd, options = {}) {
+function run(command, args, cwd, {capture = false} = {}) {
   return execFileSync(command, args, {
     cwd,
     encoding: 'utf8',
-    stdio: options.capture ? ['ignore', 'pipe', 'pipe'] : 'inherit',
+    stdio: capture ? ['ignore', 'pipe', 'pipe'] : 'inherit',
   });
 }
 
@@ -61,13 +70,7 @@ function activatePackage(worktree) {
     .map((part) => part.trim())
     .filter(Boolean)
     .filter((command) => ![primaryCommand, lockCommand, lineageCommand].includes(command));
-
-  scripts['validate:mvk'] = [
-    ...existing,
-    primaryCommand,
-    lockCommand,
-    lineageCommand,
-  ].join(' && ');
+  scripts['validate:mvk'] = [...existing, primaryCommand, lockCommand, lineageCommand].join(' && ');
   pkg.scripts = scripts;
   writeJson(worktree, 'package.json', pkg);
 }
@@ -83,23 +86,24 @@ function repinOrdinaryFixtures(worktree, bootstrapHead) {
   }
 }
 
-function createSyntheticValidationHistory(worktree, bootstrapHead) {
-  const activationHead = run('git', ['rev-parse', ACTIVATION_REF], worktree, {capture: true}).trim();
-  if (!/^[0-9a-f]{40}$/.test(activationHead)) {
-    throw new Error(`Activation branch head is unavailable: ${activationHead}`);
-  }
-
-  const syntheticHead = run('git', [
+function commitSyntheticActivation(worktree) {
+  run('git', ['add', 'package.json', ...ORDINARY_FIXTURES], worktree);
+  run('git', [
     '-c', 'user.name=EV4 Bootstrap Harness',
     '-c', 'user.email=bootstrap@ev4.local',
-    'commit-tree', `${bootstrapHead}^{tree}`,
-    '-p', bootstrapHead,
-    '-p', activationHead,
-    '-m', 'Synthetic KROAD-010 bootstrap validation history',
-  ], worktree, {capture: true}).trim();
+    'commit', '-m', 'Synthetic committed KROAD-010 activation for bootstrap validation',
+  ], worktree);
+  return run('git', ['rev-parse', 'HEAD'], worktree, {capture: true}).trim();
+}
 
-  run('git', ['checkout', '--detach', syntheticHead], worktree);
-  return {activationHead, syntheticHead};
+function assertClean(worktree) {
+  const status = run(
+    'git',
+    ['status', '--porcelain', '--untracked-files=all'],
+    worktree,
+    {capture: true},
+  );
+  if (status.trim()) throw new Error(`Bootstrap synthetic worktree is dirty:\n${status}`);
 }
 
 function executeValidator(worktree, label, path) {
@@ -115,7 +119,7 @@ function main() {
   }
 
   const bootstrapHead = run('git', ['rev-parse', 'HEAD'], ROOT, {capture: true}).trim();
-  if (!/^[0-9a-f]{40}$/.test(bootstrapHead)) {
+  if (!SHA_PATTERN.test(bootstrapHead)) {
     throw new Error(`Expected a full bootstrap commit SHA, received: ${bootstrapHead}`);
   }
 
@@ -127,22 +131,34 @@ function main() {
     run('git', ['worktree', 'add', '--detach', worktree, bootstrapHead], ROOT);
     worktreeAdded = true;
 
-    const {activationHead, syntheticHead} = createSyntheticValidationHistory(
-      worktree,
-      bootstrapHead,
-    );
-    console.log(`BOOTSTRAP_VALIDATION_HISTORY bootstrap=${bootstrapHead} activation=${activationHead} synthetic=${syntheticHead}`);
-
-    symlinkSync(join(ROOT, 'node_modules'), join(worktree, 'node_modules'), 'dir');
     activatePackage(worktree);
     repinOrdinaryFixtures(worktree, bootstrapHead);
+    const syntheticActivation = commitSyntheticActivation(worktree);
 
+    const exclude = run(
+      'git',
+      ['rev-parse', '--git-path', 'info/exclude'],
+      worktree,
+      {capture: true},
+    ).trim();
+    appendFileSync(exclude, '\n/node_modules\n');
+    symlinkSync(join(ROOT, 'node_modules'), join(worktree, 'node_modules'), 'dir');
+
+    run('git', ['merge-base', '--is-ancestor', bootstrapHead, syntheticActivation], worktree);
+    assertClean(worktree);
+
+    console.log(
+      `BOOTSTRAP_COMMITTED_VALIDATION_HISTORY bootstrap=${bootstrapHead} activation=${syntheticActivation}`,
+    );
     const selected = requested === 'all'
       ? Object.entries(VALIDATORS)
       : [[requested, VALIDATORS[requested]]];
     for (const [label, path] of selected) executeValidator(worktree, label, path);
+    assertClean(worktree);
 
-    console.log(`KROAD-010 bootstrap direct execution: PASS mode=${requested} head=${bootstrapHead}`);
+    console.log(
+      `KROAD-010 bootstrap direct execution: PASS mode=${requested} head=${bootstrapHead}`,
+    );
   } finally {
     if (worktreeAdded) {
       try {

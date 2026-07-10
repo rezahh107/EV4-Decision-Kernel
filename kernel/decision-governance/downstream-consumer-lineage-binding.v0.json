@@ -44,14 +44,16 @@
     "kernel/fixtures/lineage/downstream_consumer/evidence_lineage_mismatch_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/evidence_limitations_mismatch_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_record_patch_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_record_constructor_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_record_prototype_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_envelope_patch_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_envelope_constructor_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_envelope_prototype_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/unrelated_l2_result_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/rerun_l2_status_mismatch_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/same_envelope_wrong_l2_fragment_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/wrong_matrix_fragment_invalid.json",
-    "kernel/fixtures/lineage/downstream_consumer/missing_provenance_invalid.json",
-    "kernel/fixtures/lineage/downstream_consumer/missing_pinned_execution_stack_invalid.json",
-    "kernel/fixtures/lineage/downstream_consumer/pinned_execution_byte_drift_invalid.json"
+    "kernel/fixtures/lineage/downstream_consumer/missing_provenance_invalid.json"
   ],
   "boundaries": {
     "downstream_repository_modified": false,

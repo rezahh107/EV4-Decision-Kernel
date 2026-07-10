@@ -1,0 +1,92 @@
+{
+  "fixture_type": "kroad_010_primary_validator_baseline",
+  "schema_version": "0.1.0",
+  "captured_from": {
+    "pr": 31,
+    "head_sha": "36556b9724870bc81c7e2fd71287aa37e485dadd",
+    "validator_blob_sha": "d5cb2c8c9a21e530c72fb2c8314406580d2883b2",
+    "ci_evidence": "PR #33 Validate MVK run 359 directly executed the same primary-validator blob successfully before refactoring."
+  },
+  "stable_cases": [
+    {
+      "path": "valid/downstream_consumer/architect_layout_structure_kernel_consumed_valid.json",
+      "expected_status": "pass",
+      "required_diagnostic_codes": []
+    },
+    {
+      "path": "valid/downstream_consumer/architect_layout_structure_insufficient_evidence_valid.json",
+      "expected_status": "insufficient_evidence",
+      "required_diagnostic_codes": ["DOWNSTREAM_CONSUMER_ACTIVE_FAMILY_INSUFFICIENT_EVIDENCE"]
+    },
+    {
+      "path": "valid/downstream_consumer/architect_media_choice_insufficient_evidence_valid.json",
+      "expected_status": "insufficient_evidence",
+      "required_diagnostic_codes": ["DOWNSTREAM_CONSUMER_RESOLVER_FAMILY_UNSUPPORTED"]
+    },
+    {
+      "path": "invalid/downstream_consumer/architect_layout_structure_missing_kernel_refs_invalid.json",
+      "expected_status": "fail",
+      "required_diagnostic_codes": [
+        "DOWNSTREAM_CONSUMER_REQUIRED_KERNEL_REF_MISSING",
+        "DOWNSTREAM_CONSUMER_DECISION_RECORD_REF_REQUIRED",
+        "DOWNSTREAM_CONSUMER_L2_AUDIT_RESULT_REF_REQUIRED"
+      ]
+    },
+    {
+      "path": "adversarial/downstream_consumer/architect_unsupported_family_resolver_backed_adversarial.json",
+      "expected_status": "fail",
+      "required_diagnostic_codes": ["DOWNSTREAM_CONSUMER_UNSUPPORTED_RESOLVER_FAMILY"]
+    },
+    {
+      "path": "adversarial/downstream_consumer/architect_synthetic_evidence_overclaim_adversarial.json",
+      "expected_status": "fail",
+      "required_diagnostic_codes": [
+        "DOWNSTREAM_CONSUMER_OVERCLAIM_DOWNSTREAM_ENFORCEMENT",
+        "DOWNSTREAM_CONSUMER_OVERCLAIM_REAL_TARGET_PROJECT_PROOF",
+        "DOWNSTREAM_CONSUMER_OVERCLAIM_PRODUCTION_READINESS"
+      ]
+    },
+    {
+      "path": "adversarial/downstream_consumer/architect_layout_structure_insufficient_with_fake_decision_adversarial.json",
+      "expected_status": "fail",
+      "required_diagnostic_codes": [
+        "DOWNSTREAM_CONSUMER_INSUFFICIENT_EVIDENCE_DECISION_FIELDS_FORBIDDEN",
+        "DOWNSTREAM_CONSUMER_INSUFFICIENT_EVIDENCE_ARTIFACT_REFS_FORBIDDEN",
+        "DOWNSTREAM_CONSUMER_MISSING_REF_SET_MISMATCH"
+      ]
+    },
+    {
+      "path": "adversarial/downstream_consumer/architect_unknown_kernel_commit_adversarial.json",
+      "expected_status": "fail",
+      "required_diagnostic_codes": ["DOWNSTREAM_CONSUMER_PINNED_COMMIT_UNAVAILABLE"]
+    },
+    {
+      "path": "adversarial/downstream_consumer/architect_ancestor_missing_contract_adversarial.json",
+      "expected_status": "fail",
+      "required_diagnostic_codes": ["DOWNSTREAM_CONSUMER_PINNED_CONTRACT_MISSING"]
+    }
+  ],
+  "migrated_history_cases": [
+    {
+      "former_path": "adversarial/downstream_consumer/architect_working_tree_drift_adversarial.json",
+      "former_expected_status": "fail",
+      "former_required_diagnostic_codes": ["DOWNSTREAM_CONSUMER_PINNED_ARTIFACT_MISSING"],
+      "new_owner": "tools/validate-kroad-010-history-matrix.mjs",
+      "reason": "The former case depended on a feature-branch commit. It is now materialized against runtime history roles inside a disposable committed Git history."
+    },
+    {
+      "former_path": "lineage/downstream_consumer/missing_pinned_execution_stack_invalid.json",
+      "former_expected_status": "fail",
+      "former_required_diagnostic_codes": ["DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_FILE_MISSING"],
+      "new_owner": "tools/validate-kroad-010-history-matrix.mjs",
+      "reason": "The former case depended on a transient feature commit. The matrix now creates an incomplete ancestor at runtime."
+    },
+    {
+      "former_path": "lineage/downstream_consumer/pinned_execution_byte_drift_invalid.json",
+      "former_expected_status": "fail",
+      "former_required_diagnostic_codes": ["DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_DRIFT"],
+      "new_owner": "tools/validate-kroad-010-history-matrix.mjs",
+      "reason": "The matrix creates stale_anchor and bootstrap_anchor commits on the simulated main line for merge, squash, and rebase histories."
+    }
+  ]
+}

@@ -95,8 +95,7 @@
       "kernel/fixtures/adversarial/downstream_consumer/architect_synthetic_evidence_overclaim_adversarial.json",
       "kernel/fixtures/adversarial/downstream_consumer/architect_layout_structure_insufficient_with_fake_decision_adversarial.json",
       "kernel/fixtures/adversarial/downstream_consumer/architect_unknown_kernel_commit_adversarial.json",
-      "kernel/fixtures/adversarial/downstream_consumer/architect_ancestor_missing_contract_adversarial.json",
-      "kernel/fixtures/adversarial/downstream_consumer/architect_working_tree_drift_adversarial.json"
+      "kernel/fixtures/adversarial/downstream_consumer/architect_ancestor_missing_contract_adversarial.json"
     ]
   },
   "lineage_cases": [
@@ -107,14 +106,16 @@
     "kernel/fixtures/lineage/downstream_consumer/evidence_lineage_mismatch_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/evidence_limitations_mismatch_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_record_patch_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_record_constructor_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_record_prototype_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_envelope_patch_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_envelope_constructor_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_envelope_prototype_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/unrelated_l2_result_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/rerun_l2_status_mismatch_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/same_envelope_wrong_l2_fragment_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/wrong_matrix_fragment_invalid.json",
-    "kernel/fixtures/lineage/downstream_consumer/missing_provenance_invalid.json",
-    "kernel/fixtures/lineage/downstream_consumer/missing_pinned_execution_stack_invalid.json",
-    "kernel/fixtures/lineage/downstream_consumer/pinned_execution_byte_drift_invalid.json"
+    "kernel/fixtures/lineage/downstream_consumer/missing_provenance_invalid.json"
   ],
   "no_overclaim_boundaries": {
     "consumer_repository_modified": false,
