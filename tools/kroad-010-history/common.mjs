@@ -148,6 +148,41 @@ export function sourceMainSha() {
   );
 }
 
+export function sourceIncompleteAnchor() {
+  const main = sourceMainSha();
+
+  try {
+    git(ROOT, ['cat-file', '-e', `${main}:${MANIFEST_PATH}`]);
+  } catch {
+    throw new MatrixError(
+      'HISTORY_MATRIX_MAIN_BOOTSTRAP_MISSING',
+      `Current main ${main} does not contain ${MANIFEST_PATH}.`,
+    );
+  }
+
+  const firstParentCommits = git(
+    ROOT,
+    ['rev-list', '--first-parent', main],
+    {capture: true},
+  )
+    .trim()
+    .split('\n')
+    .filter(Boolean);
+
+  for (const commit of firstParentCommits) {
+    try {
+      git(ROOT, ['cat-file', '-e', `${commit}:${MANIFEST_PATH}`]);
+    } catch {
+      return commit;
+    }
+  }
+
+  throw new MatrixError(
+    'HISTORY_MATRIX_INCOMPLETE_ANCHOR_UNAVAILABLE',
+    `No first-parent commit before ${MANIFEST_PATH} was found from ${main}.`,
+  );
+}
+
 export function assertMethodSet(methods) {
   const actual = [...new Set(methods)].sort();
   const expected = [...REQUIRED_METHODS].sort();
