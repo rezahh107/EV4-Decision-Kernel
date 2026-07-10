@@ -1,0 +1,19 @@
+{
+  "fixture_type": "kroad_010_downstream_consumer_lineage_case",
+  "schema_version": "0.1.0",
+  "case_id": "kroad_010.lineage.prototype_pollution_record_patch.invalid",
+  "base_record_fixture": "kernel/fixtures/valid/downstream_consumer/architect_layout_structure_kernel_consumed_valid.json",
+  "record_patch": {
+    "__proto__.polluted": "yes"
+  },
+  "expected_result": {
+    "validation_status": "fail",
+    "diagnostic_codes": [
+      "DOWNSTREAM_CONSUMER_FIXTURE_PATCH_PATH_FORBIDDEN"
+    ]
+  },
+  "notes": [
+    "Attempts prototype pollution through record_patch.",
+    "The validator must reject the path before any mutation and preserve Object.prototype integrity."
+  ]
+}

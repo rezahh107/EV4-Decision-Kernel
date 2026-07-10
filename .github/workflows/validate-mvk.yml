@@ -13,8 +13,11 @@ jobs:
   validate-mvk:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout exact repository head with full history
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Node.js LTS
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -25,8 +28,42 @@ jobs:
       - name: Install MVK validator dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
 
-      - name: Validate MVK fixtures and gates
+      - name: Validate KROAD-010 source syntax and JSON
+        run: |
+          node --check kernel/validator/validate-downstream-consumer-contract.mjs
+          node --check kernel/validator/validate-downstream-consumer-canonical-lock.mjs
+          node --check kernel/validator/validate-downstream-consumer-lineage.mjs
+          node --check tools/validate-kroad-010-bootstrap.mjs
+          node --check tools/validate-kroad-010-primary-baseline.mjs
+          node --check tools/validate-kroad-010-prototype-integrity.mjs
+          node -e "for (const p of process.argv.slice(1)) JSON.parse(require('node:fs').readFileSync(p, 'utf8'))" \
+            kernel/decision-governance/downstream-consumer-contract.v0.json \
+            kernel/decision-governance/downstream-consumer-lineage-binding.v0.json \
+            kernel/fixtures/contract-lock/downstream_consumer/canonical_lock_mutations.json \
+            kernel/fixtures/contract-lock/downstream_consumer/primary-validator-baseline.v0.json
+
+      - name: Validate existing MVK fixtures and gates
         run: npm run validate:mvk
 
       - name: Validate roadmap memory consistency
         run: npm run validate:roadmap-memory
+
+      - name: Directly execute KROAD-010 bootstrap primary validator
+        if: ${{ always() }}
+        run: node tools/validate-kroad-010-bootstrap.mjs primary
+
+      - name: Verify KROAD-010 primary behavior baseline
+        if: ${{ always() }}
+        run: node tools/validate-kroad-010-bootstrap.mjs primary-baseline
+
+      - name: Directly execute KROAD-010 bootstrap canonical lock
+        if: ${{ always() }}
+        run: node tools/validate-kroad-010-bootstrap.mjs canonical-lock
+
+      - name: Directly execute KROAD-010 bootstrap lineage validator
+        if: ${{ always() }}
+        run: node tools/validate-kroad-010-bootstrap.mjs lineage
+
+      - name: Verify KROAD-010 prototype integrity
+        if: ${{ always() }}
+        run: node tools/validate-kroad-010-bootstrap.mjs prototype-integrity
