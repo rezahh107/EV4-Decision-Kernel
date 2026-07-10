@@ -100,6 +100,14 @@ export function runMutationGuards(
   config,
 ) {
   const mutations = [];
+  const firstWorktree = matrixResults[0]?.worktree;
+  if (!firstWorktree) {
+    throw new MatrixError(
+      'HISTORY_MATRIX_WORKTREE_MISSING',
+      'No validated worktree is available in matrix results.',
+    );
+  }
+
   mutations.push(expectFailure(
     'skip_history_method',
     'HISTORY_MATRIX_METHOD_SET_INVALID',
@@ -108,7 +116,14 @@ export function runMutationGuards(
 
   const mergeHead = matrixResults
     .find((item) => item.method === 'merge_commit')
-    .head;
+    ?.head;
+  if (!mergeHead) {
+    throw new MatrixError(
+      'HISTORY_MATRIX_MERGE_HEAD_MISSING',
+      'No merge_commit head is available in matrix results.',
+    );
+  }
+
   const staleSide = createSideCommit(
     repository,
     roles.staleAnchor,
@@ -143,12 +158,12 @@ export function runMutationGuards(
     ),
   ));
 
-  const dirtyPath = join(matrixResults[0].worktree, '.history-matrix-dirty');
+  const dirtyPath = join(firstWorktree, '.history-matrix-dirty');
   writeFileSync(dirtyPath, 'dirty\n');
   mutations.push(expectFailure(
     'dirty_worktree',
     'HISTORY_MATRIX_WORKTREE_DIRTY',
-    () => assertClean(matrixResults[0].worktree),
+    () => assertClean(firstWorktree),
   ));
   rmSync(dirtyPath, {force: true});
 
@@ -161,7 +176,7 @@ export function runMutationGuards(
   ));
 
   const fixture = readJson(
-    matrixResults[0].worktree,
+    firstWorktree,
     ORDINARY_PIN_FIXTURES[0],
   );
   fixture.record.kernel_pin.kernel_ref = roles.staleAnchor;
