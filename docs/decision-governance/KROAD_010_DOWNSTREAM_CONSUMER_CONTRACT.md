@@ -5,14 +5,20 @@
 **Owner:** Kernel  
 **Intended consumer:** Architect decision-output boundary
 
+## Status authority
+
+Mutable roadmap and activation state belongs only in `planning/NEXT_WORK.md`.
+
+The byte-pinned manifest is lifecycle-neutral. Its `status` identifies the contract definition and its `next_allowed_step` delegates roadmap progression to `planning/NEXT_WORK.md`; neither field is changed merely to mark KROAD-010 complete.
+
 ## Current state
 
-KROAD-010 is not complete on `main` yet.
+KROAD-010 is not complete on verified `main` history yet.
 
 The implementation is split into two controlled stages:
 
-1. a bootstrap PR lands the final byte-stable acceptance semantics on `main` without activating Consumer Records;
-2. the activation PR pins ordinary Consumer Records to that actual `main` commit, enables all gates, and proves the resulting history.
+1. PR #33 lands and directly executes the final byte-stable acceptance semantics on `main` without activating Consumer Records;
+2. PR #31 pins ordinary Consumer Records to that actual `main` commit, enables all gates, and proves the resulting histories.
 
 Until both stages pass exact-head CI and post-merge-history validation, KROAD-011 is not an available next task.
 
@@ -40,21 +46,19 @@ validate-downstream-consumer-contract.mjs
      unsupported-family misuse, and no-overclaim boundaries
 
 validate-downstream-consumer-canonical-lock.mjs
-  -> canonical manifest/policy parity, package script identity,
-     validate:mvk gate presence/uniqueness/order, and mutation regressions
+  -> lifecycle-neutral manifest, manifest/policy parity, package script
+     identity, validate:mvk gate uniqueness/order, and mutation regressions
 
 validate-downstream-consumer-lineage.mjs
-  -> immutable acceptance-semantics snapshot, Consumer-to-Decision-Record
-     lineage, evidence limitations, and anti-downgrade checks
+  -> immutable acceptance snapshot, Consumer-to-Decision-Record lineage,
+     evidence limitations, patch-path safety, and anti-downgrade checks
 ```
 
 The gates remain separate so record semantics, repository orchestration, and Decision Record lineage are independently reviewable.
 
 ## Bootstrap and immutable pin design
 
-A feature-branch commit is not a merge-method-independent durable anchor. Squash and rebase can replace feature-branch ancestry.
-
-The accepted design therefore requires a bootstrap commit that already exists on `main` before ordinary Consumer Records are pinned.
+A feature-branch commit is not a merge-method-independent durable anchor. The accepted design requires a bootstrap commit that already exists on `main` before ordinary Consumer Records are pinned.
 
 The immutable snapshot contains acceptance-semantic files only:
 
@@ -74,94 +78,72 @@ kernel/validator/validate-l2-decision-correctness.mjs
 
 `package.json` and `package-lock.json` are orchestration files, not immutable record semantics. Their exact scripts and MVK ordering are enforced by the canonical-lock gate instead of byte-pinning them across bootstrap and activation.
 
-For every evaluated record, each acceptance-semantic file must:
+For every evaluated record, each acceptance-semantic file must exist in the pinned main-history commit and current checkout and match byte-for-byte.
+
+No final anchor SHA is documented until PR #33 is actually merged and the resulting `main` commit is verified.
+
+## Bootstrap-specific execution evidence
+
+PR #33 contains `tools/validate-kroad-010-bootstrap.mjs` and a dedicated Workflow step.
+
+The harness creates a detached temporary worktree at the exact PR head, activates package wiring only inside that temporary worktree, repins ordinary test records to the same head, and directly executes:
 
 ```text
-- exist in the pinned main-history commit;
-- exist in the current checkout;
-- match byte-for-byte between the pinned commit and current checkout.
+primary
+canonical-lock
+lineage
 ```
 
-Representative diagnostics:
+The bootstrap branch itself does not activate KROAD-010 in `package.json`. A green legacy MVK run alone is not accepted as bootstrap execution evidence.
+
+## Fixture patch security
+
+Fixture JSON is untrusted input.
+
+The lineage patcher rejects these path segments before mutation:
 
 ```text
-DOWNSTREAM_CONSUMER_LINEAGE_EXECUTION_SET_INVALID
-DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_FILE_MISSING
-DOWNSTREAM_CONSUMER_LINEAGE_CURRENT_EXECUTION_FILE_MISSING
-DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_DRIFT
+__proto__
+prototype
+constructor
 ```
 
-No final anchor SHA is documented until the bootstrap PR is actually merged and the resulting `main` commit is verified.
+It also requires allowlisted roots, numeric array indexes, own-property traversal, and plain-object or array containers. The same guard applies to `record_patch` and `envelope_patch`.
+
+Direct adversarial cases are:
+
+```text
+kernel/fixtures/lineage/downstream_consumer/prototype_pollution_record_patch_invalid.json
+kernel/fixtures/lineage/downstream_consumer/prototype_pollution_envelope_patch_invalid.json
+```
+
+Both require:
+
+```text
+DOWNSTREAM_CONSUMER_FIXTURE_PATCH_PATH_FORBIDDEN
+```
+
+The validator additionally checks that `Object.prototype` remains unchanged during its bootstrap security self-test.
 
 ## Evidence lineage
 
-A consumer must preserve:
+A consumer must preserve evidence ID, evidence tier, source type, evidence ref, and normalized material limitations.
 
-```text
-- evidence ID;
-- evidence tier;
-- source type;
-- evidence ref;
-- normalized material limitations.
-```
-
-Limitation order and duplicate strings are non-semantic after trim/dedup/sort normalization. Removing, adding, or rewriting a material limitation is semantic drift and must fail with:
+Limitation order and duplicate strings are non-semantic after trim/dedup/sort normalization. Removing, adding, or rewriting a material limitation fails with:
 
 ```text
 DOWNSTREAM_CONSUMER_EVIDENCE_LIMITATIONS_MISMATCH
-```
-
-The normal lineage runner includes both:
-
-```text
-kernel/fixtures/lineage/downstream_consumer/evidence_limitations_mismatch_invalid.json
-kernel/fixtures/lineage/downstream_consumer/evidence_limitations_reordered_equivalent_valid.json
-```
-
-## Full Decision Record binding
-
-The lineage gate also binds:
-
-```text
-- provisional state;
-- downstream owner;
-- rerun L2 status;
-- L2 result from the same envelope;
-- exact matrix fragment;
-- contract, Decision Record, and vertical-slice provenance.
-```
-
-Representative diagnostics:
-
-```text
-DOWNSTREAM_CONSUMER_PROVISIONAL_STATUS_MISMATCH
-DOWNSTREAM_CONSUMER_DECISION_OWNER_MISMATCH
-DOWNSTREAM_CONSUMER_EVIDENCE_LINEAGE_MISMATCH
-DOWNSTREAM_CONSUMER_EVIDENCE_LIMITATIONS_MISMATCH
-DOWNSTREAM_CONSUMER_L2_STATUS_MISMATCH
-DOWNSTREAM_CONSUMER_L2_RESULT_ENVELOPE_MISMATCH
-DOWNSTREAM_CONSUMER_L2_AUDIT_RESULT_REF_MISMATCH
-DOWNSTREAM_CONSUMER_MATRIX_REF_MISMATCH
-DOWNSTREAM_CONSUMER_PROVENANCE_REF_MISSING
 ```
 
 ## Canonical regression lock
 
-The canonical lock requires:
-
-```text
-validate:downstream-consumer-contract
-validate:downstream-consumer-canonical-lock
-validate:downstream-consumer-lineage
-```
-
-Each gate must appear exactly once in `validate:mvk` and in this order:
+The canonical lock requires these gates exactly once in `validate:mvk` and in this order:
 
 ```text
 primary -> canonical-lock -> lineage
 ```
 
-The mutation suite verifies failure when a gate is removed, renamed, duplicated, reordered, or when manifest/policy case sets or the immutable execution set drift.
+The mutation suite verifies failure when a gate is removed, renamed, duplicated, reordered, when manifest/policy or execution sets drift, or when mutable lifecycle wording is reintroduced into the pinned manifest.
 
 ## `insufficient_evidence` is not a decision channel
 
@@ -194,7 +176,7 @@ npm run validate:roadmap-memory
 
 KROAD-010 may be marked complete only after:
 
-1. the byte-stable bootstrap stack is merged to `main`;
+1. the byte-stable bootstrap stack is independently reviewed and merged to `main`;
 2. ordinary records are pinned to the verified bootstrap commit on `main`;
 3. exact-head CI passes on the activation PR;
 4. merge, squash, and rebase history simulations preserve valid-record behavior;
