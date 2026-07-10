@@ -18,7 +18,7 @@ kernel/fixtures/adversarial/downstream_consumer/
 
 ## What this is
 
-KROAD-010 defines a Kernel-owned contract for an Architect output that consumes a Kernel-governed decision explicitly. It prevents a resolver-covered decision from being represented as Kernel-backed unless the consumer record names the relevant matrix/card, active resolver rule, Decision Record v2, L2 audit contract/result, evidence/provenance, and immutable Kernel pin.
+KROAD-010 defines a Kernel-owned contract for an Architect output that consumes a Kernel-governed decision explicitly. A resolver-backed record is accepted only when it identifies an immutable Kernel commit and all required artifacts resolve from that exact commit snapshot.
 
 The initial consumer is exactly:
 
@@ -27,7 +27,7 @@ rezahh107/EV4-Architect-Repo
 role: architect
 ```
 
-Architect was selected because Architect owns candidate generation, comparison, selection, and decision records, and the Kernel already has an Architect source/card consumption boundary. Extending that boundary is the smallest safe first consumer contract.
+Architect was selected because it owns candidate generation, comparison, selection, and decision records, and the Kernel already has an Architect source/card consumption boundary. Extending that boundary is the smallest safe first consumer contract.
 
 ## What this is not
 
@@ -44,165 +44,110 @@ Architect was selected because Architect owns candidate generation, comparison, 
 - not production readiness
 ```
 
-The fixtures simulate a consumer record inside the Kernel repository. They demonstrate the contract and deterministic rejection behavior only. Actual downstream enforcement requires a later inspected change in the selected downstream repository.
+The fixtures simulate consumer records inside the Kernel repository. Actual downstream enforcement still requires inspected rejection behavior in the selected downstream repository.
 
-## Contract shape
+## Snapshot-bound Kernel pin
 
-Every record identifies:
+`kernel_pin.kernel_ref` is not accepted merely because it looks like a SHA. The validator requires that the commit:
 
 ```text
-consumer identity
-immutable Kernel commit pin
-decision family
-consumption status
-Kernel artifact refs
-Decision Record v2 output identity
-resolver rule ID/version when resolver-backed
-L2 audit status/result ref
-evidence and provenance refs
-unsupported/provisional/missing-ref handling
-explicit no-overclaim acknowledgements
-claims and limitations
+- exists in the local Git object database;
+- is an ancestor of the validation head;
+- contains the KROAD-010 contract path;
+- contains every referenced matrix, card, registry, rule, schema, Decision Record, L2 result, and vertical-slice artifact;
+- matches the current executable validation files used to rerun L2.
 ```
 
-Supported consumption statuses are:
+All referenced JSON is read with `git show <pinned-commit>:<path>`. The validator never falls back to the working tree when a pinned artifact is absent. CI checks out the pull-request head with full history so these checks are deterministic.
+
+Important pin diagnostics include:
+
+```text
+DOWNSTREAM_CONSUMER_PINNED_COMMIT_UNAVAILABLE
+DOWNSTREAM_CONSUMER_PINNED_COMMIT_NOT_ANCESTOR
+DOWNSTREAM_CONSUMER_PINNED_CONTRACT_MISSING
+DOWNSTREAM_CONSUMER_PINNED_ARTIFACT_MISSING
+DOWNSTREAM_CONSUMER_PINNED_EXECUTION_DRIFT
+```
+
+## Consumption states
 
 ```text
 kernel_consumed
 insufficient_evidence
 ```
 
-## Resolver-covered `layout_structure` path
+### `kernel_consumed`
 
-`layout_structure` is the only active Resolver MVP family. A `kernel_consumed` Architect record must reference the live Kernel graph:
+For resolver-covered `layout_structure`, the pinned snapshot must provide the exact matrix, decision card, resolver registry and rule, Decision Record v2 schema and record, L2 contract and passing result, and KROAD-009 vertical slice. The validator reads the referenced Decision Record from the pinned snapshot, reruns L2, and compares decision identity, resolver status, selected option, rule ID/version, provisional state, and evidence refs.
+
+### `insufficient_evidence`
+
+`insufficient_evidence` is a halt state, not a weaker decision channel. It requires:
 
 ```text
-matrix:
-  kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.layout_structure.v0
-
-decision card:
-  kernel/decision-cards/elements.core.v0.json#v4.<selected_option>
-
-resolver registry:
-  kernel/decision-governance/resolver-rule-registry.v0.json
-
-resolver rule:
-  kernel/decision-governance/resolver-rules/layout-structure.v0.json#resolver.rule.layout_structure.mvp.v0@0.1.0
-
-Decision Record v2 schema:
-  kernel/schemas/decision-record.v2.schema.json
-
-Decision Record output:
-  an explicit `#decision_record` reference
-
-L2 audit contract:
-  kernel/validator/validate-l2-decision-correctness.mjs#auditDecisionRecord
-
-L2 audit result:
-  an explicit referenced result with `pass`
-
-KROAD-009 vertical slice:
-  kernel/decision-governance/kroad-009-layout-structure-vertical-slice.v0.json
+decision_id: null
+resolver_status: null
+selected_option_id: null
+rule_id: null
+rule_version: null
+provisional: true
 ```
 
-The validator loads the referenced Decision Record envelope, reruns the existing L2 audit, and compares the consumer-declared decision ID, resolver status, selected option, rule ID/version, provisional state, and evidence refs with the referenced record.
+Decision-bearing refs must also be null:
 
-## Missing-reference behavior
+```text
+decision_card_ref
+resolver_rule_ref
+decision_record_ref
+l2_audit_result_ref
+vertical_slice_ref
+```
 
-For a resolver-covered `kernel_consumed` record, any required Kernel ref that is null, empty, unreadable, or mismatched causes deterministic failure. Important diagnostics include:
+`missing_kernel_refs` must equal that exact null-ref set, and evidence must be represented as `evidence_gap`. A covered family may use `l2_audit_status: not_run`; a resolver-uncovered family uses `l2_audit_status: unsupported`. Any retained fake decision or resolver carrier fails deterministically.
+
+## Missing-reference and unsupported-family behavior
+
+A claimed `kernel_consumed` record with missing refs fails closed. A family without an active resolver rule cannot borrow `layout_structure` artifacts and must remain no-decision `insufficient_evidence`.
+
+Representative diagnostics:
 
 ```text
 DOWNSTREAM_CONSUMER_REQUIRED_KERNEL_REF_MISSING
 DOWNSTREAM_CONSUMER_DECISION_RECORD_REF_REQUIRED
 DOWNSTREAM_CONSUMER_L2_AUDIT_RESULT_REF_REQUIRED
-DOWNSTREAM_CONSUMER_KERNEL_REF_MISMATCH
-DOWNSTREAM_CONSUMER_REFERENCED_L2_AUDIT_NOT_PASS
-```
-
-The contract does not guess missing refs and does not silently downgrade a claimed `kernel_consumed` record.
-
-## Unsupported-family behavior
-
-A P0 matrix family without an active resolver rule cannot be presented as resolver-backed. The honest path is:
-
-```text
-consumption_status: insufficient_evidence
-l2_audit_status: unsupported
-provisional: true
-missing_kernel_refs: non-empty
-```
-
-The validator emits the warning:
-
-```text
-DOWNSTREAM_CONSUMER_RESOLVER_FAMILY_UNSUPPORTED
-```
-
-Trying to reuse the `layout_structure` rule or Decision Record for another family fails with:
-
-```text
+DOWNSTREAM_CONSUMER_INSUFFICIENT_EVIDENCE_DECISION_FIELDS_FORBIDDEN
+DOWNSTREAM_CONSUMER_INSUFFICIENT_EVIDENCE_ARTIFACT_REFS_FORBIDDEN
+DOWNSTREAM_CONSUMER_MISSING_REF_SET_MISMATCH
 DOWNSTREAM_CONSUMER_UNSUPPORTED_RESOLVER_FAMILY
 ```
 
-No free decision is authorized by the unsupported status.
-
 ## Synthetic evidence and no-overclaim boundary
 
-Kernel fixture evidence remains synthetic. A fixture may not prove:
-
-```text
-live downstream enforcement
-real target-project correctness or availability
-runtime/browser validation
-Builder execution
-Project Gate acceptance
-production readiness
-```
-
-Any true claim in those categories emits a specific machine-readable overclaim diagnostic. In particular:
-
-```text
-DOWNSTREAM_CONSUMER_OVERCLAIM_DOWNSTREAM_ENFORCEMENT
-DOWNSTREAM_CONSUMER_OVERCLAIM_RUNTIME_VALIDATION
-DOWNSTREAM_CONSUMER_OVERCLAIM_BUILDER_EXECUTION
-DOWNSTREAM_CONSUMER_OVERCLAIM_PROJECT_GATE_ACCEPTANCE
-DOWNSTREAM_CONSUMER_OVERCLAIM_PRODUCTION_READINESS
-DOWNSTREAM_CONSUMER_OVERCLAIM_REAL_TARGET_PROJECT_PROOF
-```
+Kernel fixture evidence cannot prove live downstream enforcement, real target-project correctness, runtime/browser validation, Builder execution, Project Gate acceptance, or production readiness. Each prohibited claim has a specific machine-readable diagnostic.
 
 ## Fixtures
 
-Valid contract paths:
+Valid paths include snapshot-bound `layout_structure` consumption, covered-family no-decision `insufficient_evidence`, and unsupported-family no-decision `insufficient_evidence`.
+
+Adversarial coverage includes:
 
 ```text
-kernel/fixtures/valid/downstream_consumer/architect_layout_structure_kernel_consumed_valid.json
-kernel/fixtures/valid/downstream_consumer/architect_media_choice_insufficient_evidence_valid.json
-```
-
-Deterministic missing-ref rejection:
-
-```text
-kernel/fixtures/invalid/downstream_consumer/architect_layout_structure_missing_kernel_refs_invalid.json
-```
-
-Adversarial misuse and overclaim rejection:
-
-```text
-kernel/fixtures/adversarial/downstream_consumer/architect_unsupported_family_resolver_backed_adversarial.json
-kernel/fixtures/adversarial/downstream_consumer/architect_synthetic_evidence_overclaim_adversarial.json
+- fake resolver reuse for an unsupported family;
+- synthetic-evidence overclaim;
+- covered-family insufficient_evidence carrying a fake decision;
+- unknown well-formed commit SHA;
+- ancestor commit missing the KROAD-010 contract;
+- working-tree-only artifact drift.
 ```
 
 ## Validation
-
-Run:
 
 ```bash
 npm run validate:downstream-consumer-contract
 npm run validate:mvk
 npm run validate:roadmap-memory
 ```
-
-`validate:mvk` includes the KROAD-010 validator after the KROAD-009 vertical-slice validator.
 
 ## Confirmed boundaries
 
