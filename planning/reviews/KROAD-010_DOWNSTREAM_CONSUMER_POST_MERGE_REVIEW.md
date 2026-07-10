@@ -49,16 +49,25 @@ f61fbf931e585b50403be2b015d34fee3a206a17
 
 Git comparison confirms that the activation merge commit is one commit ahead of the reviewed activation head, the reviewed head is its merge base, and there are no file differences between them.
 
-## Confirmed pre-merge evidence
+## PR #34 pre-merge workflow evidence
 
-On exact PR #34 head `f61fbf931e585b50403be2b015d34fee3a206a17`:
+Workflow run metadata and the commit object checked out by a job are separate provenance fields. A `pull_request` run may report the PR head in run metadata while the default checkout tests a synthetic merge ref.
+
+### Validate MVK — exact PR-head evidence
 
 ```text
-Validate MVK — run number 372 — success
-Behavioral Coverage Audit — run number 340 — success
+workflow: Validate MVK
+run_id: 29111998786
+run_number: 372
+event: pull_request
+run_metadata_head_sha: f61fbf931e585b50403be2b015d34fee3a206a17
+checked_out_ref_type: explicit_pr_head
+checked_out_sha: f61fbf931e585b50403be2b015d34fee3a206a17
+status: completed
+conclusion: success
 ```
 
-The Validate MVK job confirmed:
+The checkout log shows the workflow's explicit `ref` input was the exact reviewed PR #34 head. The job confirmed:
 
 ```text
 source syntax and JSON — success
@@ -69,18 +78,35 @@ merge/squash/rebase history matrix — success
 history matrix artifact upload — success
 ```
 
-History matrix artifact:
+History matrix artifact produced by this exact-head Validate MVK run:
 
 ```text
 artifact_id: 8235134860
 digest: sha256:0f3b2370957958aab14cc826355b5c45158edf4bf8847c123338e5bd5e9cd607
 ```
 
+### Behavioral Coverage Audit — synthetic-merge integration evidence
+
+```text
+workflow: Behavioral Coverage Audit
+run_id: 29111998776
+run_number: 340
+event: pull_request
+run_metadata_head_sha: f61fbf931e585b50403be2b015d34fee3a206a17
+checked_out_ref_type: pull_request_synthetic_merge
+checked_out_ref: refs/pull/34/merge
+checked_out_sha: ac0cb0f513486c65907c262188f2d4d0a38d2cab
+status: completed
+conclusion: success
+```
+
+The checkout log shows that the default `actions/checkout` behavior fetched and tested the synthetic PR merge object. This is successful integration evidence for PR #34, but it is not exact PR-head commit-object evidence.
+
 ## Workflow definitions inspected
 
-`.github/workflows/validate-mvk.yml` defines `Validate MVK` for `pull_request` and pushes to `main`. It does not define `workflow_dispatch`.
+`.github/workflows/validate-mvk.yml` defines `Validate MVK` for `pull_request` and push events to `main`. It does not define `workflow_dispatch`.
 
-`.github/workflows/behavioral-coverage.yml` defines `Behavioral Coverage Audit` for `pull_request`, pushes to `main`, and `workflow_dispatch`.
+`.github/workflows/behavioral-coverage.yml` defines `Behavioral Coverage Audit` for `pull_request`, push events to `main`, and `workflow_dispatch`.
 
 ## Exact activation-commit Actions evidence
 
@@ -97,7 +123,7 @@ workflow_runs: []
 combined_statuses: []
 ```
 
-The available connector query currently filters to pull-request-triggered workflow runs. The target is a merge commit whose relevant workflows would have been push-triggered. Therefore this empty result does not prove that the push runs do not exist; it means the required direct run metadata remains unverifiable through the available inspection path.
+The available connector query currently filters to pull-request-triggered workflow runs. The target is a merge commit whose relevant workflows would have been triggered by push events to `main`. Therefore this empty result does not prove that the push-event runs do not exist; it means the required direct run metadata remains unverifiable through the available inspection path.
 
 The following exact-commit fields could not be evidenced:
 
@@ -120,28 +146,21 @@ Target:
 a7d3fbddc0290a7af96fbbf7ed9c4720d9020829
 ```
 
-The connected commit-workflow query and combined-status query also returned no visible runs or statuses for the current merge commit. Direct current-HEAD push-run evidence therefore remains unverified through this connector path.
+The connected commit-workflow query and combined-status query also returned no visible runs or statuses for the current merge commit. Direct current-HEAD push-event evidence therefore remains unverified through this connector path.
 
-PR #35 head `8c8d6729acc809da88a878adf5201e08b1b05bb9` is one commit behind current `main` HEAD and has no file differences from it. Its pull-request-triggered runs provide supplementary tree-equivalent regression evidence only:
+PR #35 head `8c8d6729acc809da88a878adf5201e08b1b05bb9` is one commit behind current `main` HEAD and has no file differences from it. Its pull-request-triggered runs provide supplementary tree-equivalent regression evidence only.
+
+### PR #35 Validate MVK
 
 ```text
-Validate MVK
-  run_id: 29113466370
-  run_number: 374
-  url: https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/29113466370
-  event: pull_request
-  head_sha: 8c8d6729acc809da88a878adf5201e08b1b05bb9
-  status: completed
-  conclusion: success
-
-Behavioral Coverage Audit
-  run_id: 29113466379
-  run_number: 342
-  url: https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/29113466379
-  event: pull_request
-  head_sha: 8c8d6729acc809da88a878adf5201e08b1b05bb9
-  status: completed
-  conclusion: success
+run_id: 29113466370
+run_number: 374
+event: pull_request
+run_metadata_head_sha: 8c8d6729acc809da88a878adf5201e08b1b05bb9
+checked_out_ref_type: explicit_pr_head
+checked_out_sha: 8c8d6729acc809da88a878adf5201e08b1b05bb9
+status: completed
+conclusion: success
 ```
 
 The `Validate MVK` job and all reported steps succeeded, including source/JSON validation, MVK gates, roadmap memory, prototype integrity, history matrix, and artifact upload.
@@ -155,9 +174,42 @@ created_at: 2026-07-10T18:08:46Z
 expires_at: 2026-07-24T18:08:45Z
 ```
 
-The `Behavioral Coverage Audit` job and all reported steps succeeded, including immutable action-pin verification, advisory coverage audit, and coverage-report upload.
+### PR #35 Behavioral Coverage Audit
+
+```text
+run_id: 29113466379
+run_number: 342
+event: pull_request
+run_metadata_head_sha: 8c8d6729acc809da88a878adf5201e08b1b05bb9
+checked_out_ref_type: pull_request_synthetic_merge
+checked_out_ref: refs/pull/35/merge
+checked_out_sha: b72ca7a00c412a4e1494b3334d0646646686af48
+status: completed
+conclusion: success
+```
+
+The `Behavioral Coverage Audit` job and all reported steps succeeded, including immutable action-pin verification, advisory coverage audit, and coverage-report upload. It tested the synthetic PR merge object, not the exact PR #35 head commit object.
 
 Neither PR #35 evidence nor current tree equality is substituted for the exact activation-commit requirement.
+
+## Provenance invariant
+
+```text
+surface_symptom:
+  Multiple workflow results were grouped under an exact-head label.
+underlying_invariant:
+  Every evidence claim must identify the commit object actually checked out and tested.
+failure_boundary:
+  pull_request run metadata may name the PR head while default checkout tests refs/pull/<n>/merge.
+affected_components:
+  planning/NEXT_WORK.md
+  planning/reviews/KROAD-010_DOWNSTREAM_CONSUMER_POST_MERGE_REVIEW.md
+  PR #36 description
+assumptions:
+  Workflow YAML and checkout logs are authoritative for tested-object identity.
+```
+
+A synthetic merge is valid integration evidence, but it must not be represented as exact PR-head evidence. Green PR workflows also do not satisfy the separate historical activation-commit gate.
 
 ## Confirmed implementation state
 
@@ -179,7 +231,7 @@ KROAD-011: blocked
 
 KROAD-010 remains unchecked because direct successful `Validate MVK` and `Behavioral Coverage Audit` run records for the exact activation merge commit have not been retrieved and recorded.
 
-Whether a rerunnable existing push run exists is `UNKNOWN`; no exact run ID is available through the connected path. Do not start KROAD-011 and do not reinterpret later-commit or tree-equivalent PR evidence as satisfying the existing exact-commit rule.
+Whether a rerunnable existing push-event run exists is `UNKNOWN`; no exact run ID is available through the connected path. Do not start KROAD-011 and do not reinterpret later-commit, synthetic-merge, or tree-equivalent PR evidence as satisfying the existing exact-commit rule.
 
 ## Safest concrete next action
 
