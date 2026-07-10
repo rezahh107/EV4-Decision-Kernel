@@ -1,6 +1,6 @@
 # KROAD-010 Downstream Consumer Contract
 
-**Status:** activation candidate; current roadmap state lives in `planning/NEXT_WORK.md`  
+**Status:** activation merged; roadmap completion remains `needs_audit` pending direct final-`main` validation  
 **Scope:** one Kernel-local downstream consumer contract for `rezahh107/EV4-Architect-Repo`  
 **Owner:** Kernel  
 **Intended consumer:** Architect decision-output boundary
@@ -20,7 +20,21 @@ bootstrap_main_commit: aa0317a07c10acf4e398dc9e5869f4e6966569f9
 bootstrap_pr: 33
 ```
 
-Ordinary KROAD-010 Consumer Records must pin this exact commit. A PR head, feature-only commit, floating ref, or synthetic test commit is not an acceptable production anchor.
+Ordinary KROAD-010 Consumer Records pin this exact commit. A PR head, feature-only commit, floating ref, or synthetic test commit is not an acceptable production anchor.
+
+## Verified activation merge
+
+PR #34 merged the activation layer to `main`.
+
+```text
+activation_main_commit: 60836283d9a5ae98c3c3819c7ab33a6f40206289
+activation_pr: 34
+reviewed_head: f61fbf931e585b50403be2b015d34fee3a206a17
+```
+
+Git comparison confirms that the resulting merge commit is one commit ahead of the reviewed PR head and contains no file differences from it.
+
+The reviewed head passed `Validate MVK` run 372 and `Behavioral Coverage Audit` run 340. A direct workflow result associated with the merged `main` commit was not available through the connected inspection path, so roadmap completion remains `needs_audit` rather than `completed`.
 
 ## Machine-readable artifacts
 
@@ -96,11 +110,13 @@ History-dependent regressions are owned by the test-only history matrix. Runtime
 `tools/validate-kroad-010-history-matrix.mjs` creates an isolated repository with these runtime roles:
 
 ```text
-I = incomplete pre-bootstrap main ancestor
+I = dynamically discovered incomplete pre-bootstrap main ancestor
 D = complete but stale acceptance-semantics anchor
 B = lifecycle-neutral current bootstrap anchor
 A = activation changes
 ```
+
+The harness discovers `I` from authoritative first-parent `main` history rather than hard-coding a historical SHA.
 
 Required relationship:
 
@@ -220,11 +236,16 @@ npm run validate:roadmap-memory
 
 ## Completion gate
 
-KROAD-010 may be marked complete only after:
+Confirmed:
 
 1. ordinary records pin `aa0317a07c10acf4e398dc9e5869f4e6966569f9`;
-2. exact-head activation CI passes;
-3. merge, squash, and rebase matrix results pass with clean worktrees and exact diagnostics;
-4. deliberate acceptance-code drift still fails closed;
-5. the activation PR is explicitly merged;
-6. final merged `main` is validated.
+2. exact-head activation CI passed;
+3. merge, squash, and rebase matrix results passed with clean worktrees and exact diagnostics;
+4. deliberate acceptance-code drift fails closed;
+5. PR #34 merged as `60836283d9a5ae98c3c3819c7ab33a6f40206289`.
+
+Still required before KROAD-010 may be marked complete:
+
+6. direct final merged-`main` validation must be observed and recorded.
+
+The post-merge evidence record is `planning/reviews/KROAD-010_DOWNSTREAM_CONSUMER_POST_MERGE_REVIEW.md`.
