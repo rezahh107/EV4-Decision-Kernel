@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-KROAD-009 Layout Structure Vertical Slice
+KROAD-010 Downstream Consumer Contract — activation candidate after merged bootstrap
 
 ## Status Authority
 
@@ -12,10 +12,14 @@ This file is the authoritative current-status dashboard for roadmap progress aft
 
 Known detailed-plan status labels: `KROAD-001`, `KROAD-003`, `KROAD-004`, `KROAD-005`, `KROAD-006`, `KROAD-007`, `KROAD-008`, and `KROAD-009` may still show legacy `not_started` status in `planning/KERNEL_EXECUTION_PLAN.md`; those lines are non-authoritative. Current status source for `KROAD-001`, `KROAD-003`, `KROAD-004`, `KROAD-005`, `KROAD-006`, `KROAD-007`, `KROAD-008`, and `KROAD-009` is `planning/NEXT_WORK.md`.
 
+Mutable KROAD-010 activation/completion state also lives here. The lifecycle-neutral manifest under `kernel/decision-governance/` must not be changed merely to report roadmap progress.
+
 ## Status Summary
 
 Current completed milestones: KROAD-000, KROAD-001, KROAD-002, KROAD-003, KROAD-004, KROAD-005, KROAD-006, KROAD-007, KROAD-008, KROAD-009.
 Current next task: KROAD-010 — Downstream Consumer Contract.
+Verified bootstrap anchor on `main`: `aa0317a07c10acf4e398dc9e5869f4e6966569f9` from merged PR #33.
+KROAD-011 is unavailable until KROAD-010 activation is merged and final `main` validation succeeds.
 Detailed plan: `planning/KERNEL_EXECUTION_PLAN.md`.
 Do not continue from chat history; read this file first.
 
@@ -24,6 +28,14 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
 ## Next Task
 
 - [ ] KROAD-010 — Downstream Consumer Contract
+  - Status: **IN_PROGRESS / ACTIVATION_VALIDATION_REQUIRED**.
+  - Bootstrap evidence: PR #33 merged lifecycle-neutral acceptance semantics as `aa0317a07c10acf4e398dc9e5869f4e6966569f9`.
+  - Activation branch: `kroad-010/activation-after-bootstrap`.
+  - Ordinary Consumer Records must pin the verified bootstrap commit above; feature-branch, PR-head, floating, or synthetic test SHAs are forbidden production pins.
+  - Package wiring must activate `primary -> canonical-lock -> lineage` exactly once and in that order.
+  - The deterministic history matrix must pass for merge commit, squash, and rebase with clean worktrees and exact drift/missing diagnostics.
+  - Required before completion: exact-head MVK, Behavioral Coverage Audit, roadmap-memory validation, prototype integrity, history-matrix artifact evidence, explicit activation merge, and final merged-`main` validation.
+  - KROAD-011 must not start while this item remains unchecked.
 
 ## Completed
 
@@ -94,6 +106,9 @@ If evidence is missing or uncertain, do not tick the item; add a note explaining
 - KROAD-007 L2 Decision Correctness Audit is limited to resolver-covered families and must rerun the resolver, not act as a second free-text opinion.
 - KROAD-008 fixture triplet coverage is limited to active Resolver MVP rules. The only active family remains `layout_structure`.
 - KROAD-009 provides one Kernel-local end-to-end `layout_structure` pattern only; it is not downstream enforcement or real target-project proof.
+- KROAD-010 currently activates only a Kernel-local consumer contract; no downstream repository rejection evidence exists yet.
+- KROAD-010 ordinary production fixtures pin merged bootstrap commit `aa0317a07c10acf4e398dc9e5869f4e6966569f9`.
+- KROAD-010 history-dependent regressions use disposable runtime commits and never persist synthetic SHAs as production pins.
 - Human overrides must be explicitly marked.
 - Critical P0 provisional decisions must not pass final release.
 - Unknown decision families must fail closed with halt / insufficient evidence / no free decision.

@@ -33,37 +33,40 @@ jobs:
           node --check kernel/validator/validate-downstream-consumer-contract.mjs
           node --check kernel/validator/validate-downstream-consumer-canonical-lock.mjs
           node --check kernel/validator/validate-downstream-consumer-lineage.mjs
-          node --check tools/validate-kroad-010-bootstrap.mjs
           node --check tools/validate-kroad-010-primary-baseline.mjs
           node --check tools/validate-kroad-010-prototype-integrity.mjs
+          node --check tools/validate-kroad-010-history-matrix.mjs
+          node --check tools/kroad-010-history/common.mjs
+          node --check tools/kroad-010-history/build.mjs
+          node --check tools/kroad-010-history/validate.mjs
           node -e "for (const p of process.argv.slice(1)) JSON.parse(require('node:fs').readFileSync(p, 'utf8'))" \
             kernel/decision-governance/downstream-consumer-contract.v0.json \
             kernel/decision-governance/downstream-consumer-lineage-binding.v0.json \
             kernel/fixtures/contract-lock/downstream_consumer/canonical_lock_mutations.json \
-            kernel/fixtures/contract-lock/downstream_consumer/primary-validator-baseline.v0.json
+            kernel/fixtures/contract-lock/downstream_consumer/primary-validator-baseline.v0.json \
+            kernel/fixtures/history-matrix/downstream_consumer/history-matrix.v0.json
 
-      - name: Validate existing MVK fixtures and gates
+      - name: Validate MVK fixtures and gates
         run: npm run validate:mvk
 
       - name: Validate roadmap memory consistency
+        if: ${{ always() }}
         run: npm run validate:roadmap-memory
-
-      - name: Directly execute KROAD-010 bootstrap primary validator
-        if: ${{ always() }}
-        run: node tools/validate-kroad-010-bootstrap.mjs primary
-
-      - name: Verify KROAD-010 primary behavior baseline
-        if: ${{ always() }}
-        run: node tools/validate-kroad-010-bootstrap.mjs primary-baseline
-
-      - name: Directly execute KROAD-010 bootstrap canonical lock
-        if: ${{ always() }}
-        run: node tools/validate-kroad-010-bootstrap.mjs canonical-lock
-
-      - name: Directly execute KROAD-010 bootstrap lineage validator
-        if: ${{ always() }}
-        run: node tools/validate-kroad-010-bootstrap.mjs lineage
 
       - name: Verify KROAD-010 prototype integrity
         if: ${{ always() }}
-        run: node tools/validate-kroad-010-bootstrap.mjs prototype-integrity
+        run: node tools/validate-kroad-010-prototype-integrity.mjs
+
+      - name: Validate KROAD-010 merge/squash/rebase history matrix
+        id: history-matrix
+        if: ${{ always() }}
+        run: npm run validate:kroad-010-history-matrix
+
+      - name: Upload KROAD-010 history matrix evidence
+        if: ${{ always() && steps.history-matrix.outcome == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: kroad-010-history-matrix
+          path: kroad-010-history-matrix-report.json
+          if-no-files-found: error
+          retention-days: 14
