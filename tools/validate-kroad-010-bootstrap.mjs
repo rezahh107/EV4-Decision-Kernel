@@ -13,6 +13,7 @@ import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const ACTIVATION_REF = 'refs/remotes/origin/kroad-010/downstream-consumer-contract';
 const PRIMARY = 'kernel/validator/validate-downstream-consumer-contract.mjs';
 const LOCK = 'kernel/validator/validate-downstream-consumer-canonical-lock.mjs';
 const LINEAGE = 'kernel/validator/validate-downstream-consumer-lineage.mjs';
@@ -70,15 +71,34 @@ function activatePackage(worktree) {
   writeJson(worktree, 'package.json', pkg);
 }
 
-function repinOrdinaryFixtures(worktree, head) {
+function repinOrdinaryFixtures(worktree, bootstrapHead) {
   for (const path of ORDINARY_FIXTURES) {
     const fixture = readJson(worktree, path);
     if (!fixture?.record?.kernel_pin) {
       throw new Error(`Ordinary bootstrap fixture lacks record.kernel_pin: ${path}`);
     }
-    fixture.record.kernel_pin.kernel_ref = head;
+    fixture.record.kernel_pin.kernel_ref = bootstrapHead;
     writeJson(worktree, path, fixture);
   }
+}
+
+function createSyntheticValidationHistory(worktree, bootstrapHead) {
+  const activationHead = run('git', ['rev-parse', ACTIVATION_REF], worktree, {capture: true}).trim();
+  if (!/^[0-9a-f]{40}$/.test(activationHead)) {
+    throw new Error(`Activation branch head is unavailable: ${activationHead}`);
+  }
+
+  const syntheticHead = run('git', [
+    '-c', 'user.name=EV4 Bootstrap Harness',
+    '-c', 'user.email=bootstrap@ev4.local',
+    'commit-tree', `${bootstrapHead}^{tree}`,
+    '-p', bootstrapHead,
+    '-p', activationHead,
+    '-m', 'Synthetic KROAD-010 bootstrap validation history',
+  ], worktree, {capture: true}).trim();
+
+  run('git', ['checkout', '--detach', syntheticHead], worktree);
+  return {activationHead, syntheticHead};
 }
 
 function executeValidator(worktree, label, path) {
@@ -88,9 +108,9 @@ function executeValidator(worktree, label, path) {
 }
 
 function main() {
-  const head = run('git', ['rev-parse', 'HEAD'], ROOT, {capture: true}).trim();
-  if (!/^[0-9a-f]{40}$/.test(head)) {
-    throw new Error(`Expected a full bootstrap commit SHA, received: ${head}`);
+  const bootstrapHead = run('git', ['rev-parse', 'HEAD'], ROOT, {capture: true}).trim();
+  if (!/^[0-9a-f]{40}$/.test(bootstrapHead)) {
+    throw new Error(`Expected a full bootstrap commit SHA, received: ${bootstrapHead}`);
   }
 
   const tempRoot = mkdtempSync(join(tmpdir(), 'ev4-kroad-010-bootstrap-'));
@@ -98,18 +118,24 @@ function main() {
   let worktreeAdded = false;
 
   try {
-    run('git', ['worktree', 'add', '--detach', worktree, head], ROOT);
+    run('git', ['worktree', 'add', '--detach', worktree, bootstrapHead], ROOT);
     worktreeAdded = true;
+
+    const {activationHead, syntheticHead} = createSyntheticValidationHistory(
+      worktree,
+      bootstrapHead,
+    );
+    console.log(`BOOTSTRAP_VALIDATION_HISTORY bootstrap=${bootstrapHead} activation=${activationHead} synthetic=${syntheticHead}`);
 
     symlinkSync(join(ROOT, 'node_modules'), join(worktree, 'node_modules'), 'dir');
     activatePackage(worktree);
-    repinOrdinaryFixtures(worktree, head);
+    repinOrdinaryFixtures(worktree, bootstrapHead);
 
     executeValidator(worktree, 'primary', PRIMARY);
     executeValidator(worktree, 'canonical-lock', LOCK);
     executeValidator(worktree, 'lineage', LINEAGE);
 
-    console.log(`KROAD-010 bootstrap direct execution: PASS (${head})`);
+    console.log(`KROAD-010 bootstrap direct execution: PASS (${bootstrapHead})`);
   } finally {
     if (worktreeAdded) {
       try {
