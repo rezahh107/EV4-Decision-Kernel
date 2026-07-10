@@ -10,9 +10,29 @@ import {auditDecisionRecord} from './validate-l2-decision-correctness.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const POLICY_PATH = 'kernel/decision-governance/downstream-consumer-lineage-binding.v0.json';
+const VALIDATOR_PATH = 'kernel/validator/validate-downstream-consumer-lineage.mjs';
+
+const REQUIRED_EXECUTION_SNAPSHOT_FILES = Object.freeze([
+  'package.json',
+  'package-lock.json',
+  'kernel/decision-governance/downstream-consumer-contract.v0.json',
+  'kernel/schemas/downstream-consumer-contract.v0.schema.json',
+  'kernel/validator/validate-downstream-consumer-contract.mjs',
+  POLICY_PATH,
+  VALIDATOR_PATH,
+  'kernel/schemas/decision-record.v2.schema.json',
+  'kernel/decision-governance/resolver-rule-registry.v0.json',
+  'kernel/decision-governance/resolver-rules/layout-structure.v0.json',
+  'kernel/resolver-mvp/resolve-high-risk-p0.mjs',
+  'kernel/validator/validate-l2-decision-correctness.mjs',
+]);
+
+function readText(path) {
+  return readFileSync(join(ROOT, path), 'utf8');
+}
 
 function readJson(path) {
-  return JSON.parse(readFileSync(join(ROOT, path), 'utf8'));
+  return JSON.parse(readText(path));
 }
 
 function git(args) {
@@ -35,8 +55,12 @@ function resolveFragment(value, fragment) {
   return fragment.split('.').reduce((current, key) => current?.[key], value);
 }
 
+function readPinnedText(commit, path) {
+  return git(['show', `${commit}:${path}`]);
+}
+
 function readPinnedJson(commit, path) {
-  return JSON.parse(git(['show', `${commit}:${path}`]));
+  return JSON.parse(readPinnedText(commit, path));
 }
 
 function deepClone(value) {
@@ -62,6 +86,12 @@ function diagnostic(code, path, message = code) {
   return {code, path, severity: 'error', source: 'lineage', message};
 }
 
+function sameStringSet(left, right) {
+  const a = new Set(Array.isArray(left) ? left : []);
+  const b = new Set(Array.isArray(right) ? right : []);
+  return a.size === b.size && [...a].every((item) => b.has(item));
+}
+
 function canonicalEvidence(item) {
   return JSON.stringify([
     item?.evidence_id ?? null,
@@ -83,7 +113,56 @@ function decisionSiblingFragment(decisionFragment, sibling) {
   return [...parts.slice(0, -1), sibling].join('.');
 }
 
-function validateBinding(record, envelopeOverride = null) {
+function validateExecutionSnapshot(commit, policy) {
+  const diagnostics = [];
+
+  if (!sameStringSet(policy.snapshot_execution_files, REQUIRED_EXECUTION_SNAPSHOT_FILES)) {
+    diagnostics.push(diagnostic(
+      'DOWNSTREAM_CONSUMER_LINEAGE_EXECUTION_SET_INVALID',
+      'snapshot_execution_files',
+      'Lineage policy must enumerate the complete hard-coded execution snapshot set.',
+    ));
+    return diagnostics;
+  }
+
+  for (const path of REQUIRED_EXECUTION_SNAPSHOT_FILES) {
+    let pinned;
+    try {
+      pinned = readPinnedText(commit, path);
+    } catch {
+      diagnostics.push(diagnostic(
+        'DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_FILE_MISSING',
+        path,
+        `Pinned commit ${commit} does not contain required execution file ${path}.`,
+      ));
+      continue;
+    }
+
+    let current;
+    try {
+      current = readText(path);
+    } catch {
+      diagnostics.push(diagnostic(
+        'DOWNSTREAM_CONSUMER_LINEAGE_CURRENT_EXECUTION_FILE_MISSING',
+        path,
+        `Current checkout does not contain required execution file ${path}.`,
+      ));
+      continue;
+    }
+
+    if (pinned !== current) {
+      diagnostics.push(diagnostic(
+        'DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_DRIFT',
+        path,
+        `Current execution file ${path} differs from pinned commit ${commit}.`,
+      ));
+    }
+  }
+
+  return diagnostics;
+}
+
+function validateBinding(record, policy, envelopeOverride = null) {
   const diagnostics = [];
   const commit = record?.kernel_pin?.kernel_ref;
 
@@ -97,6 +176,9 @@ function validateBinding(record, envelopeOverride = null) {
       'Lineage validation requires an available ancestor commit.',
     )];
   }
+
+  diagnostics.push(...validateExecutionSnapshot(commit, policy));
+  if (diagnostics.length > 0) return diagnostics;
 
   const decisionRef = splitRef(record.kernel_artifact_refs?.decision_record_ref);
   let envelope;
@@ -258,6 +340,11 @@ function main() {
     process.exit(1);
   }
 
+  if (!sameStringSet(policy.snapshot_execution_files, REQUIRED_EXECUTION_SNAPSHOT_FILES)) {
+    console.error('Lineage policy execution snapshot set is invalid.');
+    process.exit(1);
+  }
+
   for (const casePath of policy.cases) {
     let loaded;
     try {
@@ -268,7 +355,7 @@ function main() {
       continue;
     }
 
-    const diagnostics = validateBinding(loaded.record, loaded.envelopePatch);
+    const diagnostics = validateBinding(loaded.record, policy, loaded.envelopePatch);
     const observedCodes = new Set(diagnostics.map((item) => item.code));
     const expected = loaded.testCase.expected_result;
     const observedStatus = diagnostics.length === 0 ? 'pass' : 'fail';
