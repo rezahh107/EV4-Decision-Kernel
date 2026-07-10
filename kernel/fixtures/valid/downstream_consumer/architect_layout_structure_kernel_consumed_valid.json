@@ -1,0 +1,112 @@
+{
+  "fixture_type": "kroad_010_downstream_consumer_case",
+  "schema_version": "0.1.0",
+  "case_id": "kroad_010.architect.layout_structure.kernel_consumed.valid",
+  "case_kind": "valid",
+  "record": {
+    "record_type": "kernel_downstream_consumer_record",
+    "schema_version": "0.1.0",
+    "consumer_record_id": "KROAD-010-ARCH-LAYOUT-VALID-001",
+    "consumer": {
+      "repository": "rezahh107/EV4-Architect-Repo",
+      "role": "architect",
+      "output_contract": "architect_kernel_decision_consumption_v0"
+    },
+    "kernel_pin": {
+      "kernel_repository": "rezahh107/EV4-Decision-Kernel",
+      "kernel_ref_type": "commit",
+      "kernel_ref": "2332b1d7624531b4b01c3e2688ef93efb224f415",
+      "floating_ref_allowed": false,
+      "contract_ref": "kernel/decision-governance/downstream-consumer-contract.v0.json"
+    },
+    "decision_family_id": "layout_structure",
+    "consumption_status": "kernel_consumed",
+    "kernel_artifact_refs": {
+      "matrix_ref": "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.layout_structure.v0",
+      "decision_card_ref": "kernel/decision-cards/elements.core.v0.json#v4.flexbox",
+      "resolver_registry_ref": "kernel/decision-governance/resolver-rule-registry.v0.json",
+      "resolver_rule_ref": "kernel/decision-governance/resolver-rules/layout-structure.v0.json#resolver.rule.layout_structure.mvp.v0@0.1.0",
+      "decision_record_schema_ref": "kernel/schemas/decision-record.v2.schema.json",
+      "decision_record_ref": "kernel/fixtures/valid/vertical_slice/layout_structure_flexbox_vertical_slice_valid.json#decision_record",
+      "l2_audit_contract_ref": "kernel/validator/validate-l2-decision-correctness.mjs#auditDecisionRecord",
+      "l2_audit_result_ref": "kernel/fixtures/valid/vertical_slice/layout_structure_flexbox_vertical_slice_valid.json#expected_result.l2_audit_status",
+      "vertical_slice_ref": "kernel/decision-governance/kroad-009-layout-structure-vertical-slice.v0.json"
+    },
+    "decision_output": {
+      "decision_id": "DR-KROAD-009-LAYOUT-FLEXBOX-VALID-001",
+      "resolver_status": "auto_resolved",
+      "selected_option_id": "flexbox",
+      "rule_id": "resolver.rule.layout_structure.mvp.v0",
+      "rule_version": "0.1.0",
+      "l2_audit_status": "pass",
+      "provisional": false
+    },
+    "evidence_refs": [
+      {
+        "evidence_id": "EV-KROAD-006-LAYOUT-P0-MATRIX",
+        "evidence_tier": "official_docs",
+        "source_type": "kernel_fixture",
+        "ref": "kernel/decision-governance/p0-decision-matrices.v0.json#layout_structure",
+        "limitations": [
+          "matrix guidance only",
+          "not real target-project evidence",
+          "not runtime validation",
+          "does not prove target project availability"
+        ]
+      },
+      {
+        "evidence_id": "EV-KROAD-006-LAYOUT-CONTROLLED-PROJECT-EXPORT",
+        "evidence_tier": "project_export",
+        "source_type": "kernel_fixture",
+        "ref": "kernel/fixtures/valid/vertical_slice/layout_structure_flexbox_vertical_slice_valid.json#resolver_input.context",
+        "limitations": [
+          "controlled fixture evidence only",
+          "not real target-project evidence",
+          "not runtime validation",
+          "not Builder execution proof"
+        ]
+      }
+    ],
+    "provenance_refs": [
+      "kernel/decision-governance/downstream-consumer-contract.v0.json",
+      "kernel/decision-governance/kroad-009-layout-structure-vertical-slice.v0.json",
+      "kernel/fixtures/valid/vertical_slice/layout_structure_flexbox_vertical_slice_valid.json"
+    ],
+    "handling": {
+      "unsupported_family": "insufficient_evidence",
+      "provisional_decision": "halt_or_repair",
+      "missing_kernel_refs": "fail_closed",
+      "unresolvable_decision": "halt_or_repair"
+    },
+    "missing_kernel_refs": [],
+    "forbidden_overclaims_acknowledged": [
+      "kernel_local_contract_is_not_downstream_enforcement",
+      "synthetic_fixture_is_not_real_target_project_proof",
+      "decision_record_is_not_runtime_validation",
+      "decision_record_is_not_builder_execution_proof",
+      "kernel_contract_is_not_project_gate_acceptance",
+      "kernel_contract_is_not_production_readiness"
+    ],
+    "claims": {
+      "downstream_enforcement_proven": false,
+      "runtime_validated": false,
+      "builder_execution_proven": false,
+      "project_gate_accepted": false,
+      "production_ready": false,
+      "real_target_project_proof": false
+    },
+    "limitations": [
+      "Kernel-local simulated consumer record only.",
+      "Does not prove live EV4-Architect-Repo enforcement.",
+      "Does not prove runtime behavior, Builder execution, Project Gate acceptance, or production readiness."
+    ]
+  },
+  "expected_result": {
+    "validation_status": "pass",
+    "diagnostic_codes": []
+  },
+  "notes": [
+    "Valid Kernel-local Architect consumption of the KROAD-009 layout_structure output.",
+    "Synthetic fixture only; not live downstream enforcement or real target-project proof."
+  ]
+}
