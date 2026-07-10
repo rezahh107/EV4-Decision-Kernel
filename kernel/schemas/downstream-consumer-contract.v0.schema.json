@@ -1,0 +1,280 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/downstream-consumer-contract.v0.schema.json",
+  "title": "EV4 Kernel Downstream Consumer Contract v0",
+  "description": "Kernel-local KROAD-010 contract for one initial downstream consumer. It validates explicit consumption of Kernel decision outputs without claiming live downstream enforcement.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_type",
+    "schema_version",
+    "consumer_record_id",
+    "consumer",
+    "kernel_pin",
+    "decision_family_id",
+    "consumption_status",
+    "kernel_artifact_refs",
+    "decision_output",
+    "evidence_refs",
+    "provenance_refs",
+    "handling",
+    "missing_kernel_refs",
+    "forbidden_overclaims_acknowledged",
+    "claims",
+    "limitations"
+  ],
+  "properties": {
+    "record_type": {
+      "const": "kernel_downstream_consumer_record"
+    },
+    "schema_version": {
+      "const": "0.1.0"
+    },
+    "consumer_record_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "consumer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "role",
+        "output_contract"
+      ],
+      "properties": {
+        "repository": {
+          "const": "rezahh107/EV4-Architect-Repo"
+        },
+        "role": {
+          "const": "architect"
+        },
+        "output_contract": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "kernel_pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kernel_repository",
+        "kernel_ref_type",
+        "kernel_ref",
+        "floating_ref_allowed",
+        "contract_ref"
+      ],
+      "properties": {
+        "kernel_repository": {
+          "const": "rezahh107/EV4-Decision-Kernel"
+        },
+        "kernel_ref_type": {
+          "const": "commit"
+        },
+        "kernel_ref": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "floating_ref_allowed": {
+          "const": false
+        },
+        "contract_ref": {
+          "const": "kernel/decision-governance/downstream-consumer-contract.v0.json"
+        }
+      }
+    },
+    "decision_family_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "consumption_status": {
+      "enum": [
+        "kernel_consumed",
+        "insufficient_evidence"
+      ]
+    },
+    "kernel_artifact_refs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "matrix_ref",
+        "decision_card_ref",
+        "resolver_registry_ref",
+        "resolver_rule_ref",
+        "decision_record_schema_ref",
+        "decision_record_ref",
+        "l2_audit_contract_ref",
+        "l2_audit_result_ref",
+        "vertical_slice_ref"
+      ],
+      "properties": {
+        "matrix_ref": {"type": ["string", "null"], "minLength": 1},
+        "decision_card_ref": {"type": ["string", "null"], "minLength": 1},
+        "resolver_registry_ref": {"type": ["string", "null"], "minLength": 1},
+        "resolver_rule_ref": {"type": ["string", "null"], "minLength": 1},
+        "decision_record_schema_ref": {"type": ["string", "null"], "minLength": 1},
+        "decision_record_ref": {"type": ["string", "null"], "minLength": 1},
+        "l2_audit_contract_ref": {"type": ["string", "null"], "minLength": 1},
+        "l2_audit_result_ref": {"type": ["string", "null"], "minLength": 1},
+        "vertical_slice_ref": {"type": ["string", "null"], "minLength": 1}
+      }
+    },
+    "decision_output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision_id",
+        "resolver_status",
+        "selected_option_id",
+        "rule_id",
+        "rule_version",
+        "l2_audit_status",
+        "provisional"
+      ],
+      "properties": {
+        "decision_id": {"type": ["string", "null"], "minLength": 1},
+        "resolver_status": {"enum": ["auto_resolved", "conditional", "unresolvable", null]},
+        "selected_option_id": {"type": ["string", "null"], "minLength": 1},
+        "rule_id": {"type": ["string", "null"], "minLength": 1},
+        "rule_version": {
+          "anyOf": [
+            {"type": "string", "pattern": "^v?[0-9]+\\.[0-9]+\\.[0-9]+$"},
+            {"type": "null"}
+          ]
+        },
+        "l2_audit_status": {"enum": ["pass", "unsupported", "not_run"]},
+        "provisional": {"type": "boolean"}
+      }
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/evidenceRef"}
+    },
+    "provenance_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "handling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unsupported_family", "provisional_decision", "missing_kernel_refs", "unresolvable_decision"],
+      "properties": {
+        "unsupported_family": {"const": "insufficient_evidence"},
+        "provisional_decision": {"const": "halt_or_repair"},
+        "missing_kernel_refs": {"const": "fail_closed"},
+        "unresolvable_decision": {"const": "halt_or_repair"}
+      }
+    },
+    "missing_kernel_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "forbidden_overclaims_acknowledged": {
+      "type": "array",
+      "minItems": 6,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "downstream_enforcement_proven",
+        "runtime_validated",
+        "builder_execution_proven",
+        "project_gate_accepted",
+        "production_ready",
+        "real_target_project_proof"
+      ],
+      "properties": {
+        "downstream_enforcement_proven": {"type": "boolean"},
+        "runtime_validated": {"type": "boolean"},
+        "builder_execution_proven": {"type": "boolean"},
+        "project_gate_accepted": {"type": "boolean"},
+        "production_ready": {"type": "boolean"},
+        "real_target_project_proof": {"type": "boolean"}
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"consumption_status": {"const": "kernel_consumed"}},
+        "required": ["consumption_status"]
+      },
+      "then": {
+        "properties": {
+          "kernel_artifact_refs": {
+            "properties": {
+              "matrix_ref": {"type": "string", "minLength": 1},
+              "decision_card_ref": {"type": "string", "minLength": 1},
+              "resolver_registry_ref": {"type": "string", "minLength": 1},
+              "resolver_rule_ref": {"type": "string", "minLength": 1},
+              "decision_record_schema_ref": {"type": "string", "minLength": 1},
+              "decision_record_ref": {"type": "string", "minLength": 1},
+              "l2_audit_contract_ref": {"type": "string", "minLength": 1},
+              "l2_audit_result_ref": {"type": "string", "minLength": 1},
+              "vertical_slice_ref": {"type": "string", "minLength": 1}
+            }
+          },
+          "decision_output": {
+            "properties": {
+              "decision_id": {"type": "string", "minLength": 1},
+              "resolver_status": {"enum": ["auto_resolved", "conditional"]},
+              "selected_option_id": {"type": "string", "minLength": 1},
+              "rule_id": {"type": "string", "minLength": 1},
+              "rule_version": {"type": "string", "pattern": "^v?[0-9]+\\.[0-9]+\\.[0-9]+$"},
+              "l2_audit_status": {"const": "pass"}
+            }
+          },
+          "missing_kernel_refs": {"maxItems": 0}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"consumption_status": {"const": "insufficient_evidence"}},
+        "required": ["consumption_status"]
+      },
+      "then": {
+        "properties": {
+          "decision_output": {
+            "properties": {
+              "l2_audit_status": {"enum": ["unsupported", "not_run"]},
+              "provisional": {"const": true}
+            }
+          },
+          "missing_kernel_refs": {"minItems": 1}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "evidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_id", "evidence_tier", "source_type", "ref", "limitations"],
+      "properties": {
+        "evidence_id": {"type": "string", "minLength": 1},
+        "evidence_tier": {"enum": ["none", "official_docs", "project_export", "runtime_browser", "downstream_validated"]},
+        "source_type": {"enum": ["kernel_fixture", "official_docs", "project_export", "runtime_browser", "downstream_validation", "evidence_gap"]},
+        "ref": {"type": "string", "minLength": 1},
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}
