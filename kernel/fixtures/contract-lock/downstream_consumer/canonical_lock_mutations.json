@@ -1,0 +1,41 @@
+{
+  "fixture_type": "kroad_010_canonical_lock_mutation_suite",
+  "schema_version": "0.1.0",
+  "cases": [
+    {
+      "case_id": "remove_lineage_script",
+      "mutation_kind": "remove_lineage_script",
+      "expected_diagnostic": "DOWNSTREAM_CONSUMER_CANONICAL_LINEAGE_SCRIPT_MISSING"
+    },
+    {
+      "case_id": "rename_canonical_lock_script",
+      "mutation_kind": "rename_canonical_lock_script",
+      "expected_diagnostic": "DOWNSTREAM_CONSUMER_CANONICAL_LOCK_SCRIPT_MISSING"
+    },
+    {
+      "case_id": "remove_lineage_gate_from_mvk",
+      "mutation_kind": "remove_lineage_gate_from_mvk",
+      "expected_diagnostic": "DOWNSTREAM_CONSUMER_CANONICAL_MVK_GATE_SET_INVALID"
+    },
+    {
+      "case_id": "duplicate_primary_gate_in_mvk",
+      "mutation_kind": "duplicate_primary_gate_in_mvk",
+      "expected_diagnostic": "DOWNSTREAM_CONSUMER_CANONICAL_MVK_GATE_SET_INVALID"
+    },
+    {
+      "case_id": "reorder_kroad_010_gates",
+      "mutation_kind": "reorder_kroad_010_gates",
+      "expected_diagnostic": "DOWNSTREAM_CONSUMER_CANONICAL_MVK_GATE_ORDER_INVALID"
+    },
+    {
+      "case_id": "manifest_policy_case_drift",
+      "mutation_kind": "manifest_policy_case_drift",
+      "expected_diagnostic": "DOWNSTREAM_CONSUMER_CANONICAL_LINEAGE_CASE_SET_MISMATCH"
+    },
+    {
+      "case_id": "snapshot_execution_set_drift",
+      "mutation_kind": "snapshot_execution_set_drift",
+      "expected_diagnostic": "DOWNSTREAM_CONSUMER_CANONICAL_EXECUTION_SET_MISMATCH"
+    }
+  ]
+}
