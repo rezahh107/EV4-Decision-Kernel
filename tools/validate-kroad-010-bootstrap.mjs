@@ -17,6 +17,7 @@ const ACTIVATION_REF = 'refs/remotes/origin/kroad-010/downstream-consumer-contra
 const PRIMARY = 'kernel/validator/validate-downstream-consumer-contract.mjs';
 const LOCK = 'kernel/validator/validate-downstream-consumer-canonical-lock.mjs';
 const LINEAGE = 'kernel/validator/validate-downstream-consumer-lineage.mjs';
+const VALIDATORS = Object.freeze({primary: PRIMARY, 'canonical-lock': LOCK, lineage: LINEAGE});
 
 const ORDINARY_FIXTURES = Object.freeze([
   'kernel/fixtures/valid/downstream_consumer/architect_layout_structure_kernel_consumed_valid.json',
@@ -108,6 +109,11 @@ function executeValidator(worktree, label, path) {
 }
 
 function main() {
+  const requested = process.argv[2] || 'all';
+  if (requested !== 'all' && !Object.hasOwn(VALIDATORS, requested)) {
+    throw new Error(`Unknown bootstrap validator mode: ${requested}`);
+  }
+
   const bootstrapHead = run('git', ['rev-parse', 'HEAD'], ROOT, {capture: true}).trim();
   if (!/^[0-9a-f]{40}$/.test(bootstrapHead)) {
     throw new Error(`Expected a full bootstrap commit SHA, received: ${bootstrapHead}`);
@@ -131,11 +137,12 @@ function main() {
     activatePackage(worktree);
     repinOrdinaryFixtures(worktree, bootstrapHead);
 
-    executeValidator(worktree, 'primary', PRIMARY);
-    executeValidator(worktree, 'canonical-lock', LOCK);
-    executeValidator(worktree, 'lineage', LINEAGE);
+    const selected = requested === 'all'
+      ? Object.entries(VALIDATORS)
+      : [[requested, VALIDATORS[requested]]];
+    for (const [label, path] of selected) executeValidator(worktree, label, path);
 
-    console.log(`KROAD-010 bootstrap direct execution: PASS (${bootstrapHead})`);
+    console.log(`KROAD-010 bootstrap direct execution: PASS mode=${requested} head=${bootstrapHead}`);
   } finally {
     if (worktreeAdded) {
       try {
