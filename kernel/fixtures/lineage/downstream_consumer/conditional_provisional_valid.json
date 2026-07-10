@@ -17,8 +17,7 @@
         "ref": "kernel/decision-governance/p0-decision-matrices.v0.json#layout_structure",
         "limitations": [
           "matrix guidance only",
-          "not real target-project evidence",
-          "not runtime validation"
+          "does not prove target project availability"
         ]
       }
     ],
