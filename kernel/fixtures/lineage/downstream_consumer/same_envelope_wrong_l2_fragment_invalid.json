@@ -1,0 +1,19 @@
+{
+  "fixture_type": "kroad_010_downstream_consumer_lineage_case",
+  "schema_version": "0.1.0",
+  "case_id": "kroad_010.lineage.same_envelope_wrong_l2_fragment.invalid",
+  "base_record_fixture": "kernel/fixtures/valid/downstream_consumer/architect_layout_structure_kernel_consumed_valid.json",
+  "record_patch": {
+    "kernel_artifact_refs.l2_audit_result_ref": "kernel/fixtures/valid/vertical_slice/layout_structure_flexbox_vertical_slice_valid.json#expected_result.diagnostic_codes"
+  },
+  "expected_result": {
+    "validation_status": "fail",
+    "diagnostic_codes": [
+      "DOWNSTREAM_CONSUMER_L2_AUDIT_RESULT_REF_MISMATCH"
+    ]
+  },
+  "notes": [
+    "Keeps the L2 result ref on the correct Decision Record envelope but points it at the wrong fragment.",
+    "This directly isolates same-envelope fragment validation."
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "fixture_type": "kroad_010_downstream_consumer_lineage_case",
+  "schema_version": "0.1.0",
+  "case_id": "kroad_010.lineage.evidence_mismatch.invalid",
+  "base_record_fixture": "kernel/fixtures/valid/downstream_consumer/architect_layout_structure_kernel_consumed_valid.json",
+  "record_patch": {
+    "evidence_refs": [
+      {
+        "evidence_id": "EV-KROAD-006-LAYOUT-P0-MATRIX",
+        "evidence_tier": "official_docs",
+        "source_type": "kernel_fixture",
+        "ref": "kernel/decision-governance/p0-decision-matrices.v0.json#layout_structure",
+        "limitations": [
+          "matrix guidance only",
+          "not real target-project evidence",
+          "not runtime validation"
+        ]
+      }
+    ]
+  },
+  "expected_result": {
+    "validation_status": "fail",
+    "diagnostic_codes": [
+      "DOWNSTREAM_CONSUMER_EVIDENCE_LINEAGE_MISMATCH"
+    ]
+  }
+}

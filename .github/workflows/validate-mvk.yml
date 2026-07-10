@@ -13,8 +13,11 @@ jobs:
   validate-mvk:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout exact repository head with full history
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Node.js LTS
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -25,8 +28,11 @@ jobs:
       - name: Install MVK validator dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
 
-      - name: Validate MVK fixtures and gates
+      - name: Validate existing MVK fixtures and gates
         run: npm run validate:mvk
 
       - name: Validate roadmap memory consistency
         run: npm run validate:roadmap-memory
+
+      - name: Directly execute staged KROAD-010 bootstrap stack
+        run: node tools/validate-kroad-010-bootstrap.mjs

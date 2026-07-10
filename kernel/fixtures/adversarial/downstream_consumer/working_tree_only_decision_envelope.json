@@ -1,0 +1,1 @@
+{"fixture_type":"kroad_010_working_tree_drift_helper","schema_version":"0.1.0","decision_record":{"record_type":"decision_record_v2"},"expected_result":{"l2_audit_status":"pass"},"notes":["This helper exists only after the snapshot anchor commit and must never be read as a substitute for pinned content."]}
