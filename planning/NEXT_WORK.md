@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-KROAD-010 Downstream Consumer Contract — activation merged, final `main` validation evidence pending
+KROAD-010 Downstream Consumer Contract — exact activation-commit Actions evidence remains unverified after closure audit
 
 ## Status Authority
 
@@ -18,9 +18,10 @@ Mutable KROAD-010 activation/completion state also lives here. The lifecycle-neu
 
 Current completed milestones: KROAD-000, KROAD-001, KROAD-002, KROAD-003, KROAD-004, KROAD-005, KROAD-006, KROAD-007, KROAD-008, KROAD-009.
 Current next task: KROAD-010 — Downstream Consumer Contract post-merge validation.
+Current `main` HEAD observed during the closure audit: `a7d3fbddc0290a7af96fbbf7ed9c4720d9020829`.
 Verified bootstrap anchor on `main`: `aa0317a07c10acf4e398dc9e5869f4e6966569f9` from merged PR #33.
-Verified activation merge on `main`: `60836283d9a5ae98c3c3819c7ab33a6f40206289` from merged PR #34.
-KROAD-011 remains unavailable until direct final-`main` validation evidence for KROAD-010 is observed and recorded.
+Verified activation merge on `main`: `60836283d9a5ae98c3c3819c7ab33a6f40206289` from merged PR #34. This is the exact historical evidence target, not the current `main` HEAD.
+KROAD-011 remains unavailable until direct exact-commit validation evidence for KROAD-010 is observed and recorded, or the evidence rule is explicitly changed in a separate governance decision.
 Detailed plan: `planning/KERNEL_EXECUTION_PLAN.md`.
 Do not continue from chat history; read this file first.
 
@@ -29,16 +30,18 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
 ## Next Task
 
 - [ ] KROAD-010 — Downstream Consumer Contract
-  - Status: **NEEDS_AUDIT / FINAL_MAIN_VALIDATION_UNVERIFIED**.
+  - Status: **NEEDS_AUDIT / EXACT_ACTIVATION_COMMIT_VALIDATION_UNVERIFIED**.
   - Bootstrap evidence: PR #33 merged lifecycle-neutral acceptance semantics as `aa0317a07c10acf4e398dc9e5869f4e6966569f9`.
   - Activation evidence: PR #34 merged as `60836283d9a5ae98c3c3819c7ab33a6f40206289`.
   - Reviewed activation head: `f61fbf931e585b50403be2b015d34fee3a206a17`.
-  - Git comparison confirms the merge commit is one commit ahead of the reviewed head and contains no file differences from it.
+  - Git comparison confirms the activation merge commit is one commit ahead of the reviewed activation head and contains no file differences from it.
   - Exact-head PR validation passed: `Validate MVK` run 372 and `Behavioral Coverage Audit` run 340.
   - Ordinary Consumer Records pin merged bootstrap commit `aa0317a07c10acf4e398dc9e5869f4e6966569f9`; feature-branch, PR-head, floating, or synthetic test SHAs remain forbidden production pins.
   - Package wiring activates `primary -> canonical-lock -> lineage` exactly once and in that order.
   - The deterministic history matrix passed merge commit, squash, and rebase with clean worktrees and exact drift/missing diagnostics.
-  - Remaining gate: observe or rerun direct `Validate MVK` and `Behavioral Coverage Audit` on merged `main` commit `60836283d9a5ae98c3c3819c7ab33a6f40206289`.
+  - Closure audit note: current `main` HEAD `a7d3fbddc0290a7af96fbbf7ed9c4720d9020829` is four commits ahead of the activation merge; intervening changes affect documentation/planning files only, not executable Kernel or workflow files.
+  - Evidence blocker: the available commit-workflow connector filters to pull-request-triggered runs and returned no direct push-run metadata for `60836283d9a5ae98c3c3819c7ab33a6f40206289`; this does not prove the runs are absent, but their exact run IDs, jobs, timestamps, and artifact evidence remain unverified.
+  - Remaining gate: retrieve and record direct successful `Validate MVK` and `Behavioral Coverage Audit` runs for exact activation merge commit `60836283d9a5ae98c3c3819c7ab33a6f40206289`.
   - Post-merge review record: `planning/reviews/KROAD-010_DOWNSTREAM_CONSUMER_POST_MERGE_REVIEW.md`.
   - KROAD-011 must not start while this item remains unchecked.
 
@@ -111,7 +114,8 @@ If evidence is missing or uncertain, do not tick the item; add a note explaining
 - KROAD-007 L2 Decision Correctness Audit is limited to resolver-covered families and must rerun the resolver, not act as a second free-text opinion.
 - KROAD-008 fixture triplet coverage is limited to active Resolver MVP rules. The only active family remains `layout_structure`.
 - KROAD-009 provides one Kernel-local end-to-end `layout_structure` pattern only; it is not downstream enforcement or real target-project proof.
-- KROAD-010 bootstrap and activation are merged, but direct final-`main` CI evidence is not yet recorded.
+- KROAD-010 bootstrap and activation are merged, but direct exact activation-commit Actions evidence is not yet recorded.
+- KROAD-010 activation commit `60836283d9a5ae98c3c3819c7ab33a6f40206289` is not the current `main` HEAD; the current observed HEAD is `a7d3fbddc0290a7af96fbbf7ed9c4720d9020829`.
 - KROAD-010 currently activates only a Kernel-local consumer contract; no downstream repository rejection evidence exists yet.
 - KROAD-010 ordinary production fixtures pin merged bootstrap commit `aa0317a07c10acf4e398dc9e5869f4e6966569f9`.
 - KROAD-010 history-dependent regressions use disposable runtime commits and never persist synthetic SHAs as production pins.
