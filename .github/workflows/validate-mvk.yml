@@ -34,5 +34,14 @@ jobs:
       - name: Validate roadmap memory consistency
         run: npm run validate:roadmap-memory
 
-      - name: Directly execute staged KROAD-010 bootstrap stack
-        run: node tools/validate-kroad-010-bootstrap.mjs
+      - name: Directly execute KROAD-010 bootstrap primary validator
+        if: ${{ always() }}
+        run: node tools/validate-kroad-010-bootstrap.mjs primary
+
+      - name: Directly execute KROAD-010 bootstrap canonical lock
+        if: ${{ always() }}
+        run: node tools/validate-kroad-010-bootstrap.mjs canonical-lock
+
+      - name: Directly execute KROAD-010 bootstrap lineage validator
+        if: ${{ always() }}
+        run: node tools/validate-kroad-010-bootstrap.mjs lineage
