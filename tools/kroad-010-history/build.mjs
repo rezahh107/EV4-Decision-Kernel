@@ -234,7 +234,7 @@ export function createActivationSource(builder) {
   );
 
   const unknownFixture = readJson(repository, UNKNOWN_COMMIT_FIXTURE);
-  if (unknownFixture.record.kernel_pin.kernel_ref
+  if (unknownFixture?.record?.kernel_pin?.kernel_ref
     !== 'ffffffffffffffffffffffffffffffffffffffff') {
     throw new MatrixError(
       'HISTORY_MATRIX_UNKNOWN_PIN_REGRESSED',
