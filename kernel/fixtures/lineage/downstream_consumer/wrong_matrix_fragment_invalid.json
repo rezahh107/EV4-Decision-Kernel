@@ -1,0 +1,15 @@
+{
+  "fixture_type": "kroad_010_downstream_consumer_lineage_case",
+  "schema_version": "0.1.0",
+  "case_id": "kroad_010.lineage.wrong_matrix_fragment.invalid",
+  "base_record_fixture": "kernel/fixtures/valid/downstream_consumer/architect_layout_structure_kernel_consumed_valid.json",
+  "record_patch": {
+    "kernel_artifact_refs.matrix_ref": "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.media_choice.v0"
+  },
+  "expected_result": {
+    "validation_status": "fail",
+    "diagnostic_codes": [
+      "DOWNSTREAM_CONSUMER_MATRIX_REF_MISMATCH"
+    ]
+  }
+}
