@@ -2,32 +2,40 @@
 
 ## Last Updated
 
-KROAD-010 Downstream Consumer Contract — security and bootstrap hardening in progress
+KROAD-010 Downstream Consumer Contract — Phase A architecture and history-matrix hardening in progress
 
 ## Status Authority
 
 This file is the authoritative current-status dashboard for roadmap progress after each merged PR.
 
-`planning/KERNEL_EXECUTION_PLAN.md` remains the durable detailed operating map for item meaning, scope, dependencies, acceptance criteria, evidence requirements, and do-not rules. If an item's status label in the detailed plan is stale, use this file for current roadmap status and update the detailed plan in a later maintenance PR only when changing roadmap meaning, scope, dependency, acceptance criteria, or evidence requirements.
+`planning/KERNEL_EXECUTION_PLAN.md` remains the durable detailed operating map for item meaning, scope, dependencies, acceptance criteria, evidence requirements, and do-not rules. If an item's status label in the detailed plan is stale, use this file for current roadmap status.
 
 Mutable staged/completed/blocked state must remain here and must not be embedded in byte-pinned KROAD-010 acceptance-semantic artifacts.
 
 ## Status Summary
 
 Current completed milestones: KROAD-000, KROAD-001, KROAD-002, KROAD-003, KROAD-004, KROAD-005, KROAD-006, KROAD-007, KROAD-008, KROAD-009.
-Current next task: KROAD-010 — Downstream Consumer Contract (blocked pending bootstrap review/merge, main-history pinning, exact-head CI, history simulation, and final-main validation).
+
+Current next task: KROAD-010 — Downstream Consumer Contract.
+
+Current status: **IN_PROGRESS / BLOCKED** pending independent review and merge authorization for PR #33, actual `main` bootstrap anchoring, PR #31 repinning, exact-head green CI, and final-main verification.
+
 KROAD-011 is unavailable until KROAD-010 is complete on verified `main` history.
+
 Detailed plan: `planning/KERNEL_EXECUTION_PLAN.md`.
+
 Do not continue from chat history; read this file first.
 
 ## Next Task
 
 - [ ] KROAD-010 — Downstream Consumer Contract
   - Status: **IN_PROGRESS / BLOCKED**.
-  - Bootstrap dependency: PR #33 must land lifecycle-neutral, byte-stable acceptance-semantic files on `main` only after its direct bootstrap execution check and independent review pass.
-  - Security dependency: the shared lineage patcher must reject `__proto__`, `prototype`, and `constructor` in both `record_patch` and `envelope_patch`, with prototype-integrity fixtures and observed CI evidence.
-  - Activation dependency: PR #31 must then sync with `main` and pin ordinary Consumer Records to the verified bootstrap commit.
-  - Required before completion: exact-head `Validate MVK`, Behavioral Coverage Audit, roadmap-memory validation, merge/squash/rebase history simulations, and final merged-`main` verification.
+  - Bootstrap dependency: PR #33 must land lifecycle-neutral, byte-stable acceptance-semantic files on `main` only after direct bootstrap execution and independent technical/security review pass.
+  - Security dependency: the shared lineage patcher must reject `__proto__`, `prototype`, and `constructor` in both `record_patch` and `envelope_patch`, with observed prototype-integrity evidence.
+  - Maintainability dependency: the primary validator must preserve its captured fixture order, statuses, and diagnostic requirements after refactoring.
+  - History dependency: PR #31 must execute a committed, clean three-method Git-history matrix for merge commit, squash, and rebase. Runtime roles `incomplete_anchor`, `stale_anchor`, and `bootstrap_anchor` must be created by the harness; no transient feature SHA may remain in canonical regression data.
+  - Activation dependency: after PR #33 is merged, PR #31 must sync with `main` and pin every ordinary Consumer Record to the verified resulting bootstrap commit.
+  - Required before completion: exact-head `Validate MVK`, Behavioral Coverage Audit, roadmap-memory validation, all three history simulations, exact drift diagnostic, and final merged-`main` verification.
   - KROAD-011 must not start while this item is blocked.
 
 ## Completed
@@ -62,7 +70,7 @@ Every PR that completes or materially changes a roadmap item must update this fi
 
 If a PR changes files under `kernel/`, `docs/`, `planning/`, schemas, validators, decision cards, governance documents, or roadmap-relevant source files, update this file in the same PR.
 
-Before ticking any item as complete, verify concrete merged repository and validation evidence exists. Draft/open PR artifacts, green advisory CI, or a planned main-history pin are not completion evidence.
+Before ticking any item as complete, verify concrete merged repository and validation evidence exists. Draft/open PR artifacts, green advisory CI, synthetic history success, or a planned main-history pin are not completion evidence.
 
 ## Open Notes
 
@@ -73,6 +81,7 @@ Before ticking any item as complete, verify concrete merged repository and valid
 - KROAD-010 mutable lifecycle state belongs here; its pinned manifest remains lifecycle-neutral.
 - KROAD-010 package wiring is orchestration state guarded by the canonical lock and is not part of immutable record semantics.
 - KROAD-010 fixture patch data is untrusted and must not mutate JavaScript prototypes.
+- KROAD-010 history-matrix SHAs are test-only runtime roles and must never become canonical production pins.
 - Human overrides must be explicitly marked.
 - Critical P0 provisional decisions must not pass final release.
 - Unknown decision families must fail closed with halt / insufficient evidence / no free decision.

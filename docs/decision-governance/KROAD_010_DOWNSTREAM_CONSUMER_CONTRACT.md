@@ -9,18 +9,16 @@
 
 Mutable roadmap and activation state belongs only in `planning/NEXT_WORK.md`.
 
-The byte-pinned manifest is lifecycle-neutral. Its `status` identifies the contract definition and its `next_allowed_step` delegates roadmap progression to `planning/NEXT_WORK.md`; neither field is changed merely to mark KROAD-010 complete.
+The byte-pinned manifest is lifecycle-neutral. Its `status` identifies the contract definition; it does not change merely because KROAD-010 moves from staged to completed.
 
-## Current state
+## Controlled two-PR sequence
 
-KROAD-010 is not complete on verified `main` history yet.
+KROAD-010 is split into two stages:
 
-The implementation is split into two controlled stages:
+1. PR #33 lands final byte-stable acceptance semantics on `main` without activating ordinary Consumer Records.
+2. PR #31 syncs with that verified `main` commit, pins ordinary records to it, activates package wiring, and proves merge-method-independent history behavior.
 
-1. PR #33 lands and directly executes the final byte-stable acceptance semantics on `main` without activating Consumer Records;
-2. PR #31 pins ordinary Consumer Records to that actual `main` commit, enables all gates, and proves the resulting histories.
-
-Until both stages pass exact-head CI and post-merge-history validation, KROAD-011 is not an available next task.
+Until both stages pass exact-head CI and final-main validation, KROAD-011 is unavailable.
 
 ## Machine-readable artifacts
 
@@ -32,13 +30,14 @@ kernel/decision-governance/downstream-consumer-lineage-binding.v0.json
 kernel/validator/validate-downstream-consumer-lineage.mjs
 kernel/validator/validate-downstream-consumer-canonical-lock.mjs
 kernel/fixtures/contract-lock/downstream_consumer/canonical_lock_mutations.json
-kernel/fixtures/valid/downstream_consumer/
-kernel/fixtures/invalid/downstream_consumer/
-kernel/fixtures/adversarial/downstream_consumer/
-kernel/fixtures/lineage/downstream_consumer/
+kernel/fixtures/contract-lock/downstream_consumer/primary-validator-baseline.v0.json
+kernel/fixtures/history-matrix/downstream_consumer/history-matrix.v0.json
+tools/validate-kroad-010-primary-baseline.mjs
+tools/validate-kroad-010-prototype-integrity.mjs
+tools/validate-kroad-010-history-matrix.mjs
 ```
 
-## Three deterministic validation gates
+## Three production validation gates
 
 ```text
 validate-downstream-consumer-contract.mjs
@@ -54,53 +53,112 @@ validate-downstream-consumer-lineage.mjs
      evidence limitations, patch-path safety, and anti-downgrade checks
 ```
 
-The gates remain separate so record semantics, repository orchestration, and Decision Record lineage are independently reviewable.
-
-## Bootstrap and immutable pin design
-
-A feature-branch commit is not a merge-method-independent durable anchor. The accepted design requires a bootstrap commit that already exists on `main` before ordinary Consumer Records are pinned.
-
-The immutable snapshot contains acceptance-semantic files only:
+The commands remain independent. Inside `validate:mvk`, each appears exactly once and in this order:
 
 ```text
-kernel/decision-governance/downstream-consumer-contract.v0.json
-kernel/schemas/downstream-consumer-contract.v0.schema.json
-kernel/validator/validate-downstream-consumer-contract.mjs
-kernel/decision-governance/downstream-consumer-lineage-binding.v0.json
-kernel/validator/validate-downstream-consumer-lineage.mjs
-kernel/validator/validate-downstream-consumer-canonical-lock.mjs
-kernel/schemas/decision-record.v2.schema.json
-kernel/decision-governance/resolver-rule-registry.v0.json
-kernel/decision-governance/resolver-rules/layout-structure.v0.json
-kernel/resolver-mvp/resolve-high-risk-p0.mjs
-kernel/validator/validate-l2-decision-correctness.mjs
+primary -> canonical-lock -> lineage
 ```
 
-`package.json` and `package-lock.json` are orchestration files, not immutable record semantics. Their exact scripts and MVK ordering are enforced by the canonical-lock gate instead of byte-pinning them across bootstrap and activation.
+## Production pin rules
 
-For every evaluated record, each acceptance-semantic file must exist in the pinned main-history commit and current checkout and match byte-for-byte.
-
-No final anchor SHA is documented until PR #33 is actually merged and the resulting `main` commit is verified.
-
-## Bootstrap-specific execution evidence
-
-PR #33 contains `tools/validate-kroad-010-bootstrap.mjs` and a dedicated Workflow step.
-
-The harness creates a detached temporary worktree at the exact PR head, activates package wiring only inside that temporary worktree, repins ordinary test records to the same head, and directly executes:
+Production validation continues to require:
 
 ```text
-primary
-canonical-lock
-lineage
+kernel_ref:
+  full lowercase 40-character commit SHA
+  commit exists
+  commit is an ancestor of validation HEAD
+  required artifacts exist at the pinned commit
+  current immutable semantics match the pinned snapshot
 ```
 
-The bootstrap branch itself does not activate KROAD-010 in `package.json`. A green legacy MVK run alone is not accepted as bootstrap execution evidence.
+These rules are not weakened or special-cased for tests.
+
+The immutable snapshot contains acceptance-semantic files, including the canonical-lock validator. It excludes:
+
+```text
+package.json
+package-lock.json
+```
+
+Package files are orchestration state and are protected separately by the canonical wiring lock.
+
+## No transient SHA in canonical regressions
+
+Canonical fixtures do not pin a PR head, feature-only commit, floating ref, or synthetic CI commit for byte-drift testing.
+
+History-dependent regressions are owned by the test-only history matrix. Runtime-created SHAs are written only into isolated disposable histories and never committed as production pins.
+
+## Deterministic Git-history matrix
+
+`tools/validate-kroad-010-history-matrix.mjs` creates an isolated repository with these runtime roles:
+
+```text
+I = incomplete pre-bootstrap main ancestor
+D = complete but stale acceptance-semantics anchor
+B = lifecycle-neutral current bootstrap anchor
+A = activation changes
+```
+
+Required relationship:
+
+```text
+I -> D -> B -> final history
+```
+
+For each final history:
+
+```text
+ordinary records pin B
+byte-drift regression pins D
+missing-stack regression pins I
+current checkout contains B semantics plus A wiring
+```
+
+The harness independently constructs:
+
+```text
+merge_commit
+squash
+rebase
+```
+
+Every state is committed before validation. `git status --porcelain` must be empty before and after each suite.
+
+The byte-drift case must emit exactly the dedicated behavior:
+
+```text
+DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_DRIFT
+```
+
+`DOWNSTREAM_CONSUMER_LINEAGE_PIN_UNAVAILABLE` is not accepted as byte-drift evidence.
+
+The matrix also proves:
+
+```text
+DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_FILE_MISSING
+DOWNSTREAM_CONSUMER_PINNED_ARTIFACT_MISSING
+```
+
+Mutation guards reject omitted merge methods, non-ancestor anchors, feature-only bootstrap anchors, dirty worktrees, weakened drift diagnostics, and ordinary records using the wrong anchor. Canonical-lock and prototype suites cover lifecycle drift, removed/reordered gates, and forbidden patch segments.
+
+## Primary validator maintainability
+
+The primary validator is expanded into reviewable functions with descriptive identifiers and exported test seams.
+
+`primary-validator-baseline.v0.json` captures only stable fixture order, expected status, and required diagnostic codes. It does not depend on a PR number or feature-branch head.
+
+`validate-kroad-010-primary-baseline.mjs` enforces:
+
+- the captured fixture order and required diagnostics;
+- unchanged pass/fail/insufficient-evidence behavior;
+- a reviewable source shape with no physical line over 120 characters.
 
 ## Fixture patch security
 
 Fixture JSON is untrusted input.
 
-The lineage patcher rejects these path segments before mutation:
+The lineage patcher rejects every path segment named:
 
 ```text
 __proto__
@@ -108,42 +166,25 @@ prototype
 constructor
 ```
 
-It also requires allowlisted roots, numeric array indexes, own-property traversal, and plain-object or array containers. The same guard applies to `record_patch` and `envelope_patch`.
+The guard applies to both `record_patch` and `envelope_patch`. It also requires allowlisted roots, numeric array indexes, own-property traversal, and plain-object or array containers.
 
-Direct adversarial cases are:
+Direct security coverage includes all six record/envelope combinations for `__proto__`, `constructor`, and `prototype`, plus an `Object.prototype` integrity check.
 
-```text
-kernel/fixtures/lineage/downstream_consumer/prototype_pollution_record_patch_invalid.json
-kernel/fixtures/lineage/downstream_consumer/prototype_pollution_envelope_patch_invalid.json
-```
-
-Both require:
+Stable rejection diagnostic:
 
 ```text
 DOWNSTREAM_CONSUMER_FIXTURE_PATCH_PATH_FORBIDDEN
 ```
 
-The validator additionally checks that `Object.prototype` remains unchanged during its bootstrap security self-test.
-
 ## Evidence lineage
 
 A consumer must preserve evidence ID, evidence tier, source type, evidence ref, and normalized material limitations.
 
-Limitation order and duplicate strings are non-semantic after trim/dedup/sort normalization. Removing, adding, or rewriting a material limitation fails with:
+Normalization trims strings, removes duplicates, and ignores ordering. Adding, removing, or rewriting a material limitation fails with:
 
 ```text
 DOWNSTREAM_CONSUMER_EVIDENCE_LIMITATIONS_MISMATCH
 ```
-
-## Canonical regression lock
-
-The canonical lock requires these gates exactly once in `validate:mvk` and in this order:
-
-```text
-primary -> canonical-lock -> lineage
-```
-
-The mutation suite verifies failure when a gate is removed, renamed, duplicated, reordered, when manifest/policy or execution sets drift, or when mutable lifecycle wording is reintroduced into the pinned manifest.
 
 ## `insufficient_evidence` is not a decision channel
 
@@ -159,15 +200,18 @@ active Resolver MVP families: layout_structure only
 KROAD-011+: not implemented
 runtime/browser evidence: not implemented
 Builder execution proof: not claimed
+Project Gate acceptance: not claimed
 production readiness: not claimed
 ```
 
 ## Validation
 
 ```bash
+npm ci --ignore-scripts --no-audit --no-fund
 npm run validate:downstream-consumer-contract
 npm run validate:downstream-consumer-canonical-lock
 npm run validate:downstream-consumer-lineage
+npm run validate:kroad-010-history-matrix
 npm run validate:mvk
 npm run validate:roadmap-memory
 ```
@@ -176,9 +220,10 @@ npm run validate:roadmap-memory
 
 KROAD-010 may be marked complete only after:
 
-1. the byte-stable bootstrap stack is independently reviewed and merged to `main`;
-2. ordinary records are pinned to the verified bootstrap commit on `main`;
-3. exact-head CI passes on the activation PR;
-4. merge, squash, and rebase history simulations preserve valid-record behavior;
-5. deliberate acceptance-code drift still fails closed;
-6. the final merged `main` history is validated.
+1. PR #33 is independently reviewed and explicitly merged to `main`;
+2. the actual resulting bootstrap commit and immutable blob SHAs are verified;
+3. PR #31 is synced with `main` and ordinary records pin that exact commit;
+4. exact-head CI passes on PR #31;
+5. merge, squash, and rebase matrix results all pass with clean worktrees and exact diagnostics;
+6. deliberate acceptance-code drift still fails closed;
+7. final merged `main` is validated.
