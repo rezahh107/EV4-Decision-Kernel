@@ -1,7 +1,7 @@
 {
   "contract_id": "kroad-010.downstream-consumer-contract.v0",
   "version": "0.1.0",
-  "status": "kroad_010_staged_blocked_pending_main_anchor",
+  "status": "kroad_010_contract_definition_v0",
   "owner": "Kernel",
   "scope": "Kernel-owned snapshot-bound contract and simulated fixtures for one initial downstream consumer. No downstream repository is modified and no live downstream enforcement is claimed.",
   "selected_consumer": {
@@ -106,6 +106,8 @@
     "kernel/fixtures/lineage/downstream_consumer/wrong_downstream_owner_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/evidence_lineage_mismatch_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/evidence_limitations_mismatch_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_record_patch_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/prototype_pollution_envelope_patch_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/unrelated_l2_result_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/rerun_l2_status_mismatch_invalid.json",
     "kernel/fixtures/lineage/downstream_consumer/same_envelope_wrong_l2_fragment_invalid.json",
@@ -133,5 +135,5 @@
     "npm run validate:mvk",
     "npm run validate:roadmap-memory"
   ],
-  "next_allowed_step": "Finish KROAD-010 bootstrap, main-history pinning, exact-head CI, and post-merge-history validation. KROAD-011 is not yet available."
+  "next_allowed_step": "Activation and roadmap progression are governed by planning/NEXT_WORK.md. This contract version does not implement KROAD-011."
 }
