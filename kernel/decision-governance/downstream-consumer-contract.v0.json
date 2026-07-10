@@ -1,0 +1,131 @@
+{
+  "contract_id": "kroad-010.downstream-consumer-contract.v0",
+  "version": "0.1.0",
+  "status": "kroad_010_kernel_local_contract_hardened",
+  "owner": "Kernel",
+  "scope": "Kernel-owned snapshot-bound contract and simulated fixtures for one initial downstream consumer. No downstream repository is modified and no live downstream enforcement is claimed.",
+  "selected_consumer": {
+    "repository": "rezahh107/EV4-Architect-Repo",
+    "role": "architect",
+    "target_count": 1,
+    "selection_reason": [
+      "Architect owns candidate generation, selection, and decision records before CE closure.",
+      "The Kernel already defines an Architect source/card consumption boundary, making this the smallest compatible extension.",
+      "Requiring Kernel refs at the Architect output boundary prevents silent free decisions for resolver-covered families without modifying multiple repositories."
+    ]
+  },
+  "schema_ref": "kernel/schemas/downstream-consumer-contract.v0.schema.json",
+  "validator_ref": "kernel/validator/validate-downstream-consumer-contract.mjs",
+  "lineage_policy_ref": "kernel/decision-governance/downstream-consumer-lineage-binding.v0.json",
+  "lineage_validator_ref": "kernel/validator/validate-downstream-consumer-lineage.mjs",
+  "canonical_lock_validator_ref": "kernel/validator/validate-downstream-consumer-canonical-lock.mjs",
+  "documentation_ref": "docs/decision-governance/KROAD_010_DOWNSTREAM_CONSUMER_CONTRACT.md",
+  "decision_record_schema_ref": "kernel/schemas/decision-record.v2.schema.json",
+  "resolver_registry_ref": "kernel/decision-governance/resolver-rule-registry.v0.json",
+  "l2_audit_ref": "kernel/validator/validate-l2-decision-correctness.mjs#auditDecisionRecord",
+  "initial_family": {
+    "decision_family_id": "layout_structure",
+    "matrix_id": "p0.matrix.layout_structure.v0",
+    "active_rule_id": "resolver.rule.layout_structure.mvp.v0",
+    "active_rule_version": "0.1.0",
+    "resolver_backed": true,
+    "decision_record_v2_required": true,
+    "l2_audit_pass_required": true
+  },
+  "required_kernel_artifact_ref_fields": [
+    "matrix_ref",
+    "decision_card_ref",
+    "resolver_registry_ref",
+    "resolver_rule_ref",
+    "decision_record_schema_ref",
+    "decision_record_ref",
+    "l2_audit_contract_ref",
+    "l2_audit_result_ref",
+    "vertical_slice_ref"
+  ],
+  "pin_snapshot_policy": {
+    "commit_must_exist": true,
+    "commit_must_be_ancestor_of_validation_head": true,
+    "contract_must_exist_at_pinned_commit": true,
+    "all_referenced_artifacts_read_from_pinned_commit": true,
+    "current_execution_files_must_match_pinned_snapshot": true,
+    "shallow_checkout_allowed": false
+  },
+  "insufficient_evidence_policy": {
+    "decision_fields_must_be_null": true,
+    "decision_bearing_ref_fields_must_be_null": [
+      "decision_card_ref",
+      "resolver_rule_ref",
+      "decision_record_ref",
+      "l2_audit_result_ref",
+      "vertical_slice_ref"
+    ],
+    "missing_ref_set_must_equal_null_decision_ref_fields": true,
+    "evidence_gap_source_type_required": true
+  },
+  "unsupported_family_policy": {
+    "outcome": "insufficient_evidence",
+    "resolver_backed_claim_allowed": false,
+    "free_decision_allowed": false,
+    "requires_missing_kernel_refs": true
+  },
+  "missing_reference_policy": {
+    "kernel_consumed_with_missing_refs_allowed": false,
+    "outcome": "fail_closed",
+    "diagnostic_code": "DOWNSTREAM_CONSUMER_REQUIRED_KERNEL_REF_MISSING"
+  },
+  "fixtures": {
+    "valid": [
+      "kernel/fixtures/valid/downstream_consumer/architect_layout_structure_kernel_consumed_valid.json",
+      "kernel/fixtures/valid/downstream_consumer/architect_layout_structure_insufficient_evidence_valid.json",
+      "kernel/fixtures/valid/downstream_consumer/architect_media_choice_insufficient_evidence_valid.json"
+    ],
+    "invalid": [
+      "kernel/fixtures/invalid/downstream_consumer/architect_layout_structure_missing_kernel_refs_invalid.json"
+    ],
+    "adversarial": [
+      "kernel/fixtures/adversarial/downstream_consumer/architect_unsupported_family_resolver_backed_adversarial.json",
+      "kernel/fixtures/adversarial/downstream_consumer/architect_synthetic_evidence_overclaim_adversarial.json",
+      "kernel/fixtures/adversarial/downstream_consumer/architect_layout_structure_insufficient_with_fake_decision_adversarial.json",
+      "kernel/fixtures/adversarial/downstream_consumer/architect_unknown_kernel_commit_adversarial.json",
+      "kernel/fixtures/adversarial/downstream_consumer/architect_ancestor_missing_contract_adversarial.json",
+      "kernel/fixtures/adversarial/downstream_consumer/architect_working_tree_drift_adversarial.json"
+    ]
+  },
+  "lineage_cases": [
+    "kernel/fixtures/lineage/downstream_consumer/conditional_provisional_valid.json",
+    "kernel/fixtures/lineage/downstream_consumer/provisional_downgrade_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/wrong_downstream_owner_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/evidence_lineage_mismatch_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/unrelated_l2_result_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/rerun_l2_status_mismatch_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/same_envelope_wrong_l2_fragment_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/wrong_matrix_fragment_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/missing_provenance_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/missing_pinned_execution_stack_invalid.json",
+    "kernel/fixtures/lineage/downstream_consumer/pinned_execution_byte_drift_invalid.json"
+  ],
+  "evidence_semantics_cases": [
+    "kernel/fixtures/lineage/downstream_consumer/evidence_limitations_mismatch_invalid.json"
+  ],
+  "no_overclaim_boundaries": {
+    "consumer_repository_modified": false,
+    "live_downstream_enforcement_claimed": false,
+    "real_target_project_proof_claimed": false,
+    "runtime_browser_evidence_implemented": false,
+    "builder_execution_proof_claimed": false,
+    "project_gate_intake_implemented": false,
+    "project_gate_acceptance_claimed": false,
+    "production_readiness_claimed": false,
+    "new_resolver_mvp_families_added": false,
+    "kroad_011_or_later_implemented": false
+  },
+  "validation_commands": [
+    "npm run validate:downstream-consumer-contract",
+    "npm run validate:downstream-consumer-canonical-lock",
+    "npm run validate:downstream-consumer-lineage",
+    "npm run validate:mvk",
+    "npm run validate:roadmap-memory"
+  ],
+  "next_allowed_step": "KROAD-011 — Project Gate Intake; not implemented by this contract."
+}
