@@ -1,7 +1,7 @@
 # KROAD-010 Downstream Consumer Contract
 
-**Status:** staged / blocked pending bootstrap merge, main-history pinning, and final validation  
-**Scope:** one Kernel-local downstream consumer contract for `rezahh107/EV4-Architect-Repo`  
+**Status:** bootstrap staged / blocked pending independent review and merge authorization  
+**Scope:** lifecycle-neutral Kernel-local acceptance semantics for one future `EV4-Architect-Repo` consumer  
 **Owner:** Kernel  
 **Intended consumer:** Architect decision-output boundary
 
@@ -9,20 +9,18 @@
 
 Mutable roadmap and activation state belongs only in `planning/NEXT_WORK.md`.
 
-The byte-pinned manifest is lifecycle-neutral. Its `status` identifies the contract definition and its `next_allowed_step` delegates roadmap progression to `planning/NEXT_WORK.md`; neither field is changed merely to mark KROAD-010 complete.
+The byte-pinned manifest is lifecycle-neutral. Its `status` identifies the contract definition and does not change merely because KROAD-010 moves from staged to completed.
 
-## Current state
+## Controlled two-PR sequence
 
-KROAD-010 is not complete on verified `main` history yet.
+KROAD-010 is split into two stages:
 
-The implementation is split into two controlled stages:
+1. PR #33 lands final byte-stable acceptance semantics on `main` without activating ordinary Consumer Records.
+2. PR #31 syncs with that verified `main` commit, pins ordinary records to it, activates package wiring, and proves merge-method-independent history behavior.
 
-1. PR #33 lands and directly executes the final byte-stable acceptance semantics on `main` without activating Consumer Records;
-2. PR #31 pins ordinary Consumer Records to that actual `main` commit, enables all gates, and proves the resulting histories.
+PR #33 does not establish the final production anchor until it is explicitly merged and the resulting `main` commit is verified.
 
-Until both stages pass exact-head CI and post-merge-history validation, KROAD-011 is not an available next task.
-
-## Machine-readable artifacts
+## Bootstrap artifacts
 
 ```text
 kernel/schemas/downstream-consumer-contract.v0.schema.json
@@ -32,13 +30,15 @@ kernel/decision-governance/downstream-consumer-lineage-binding.v0.json
 kernel/validator/validate-downstream-consumer-lineage.mjs
 kernel/validator/validate-downstream-consumer-canonical-lock.mjs
 kernel/fixtures/contract-lock/downstream_consumer/canonical_lock_mutations.json
-kernel/fixtures/valid/downstream_consumer/
-kernel/fixtures/invalid/downstream_consumer/
-kernel/fixtures/adversarial/downstream_consumer/
-kernel/fixtures/lineage/downstream_consumer/
+kernel/fixtures/contract-lock/downstream_consumer/primary-validator-baseline.v0.json
+tools/validate-kroad-010-bootstrap.mjs
+tools/validate-kroad-010-primary-baseline.mjs
+tools/validate-kroad-010-prototype-integrity.mjs
 ```
 
-## Three deterministic validation gates
+The bootstrap also carries representative primary and lineage fixtures so the final validators can be executed directly before they become immutable on `main`.
+
+## Three production validation gates
 
 ```text
 validate-downstream-consumer-contract.mjs
@@ -54,53 +54,69 @@ validate-downstream-consumer-lineage.mjs
      evidence limitations, patch-path safety, and anti-downgrade checks
 ```
 
-The gates remain separate so record semantics, repository orchestration, and Decision Record lineage are independently reviewable.
-
-## Bootstrap and immutable pin design
-
-A feature-branch commit is not a merge-method-independent durable anchor. The accepted design requires a bootstrap commit that already exists on `main` before ordinary Consumer Records are pinned.
-
-The immutable snapshot contains acceptance-semantic files only:
+The commands remain independent. PR #31 will activate them exactly once and in this order:
 
 ```text
-kernel/decision-governance/downstream-consumer-contract.v0.json
-kernel/schemas/downstream-consumer-contract.v0.schema.json
-kernel/validator/validate-downstream-consumer-contract.mjs
-kernel/decision-governance/downstream-consumer-lineage-binding.v0.json
-kernel/validator/validate-downstream-consumer-lineage.mjs
-kernel/validator/validate-downstream-consumer-canonical-lock.mjs
-kernel/schemas/decision-record.v2.schema.json
-kernel/decision-governance/resolver-rule-registry.v0.json
-kernel/decision-governance/resolver-rules/layout-structure.v0.json
-kernel/resolver-mvp/resolve-high-risk-p0.mjs
-kernel/validator/validate-l2-decision-correctness.mjs
+primary -> canonical-lock -> lineage
 ```
 
-`package.json` and `package-lock.json` are orchestration files, not immutable record semantics. Their exact scripts and MVK ordering are enforced by the canonical-lock gate instead of byte-pinning them across bootstrap and activation.
+## Immutable snapshot classification
 
-For every evaluated record, each acceptance-semantic file must exist in the pinned main-history commit and current checkout and match byte-for-byte.
+The immutable snapshot contains acceptance-semantic files, including the canonical-lock validator. It excludes:
 
-No final anchor SHA is documented until PR #33 is actually merged and the resulting `main` commit is verified.
+```text
+package.json
+package-lock.json
+```
 
-## Bootstrap-specific execution evidence
+Package files are orchestration state and are protected separately by the canonical wiring lock after activation.
 
-PR #33 contains `tools/validate-kroad-010-bootstrap.mjs` and a dedicated Workflow step.
+Every production Consumer Record must eventually pin an actual verified `main` commit containing these semantics. A PR head or feature-only commit is not an acceptable production anchor.
 
-The harness creates a detached temporary worktree at the exact PR head, activates package wiring only inside that temporary worktree, repins ordinary test records to the same head, and directly executes:
+## No transient history fixture
+
+Canonical bootstrap data does not retain byte-drift or missing-stack fixtures that hard-code feature-branch commits.
+
+The former history-dependent fixtures are recorded only as migrated behavior in `primary-validator-baseline.v0.json`. Their executable replacement is the activation-only runtime history matrix owned by PR #31.
+
+That matrix constructs runtime `incomplete_anchor`, `stale_anchor`, and `bootstrap_anchor` commits inside disposable repositories. No synthetic SHA becomes a production record pin.
+
+## Direct bootstrap execution
+
+`tools/validate-kroad-010-bootstrap.mjs` creates a detached temporary worktree at the exact bootstrap head, activates package wiring only inside the temporary history, repins ordinary test records to the bootstrap head, commits the synthetic activation state, and verifies a clean worktree.
+
+It directly executes:
 
 ```text
 primary
+primary-baseline
 canonical-lock
 lineage
+prototype-integrity
 ```
 
-The bootstrap branch itself does not activate KROAD-010 in `package.json`. A green legacy MVK run alone is not accepted as bootstrap execution evidence.
+The bootstrap branch itself does not activate KROAD-010 in `package.json`.
+
+## Primary validator maintainability
+
+The primary validator is expanded into reviewable functions with descriptive identifiers and exported test seams.
+
+`primary-validator-baseline.v0.json` captures only stable fixture order, expected status, and required diagnostic codes. It contains no PR number or feature-branch head dependency.
+
+`validate-kroad-010-primary-baseline.mjs` enforces:
+
+- unchanged fixture ordering and required diagnostics;
+- unchanged pass/fail/insufficient-evidence behavior;
+- at least 100 physical lines;
+- no physical line longer than 120 characters.
+
+No formatting dependency was added.
 
 ## Fixture patch security
 
 Fixture JSON is untrusted input.
 
-The lineage patcher rejects these path segments before mutation:
+The lineage patcher rejects every path segment named:
 
 ```text
 __proto__
@@ -108,28 +124,32 @@ prototype
 constructor
 ```
 
-It also requires allowlisted roots, numeric array indexes, own-property traversal, and plain-object or array containers. The same guard applies to `record_patch` and `envelope_patch`.
+The guard applies to both `record_patch` and `envelope_patch`. It also requires allowlisted roots, numeric array indexes, own-property traversal, and plain-object or array containers.
 
-Direct adversarial cases are:
+Direct fixtures cover all six record/envelope combinations:
 
 ```text
-kernel/fixtures/lineage/downstream_consumer/prototype_pollution_record_patch_invalid.json
-kernel/fixtures/lineage/downstream_consumer/prototype_pollution_envelope_patch_invalid.json
+prototype_pollution_record_patch_invalid.json
+prototype_pollution_record_constructor_invalid.json
+prototype_pollution_record_prototype_invalid.json
+prototype_pollution_envelope_patch_invalid.json
+prototype_pollution_envelope_constructor_invalid.json
+prototype_pollution_envelope_prototype_invalid.json
 ```
 
-Both require:
+Stable rejection diagnostic:
 
 ```text
 DOWNSTREAM_CONSUMER_FIXTURE_PATCH_PATH_FORBIDDEN
 ```
 
-The validator additionally checks that `Object.prototype` remains unchanged during its bootstrap security self-test.
+`validate-kroad-010-prototype-integrity.mjs` also proves that `Object.prototype` remains unchanged and that normal allowlisted patching still works.
 
 ## Evidence lineage
 
 A consumer must preserve evidence ID, evidence tier, source type, evidence ref, and normalized material limitations.
 
-Limitation order and duplicate strings are non-semantic after trim/dedup/sort normalization. Removing, adding, or rewriting a material limitation fails with:
+Normalization trims strings, removes duplicates, and ignores ordering. Adding, removing, or rewriting a material limitation fails with:
 
 ```text
 DOWNSTREAM_CONSUMER_EVIDENCE_LIMITATIONS_MISMATCH
@@ -137,13 +157,13 @@ DOWNSTREAM_CONSUMER_EVIDENCE_LIMITATIONS_MISMATCH
 
 ## Canonical regression lock
 
-The canonical lock requires these gates exactly once in `validate:mvk` and in this order:
+The mutation suite rejects:
 
-```text
-primary -> canonical-lock -> lineage
-```
-
-The mutation suite verifies failure when a gate is removed, renamed, duplicated, reordered, when manifest/policy or execution sets drift, or when mutable lifecycle wording is reintroduced into the pinned manifest.
+- missing or renamed gate scripts;
+- duplicated or reordered KROAD-010 gates;
+- manifest/policy case-set drift;
+- immutable execution-set drift;
+- reintroduction of mutable lifecycle wording into the pinned manifest.
 
 ## `insufficient_evidence` is not a decision channel
 
@@ -152,33 +172,36 @@ The mutation suite verifies failure when a gate is removed, renamed, duplicated,
 ## Confirmed boundaries
 
 ```text
-selected downstream target: EV4-Architect-Repo only
+ordinary production records activated: no
+actual main-history bootstrap anchor: not yet available
 downstream repository modifications: none
 live downstream enforcement: not claimed
-active Resolver MVP families: layout_structure only
 KROAD-011+: not implemented
 runtime/browser evidence: not implemented
 Builder execution proof: not claimed
+Project Gate acceptance: not claimed
 production readiness: not claimed
 ```
 
-## Validation
+## Bootstrap validation
 
 ```bash
-npm run validate:downstream-consumer-contract
-npm run validate:downstream-consumer-canonical-lock
-npm run validate:downstream-consumer-lineage
+npm ci --ignore-scripts --no-audit --no-fund
 npm run validate:mvk
 npm run validate:roadmap-memory
+node tools/validate-kroad-010-bootstrap.mjs primary
+node tools/validate-kroad-010-bootstrap.mjs primary-baseline
+node tools/validate-kroad-010-bootstrap.mjs canonical-lock
+node tools/validate-kroad-010-bootstrap.mjs lineage
+node tools/validate-kroad-010-bootstrap.mjs prototype-integrity
 ```
 
-## Completion gate
+## Required continuation after merge authorization
 
-KROAD-010 may be marked complete only after:
-
-1. the byte-stable bootstrap stack is independently reviewed and merged to `main`;
-2. ordinary records are pinned to the verified bootstrap commit on `main`;
-3. exact-head CI passes on the activation PR;
-4. merge, squash, and rebase history simulations preserve valid-record behavior;
-5. deliberate acceptance-code drift still fails closed;
-6. the final merged `main` history is validated.
+1. independently review the exact PR #33 head;
+2. explicitly authorize and merge PR #33;
+3. verify the actual resulting commit and immutable blob SHAs on `main`;
+4. sync PR #31 with `main`;
+5. repin ordinary records to that exact bootstrap commit;
+6. rerun exact-head CI and the merge/squash/rebase history matrix;
+7. validate final merged `main` before marking KROAD-010 complete.
