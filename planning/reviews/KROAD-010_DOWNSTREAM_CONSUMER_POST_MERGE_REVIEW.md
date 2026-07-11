@@ -14,6 +14,8 @@ activation_merge_commit: 60836283d9a5ae98c3c3819c7ab33a6f40206289
 bootstrap_commit: aa0317a07c10acf4e398dc9e5869f4e6966569f9
 reviewed_activation_head: f61fbf931e585b50403be2b015d34fee3a206a17
 behavioral_coverage_synthetic_merge: ac0cb0f513486c65907c262188f2d4d0a38d2cab
+evaluated_main_commit: merge commit produced when PR #37 lands
+exact_sha: to be recorded by the evidence-closure PR
 ```
 
 PR #33 merged the lifecycle-neutral acceptance stack as the bootstrap anchor. PR #34 merged the activation layer. Repository comparison confirms the activation merge descends from the bootstrap anchor.
@@ -139,15 +141,16 @@ Root tree OID retrieval is no longer the next operational action or a mandatory 
 
 ## Adopted closure governance
 
-PR #37 proposes the KROAD-010-specific mode:
+PR #37 adopts the KROAD-010-specific governance mode:
 
 ```text
 evidence_mode: current_main_post_activation_validation
+effective_condition: decision_present_on_main
 ```
 
-The mode becomes available only after PR #37 is independently reviewed and manually merged.
+The mode is effective when `planning/decisions/KROAD-010_CURRENT_MAIN_POST_ACTIVATION_VALIDATION_DECISION.md` is present on `main`. Its adoption does not complete KROAD-010.
 
-A follow-up evidence-only closure PR must evaluate the resulting PR #37 merge commit on `main` and require all of the following:
+A follow-up evidence-only closure PR must evaluate the merge commit produced when PR #37 lands and require all of the following:
 
 1. activation commit `60836283d9a5ae98c3c3819c7ab33a6f40206289` is an ancestor of the evaluated `main` commit;
 2. bootstrap anchor `aa0317a07c10acf4e398dc9e5869f4e6966569f9` remains an ancestor of activation;
@@ -173,25 +176,29 @@ A follow-up evidence-only closure PR must evaluate the resulting PR #37 merge co
 ## Current decision
 
 ```text
-PR_37_purpose: governance_adoption_only
+governance_state_after_merge: adopted
 KROAD-010: needs_audit
 KROAD-011: blocked
-KROAD-010_completion_in_PR_37: no
-KROAD-011_unblocked_in_PR_37: no
+completion_evidence_mode: current_main_post_activation_validation
+completion_evidence_status: pending_post_merge_push_evidence
+KROAD-010_completion_by_PR_37: no
+KROAD-011_unblocked_by_PR_37: no
 required_follow_up: post_merge_push_run_evidence_closure
+evaluated_main_commit: merge commit produced when PR #37 lands
+exact_sha: to be recorded by the evidence-closure PR
 ```
 
-The qualifying push runs cannot exist for the PR #37 merge commit until PR #37 is merged. Therefore PR #37 must not mark KROAD-010 complete.
+KROAD-011 remains blocked until the separate evidence-only closure PR completes KROAD-010. Governance merge is not itself a remaining KROAD-010 evidence gate.
 
 ## Required follow-up after PR #37 merge
 
 A separate evidence-only closure PR must:
 
 ```text
-identify PR #37 merge commit
-verify activation and bootstrap ancestry
-enumerate and classify post-activation paths
-verify protected-surface status
+identify the actual PR #37 merge commit now on main
+verify bootstrap -> activation -> evaluated-main ancestry
+enumerate and classify every post-activation path
+verify the protected implementation surface
 retrieve Validate MVK push run with exact matching head_sha
 retrieve Behavioral Coverage Audit push run with exact matching head_sha
 record all required run/job/step/timestamp/URL fields

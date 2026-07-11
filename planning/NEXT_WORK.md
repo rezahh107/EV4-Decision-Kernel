@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-KROAD-010 Downstream Consumer Contract — bounded current-main validation governance proposed; completion remains pending post-merge push-run evidence
+KROAD-010 Downstream Consumer Contract — `current_main_post_activation_validation` adopted by PR #37; completion remains pending post-merge push-run evidence
 
 ## Status Authority
 
@@ -17,11 +17,13 @@ Mutable KROAD-010 activation/completion state also lives here. The lifecycle-neu
 ## Status Summary
 
 Current completed milestones: KROAD-000, KROAD-001, KROAD-002, KROAD-003, KROAD-004, KROAD-005, KROAD-006, KROAD-007, KROAD-008, KROAD-009.
-Current next task: KROAD-010 — Downstream Consumer Contract post-merge validation.
-Governance base `main` for PR #37: `56a730fc3bbf6939bdb49dd81e25ae0421c376e2`.
+Current next task: KROAD-010 — Downstream Consumer Contract post-merge evidence closure.
+PR #37 governance base `main`: `56a730fc3bbf6939bdb49dd81e25ae0421c376e2`.
 Verified bootstrap anchor on `main`: `aa0317a07c10acf4e398dc9e5869f4e6966569f9` from merged PR #33.
 Verified activation merge on `main`: `60836283d9a5ae98c3c3819c7ab33a6f40206289` from merged PR #34.
-KROAD-011 remains unavailable until the reviewed KROAD-010 governance rule is merged and a separate evidence-closure PR records successful direct push validation on the resulting current `main` merge commit.
+Governance decision adopted by PR #37: `current_main_post_activation_validation`.
+Evaluated `main` commit: merge commit produced when PR #37 lands; exact SHA to be recorded by the evidence-closure PR.
+KROAD-011 remains unavailable until a separate evidence-closure PR applies the adopted rule and completes KROAD-010.
 Detailed plan: `planning/KERNEL_EXECUTION_PLAN.md`.
 Do not continue from chat history; read this file first.
 
@@ -31,6 +33,8 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
 
 - [ ] KROAD-010 — Downstream Consumer Contract
   - Status: **NEEDS_AUDIT / CURRENT_MAIN_POST_ACTIVATION_VALIDATION_PENDING**.
+  - `completion_evidence_mode`: `current_main_post_activation_validation`.
+  - `completion_evidence_status`: `pending_post_merge_push_evidence`.
   - Bootstrap evidence: PR #33 merged lifecycle-neutral acceptance semantics as `aa0317a07c10acf4e398dc9e5869f4e6966569f9`.
   - Activation evidence: PR #34 merged as `60836283d9a5ae98c3c3819c7ab33a6f40206289`.
   - Reviewed activation head: `f61fbf931e585b50403be2b015d34fee3a206a17`.
@@ -39,16 +43,21 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
   - Package wiring activates `primary -> canonical-lock -> lineage` exactly once and in that order.
   - The deterministic history matrix passed merge commit, squash, and rebase with clean worktrees and exact drift/missing diagnostics.
   - Historical note: direct Actions retrieval for exact activation commit `60836283d9a5ae98c3c3819c7ab33a6f40206289` was unavailable. No historical success was invented.
-  - Governance change: PR #37 proposes `current_main_post_activation_validation` as the explicit bounded closure mode. The former root-tree-OID proposal is superseded as valid but operationally inaccessible; root tree equality is no longer a mandatory closure condition.
+  - Governance state: PR #37 adopts `current_main_post_activation_validation` as the explicit bounded closure mode. The former root-tree-OID proposal is superseded as valid but operationally inaccessible; root tree equality is no longer a mandatory closure condition.
+  - Evaluated `main` commit: merge commit produced when PR #37 lands. Exact SHA: to be recorded by the evidence-closure PR.
   - Protected post-activation surface: `.github/workflows/`, `package.json`, `package-lock.json`, `kernel/`, `tools/validate-kroad-010-*`, and `tools/kroad-010-history/`. Every changed path must be enumerated and semantically classified before closure.
   - Remaining gate:
-    1. merge the independently reviewed governance rule;
-    2. observe direct successful `push`-event runs for `Validate MVK` and `Behavioral Coverage Audit` whose exact run-record `head_sha` equals the resulting current `main` merge commit;
-    3. record run IDs, run numbers, URLs, timestamps, job IDs, relevant step conclusions, and the `kroad-010-history-matrix` artifact evidence in a separate evidence-closure PR.
-  - This PR does not complete KROAD-010 and does not unblock KROAD-011.
-  - Governance decision: `planning/decisions/KROAD-010_TESTED_TREE_EQUIVALENCE_DECISION.md`.
+    1. identify the actual PR #37 merge commit now on `main`;
+    2. verify bootstrap → activation → evaluated-main ancestry;
+    3. enumerate and semantically classify every path changed after activation;
+    4. verify that no unreviewed change affects the protected KROAD-010 implementation surface;
+    5. retrieve successful direct `push`-event runs for `Validate MVK` and `Behavioral Coverage Audit` whose exact run-record `head_sha` equals the PR #37 merge commit;
+    6. record complete run, job, step, timestamp, URL, and `kroad-010-history-matrix` artifact evidence in a separate evidence-closure PR;
+    7. complete KROAD-010 only if every mandatory criterion passes.
+  - Governance adoption by PR #37 does not complete KROAD-010 and does not unblock KROAD-011.
+  - Governance decision: `planning/decisions/KROAD-010_CURRENT_MAIN_POST_ACTIVATION_VALIDATION_DECISION.md`.
   - Post-merge review record: `planning/reviews/KROAD-010_DOWNSTREAM_CONSUMER_POST_MERGE_REVIEW.md`.
-  - KROAD-011 must not start while this item remains unchecked.
+  - KROAD-011 remains blocked until the evidence-only closure PR completes KROAD-010.
 
 ## Completed
 
@@ -119,7 +128,7 @@ If evidence is missing or uncertain, do not tick the item; add a note explaining
 - KROAD-007 L2 Decision Correctness Audit is limited to resolver-covered families and must rerun the resolver, not act as a second free-text opinion.
 - KROAD-008 fixture triplet coverage is limited to active Resolver MVP rules. The only active family remains `layout_structure`.
 - KROAD-009 provides one Kernel-local end-to-end `layout_structure` pattern only; it is not downstream enforcement or real target-project proof.
-- KROAD-010 closure requires the reviewed governance change plus direct successful current-main push-event evidence on the resulting merge commit; PR #34 pull-request evidence remains supporting evidence only.
+- KROAD-010 governance mode is `current_main_post_activation_validation`; closure remains pending direct successful push-event evidence on the merge commit produced when PR #37 lands.
 - KROAD-010 currently activates only a Kernel-local consumer contract; no downstream repository rejection evidence exists yet.
 - KROAD-010 ordinary production fixtures pin merged bootstrap commit `aa0317a07c10acf4e398dc9e5869f4e6966569f9`.
 - KROAD-010 history-dependent regressions use disposable runtime commits and never persist synthetic SHAs as production pins.

@@ -1,12 +1,23 @@
 # KROAD-010 Current-Main Post-Activation Validation Decision
 
-**Status:** proposed governance adoption; authoritative only after merge  
+**Governance decision:** `current_main_post_activation_validation`  
+**Effective condition:** this decision is present on `main`  
+**KROAD-010 application status:** `pending_post_merge_push_evidence`  
+**KROAD-010 completion status:** `needs_audit`  
 **Decision owner:** Kernel governance  
 **Applies to:** KROAD-010 closure evidence only  
-**Evidence mode:** `current_main_post_activation_validation`  
 **Roadmap authority:** `planning/NEXT_WORK.md`
 
-> Filename note: this file retains its original path for review continuity. The former `equivalent_tested_tree` proposal is superseded by this decision and is not an active closure mode.
+## Lifecycle invariant
+
+This decision becomes effective when merged to `main`. Its presence on `main` adopts the evidence mode but does not complete KROAD-010.
+
+The closure sequence remains deliberately split:
+
+1. PR #37 adopts this governance decision.
+2. A separate post-merge evidence-only PR applies the decision to the actual PR #37 merge commit and may close KROAD-010 only if every mandatory criterion passes.
+
+KROAD-011 remains blocked until the evidence-only closure PR completes KROAD-010.
 
 ## Decision context
 
@@ -31,13 +42,14 @@ This is an explicit governance change, not a silent reinterpretation of historic
 evidence_mode: current_main_post_activation_validation
 ```
 
-This mode is specific to KROAD-010. It becomes an available KROAD-010 closure mode only after this governance PR is independently reviewed and merged.
+This mode is specific to KROAD-010. It is adopted when this decision is present on `main`.
 
-PR #37 performs governance adoption only:
+Governance adoption and roadmap completion are separate:
 
 ```text
-KROAD-010 completion in PR #37: no
-KROAD-011 unblocked in PR #37: no
+PR #37 purpose: governance adoption only
+KROAD-010 completion by PR #37: no
+KROAD-011 unblocked by PR #37: no
 required follow-up: post-merge push-run evidence closure PR
 ```
 
@@ -165,22 +177,21 @@ Root tree OID equality remains a legitimate Git content-identity method, but it 
 
 ## Two-step closure sequence
 
-### Step 1 — PR #37 governance adoption
+### Step 1 — governance adoption by PR #37
 
-PR #37 must:
+When PR #37 lands, the presence of this decision on `main`:
 
-- adopt this mode;
-- update `planning/NEXT_WORK.md` and `planning/KERNEL_EXECUTION_PLAN.md` coherently;
-- preserve `KROAD-010: needs_audit`;
-- preserve `KROAD-011: blocked`;
-- remain Draft pending fresh independent review;
-- not close KROAD-010.
+- adopts `current_main_post_activation_validation`;
+- keeps `KROAD-010: needs_audit`;
+- keeps `KROAD-011: blocked`;
+- does not itself apply the evidence rule;
+- does not close KROAD-010.
 
 ### Step 2 — separate evidence-only closure PR
 
-Only after PR #37 is reviewed and manually merged may a separate PR:
+After the merge commit produced when PR #37 lands is present on `main`, a separate PR must:
 
-1. identify the PR #37 merge commit now on `main`;
+1. identify that merge commit and record its exact SHA;
 2. verify activation and bootstrap ancestry;
 3. enumerate and classify every post-activation path;
 4. confirm the protected implementation surface has no unreviewed changes;
@@ -189,16 +200,16 @@ Only after PR #37 is reviewed and manually merged may a separate PR:
 7. mark `KROAD-010` complete only if every criterion passes;
 8. make `KROAD-011` the next allowed task without implementing it.
 
-## Required roadmap state while PR #37 is open
+## Lifecycle-safe roadmap state
 
 ```text
-KROAD-010: needs_audit
-KROAD-011: blocked
-completion_evidence_mode: pending_governance_merge
-remaining_gate:
-  - merge the independently reviewed governance rule
-  - observe both required push-event workflows on the resulting main merge commit
-  - record complete run, job, step, URL, timestamp, and artifact evidence in a follow-up closure PR
+governance_decision: current_main_post_activation_validation
+effective_condition: decision_present_on_main
+KROAD-010_application_status: pending_post_merge_push_evidence
+KROAD-010_completion_status: needs_audit
+KROAD-011_status: blocked
+evaluated_main_commit: merge commit produced when PR #37 lands
+exact SHA: to be recorded by the evidence-closure PR
 ```
 
 ## Historical note
@@ -224,4 +235,4 @@ ecosystem readiness: not claimed
 production readiness: not claimed
 ```
 
-This decision does not implement KROAD-011 and does not itself complete KROAD-010.
+This decision adopts the evidence mode when present on `main`; it does not implement KROAD-011 and does not itself complete KROAD-010.
