@@ -1,7 +1,7 @@
 # KROAD-010 Downstream Consumer Contract — Post-Merge Review
 
-**Status:** needs_audit  
-**Scope:** evidence-only post-merge verification record for KROAD-010 bootstrap, activation, and closure governance  
+**Status:** complete  
+**Scope:** evidence-only post-merge verification record for KROAD-010 bootstrap, activation, governance adoption, and current-main closure evidence  
 **Owner:** Kernel  
 **Roadmap authority:** `planning/NEXT_WORK.md`
 
@@ -10,15 +10,18 @@
 ```text
 governance_base_main: 56a730fc3bbf6939bdb49dd81e25ae0421c376e2
 pr_36_merge_commit: 56a730fc3bbf6939bdb49dd81e25ae0421c376e2
-activation_merge_commit: 60836283d9a5ae98c3c3819c7ab33a6f40206289
 bootstrap_commit: aa0317a07c10acf4e398dc9e5869f4e6966569f9
+activation_merge_commit: 60836283d9a5ae98c3c3819c7ab33a6f40206289
 reviewed_activation_head: f61fbf931e585b50403be2b015d34fee3a206a17
 behavioral_coverage_synthetic_merge: ac0cb0f513486c65907c262188f2d4d0a38d2cab
-evaluated_main_commit: merge commit produced when PR #37 lands
-exact_sha: to be recorded by the evidence-closure PR
+pr_37_head: 5125cbf347789dbe037658f4ae540f461bf6812e
+pr_37_merge_commit: 9e07cfe551c80d669d13489b05b035834290a32f
+evaluated_main_commit: 9e07cfe551c80d669d13489b05b035834290a32f
+completion_evidence_mode: current_main_post_activation_validation
+completion_evidence_status: satisfied
 ```
 
-PR #33 merged the lifecycle-neutral acceptance stack as the bootstrap anchor. PR #34 merged the activation layer. Repository comparison confirms the activation merge descends from the bootstrap anchor.
+PR #33 merged the lifecycle-neutral acceptance stack as the bootstrap anchor. PR #34 merged the activation layer. PR #37 merged the bounded `current_main_post_activation_validation` governance decision. The evidence-only closure operation evaluated the actual PR #37 merge commit on `main`.
 
 ## Confirmed implementation state
 
@@ -32,11 +35,187 @@ The activation:
 - implements only a Kernel-local consumer contract;
 - does not prove live downstream enforcement, runtime behavior, Builder execution, Project Gate acceptance, ecosystem readiness, or production readiness.
 
+## Ancestry evidence
+
+```text
+bootstrap -> activation:
+  base: aa0317a07c10acf4e398dc9e5869f4e6966569f9
+  head: 60836283d9a5ae98c3c3819c7ab33a6f40206289
+  comparison_status: ahead
+  merge_base: aa0317a07c10acf4e398dc9e5869f4e6966569f9
+  result: PASS
+
+activation -> evaluated main:
+  base: 60836283d9a5ae98c3c3819c7ab33a6f40206289
+  head: 9e07cfe551c80d669d13489b05b035834290a32f
+  comparison_status: ahead
+  merge_base: 60836283d9a5ae98c3c3819c7ab33a6f40206289
+  result: PASS
+
+evaluated main -> live main at closure:
+  base: 9e07cfe551c80d669d13489b05b035834290a32f
+  head: main
+  comparison_status: identical
+  ahead_by: 0
+  behind_by: 0
+  result: PASS
+```
+
+## Complete post-activation changed-path classification
+
+Comparison range:
+
+```text
+60836283d9a5ae98c3c3819c7ab33a6f40206289
+...
+9e07cfe551c80d669d13489b05b035834290a32f
+```
+
+| Path | Change | Semantic classification | Protected implementation surface |
+|---|---|---|---|
+| `docs/decision-governance/KROAD_010_DOWNSTREAM_CONSUMER_CONTRACT.md` | modified | KROAD-010 contract and closure-governance documentation | no |
+| `planning/KERNEL_EXECUTION_PLAN.md` | modified | durable roadmap meaning and evidence-option documentation | no |
+| `planning/NEXT_WORK.md` | modified | authoritative mutable roadmap status | no |
+| `planning/decisions/KROAD-010_CURRENT_MAIN_POST_ACTIVATION_VALIDATION_DECISION.md` | added | explicit KROAD-010 closure-governance decision | no |
+| `planning/reviews/KROAD-010_DOWNSTREAM_CONSUMER_POST_MERGE_REVIEW.md` | added | evidence review and closure record | no |
+
+No post-activation change affected:
+
+```text
+.github/workflows/
+package.json
+package-lock.json
+kernel/
+tools/validate-kroad-010-*
+tools/kroad-010-history/
+```
+
+Protected-surface result: `PASS`. No independently reviewed implementation change was required for this evidence-only closure.
+
+## Direct current-main push evidence
+
+### Validate MVK
+
+```text
+workflow: Validate MVK
+run_id: 29147385930
+run_number: 383
+event: push
+head_branch: main
+head_sha: 9e07cfe551c80d669d13489b05b035834290a32f
+status: completed
+conclusion: success
+created_at: 2026-07-11T09:13:41Z
+updated_at: 2026-07-11T09:14:12Z
+run_url: https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/29147385930
+job_id: 86531145374
+job_name: validate-mvk
+job_status: completed
+job_conclusion: success
+```
+
+Relevant successful steps:
+
+```text
+Checkout exact repository head with full history: success
+Set up Node.js LTS: success
+Install MVK validator dependencies: success
+Validate KROAD-010 source syntax and JSON: success
+Validate MVK fixtures and gates: success
+Validate roadmap memory consistency: success
+Verify KROAD-010 prototype integrity: success
+Validate KROAD-010 merge/squash/rebase history matrix: success
+Upload KROAD-010 history matrix evidence: success
+```
+
+The checkout log records:
+
+```text
+repository: rezahh107/EV4-Decision-Kernel
+ref: 9e07cfe551c80d669d13489b05b035834290a32f
+fetch-depth: 0
+```
+
+### Behavioral Coverage Audit
+
+```text
+workflow: Behavioral Coverage Audit
+run_id: 29147385903
+run_number: 351
+event: push
+head_branch: main
+head_sha: 9e07cfe551c80d669d13489b05b035834290a32f
+status: completed
+conclusion: success
+created_at: 2026-07-11T09:13:41Z
+updated_at: 2026-07-11T09:13:50Z
+run_url: https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/29147385903
+job_id: 86531145290
+job_name: Behavioral coverage
+job_status: completed
+job_conclusion: success
+```
+
+Relevant successful steps:
+
+```text
+Check out repository: success
+Verify immutable action pins: success
+Set up Node.js LTS: success
+Run advisory coverage audit: success
+Upload coverage reports: success
+```
+
+Both qualifying runs are direct `push` runs on `main` and preserve the exact required run-record `head_sha`. No PR run, synthetic merge, later commit, local test, ancestry-only claim, or content-similarity substitute was used.
+
+## Current-main history-matrix artifact
+
+```text
+artifact_id: 8247156838
+artifact_name: kroad-010-history-matrix
+digest: sha256:ff9c73838b014298c0838d2d8c894bf8a17aa7ea1affbb4f41d5ff68287b08ea
+created_at: 2026-07-11T09:14:09Z
+updated_at: 2026-07-11T09:14:09Z
+expires_at: 2026-07-25T09:14:09Z
+expired: false
+run_id: 29147385930
+run_head_branch: main
+run_head_sha: 9e07cfe551c80d669d13489b05b035834290a32f
+```
+
+The downloaded report records:
+
+```text
+result: PASS
+merge_commit:
+  ordinary_records: pass
+  clean_worktree: true
+  byte_drift_diagnostic: DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_DRIFT
+  missing_stack_diagnostic: DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_FILE_MISSING
+  working_tree_only_diagnostic: DOWNSTREAM_CONSUMER_PINNED_ARTIFACT_MISSING
+squash:
+  ordinary_records: pass
+  clean_worktree: true
+  byte_drift_diagnostic: DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_DRIFT
+  missing_stack_diagnostic: DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_FILE_MISSING
+  working_tree_only_diagnostic: DOWNSTREAM_CONSUMER_PINNED_ARTIFACT_MISSING
+rebase:
+  ordinary_records: pass
+  clean_worktree: true
+  byte_drift_diagnostic: DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_DRIFT
+  missing_stack_diagnostic: DOWNSTREAM_CONSUMER_LINEAGE_PINNED_EXECUTION_FILE_MISSING
+  working_tree_only_diagnostic: DOWNSTREAM_CONSUMER_PINNED_ARTIFACT_MISSING
+```
+
+Mutation guards also passed for missing history methods, stale/non-ancestor anchors, invalid bootstrap anchors, dirty worktrees, weakened drift diagnostics, wrong ordinary-record anchors, and delegated canonical-lock/prototype guard execution.
+
+History-sensitive validation result: `PASS`.
+
 ## PR #34 supporting workflow evidence
 
 Workflow run metadata and the commit object checked out by a job remain separate provenance fields.
 
-### Validate MVK — exact PR-head evidence
+### Validate MVK — exact PR-head supporting evidence
 
 ```text
 workflow: Validate MVK
@@ -51,19 +230,7 @@ status: completed
 conclusion: success
 ```
 
-Relevant successful steps:
-
-```text
-exact repository-head checkout
-source syntax and JSON validation
-MVK fixtures and gates
-roadmap-memory validation
-prototype integrity
-merge/squash/rebase history matrix
-history-matrix artifact upload
-```
-
-Artifact:
+Historical artifact:
 
 ```text
 artifact_id: 8235134860
@@ -74,9 +241,9 @@ expires_at: 2026-07-24T17:44:07Z
 artifact_head_sha: f61fbf931e585b50403be2b015d34fee3a206a17
 ```
 
-This is exact PR-head evidence. It is not direct current-main push evidence.
+This remains exact PR-head supporting evidence only.
 
-### Behavioral Coverage Audit — synthetic-merge evidence
+### Behavioral Coverage Audit — synthetic-merge supporting evidence
 
 ```text
 workflow: Behavioral Coverage Audit
@@ -92,18 +259,9 @@ status: completed
 conclusion: success
 ```
 
-Relevant successful steps:
+This remains synthetic-merge supporting evidence only. Neither PR #34 run is relabelled as direct current-main push evidence.
 
-```text
-synthetic merge checkout
-immutable action-pin verification
-advisory behavioral-coverage audit
-coverage-report upload
-```
-
-This is successful synthetic-merge integration evidence. It is not exact PR-head or direct current-main push evidence.
-
-## Historical exact-commit retrieval disposition
+## Historical exact-activation retrieval disposition
 
 The original closure rule targeted direct workflow records for activation commit:
 
@@ -111,110 +269,48 @@ The original closure rule targeted direct workflow records for activation commit
 60836283d9a5ae98c3c3819c7ab33a6f40206289
 ```
 
-The available commit-workflow connector filtered to pull-request-triggered runs, while the required records would have been push-event runs. Direct historical Actions retrieval was also unavailable from the execution environment.
+Direct historical Actions retrieval remained unavailable in the earlier environment. No historical success or failure was invented. PR #37 explicitly superseded the former exact-activation operational rule with `current_main_post_activation_validation`; it did not silently reinterpret the historical evidence.
+
+## Criterion-by-criterion result
+
+| Criterion | Result | Evidence |
+|---|---|---|
+| Activation ancestry | `PASS` | activation is merge base and ancestor of evaluated main |
+| Bootstrap ancestry | `PASS` | bootstrap is merge base and ancestor of activation |
+| Complete post-activation path enumeration | `PASS` | all five changed paths listed and classified |
+| Protected implementation surface | `PASS` | no protected path changed post-activation |
+| Direct current-main push runs | `PASS` | runs `29147385930` and `29147385903` |
+| Complete workflow provenance | `PASS` | run, job, step, timestamp, URL, branch, and SHA recorded |
+| Current-main history-matrix artifact | `PASS` | artifact `8247156838` on qualifying Validate MVK run |
+| Accurate PR #34 supporting provenance | `PASS` | exact PR-head and synthetic-merge identities preserved |
+| History-sensitive behavior | `PASS` | merge/squash/rebase report result `PASS`; clean worktrees and diagnostics recorded |
+| Fail-closed handling | `PASS` | closure occurred only after all mandatory evidence became available and matched |
+| Bounded claim surface | `PASS` | limitations below remain explicit |
+
+All mandatory criteria are conjunctively satisfied.
+
+## Closure decision
 
 ```text
-historical_exact_commit_retrieval: unavailable
-historical_run_absence_proved: no
-historical_success_invented: no
-historical_failure_claimed: no
-```
-
-The unavailable result was evidence-honest but did not satisfy closure.
-
-## Superseded root-tree proposal
-
-PR #37 initially proposed `equivalent_tested_tree` with mandatory root tree OID equality. Root tree identity is a valid Git content-identity method, but retrieving the required root tree OIDs was operationally inaccessible through the available capability.
-
-The proposal is superseded rather than represented as incorrect:
-
-```text
-former_mode: equivalent_tested_tree
-former_root_tree_requirement: valid_but_operationally_inaccessible
-former_mode_active: no
-replacement_mode: current_main_post_activation_validation
-replacement_method: explicit_governance_change
-silent_substitution: no
-```
-
-Root tree OID retrieval is no longer the next operational action or a mandatory KROAD-010 closure condition.
-
-## Adopted closure governance
-
-PR #37 adopts the KROAD-010-specific governance mode:
-
-```text
-evidence_mode: current_main_post_activation_validation
-effective_condition: decision_present_on_main
-```
-
-The mode is effective when `planning/decisions/KROAD-010_CURRENT_MAIN_POST_ACTIVATION_VALIDATION_DECISION.md` is present on `main`. Its adoption does not complete KROAD-010.
-
-A follow-up evidence-only closure PR must evaluate the merge commit produced when PR #37 lands and require all of the following:
-
-1. activation commit `60836283d9a5ae98c3c3819c7ab33a6f40206289` is an ancestor of the evaluated `main` commit;
-2. bootstrap anchor `aa0317a07c10acf4e398dc9e5869f4e6966569f9` remains an ancestor of activation;
-3. every post-activation changed path is enumerated and semantically classified;
-4. no unreviewed change affects the protected KROAD-010 surface:
-
-   ```text
-   .github/workflows/
-   package.json
-   package-lock.json
-   kernel/
-   tools/validate-kroad-010-*
-   tools/kroad-010-history/
-   ```
-
-5. direct successful `push` runs exist for both required workflows with exact run-record `head_sha` equal to the evaluated current-main merge commit;
-6. run IDs, run numbers, events, head SHAs, statuses, conclusions, timestamps, URLs, job IDs, and relevant step conclusions are recorded;
-7. the qualifying `Validate MVK` run produces and records the `kroad-010-history-matrix` artifact ID, name, digest, timestamps, expiration state, and run association;
-8. PR #34 evidence retains its actual exact-head and synthetic-merge provenance;
-9. merge/squash/rebase history evidence remains mandatory and separate;
-10. any missing, failed, cancelled, inaccessible, or mismatched run or artifact fails closed.
-
-## Current decision
-
-```text
-governance_state_after_merge: adopted
-KROAD-010: needs_audit
-KROAD-011: blocked
+governance_state: adopted
+KROAD-010: complete
 completion_evidence_mode: current_main_post_activation_validation
-completion_evidence_status: pending_post_merge_push_evidence
-KROAD-010_completion_by_PR_37: no
-KROAD-011_unblocked_by_PR_37: no
-required_follow_up: post_merge_push_run_evidence_closure
-evaluated_main_commit: merge commit produced when PR #37 lands
-exact_sha: to be recorded by the evidence-closure PR
-```
-
-KROAD-011 remains blocked until the separate evidence-only closure PR completes KROAD-010. Governance merge is not itself a remaining KROAD-010 evidence gate.
-
-## Required follow-up after PR #37 merge
-
-A separate evidence-only closure PR must:
-
-```text
-identify the actual PR #37 merge commit now on main
-verify bootstrap -> activation -> evaluated-main ancestry
-enumerate and classify every post-activation path
-verify the protected implementation surface
-retrieve Validate MVK push run with exact matching head_sha
-retrieve Behavioral Coverage Audit push run with exact matching head_sha
-record all required run/job/step/timestamp/URL fields
-record current-main history-matrix artifact evidence
-mark KROAD-010 complete only if all criteria pass
-make KROAD-011 next_allowed without implementing it
+completion_evidence_status: satisfied
+evaluated_main_commit: 9e07cfe551c80d669d13489b05b035834290a32f
+KROAD-011: next_allowed
+KROAD-011_implemented_by_this_operation: no
 ```
 
 ## Preserved limitations
 
 ```text
 active consumer contract: Kernel-local only
-live downstream-repository rejection evidence: not claimed
-runtime/browser proof: not claimed
-Builder execution proof: not claimed
-Project Gate acceptance: not claimed
-ecosystem readiness: not claimed
-production readiness: not claimed
+live downstream-repository enforcement: not proved
+runtime/browser proof: not proved
+Builder execution: not proved
+Project Gate acceptance: not proved
+ecosystem readiness: not proved
+production readiness: not proved
 ```
+
+KROAD-011 is only the next allowed roadmap item. This evidence-only closure does not implement KROAD-011 and does not modify Kernel schemas, validators, fixtures, Resolver behavior, package wiring, workflows, runtime code, or downstream repositories.
