@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-KROAD-010 Downstream Consumer Contract — closed by exact current-main push-run and inspected history-matrix evidence; KROAD-011 is next allowed but not implemented
+KROAD-011 Project Gate Intake — completed by merged Project Gate implementation/correction PRs and exact corrected-main KROAD workflow evidence; KROAD-012 is next allowed but not started
 
 ## Status Authority
 
@@ -10,21 +10,21 @@ This file is the authoritative current-status dashboard for roadmap progress aft
 
 `planning/KERNEL_EXECUTION_PLAN.md` remains the durable detailed operating map for item meaning, scope, dependencies, acceptance criteria, evidence requirements, and do-not rules. If an item's status label in the detailed plan is stale, use this file for current roadmap status and update the detailed plan in a later maintenance PR only when changing roadmap meaning, scope, dependency, acceptance criteria, or evidence requirements.
 
-Known detailed-plan status labels: `KROAD-001`, `KROAD-003`, `KROAD-004`, `KROAD-005`, `KROAD-006`, `KROAD-007`, `KROAD-008`, `KROAD-009`, and `KROAD-010` may still show legacy `not_started` status in `planning/KERNEL_EXECUTION_PLAN.md`; those lines are non-authoritative. Current status source for `KROAD-001`, `KROAD-003`, `KROAD-004`, `KROAD-005`, `KROAD-006`, `KROAD-007`, `KROAD-008`, `KROAD-009`, and `KROAD-010` is `planning/NEXT_WORK.md`.
+Known detailed-plan status labels: `KROAD-001`, `KROAD-003`, `KROAD-004`, `KROAD-005`, `KROAD-006`, `KROAD-007`, `KROAD-008`, `KROAD-009`, `KROAD-010`, and `KROAD-011` may still show legacy `not_started` status in `planning/KERNEL_EXECUTION_PLAN.md`; those lines are non-authoritative. Current status source for these items is `planning/NEXT_WORK.md`.
 
-Mutable KROAD-010 activation/completion state also lives here. The lifecycle-neutral manifest under `kernel/decision-governance/` must not be changed merely to report roadmap progress.
+Mutable roadmap activation/completion state lives here. Lifecycle-neutral manifests under `kernel/decision-governance/` must not be changed merely to report roadmap progress.
 
 ## Status Summary
 
-Current completed milestones: KROAD-000, KROAD-001, KROAD-002, KROAD-003, KROAD-004, KROAD-005, KROAD-006, KROAD-007, KROAD-008, KROAD-009, KROAD-010.
-Current next task: KROAD-011 — Project Gate Intake.
-PR #37 governance base `main`: `56a730fc3bbf6939bdb49dd81e25ae0421c376e2`.
-Verified bootstrap anchor on `main`: `aa0317a07c10acf4e398dc9e5869f4e6966569f9` from merged PR #33.
-Verified activation merge on `main`: `60836283d9a5ae98c3c3819c7ab33a6f40206289` from merged PR #34.
-Governance decision adopted by PR #37: `current_main_post_activation_validation`.
-Evaluated `main` commit: `9e07cfe551c80d669d13489b05b035834290a32f`, the PR #37 merge commit and exact `main` head at evaluation time.
-KROAD-010 closure evidence: direct successful `push` runs `Validate MVK` #383 (`29147385930`) and `Behavioral Coverage Audit` #351 (`29147385903`), plus inspected artifact `8247156838`.
-KROAD-011 is next allowed because KROAD-010 is closed; KROAD-011 has not been implemented.
+Current completed milestones: KROAD-000, KROAD-001, KROAD-002, KROAD-003, KROAD-004, KROAD-005, KROAD-006, KROAD-007, KROAD-008, KROAD-009, KROAD-010, KROAD-011.
+Current next task: KROAD-012 — External Evidence Producer Boundary.
+KROAD-010 closure evidence is preserved in `planning/reviews/KROAD-010_CURRENT_MAIN_EVIDENCE_CLOSURE.md`.
+KROAD-011 closure evidence is preserved in `planning/reviews/KROAD-011_PROJECT_GATE_INTAKE_EVIDENCE_CLOSURE.md`.
+Validated Project Gate commit: `c030460aa90b0b234c2e421554d4f8eb45061210`.
+Current Project Gate `main`: `2ed9c256160e177605c08d3250d5ea7836b6bbf0`; the only later change is a non-authoritative historical-ledger line.
+Exact-main KROAD workflow: `KROAD-011 Project Gate Intake` run `29185523846`, success.
+Pinned Kernel commit: `76a82e28543ff8f0babca11b7d7dccac96b92894`.
+KROAD-012 is next allowed and has not started.
 Detailed plan: `planning/KERNEL_EXECUTION_PLAN.md`.
 Do not continue from chat history; read this file first.
 
@@ -32,11 +32,11 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
 
 ## Next Task
 
-- [ ] KROAD-011 — Project Gate Intake
+- [ ] KROAD-012 — External Evidence Producer Boundary
   - Status: **NOT_STARTED / NEXT_ALLOWED**.
-  - Dependency result: KROAD-010 is completed by `planning/reviews/KROAD-010_CURRENT_MAIN_EVIDENCE_CLOSURE.md`.
-  - This evidence-only closure does not implement KROAD-011, Project Gate intake, or any downstream repository change.
-  - Before implementation, use `planning/KERNEL_EXECUTION_PLAN.md` for KROAD-011 scope, acceptance criteria, evidence requirements, and do-not rules.
+  - Dependency result: KROAD-011 is completed by `planning/reviews/KROAD-011_PROJECT_GATE_INTAKE_EVIDENCE_CLOSURE.md`.
+  - This evidence-only closure does not implement KROAD-012, modify an external evidence producer, or claim runtime/browser proof.
+  - Before implementation, use `planning/KERNEL_EXECUTION_PLAN.md` for KROAD-012 scope, acceptance criteria, evidence requirements, and do-not rules.
 
 ## Completed
 
@@ -70,10 +70,12 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
 - [x] KROAD-010 — Downstream Consumer Contract
   - Update note: KROAD-010 is completed by `planning/reviews/KROAD-010_CURRENT_MAIN_EVIDENCE_CLOSURE.md`. Evidence proves bootstrap → activation → evaluated-main ancestry, classifies every post-activation path, confirms no protected implementation-surface changes, records successful exact-commit `push` runs `Validate MVK` #383 (`29147385930`) and `Behavioral Coverage Audit` #351 (`29147385903`) on `9e07cfe551c80d669d13489b05b035834290a32f`, and inspects history-matrix artifact `8247156838` with digest `sha256:ff9c73838b014298c0838d2d8c894bf8a17aa7ea1affbb4f41d5ff68287b08ea`.
   - Boundary note: This proves only the Kernel-local consumer-contract gate. It does not prove live downstream-repository enforcement, runtime/browser validity, Builder execution, Project Gate acceptance, ecosystem readiness, or production readiness.
+- [x] KROAD-011 — Project Gate Intake
+  - Update note: KROAD-011 is completed by `planning/reviews/KROAD-011_PROJECT_GATE_INTAKE_EVIDENCE_CLOSURE.md`. Project Gate PR #51 implemented the intake path; PR #52 corrected capability/status memory, the governance carrier, adversarial coverage, deterministic rejection checks, and the `main` workflow trigger. Exact corrected-main workflow run `29185523846` succeeded on `c030460aa90b0b234c2e421554d4f8eb45061210`, reproduced the six-artifact Kernel lock pinned to `76a82e28543ff8f0babca11b7d7dccac96b92894`, executed the official Kernel bridge, passed focused validation and the full `407 passed, 24 skipped` suite, and produced artifact `8257869671` with digest `sha256:7bed55cfb64156872edcac1d31d4b584476abb8da6bb41501fc23579221fed83`.
+  - Boundary note: This proves the bounded Project Gate intake/validation path with synthetic and adversarial fixtures. It does not prove a real non-synthetic handoff, live downstream producer rejection, Builder execution, runtime/browser validity, responsive correctness, ecosystem readiness, release readiness, or production readiness.
 
 ## Remaining Work
 
-- [ ] KROAD-011 — Project Gate Intake
 - [ ] KROAD-012 — External Evidence Producer Boundary
 - [ ] KROAD-013 — Runtime / Browser Evidence Layer
 - [ ] KROAD-014 — Provisional Re-Audit Policy
@@ -113,7 +115,7 @@ If evidence is missing or uncertain, do not tick the item; add a note explaining
 - KROAD-010 currently activates only a Kernel-local consumer contract; no downstream repository rejection evidence exists yet.
 - KROAD-010 ordinary production fixtures pin merged bootstrap commit `aa0317a07c10acf4e398dc9e5869f4e6966569f9`.
 - KROAD-010 history-dependent regressions use disposable runtime commits and never persist synthetic SHAs as production pins.
-- KROAD-011 is the next allowed task and remains unimplemented.
+- KROAD-011 is completed by exact corrected-main Project Gate evidence; KROAD-012 is next allowed and remains unimplemented.
 - Human overrides must be explicitly marked.
 - Critical P0 provisional decisions must not pass final release.
 - Unknown decision families must fail closed with halt / insufficient evidence / no free decision.
