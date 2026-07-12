@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-KROAD-011 Project Gate Intake — completed by merged Project Gate implementation/correction PRs and exact corrected-main KROAD workflow evidence; KROAD-012 is next allowed but not started
+KROAD-011 Project Gate Intake — completed; KROAD-012 retains next-allowed status while the proposed decision-coverage recovery specification is under review
 
 ## Status Authority
 
@@ -18,6 +18,10 @@ Mutable roadmap activation/completion state lives here. Lifecycle-neutral manife
 
 Current completed milestones: KROAD-000, KROAD-001, KROAD-002, KROAD-003, KROAD-004, KROAD-005, KROAD-006, KROAD-007, KROAD-008, KROAD-009, KROAD-010, KROAD-011.
 Current next task: KROAD-012 — External Evidence Producer Boundary.
+Decision-coverage recovery overlay: `DCOV-WP-001` is a proposed documentation integration under PR review; it creates no implementation coverage.
+`DCOV-WP-002` is blocked until `parent_authority=approved_recovery_source_of_record` is explicitly recorded after the full promotion gate and repository placement is approved. Merge, CI success or package `evidence_closed` alone cannot unlock it.
+Parent proposal: `docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md`.
+Operational map: `planning/EV4_DECISION_COVERAGE_OPERATIONALIZATION_MAP.md`.
 KROAD-010 closure evidence is preserved in `planning/reviews/KROAD-010_CURRENT_MAIN_EVIDENCE_CLOSURE.md`.
 KROAD-011 closure evidence is preserved in `planning/reviews/KROAD-011_PROJECT_GATE_INTAKE_EVIDENCE_CLOSURE.md`.
 Validated Project Gate commit: `c030460aa90b0b234c2e421554d4f8eb45061210`.
@@ -37,6 +41,8 @@ KROAD-001 is complete on `main` because PR #13 merged `planning/CROSS_REPO_ADOPT
   - Dependency result: KROAD-011 is completed by `planning/reviews/KROAD-011_PROJECT_GATE_INTAKE_EVIDENCE_CLOSURE.md`.
   - This evidence-only closure does not implement KROAD-012, modify an external evidence producer, or claim runtime/browser proof.
   - Before implementation, use `planning/KERNEL_EXECUTION_PLAN.md` for KROAD-012 scope, acceptance criteria, evidence requirements, and do-not rules.
+  - Recovery dependency note: KROAD-012 research may continue only where it does not commit unapproved recovery identifiers, schemas or paths. Serial work depending on those constructs remains blocked by the applicable `DCOV-WP-*` package.
+  - `DCOV-WP-002` is not the current KROAD task and must not start until the parent is explicitly promoted to `approved_recovery_source_of_record` through the full promotion gate and repository placement is approved.
 
 ## Completed
 
