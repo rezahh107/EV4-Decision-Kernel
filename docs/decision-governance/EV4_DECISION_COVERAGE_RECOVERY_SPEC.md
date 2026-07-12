@@ -5,13 +5,13 @@
 
 | Field | Value |
 |---|---|
-| `status` | `proposed_recovery_specification_pending_evidence_validation` |
-| `version` | `1.0.0-rc1` |
+| `status` | `merged_recovery_context_superseded_by_coverage_guarantee_v1` |
+| `version` | `1.1.0` |
 | `purpose` | Recover the broad EV4 decision-governance objective, distinguish it from the small MVK, and define bounded future work. |
 | `repository` | `rezahh107/EV4-Decision-Kernel` |
-| `repository_precheck` | `main` at `ccab57d9f0be0286dc68297404ef040a77e80b36` |
-| `authority` | Proposed requirement source only; repository evidence remains implementation truth. |
-| `promotion_target` | `approved_recovery_source_of_record` only after the promotion gate. |
+| `repository_precheck` | PR #41 merged as `487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8`; `DCOV-EXEC-001` started from that live `main`. |
+| `authority` | Historical recovery context. The machine-readable Coverage Guarantee v1 contract is active execution authority. |
+| `active_contract` | `kernel/decision-governance/coverage-guarantee-contract.v1.json` |
 
 This document consolidates and hardens the supplied recovery draft. It preserves its core product conclusions while separating historical intent, current facts, derived requirements, proposals and unresolved candidates.
 
@@ -54,17 +54,15 @@ official_source_evidence:
 
 Raw URLs and chat recovery notes are discovery evidence, not sufficient canonical proof. `[EVID-005] [EVID-006]`
 
-### 0.3 Promotion gate and implementation authority
+### 0.3 Active executable authority
 
-Promotion requires repository evidence capture, official-source fingerprints, contradiction review, governance approval, synchronized planning memory, exact-head validation, merged PR evidence and post-merge closure. Until then, `complete`, `canonical`, `active`, `approved metric` and `95% covered` are prohibited except as target-state criteria. `[ARCH-005]`
+PR #41 merged this recovery specification as durable context. `DCOV-EXEC-001` converts that context into executable policy through `kernel/decision-governance/coverage-guarantee-contract.v1.json`. Contract-state eligibility is computed by `npm run validate:coverage`; no approval file, owner flag, authority-promotion package or post-merge activation package is required. Unsupported coverage, readiness and production claims remain prohibited. `[ARCH-005]`
 
-The canonical implementation-eligibility predicate for every recovery-spec-sourced implementation package is:
+<!-- PARENT-AUTHORITY-HISTORY:START -->
+Superseded: manual parent_authority promotion was removed from the active execution model.
 
-```yaml
-parent_authority: approved_recovery_source_of_record
-```
-
-This authority value may be recorded only after every promotion-gate condition above is satisfied. Package status `merged` or `evidence_closed`, CI success, and repository-placement approval do not independently or collectively imply this authority transition. An evidence-closure record must explicitly prove the full promotion gate and record the authority change before any implementation package may become eligible.
+Historical PR #41 text required `parent_authority: approved_recovery_source_of_record` before recovery packages could start. That predicate is retained here only to explain the superseded model and is not an implementation dependency.
+<!-- PARENT-AUTHORITY-HISTORY:END -->
 
 
 ## 1. Executive Decision
@@ -351,7 +349,7 @@ Hard readiness gates remain separate from the weighted score. KROAD-018 assesses
 
 Existing conventions use `kernel/decision-governance/`, `kernel/registries/`, `kernel/schemas/`, `kernel/official-sources/`, `kernel/fixtures/` and validators. Candidate `kernel/elementor-v4/`, `kernel/evidence/` and `kernel/coverage/` paths remain unresolved.
 
-Recommendation: extend existing conventions unless `DCOV-WP-002` proves a new package boundary is necessary. Implementation prompts use only approved paths and update manifests/validators consistently. `[ARCH-006]`
+The active program extends existing conventions. `DCOV-EXEC-002` may add only content-required artifacts under established paths unless repository evidence proves a bounded new placement decision. `[ARCH-006]`
 
 
 ## 21. Candidate Artifact Set
@@ -369,7 +367,9 @@ Recommendation: extend existing conventions unless `DCOV-WP-002` proves a new pa
 Candidate paths in the supplied draft are not approved by this document.
 
 
-## 22. Corrected Bounded Roadmap
+## 22. Historical Candidate Roadmap — Superseded
+
+The labels in this section are preserved as PR #41 recovery history. Active execution uses exactly `DCOV-EXEC-001` through `DCOV-EXEC-005` in `planning/EV4_DECISION_COVERAGE_OPERATIONALIZATION_MAP.md`; the candidates below are not competing next tasks.
 
 | Candidate | Purpose | Bounded outcome | Non-goals |
 |---|---|---|---|
@@ -414,14 +414,14 @@ Every package traces to IDs, stays bounded, reads live state, separates stages, 
 
 - parent path exists and local links resolve;
 - Requirement definitions are semantically one-to-one; aliases are non-normative and every Operationalization reference resolves exactly once to one canonical definition;
-- every recovery-spec-sourced implementation package requires `parent_authority: approved_recovery_source_of_record` and cannot be unlocked by Merge, CI or package evidence closure alone;
+- every coverage-sensitive package follows the machine-readable Coverage Guarantee v1 contract and supplies a valid Coverage Impact Record;
 - origins distinguish repository facts, historical intent, derived requirements, proposals and unresolved candidates;
 - no unresolved Element is active;
 - no Matrix-only Family is Resolver-covered;
 - no metric is approved or 95% readiness claimed;
 - v2 compatibility disposition is explicit and no v3 schema is created;
 - KROAD-012 through KROAD-018 retain their meanings;
-- changed-path scope remains documentation/planning only;
+- `DCOV-EXEC-001` includes real source-bound seed data, deterministic validation, negative fixtures and existing-CI integration;
 - repository-native validations pass on the exact final head, subject to documented environment limits;
 - fresh PR Inspector review is completed before merge.
 
@@ -446,12 +446,11 @@ Premature authority, inventory overclaim, raw-URL evidence, Family/Matrix confus
 
 | Objective | Requirements | Future package |
 |---|---|---|
-| restore MVK/product distinction | PROD-002, PROD-003, ROAD-001 | DCOV-WP-001 |
-| reconcile element/source identities | EVID-005, EVID-006, ELEM-001–003 | DCOV-WP-002/003 |
-| recover comparison demand | DEC-001–003, RULE-001–003 | DCOV-WP-004 |
-| calibrate 95% model | COV-001–005 | DCOV-WP-005 |
-| expand Resolver safely | ARCH-002–003, COMP-001–002, FIX-001, AUDIT-001 | later family-bounded packages |
-| expand consumers | CONS-001, LIFE-001 | later consumer packages |
+| restore MVK/product distinction | PROD-002, PROD-003, ROAD-001 | DCOV-EXEC-001 |
+| reconcile element/source identities | EVID-005, EVID-006, ELEM-001–003 | DCOV-EXEC-002 |
+| recover comparison demand and expand Resolver safely | DEC-001–003, RULE-001–003, ARCH-002–003, COMP-001–002, FIX-001, AUDIT-001 | DCOV-EXEC-002 through DCOV-EXEC-004 |
+| add bounded runtime, provisional and lifecycle proof | EVID-001–003, LIFE-001, CONS-001 | DCOV-EXEC-003 and DCOV-EXEC-004 |
+| validate denominator, thresholds and assessment | COV-001–005 | DCOV-EXEC-005 |
 
 ## 28. Requirement Index
 
@@ -515,7 +514,7 @@ Only headings below define requirement IDs; inline references do not create dupl
 
 ### ARCH-005
 
-- **Normative statement:** The specification remains proposed until its promotion gate is satisfied.
+- **Normative statement:** Executable coverage state is derived from validated repository evidence; no manual authority-promotion workflow is active.
 - **Origin:** `newly_proposed_architecture`
 - **Confidence:** high for repository contracts; proposed where architecture/calibration is not approved.
 - **Implementation status:** artifact-derived; this document does not assert implementation.
@@ -917,6 +916,6 @@ Only headings below define requirement IDs; inline references do not create dupl
 
 ## 29. Final Recommended Decision
 
-Integrate this proposed parent specification and its Operationalization Map as durable recovery memory. Do not start broad Resolver implementation from this PR. `DCOV-WP-002` remains blocked until the parent is explicitly promoted to `approved_recovery_source_of_record` through the full promotion gate and repository placement is approved; only then may the bounded reconciliation/source-ledger schema package become eligible. Existing KROAD-012 research may proceed only where it does not assume unapproved identifiers or paths.
+Use this merged recovery specification as historical context and the machine-readable Coverage Guarantee v1 contract as active execution policy. `DCOV-EXEC-001` activates the policy foundation; after it merges, the only next executable package is `DCOV-EXEC-002`, a real content-expansion slice that reconciles Elements, expands the Catalog and closes one materially sized P0 or high-risk Resolver chain.
 
 No 95% readiness, broad Resolver coverage, consumer completeness, release readiness or production readiness is claimed.

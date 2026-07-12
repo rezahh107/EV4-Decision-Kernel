@@ -1,0 +1,157 @@
+{
+  "contract_id": "coverage-guarantee-contract.v1",
+  "contract_version": "1.0.0",
+  "contract_class": "repository_governance_policy",
+  "authority": {
+    "machine_readable_source": "kernel/decision-governance/coverage-guarantee-contract.v1.json",
+    "human_readable_view": "docs/decision-governance/COVERAGE_GUARANTEE_CONTRACT.md",
+    "manual_state_promotion_allowed": false
+  },
+  "thresholds": {
+    "minimum_content_floor": 90,
+    "owner_acceptance_target": 95,
+    "critical_p0_and_safety_coverage": 100
+  },
+  "state_machine": {
+    "ordered_states": [
+      "policy_active",
+      "measurement_active",
+      "threshold_enforced"
+    ],
+    "eligibility": {
+      "policy_active": {
+        "requirements": [
+          "schema_valid_contract",
+          "real_non_empty_ledger",
+          "real_non_empty_question_catalog",
+          "baseline_and_debt_records",
+          "deterministic_validator",
+          "negative_and_adversarial_fixtures",
+          "ci_wiring"
+        ]
+      },
+      "measurement_active": {
+        "requirements": [
+          "policy_active",
+          "versioned_source_bound_ledger_and_catalog",
+          "verified_content_hashes",
+          "all_in_scope_denominator_candidates_dispositioned",
+          "validated_denominators_computed_from_records",
+          "valid_coverage_impact_history",
+          "derived_percentages_only"
+        ]
+      },
+      "threshold_enforced": {
+        "requirements": [
+          "measurement_active",
+          "computed_minimum_content_floor",
+          "computed_owner_acceptance_target",
+          "computed_critical_p0_and_safety_coverage",
+          "release_and_readiness_checks_connected",
+          "no_critical_gap_hidden_by_aggregate"
+        ]
+      }
+    }
+  },
+  "coverage_semantics": {
+    "element": {
+      "definition_id": "all_applicable_obligations_end_to_end_or_validated_not_applicable",
+      "covered_statuses": [
+        "end_to_end_covered",
+        "not_applicable_with_validated_reason"
+      ],
+      "non_credit_artifacts": [
+        "decision_card_only",
+        "matrix_only",
+        "resolver_rule_only",
+        "fixture_only",
+        "schema_only",
+        "documentation_only",
+        "ci_pass_only"
+      ]
+    },
+    "question": {
+      "definition_id": "complete_applicable_question_chain",
+      "required_chain": [
+        "catalog",
+        "matrix",
+        "resolver_rule",
+        "deterministic_evaluator",
+        "valid_fixture",
+        "invalid_fixture",
+        "adversarial_fixture",
+        "l2_audit",
+        "required_runtime_or_consumer_proof",
+        "coverage_credit"
+      ],
+      "not_applicable_requirements": [
+        "machine_readable_reason",
+        "supporting_evidence",
+        "validator_acceptance"
+      ]
+    },
+    "critical": {
+      "measured_separately": true,
+      "aggregate_may_hide_gap": false,
+      "threshold_state_requires_percent": 100
+    }
+  },
+  "denominator_integrity": {
+    "known_scope_includes": [
+      "confirmed",
+      "candidate",
+      "unresolved"
+    ],
+    "coverage_percent_requires_validated_denominator": true,
+    "reduction_requires_record_level_reasons": true
+  },
+  "material_progress": {
+    "measurement_active_options": {
+      "option_1": {
+        "coverage_delta_gte_percentage_points": 5
+      },
+      "option_2": {
+        "formula": "max(2, ceil(0.05 * current_denominator))"
+      },
+      "option_3": {
+        "complete_p0_family_across_all_applicable_elements": true,
+        "measurable_numerator_increase_required": true
+      }
+    },
+    "policy_active_rule": "complete_materially_bounded_obligations_and_close_one_real_family_slice",
+    "limited_exception": "machine_readable_reason_plus_closed_family_plus_numerator_or_completed_obligation_growth",
+    "zero_delta_rule": "blocking_defect_only_with_next_content_expansion_package",
+    "three_consecutive_zero_delta_fail": true
+  },
+  "coverage_sensitive_paths": [
+    "kernel/decision-governance/coverage-guarantee-contract.v1.json",
+    "kernel/decision-governance/p0-decision-matrices.v0.json",
+    "kernel/decision-governance/resolver-rule-registry.v0.json",
+    "kernel/decision-governance/resolver-rules/",
+    "kernel/schemas/coverage-",
+    "kernel/schemas/element-reconciliation-ledger.v1.schema.json",
+    "kernel/schemas/decision-question-catalog.v1.schema.json",
+    "kernel/resolver-mvp/",
+    "kernel/validator/validate-coverage-guarantee.mjs",
+    "kernel/validator/validate-l2-decision-correctness.mjs",
+    "planning/coverage/",
+    "docs/decision-governance/COVERAGE_GUARANTEE_CONTRACT.md",
+    "planning/NEXT_WORK.md",
+    "planning/KERNEL_EXECUTION_PLAN.md"
+  ],
+  "merge_gate": {
+    "exact_head_ci_green": "required",
+    "independent_pr_inspector_green": "required",
+    "explicit_owner_merge_command": "required"
+  },
+  "forbidden_claims": [
+    "unsupported_coverage_percentage",
+    "unsupported_readiness",
+    "unsupported_release_readiness",
+    "unsupported_runtime_proof",
+    "unsupported_production_readiness",
+    "official_docs_prove_target_project_availability",
+    "fixture_evidence_is_real_project_proof"
+  ],
+  "expected_state_after_dcov_exec_001": "policy_active"
+}

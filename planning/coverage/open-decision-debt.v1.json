@@ -1,0 +1,180 @@
+{
+  "debt_id": "open-decision-debt.v1",
+  "version": "1.0.0",
+  "status": "open",
+  "baseline_ref": "coverage-baseline.v1.0.0",
+  "open_item_count": 6,
+  "items": [
+    {
+      "debt_id": "DEBT-ELEMENT-RECONCILIATION",
+      "debt_type": "element_reconciliation",
+      "record_ids": [
+        "EL-GRID",
+        "EL-TABS",
+        "EL-DIVIDER",
+        "EL-FORM_ATOMS",
+        "EL-ACCORDION",
+        "EL-LOOP_GRID",
+        "EL-HTML",
+        "EL-ICON"
+      ],
+      "obligation_ids": [
+        "OB-EXEC-002-RECONCILE-ELEMENTS"
+      ],
+      "status": "unresolved",
+      "missing_evidence": [
+        "Current official identity and source fingerprints for every candidate.",
+        "Duplicate/supersession disposition and target-project applicability where relevant."
+      ],
+      "source_refs": [
+        "planning/coverage/element-reconciliation-ledger.v1.json"
+      ],
+      "target_package": "DCOV-EXEC-002"
+    },
+    {
+      "debt_id": "DEBT-QUESTION-RECOVERY",
+      "debt_type": "question_recovery",
+      "record_ids": [
+        "DQ-POSITIONING_SAFETY-GAP",
+        "DQ-STYLING_MECHANISM-GAP",
+        "DQ-CLASS_SCOPE-GAP",
+        "DQ-VALUE_BINDING-GAP",
+        "DQ-UNIT_DECISION-GAP"
+      ],
+      "obligation_ids": [
+        "OB-EXEC-002-EXPAND-CATALOG"
+      ],
+      "status": "unresolved",
+      "missing_evidence": [
+        "Explicit source-bound Decision Question wording.",
+        "Trigger context and deduplication against recovered source material."
+      ],
+      "source_refs": [
+        "planning/coverage/decision-question-catalog.v1.json",
+        "kernel/decision-governance/p0-decision-matrices.v0.json"
+      ],
+      "target_package": "DCOV-EXEC-002"
+    },
+    {
+      "debt_id": "DEBT-P0-RESOLVER-EXPANSION",
+      "debt_type": "resolver_chain",
+      "record_ids": [
+        "DQ-IMAGE-01",
+        "DQ-IMAGE-02",
+        "DQ-IMAGE-03",
+        "DQ-SVG-01",
+        "DQ-SVG-02",
+        "DQ-SVG-03",
+        "DQ-HEADING-01",
+        "DQ-HEADING-02",
+        "DQ-HEADING-03",
+        "DQ-PARAGRAPH-01",
+        "DQ-PARAGRAPH-02",
+        "DQ-PARAGRAPH-03",
+        "DQ-BUTTON-01",
+        "DQ-BUTTON-02",
+        "DQ-BUTTON-03"
+      ],
+      "obligation_ids": [
+        "OB-EXEC-002-CLOSE-SELECTED-P0-FAMILY"
+      ],
+      "status": "candidate",
+      "missing_evidence": [
+        "Selected materially sized P0 or high-risk family.",
+        "Active Resolver Rule, deterministic evaluator, fixture triplet and L2 audit."
+      ],
+      "source_refs": [
+        "planning/coverage/decision-question-catalog.v1.json"
+      ],
+      "target_package": "DCOV-EXEC-002"
+    },
+    {
+      "debt_id": "DEBT-LAYOUT-RUNTIME-CONSUMER-PROOF",
+      "debt_type": "runtime_or_consumer_proof",
+      "record_ids": [
+        "DQ-DIV_BLOCK-01",
+        "DQ-DIV_BLOCK-02",
+        "DQ-DIV_BLOCK-03",
+        "DQ-FLEXBOX-01",
+        "DQ-FLEXBOX-02",
+        "DQ-FLEXBOX-03",
+        "DQ-GRID-01",
+        "DQ-GRID-02",
+        "DQ-GRID-03"
+      ],
+      "obligation_ids": [
+        "OB-EXEC-002-LAYOUT-BOUNDED-PROOF"
+      ],
+      "status": "unresolved",
+      "missing_evidence": [
+        "Required bounded real runtime or consumer proof for the layout_structure Question chain.",
+        "Target-project applicability evidence without overclaim."
+      ],
+      "source_refs": [
+        "planning/coverage/decision-question-catalog.v1.json",
+        "kernel/decision-governance/kroad-009-layout-structure-vertical-slice.v0.json"
+      ],
+      "target_package": "DCOV-EXEC-002"
+    },
+    {
+      "debt_id": "DEBT-DENOMINATOR-VALIDATION",
+      "debt_type": "denominator_validation",
+      "record_ids": [
+        "EL-GRID",
+        "EL-TABS",
+        "EL-DIVIDER",
+        "EL-FORM_ATOMS",
+        "EL-ACCORDION",
+        "EL-LOOP_GRID",
+        "EL-HTML",
+        "EL-ICON",
+        "DQ-POSITIONING_SAFETY-GAP",
+        "DQ-STYLING_MECHANISM-GAP",
+        "DQ-CLASS_SCOPE-GAP",
+        "DQ-VALUE_BINDING-GAP",
+        "DQ-UNIT_DECISION-GAP"
+      ],
+      "obligation_ids": [
+        "OB-EXEC-005-VALIDATE-DENOMINATORS"
+      ],
+      "status": "unresolved",
+      "missing_evidence": [
+        "All in-scope candidates must be confirmed, superseded, duplicated or validated not applicable.",
+        "Every denominator member must retain verified source binding."
+      ],
+      "source_refs": [
+        "planning/coverage/element-reconciliation-ledger.v1.json",
+        "planning/coverage/decision-question-catalog.v1.json"
+      ],
+      "target_package": "DCOV-EXEC-005"
+    },
+    {
+      "debt_id": "DEBT-CRITICAL-THRESHOLD",
+      "debt_type": "critical_coverage",
+      "record_ids": [
+        "DQ-DIV_BLOCK-01",
+        "DQ-IMAGE-01",
+        "DQ-HEADING-01",
+        "DQ-BUTTON-01",
+        "DQ-POSITIONING_SAFETY-GAP",
+        "DQ-STYLING_MECHANISM-GAP",
+        "DQ-CLASS_SCOPE-GAP",
+        "DQ-VALUE_BINDING-GAP",
+        "DQ-UNIT_DECISION-GAP"
+      ],
+      "obligation_ids": [
+        "OB-EXEC-005-CRITICAL-100"
+      ],
+      "status": "unresolved",
+      "missing_evidence": [
+        "Every critical P0 Question and safety obligation must be end-to-end covered or validated not applicable.",
+        "Critical coverage must compute to 100 before threshold_enforced."
+      ],
+      "source_refs": [
+        "planning/coverage/element-reconciliation-ledger.v1.json",
+        "planning/coverage/decision-question-catalog.v1.json"
+      ],
+      "target_package": "DCOV-EXEC-005"
+    }
+  ]
+}

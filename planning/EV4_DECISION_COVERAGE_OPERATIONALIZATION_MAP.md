@@ -1,146 +1,174 @@
-# EV4 Decision Coverage Operationalization Map
+# EV4 Decision Coverage — Unified Execution Map
 
-**Status:** proposed operational map pending parent-spec approval and merge
-**Parent specification:** `docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md`
-**Authority boundary:** schedules bounded proposed work only; it activates no Registry, Decision Family, Resolver Rule, metric or readiness claim.
+## Status
 
-## Status Model
+- `status`: `active_unified_execution_map`
+- `contract`: `kernel/decision-governance/coverage-guarantee-contract.v1.json`
+- `current_work_package`: `DCOV-EXEC-001`
+- `only_next_executable_after_merge`: `DCOV-EXEC-002`
+- `next_work_type`: `content_expansion`
+- `package_count`: `5`
 
-`not_started`, `ready_for_planning`, `planning_in_progress`, `plan_approved`, `implementation_in_progress`, `pr_open`, `merged`, `evidence_closed`, `blocked`, `superseded`.
+PR #41 merged the recovery context at `487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8`. This map replaces the fragmented proposed package path with five bounded executable packages. Contract states are computed; no manual promotion workflow is active.
 
-`evidence_closed` is package-lifecycle evidence only. It does not imply parent-spec authority. Every implementation package sourced from this specification additionally requires `parent_authority: approved_recovery_source_of_record`, which is recorded only after the full parent promotion gate—including explicit governance approval—has been satisfied.
-
-## Decision Dependency Summary
-
-```text
-Project Environment → Element Identity → Capability Availability → Structural Responsibility
-→ Layout Structure → Interaction/Semantic Role → Styling Mechanism → Control Compatibility
-→ Property Compatibility → Value Strategy → Unit Strategy → State/Responsive/Direction
-→ Saved-Source Validation → Runtime Validation → Downstream Closure
-```
-
-## Work-Package Inventory
-
-### DCOV-WP-001 — Recovery Specification Integration
+## Machine-readable dependency map
 
 ```yaml
-status: pr_open
-source_requirement_ids: [ARCH-004, ARCH-005, ARCH-006, EVID-006, EVID-007, EVID-008, RULE-001, COMP-001, RECORD-001, RECORD-002, COV-001, ROAD-001, ROAD-002, OPS-001, OPS-002, OPS-009]
-decision_dependencies: []
-target_repository: rezahh107/EV4-Decision-Kernel
-implementation_scope: [parent specification, correction ledger, dependency DAG, composition contract, roadmap memory, operational map]
-explicit_non_goals: [Resolver implementation, Registry schemas/data, demand corpus, producer/runtime implementation]
-expected_pr_boundary: one six-path documentation/planning PR
-stop_conditions: [newer approved equivalent exists, roadmap contradiction, coherence requires runtime or Resolver code]
-post_merge_followup: record exact merge evidence and reassess DCOV-WP-002 eligibility
+program_id: DCOV-COVERAGE-EXECUTION-PROGRAM
+contract_version: 1.0.0
+packages:
+  - work_package_id: DCOV-EXEC-001
+    work_type: foundation_with_real_data
+    depends_on:
+      - PR-41-merged
+    obligation_ids:
+      - OB-EXEC-001-CONTRACT
+      - OB-EXEC-001-LEDGER
+      - OB-EXEC-001-CATALOG
+      - OB-EXEC-001-BASELINE-DEBT
+      - OB-EXEC-001-VALIDATOR-FIXTURES
+      - OB-EXEC-001-CI
+      - OB-EXEC-001-ROADMAP
+    state_after: policy_active
+  - work_package_id: DCOV-EXEC-002
+    work_type: content_expansion
+    depends_on:
+      - DCOV-EXEC-001-merged
+    obligation_ids:
+      - OB-EXEC-002-PRODUCER-BOUNDARY
+      - OB-EXEC-002-RECONCILE-ELEMENTS
+      - OB-EXEC-002-EXPAND-CATALOG
+      - OB-EXEC-002-CLOSE-SELECTED-P0-FAMILY
+      - OB-EXEC-002-LAYOUT-BOUNDED-PROOF
+  - work_package_id: DCOV-EXEC-003
+    work_type: content_expansion
+    depends_on:
+      - DCOV-EXEC-002-merged
+    obligation_ids:
+      - OB-EXEC-003-BOUNDED-RUNTIME-EVIDENCE
+      - OB-EXEC-003-ADDITIONAL-RESOLVER-CHAINS
+      - OB-EXEC-003-PROVISIONAL-REAUDIT
+      - OB-EXEC-003-SOURCE-RUNTIME-DISTINCTION
+  - work_package_id: DCOV-EXEC-004
+    work_type: content_expansion
+    depends_on:
+      - DCOV-EXEC-003-merged
+    obligation_ids:
+      - OB-EXEC-004-ADDITIONAL-FAMILIES
+      - OB-EXEC-004-REOPEN-VERSION-LIFECYCLE
+      - OB-EXEC-004-SEQUENCE-REPLAY
+      - OB-EXEC-004-UNAUTHORIZED-UPGRADE-REJECTION
+  - work_package_id: DCOV-EXEC-005
+    work_type: content_expansion_and_assessment
+    depends_on:
+      - DCOV-EXEC-004-merged
+    obligation_ids:
+      - OB-EXEC-005-SOURCE-FRESHNESS
+      - OB-EXEC-005-CLOSE-REMAINING-CRITICAL
+      - OB-EXEC-005-VALIDATE-DENOMINATORS
+      - OB-EXEC-005-COMPUTE-THRESHOLDS
+      - OB-EXEC-005-CRITICAL-100
+      - OB-EXEC-005-FINAL-ASSESSMENT
 ```
 
-### DCOV-WP-002 — Reconciliation and Source-Ledger Schema Foundation
+## DCOV-EXEC-001 — Coverage Guarantee Foundation and Execution Unblock
+
+This Draft PR creates the authoritative v1 contract and human view, source-bound non-empty Ledger and Catalog, proposed baseline, open debt, bootstrap impact, deterministic validator, exact-code fixtures, existing-CI wiring and unified roadmap memory.
+
+Acceptance:
+
+- active manual authority lock count is zero;
+- Ledger and Catalog are non-empty and source-bound;
+- denominator candidates are preserved;
+- percentages are `null` while denominator state is unresolved;
+- valid, invalid and adversarial fixtures pass with intended diagnostics;
+- exact-head CI is green before independent inspection;
+- state derives as `policy_active`.
+
+Non-goals: Resolver-family expansion, runtime platform, external producer implementation, measurement activation, readiness and Merge.
+
+## DCOV-EXEC-002 — Evidence-Bound Element and Resolver Expansion
+
+This is the only next executable package after `DCOV-EXEC-001` merges.
+
+Required content result:
+
+- implement only the external-producer proof boundaries required by selected real content;
+- prove producer identity, observation scope, version/hash/lineage and the prohibition on tier promotion or inference;
+- reconcile a materially bounded set of real Element records;
+- expand explicit source-bound Decision Questions;
+- select one materially sized P0 or high-risk Family;
+- complete its Matrix → Resolver → Evaluator → Fixture Triplet → L2 chain;
+- add bounded runtime or consumer proof only when that Family requires it;
+- increase completed obligation count or a measurable numerator.
+
+It must not be a producer-boundary documentation-only PR.
+
+## DCOV-EXEC-003 — Runtime-Evidence Families and Provisional Re-Audit
+
+Add only runtime/browser evidence contracts required by selected real Families, complete more Resolver chains, implement provisional/re-audit behavior for those Families, and prove source/runtime distinction with exact-code fixtures. Do not build a general monitoring platform.
+
+## DCOV-EXEC-004 — Reopen Lifecycle and Cross-Stage Integrity
+
+Complete additional real Families, add bounded reopen/version behavior, implement sequence-aware replay/diff or equivalent enforcement, and reject unauthorized claim upgrades or option changes. Static documentation is not sequence enforcement.
+
+## DCOV-EXEC-005 — Freshness, Remaining Coverage, and Release Assessment
+
+Implement only freshness needed by active Rules, close remaining critical obligations, validate the denominator, derive coverage, enforce 90%/95%/critical-100% criteria and perform final assessment. The assessment cannot manufacture missing coverage.
+
+## Historical KROAD mapping
+
+The IDs and original acceptance intent remain discoverable in `planning/KERNEL_EXECUTION_PLAN.md`. Mapping does not complete them.
+
+| Historical item | Historical execution status | Unified package | Preserved obligation groups |
+|---|---|---|---|
+| KROAD-012 | `superseded_by_coverage_execution_program` | DCOV-EXEC-002 | producer identity; declared input/version/hash; observation-only claims; lineage; no tier promotion; invalid/adversarial rejection; bounded consumer/runtime proof |
+| KROAD-013 | `superseded_by_coverage_execution_program` | DCOV-EXEC-003 | browser/runtime evidence schema; viewport/state/direction evidence; saved-source/runtime distinction; runtime limitations |
+| KROAD-014 | `superseded_by_coverage_execution_program` | DCOV-EXEC-003 | provisional triggers; re-audit conditions; evidence upgrade/downgrade; fail-closed status transitions |
+| KROAD-015 | `superseded_by_coverage_execution_program` | DCOV-EXEC-004 | reopen causes; immutable history; version lineage; earliest invalidated dependency |
+| KROAD-016 | `superseded_by_coverage_execution_program` | DCOV-EXEC-004 | cross-turn ordering; replay/diff enforcement; unauthorized option/claim upgrade rejection |
+| KROAD-017 | `superseded_by_coverage_execution_program` | DCOV-EXEC-005 | source freshness; stale-source diagnostics; Rule/source coupling; bounded monitoring |
+| KROAD-018 | `superseded_by_coverage_execution_program` | DCOV-EXEC-005 | validated denominator; computed thresholds; critical hard gate; final assessment only |
+
+## Package progress
 
 ```yaml
-status: blocked
-source_requirement_ids: [ARCH-005, ARCH-006, ARCH-007, EVID-006, EVID-007, ELEM-001, ELEM-002, ELEM-003, CAP-001, CAP-002, CTRL-001, CTRL-002, ROAD-002, OPS-001, OPS-002]
-decision_dependencies: [parent_authority=approved_recovery_source_of_record, repository placement approved]
-target_repository: rezahh107/EV4-Decision-Kernel
-implementation_scope: [reconciliation schema, source-ledger schema, validators, valid/invalid schema fixtures]
-explicit_non_goals: [element data, question data, Resolver Rules, complete inventory claim]
-expected_pr_boundary: one schema-and-validator PR
-stop_conditions: [placement unresolved, schema requires invented current identities]
-post_merge_followup: update roadmap memory and evaluate DCOV-WP-003
+package_progress:
+  work_package_id: DCOV-EXEC-001
+  baseline_before: null
+  baseline_after: coverage-baseline.v1.0.0
+  element_coverage_delta: null
+  question_coverage_delta: null
+  completed_obligation_ids:
+    - OB-EXEC-001-CONTRACT
+    - OB-EXEC-001-LEDGER
+    - OB-EXEC-001-CATALOG
+    - OB-EXEC-001-BASELINE-DEBT
+    - OB-EXEC-001-VALIDATOR-FIXTURES
+    - OB-EXEC-001-CI
+    - OB-EXEC-001-ROADMAP
+  remaining_obligation_ids:
+    - OB-EXEC-002-PRODUCER-BOUNDARY
+    - OB-EXEC-002-RECONCILE-ELEMENTS
+    - OB-EXEC-002-EXPAND-CATALOG
+    - OB-EXEC-002-CLOSE-SELECTED-P0-FAMILY
+    - OB-EXEC-002-LAYOUT-BOUNDED-PROOF
+    - OB-EXEC-003-BOUNDED-RUNTIME-EVIDENCE
+    - OB-EXEC-003-ADDITIONAL-RESOLVER-CHAINS
+    - OB-EXEC-003-PROVISIONAL-REAUDIT
+    - OB-EXEC-003-SOURCE-RUNTIME-DISTINCTION
+    - OB-EXEC-004-ADDITIONAL-FAMILIES
+    - OB-EXEC-004-REOPEN-VERSION-LIFECYCLE
+    - OB-EXEC-004-SEQUENCE-REPLAY
+    - OB-EXEC-004-UNAUTHORIZED-UPGRADE-REJECTION
+    - OB-EXEC-005-SOURCE-FRESHNESS
+    - OB-EXEC-005-CLOSE-REMAINING-CRITICAL
+    - OB-EXEC-005-VALIDATE-DENOMINATORS
+    - OB-EXEC-005-COMPUTE-THRESHOLDS
+    - OB-EXEC-005-CRITICAL-100
+    - OB-EXEC-005-FINAL-ASSESSMENT
+  estimated_program_share_completed: unresolved
+  estimation_basis: denominator_unresolved_use_obligation_criticality_dependency_complexity_and_proof_requirements
 ```
 
-### DCOV-WP-003 — Verified Element Reconciliation Data
-
-```yaml
-status: blocked
-source_requirement_ids: [EVID-006, EVID-007, EVID-008, ELEM-001, ELEM-002, ELEM-003, CAP-001]
-decision_dependencies: [parent_authority=approved_recovery_source_of_record, DCOV-WP-002 evidence_closed]
-implementation_scope: [source fingerprints, evidence-backed reconciliation records, unresolved inactive records]
-explicit_non_goals: [Decision Question Catalog, Resolver activation]
-expected_pr_boundary: one evidence-data PR
-```
-
-### DCOV-WP-004 — Recovered Decision Question Catalog Draft
-
-```yaml
-status: blocked
-source_requirement_ids: [DEC-001, DEC-002, DEC-003, RULE-001, RULE-002, RULE-003, COMP-001, COMP-002, EVID-004, OPS-001]
-decision_dependencies: [parent_authority=approved_recovery_source_of_record, DCOV-WP-002 evidence_closed, approved candidate identifiers]
-implementation_scope: [catalog schema, validator, recovered draft, fixtures]
-explicit_non_goals: [evaluator, active Resolver Rules, complete-catalog claim]
-expected_pr_boundary: one catalog-contract/draft PR
-```
-
-### DCOV-WP-005 — Practical Decision Demand Corpus Contract
-
-```yaml
-status: blocked
-source_requirement_ids: [PROD-003, COV-001, COV-002, COV-003, COV-004, COV-005, ROAD-003, OPS-001]
-decision_dependencies: [parent_authority=approved_recovery_source_of_record, privacy and telemetry governance approved]
-implementation_scope: [corpus contract, sampling/dedup policy, governed initial corpus, calibration report]
-explicit_non_goals: [final weights, 95 percent claim, ungoverned private telemetry]
-expected_pr_boundary: contract PR and separately reviewed data PR when warranted
-```
-
-## Dependency Order
-
-```text
-DCOV-WP-001
-→ parent authority promotion gate
-→ DCOV-WP-002
-→ DCOV-WP-003 and DCOV-WP-004
-parent authority promotion gate + privacy/telemetry governance → DCOV-WP-005
-DCOV-WP-003 + DCOV-WP-004 + DCOV-WP-005
-→ compatibility foundation → family-bounded Resolver work → fixture/L2
-→ consumer enforcement → calibrated baseline → KROAD-018 assessment
-```
-
-## Current Eligibility
-
-- `DCOV-WP-001`: current documentation PR; implementation coverage created: none.
-- `DCOV-WP-002`: blocked until `parent_authority=approved_recovery_source_of_record` is explicitly recorded after the full promotion gate and repository placement is approved. Merge, CI success or `evidence_closed` alone cannot unlock it.
-- Existing KROAD-012 retains its approved purpose. Research may proceed in parallel only when it does not commit unapproved identifiers or paths.
-- All data, Resolver, L2, consumer and coverage packages remain blocked by their dependencies.
-
-## Prompt-Generation Contract
-
-Every future operational prompt must include:
-
-```yaml
-work_package_id:
-source_spec_sections: []
-source_requirement_ids: []
-decision_dependencies: []
-target_repository:
-target_files_or_artifact_types: []
-prerequisites: []
-implementation_scope: []
-explicit_non_goals: []
-evidence_requirements: []
-acceptance_criteria: []
-required_tests: []
-required_repository_memory_updates: []
-expected_pr_boundary:
-stop_conditions: []
-post_merge_followup:
-```
-
-Rules: read live state; resolve requirement IDs exactly once in the parent index; never expand scope silently; keep planning/implementation/validation/merge distinct; require committed evidence; update planning memory after merge; select next work from dependency state rather than conversation memory.
-
-## Implementation Evidence Fields
-
-```yaml
-implementation_evidence:
-  branch:
-  commit_sha:
-  pull_request:
-  merged_commit_sha:
-  changed_paths: []
-  validation_commands: []
-  validation_results: []
-  review_record:
-  evidence_closure_record:
-  verified_at:
-```
-
-No package reaches `evidence_closed` from prose or CI success alone. No recovery-spec-sourced implementation package becomes eligible from `evidence_closed` alone; it must also satisfy `parent_authority=approved_recovery_source_of_record`.
+No 20% figure is inferred from files, schemas, validators, commits, PRs or mapped KROAD items.

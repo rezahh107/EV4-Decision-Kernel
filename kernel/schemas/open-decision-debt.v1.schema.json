@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/open-decision-debt.v1.schema.json",
+  "title": "EV4 Open Decision Debt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["debt_id", "version", "status", "baseline_ref", "open_item_count", "items"],
+  "properties": {
+    "debt_id": { "const": "open-decision-debt.v1" },
+    "version": { "const": "1.0.0" },
+    "status": { "const": "open" },
+    "baseline_ref": { "type": "string", "minLength": 1 },
+    "open_item_count": { "type": "integer", "minimum": 1 },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["debt_id", "debt_type", "record_ids", "obligation_ids", "status", "missing_evidence", "source_refs", "target_package"],
+        "properties": {
+          "debt_id": { "type": "string", "pattern": "^DEBT-[A-Z0-9_-]+$" },
+          "debt_type": { "enum": ["element_reconciliation", "question_recovery", "resolver_chain", "runtime_or_consumer_proof", "denominator_validation", "critical_coverage"] },
+          "record_ids": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+          "obligation_ids": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+          "status": { "enum": ["unresolved", "candidate", "pending_official_confirmation"] },
+          "missing_evidence": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+          "source_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+          "target_package": { "enum": ["DCOV-EXEC-002", "DCOV-EXEC-003", "DCOV-EXEC-004", "DCOV-EXEC-005"] }
+        }
+      }
+    }
+  }
+}

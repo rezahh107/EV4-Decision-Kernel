@@ -64,12 +64,38 @@ function assertStatusAuthority(nextWork) {
 
 function assertExactlyOneNextTask(nextWork) {
   const section = extractSection(nextWork, 'Next Task');
-  const nextTasks = [...section.matchAll(/^- \[ \] (KROAD-\d{3})\s+—\s+.+$/gm)];
+  const nextTasks = [...section.matchAll(/^- \[ \] ((?:KROAD-\d{3})|(?:DCOV-EXEC-\d{3}))\s+—\s+.+$/gm)];
   if (nextTasks.length !== 1) {
     fail(
       'planning/NEXT_WORK.md',
       `NEXT_WORK.md must identify exactly one current next task, found ${nextTasks.length}.`,
-      'Keep exactly one unchecked KROAD item under the Next Task section.',
+      'Keep exactly one unchecked executable item under the Next Task section.',
+    );
+  }
+}
+
+function assertUnifiedCoverageNextWork(nextWork) {
+  const current = extractSection(nextWork, 'Current PR');
+  const next = extractSection(nextWork, 'Next Task');
+  if (!/^- \[ \] DCOV-EXEC-001\s+—\s+Coverage Guarantee Foundation and Execution Unblock$/m.test(current)) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'Current PR is not uniquely recorded as DCOV-EXEC-001.',
+      'Record DCOV-EXEC-001 under Current PR without activating another current package.',
+    );
+  }
+  if (!/^- \[ \] DCOV-EXEC-002\s+—\s+Evidence-Bound Element and Resolver Expansion$/m.test(next)) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'The only next executable package must be DCOV-EXEC-002.',
+      'Keep only DCOV-EXEC-002 under Next Task.',
+    );
+  }
+  if (!/`next_work_type`:\s+`content_expansion`/.test(next)) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'DCOV-EXEC-002 is not classified as content_expansion.',
+      'Add next_work_type: content_expansion under DCOV-EXEC-002.',
     );
   }
 }
@@ -159,6 +185,7 @@ const files = Object.fromEntries(REQUIRED_FILES.map((filePath) => [filePath, rea
 
 assertStatusAuthority(files['planning/NEXT_WORK.md']);
 assertExactlyOneNextTask(files['planning/NEXT_WORK.md']);
+assertUnifiedCoverageNextWork(files['planning/NEXT_WORK.md']);
 assertCompletedItemsHaveEvidence(files['planning/NEXT_WORK.md']);
 assertKernelDoesNotOverrideCompletedStatus(files['planning/NEXT_WORK.md'], files['planning/KERNEL_EXECUTION_PLAN.md']);
 assertNoStalePreMergeWording();

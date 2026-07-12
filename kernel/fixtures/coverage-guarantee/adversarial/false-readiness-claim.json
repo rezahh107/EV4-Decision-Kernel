@@ -1,0 +1,16 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_READINESS_CLAIM_UNSUPPORTED"
+  ],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": [
+      "production_ready"
+    ]
+  }
+}

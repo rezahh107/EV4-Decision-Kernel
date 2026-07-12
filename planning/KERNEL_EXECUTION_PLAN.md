@@ -174,62 +174,57 @@ Use these statuses in this file and in `planning/NEXT_WORK.md`:
 - `blocked`
 - `provisional`
 - `superseded`
+- `superseded_by_coverage_execution_program`
 
 ---
 
-## Decision Coverage Recovery Overlay
+## Unified Coverage Execution Program
 
-- **Status:** proposed; pending review, merge and evidence closure.
-- **Parent specification:** `docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md`.
+- **Status:** active.
+- **Contract:** `kernel/decision-governance/coverage-guarantee-contract.v1.json`.
 - **Operational map:** `planning/EV4_DECISION_COVERAGE_OPERATIONALIZATION_MAP.md`.
-- **Origin:** `newly_proposed_architecture`.
+- **Current package:** `DCOV-EXEC-001`.
+- **Only next executable package after Merge:** `DCOV-EXEC-002`.
+- **Active package count:** exactly five.
 
-This overlay restores the distinction between the deliberately small MVK vertical slice and the broader product objective. It does not renumber, redefine or implement KROAD-012 through KROAD-018. It creates no new Resolver coverage.
+The program converts merged recovery context into executable, source-bound coverage policy. Contract states and percentages are computed; no manual authority or activation workflow is part of the dependency graph.
 
-### Durable ordering
+### Package dependencies and obligations
 
-```text
-DCOV-WP-001 recovery documentation and promotion evidence
-→ parent_authority=approved_recovery_source_of_record
-→ DCOV-WP-002 reconciliation/source-ledger schemas and validators
-→ DCOV-WP-003 evidence-backed element reconciliation data
-→ DCOV-WP-004 recovered decision-question catalog draft
-→ DCOV-WP-005 governed demand corpus and metric calibration
-→ approved compatibility foundation
-→ family-bounded Resolver expansion
-→ fixture/L2 expansion
-→ consumer enforcement expansion
-→ calibrated coverage baseline
-→ KROAD-018 readiness assessment
-```
+| Package | Depends on | Stable obligation groups | Acceptance and evidence | Do not |
+|---|---|---|---|---|
+| `DCOV-EXEC-001` | PR #41 merged | `OB-EXEC-001-CONTRACT`, `LEDGER`, `CATALOG`, `BASELINE-DEBT`, `VALIDATOR-FIXTURES`, `CI`, `ROADMAP` | authoritative v1 JSON + Markdown mirror; non-empty source-bound data; proposed baseline; open debt; bootstrap impact; exact-code valid/invalid/adversarial fixtures; existing-CI run; derived `policy_active` | no Resolver expansion, runtime platform, readiness or Merge |
+| `DCOV-EXEC-002` | `DCOV-EXEC-001` merged | `OB-EXEC-002-PRODUCER-BOUNDARY`, `RECONCILE-ELEMENTS`, `EXPAND-CATALOG`, `CLOSE-SELECTED-P0-FAMILY`, `LAYOUT-BOUNDED-PROOF` | producer observation/version/hash/lineage boundaries needed by selected content; real Element/Question expansion; one materially sized P0/high-risk Matrix → Resolver → Evaluator → Fixture Triplet → L2 chain; bounded required proof; actual obligation/numerator growth | no producer-boundary documentation-only PR; no external implementation platform |
+| `DCOV-EXEC-003` | `DCOV-EXEC-002` merged | `OB-EXEC-003-BOUNDED-RUNTIME-EVIDENCE`, `ADDITIONAL-RESOLVER-CHAINS`, `PROVISIONAL-REAUDIT`, `SOURCE-RUNTIME-DISTINCTION` | Family-required runtime contracts and fixtures; more complete Resolver chains; deterministic provisional/re-audit behavior; source/runtime distinction; coverage growth | no general browser/runtime monitoring platform |
+| `DCOV-EXEC-004` | `DCOV-EXEC-003` merged | `OB-EXEC-004-ADDITIONAL-FAMILIES`, `REOPEN-VERSION-LIFECYCLE`, `SEQUENCE-REPLAY`, `UNAUTHORIZED-UPGRADE-REJECTION` | more real Families; immutable reopen lineage; sequence-aware replay/diff or equivalent tests; rejected claim/option upgrades; coverage growth | no static-document-only sequence claim; no broad lifecycle platform |
+| `DCOV-EXEC-005` | `DCOV-EXEC-004` merged | `OB-EXEC-005-SOURCE-FRESHNESS`, `CLOSE-REMAINING-CRITICAL`, `VALIDATE-DENOMINATORS`, `COMPUTE-THRESHOLDS`, `CRITICAL-100`, `FINAL-ASSESSMENT` | active-Rule freshness; remaining critical closure; validated denominator; derived 90%/95%/100%; final assessment | no manufactured coverage; no readiness from CI alone |
 
-### Dependency boundaries
+### Evidence and progress rules
 
-- KROAD-012 retains its existing purpose: external evidence producer boundaries.
-- KROAD-012 research may proceed in parallel when it does not commit unapproved identifiers, schemas or repository paths.
-- Any KROAD-012 implementation that depends on recovery identifiers or contracts waits for the applicable evidence-closed `DCOV-WP-*` package.
-- KROAD-013 through KROAD-017 remain evidence/runtime/lifecycle/freshness work and are not substitutes for Resolver expansion.
-- KROAD-018 remains an assessment gate and cannot create missing decision coverage.
-- Every recovery-spec-sourced implementation package (`DCOV-WP-002` and later) requires `parent_authority=approved_recovery_source_of_record`; package lifecycle status alone cannot bypass the promotion gate.
-- `DCOV-WP-002` is the first candidate implementation package after the documentation anchor, but remains blocked until the parent is explicitly promoted to `approved_recovery_source_of_record` through the full promotion gate and repository placement is approved. Merge, CI success and `DCOV-WP-001 evidence_closed` do not by themselves imply that authority state.
+- Every coverage-sensitive package commits a valid Coverage Impact Record.
+- Before `measurement_active`, content expansion closes a bounded real Family/Element slice and completes a material set of obligation IDs.
+- After `measurement_active`, progress uses computed percentage/numerator/family criteria from the contract.
+- File, schema, validator, Commit, PR and KROAD counts are never content-progress proxies.
+- A zero-delta package is limited to a blocking defect and names the next content package; three consecutive zero-delta packages fail.
+- Program share is `unresolved` until a validated denominator supports derivation.
 
-### First PR boundaries
+### Historical KROAD-to-package mapping
 
-1. PR 1 / `DCOV-WP-001`: parent specification, correction ledger, dependency DAG, Rule composition, roadmap memory and operational map only.
-2. PR 2 / `DCOV-WP-002`: reconciliation/source-ledger schemas, validators and schema fixtures only.
-3. PR 3 / `DCOV-WP-003`: verified element/source data only.
-4. PR 4 / `DCOV-WP-004`: question-catalog schema, validator and recovered draft only.
-5. PR 5 / `DCOV-WP-005`: demand-corpus contract and governed initial corpus, split further if data risk warrants.
+KROAD-012 through KROAD-018 keep their IDs, detailed scope and acceptance intent below. Mapping does not mark them complete.
 
-No package may mix recovery, schema design, data population, Resolver implementation, consumer enforcement and runtime integration unless a documented technical dependency proves inseparability.
+| Historical item | Former active status | Unified package | Preserved intent |
+|---|---|---|---|
+| KROAD-012 | `superseded_by_coverage_execution_program` | `DCOV-EXEC-002` | external producer identity, declared inputs, version/hash/lineage, observed-only claims, no inference/tier promotion, fail-closed fixtures |
+| KROAD-013 | `superseded_by_coverage_execution_program` | `DCOV-EXEC-003` | runtime/browser evidence, viewport/state/direction, saved-source/runtime distinction, limitations |
+| KROAD-014 | `superseded_by_coverage_execution_program` | `DCOV-EXEC-003` | provisional thresholds, evidence changes, re-audit triggers and fail-closed transitions |
+| KROAD-015 | `superseded_by_coverage_execution_program` | `DCOV-EXEC-004` | reopen causes, immutable history, version lineage and earliest invalidated dependency |
+| KROAD-016 | `superseded_by_coverage_execution_program` | `DCOV-EXEC-004` | cross-stage ordering, replay/diff evidence and unauthorized change rejection |
+| KROAD-017 | `superseded_by_coverage_execution_program` | `DCOV-EXEC-005` | bounded freshness, stale-source diagnostics and Rule/source coupling |
+| KROAD-018 | `superseded_by_coverage_execution_program` | `DCOV-EXEC-005` | quantitative assessment using validated coverage; assessment cannot create coverage |
 
 ### Decision Record compatibility
 
-Disposition: `introduce_v2_extension_profile`. Existing Decision Record v2 remains the base. No v3 schema is approved or created by this overlay.
-
-### Coverage interpretation
-
-The user objective is at least 95% practical decision-demand coverage. Denominator, weights, uncertainty and hard gates remain proposed until a governed corpus is calibrated.
+Decision Record v2 remains the base. A future extension or version change requires a proven semantic need and compatible consumer evidence; this program creates no v3 contract by default.
 
 ---
 
@@ -295,7 +290,7 @@ At least one of:
 
 ## KROAD-001 — Cross-Repository Adoption Report
 
-- **Status:** not_started
+- **Status:** completed
 - **Purpose:** Discover which useful knowledge, contracts, schemas, evidence boundaries, and validation patterns from related repositories should be adopted, adapted, referenced, or excluded.
 - **Depends on:** KROAD-000
 - **Primary question:** What should the Kernel learn from nearby EV4/EDIS/EDAS repositories without becoming a copy of them?
@@ -506,7 +501,7 @@ Artifacts such as:
 
 ## KROAD-003 — Decision Record Schema v2 + Migration Plan
 
-- **Status:** not_started
+- **Status:** completed
 - **Purpose:** Upgrade the decision record model so Resolver, L2 Audit, Provisional Policy, Rule Versioning, Human Override, and Reopen Loop all use one coherent data contract.
 - **Depends on:** KROAD-001, KROAD-002
 - **Primary question:** What fields must every future decision record carry so the decision can be resolved, audited, reopened, migrated, and gated?
@@ -599,7 +594,7 @@ Possible artifacts:
 
 ## KROAD-004 — P0 Decision Matrices
 
-- **Status:** not_started
+- **Status:** completed
 - **Purpose:** Define the first structured comparison matrices for high-value Elementor V4 decision families.
 - **Depends on:** KROAD-003
 - **Primary question:** For each P0 decision family, what are the candidate options, required evidence, common risks, forbidden overclaims, and decision boundaries?
@@ -671,7 +666,7 @@ Possible artifacts:
 
 ## KROAD-005 — Decision Resolver Contract
 
-- **Status:** not_started
+- **Status:** completed
 - **Purpose:** Define how a decision matrix becomes an executable or semi-executable resolver contract.
 - **Depends on:** KROAD-003, KROAD-004
 - **Primary question:** How does the Kernel decide whether a case is auto-resolved, conditional, or unresolvable?
@@ -741,7 +736,7 @@ Possible artifacts:
 
 ## KROAD-006 — Resolver MVP for High-Risk P0 Families
 
-- **Status:** not_started
+- **Status:** completed
 - **Purpose:** Implement a small resolver MVP for the highest-risk P0 families instead of trying to solve every decision family at once.
 - **Depends on:** KROAD-005
 - **Primary question:** Can the Kernel constrain real high-risk decisions with actual resolver logic?
@@ -810,7 +805,7 @@ Possible artifacts:
 
 ## KROAD-007 — L2 Decision Correctness Audit
 
-- **Status:** not_started
+- **Status:** completed
 - **Purpose:** Add a second-level audit that checks whether a selected decision is consistent with the resolver and evidence, not merely well-formed.
 - **Depends on:** KROAD-005, KROAD-006
 - **Primary question:** Can a well-formatted but wrong decision be caught?
@@ -875,7 +870,7 @@ Possible artifacts:
 
 ## KROAD-008 — Resolver Fixtures: Valid / Invalid / Adversarial
 
-- **Status:** not_started
+- **Status:** completed
 - **Purpose:** Ensure every resolver rule has enforcement evidence, not just prose.
 - **Depends on:** KROAD-005
 - **Primary question:** Does every rule have test cases that prove it accepts, rejects, and resists near-valid mistakes?
@@ -930,7 +925,7 @@ Possible artifacts:
 
 ## KROAD-009 — Vertical Slice
 
-- **Status:** not_started
+- **Status:** completed
 - **Purpose:** Prove that one decision family works end-to-end through matrix, resolver, record, audit, fixtures, and documentation.
 - **Depends on:** KROAD-003, KROAD-004, KROAD-005, KROAD-006, KROAD-007, KROAD-008
 - **Primary question:** Can the Kernel govern one real decision from input context to accepted/rejected decision record?
@@ -987,7 +982,7 @@ A complete example showing how future families should be implemented.
 
 ## KROAD-010 — Downstream Consumer Contract
 
-- **Status:** not_started
+- **Status:** completed
 - **Purpose:** Make downstream EV4 repositories enforce when and how to consult the Kernel.
 - **Depends on:** KROAD-009
 - **Primary question:** How does Architect or CE know it must use the Kernel instead of deciding freely?
@@ -1098,7 +1093,7 @@ Direct exact-activation Actions retrieval was attempted but unavailable; no hist
 
 ## KROAD-011 — Project Gate Intake
 
-- **Status:** not_started
+- **Status:** completed
 - **Purpose:** Allow Project Gate to reject incomplete, unproven, overclaimed, or Kernel-bypassing decision packets.
 - **Depends on:** KROAD-010
 - **Primary question:** Can Project Gate enforce completeness after downstream decisions are produced?
@@ -1161,7 +1156,8 @@ Possible artifacts:
 
 ## KROAD-012 — External Evidence Producer Boundary
 
-- **Status:** not_started
+- **Status:** superseded_by_coverage_execution_program
+- **Unified execution mapping:** `DCOV-EXEC-002`; this mapping preserves scope and does not mark KROAD-012 completed.
 - **Purpose:** Define what external evidence producers can and cannot prove.
 - **Depends on:** KROAD-001, KROAD-011
 - **Primary question:** What does each external evidence source prove, and what does it not prove?
@@ -1250,7 +1246,8 @@ Possible artifacts:
 
 ## KROAD-013 — Runtime / Browser Evidence Layer
 
-- **Status:** not_started
+- **Status:** superseded_by_coverage_execution_program
+- **Unified execution mapping:** `DCOV-EXEC-003`; this mapping preserves scope and does not mark KROAD-013 completed.
 - **Purpose:** Introduce actual runtime/browser evidence into Kernel decision governance.
 - **Depends on:** KROAD-012
 - **Primary question:** Can the Kernel distinguish source/editor claims from rendered browser facts?
@@ -1306,7 +1303,8 @@ Possible artifacts:
 
 ## KROAD-014 — Provisional Re-Audit Policy
 
-- **Status:** not_started
+- **Status:** superseded_by_coverage_execution_program
+- **Unified execution mapping:** `DCOV-EXEC-003`; this mapping preserves scope and does not mark KROAD-014 completed.
 - **Purpose:** Ensure decisions made with incomplete evidence remain provisional and are re-audited when stronger evidence arrives.
 - **Depends on:** KROAD-003, KROAD-012, KROAD-013
 - **Primary question:** Which decisions may remain provisional, which may not, and when must re-audit happen?
@@ -1364,7 +1362,8 @@ Possible artifacts:
 
 ## KROAD-015 — Decision Reopen / Feedback Loop
 
-- **Status:** not_started
+- **Status:** superseded_by_coverage_execution_program
+- **Unified execution mapping:** `DCOV-EXEC-004`; this mapping preserves scope and does not mark KROAD-015 completed.
 - **Purpose:** Make decision records reopenable when downstream failure, new evidence, or rule revision invalidates or weakens the original decision.
 - **Depends on:** KROAD-003, KROAD-007, KROAD-014
 - **Primary question:** How does the system repair root decisions instead of only failing downstream?
@@ -1441,7 +1440,8 @@ Possible artifacts:
 
 ## KROAD-016 — Cross-Turn / Sequence Enforcement
 
-- **Status:** not_started
+- **Status:** superseded_by_coverage_execution_program
+- **Unified execution mapping:** `DCOV-EXEC-004`; this mapping preserves scope and does not mark KROAD-016 completed.
 - **Purpose:** Ensure EV4 pipeline stages cannot mutate, overclaim, or silently reinterpret decisions across Architect → CE → Builder → Responsive.
 - **Depends on:** KROAD-010, KROAD-011, KROAD-015
 - **Primary question:** Can the system detect when a downstream stage changes the meaning of an upstream decision?
@@ -1499,7 +1499,8 @@ Possible artifacts:
 
 ## KROAD-017 — Official Docs Freshness Monitor
 
-- **Status:** not_started
+- **Status:** superseded_by_coverage_execution_program
+- **Unified execution mapping:** `DCOV-EXEC-005`; this mapping preserves scope and does not mark KROAD-017 completed.
 - **Purpose:** Prevent Kernel official-source knowledge from becoming stale when Elementor documentation changes.
 - **Depends on:** KROAD-001, KROAD-004
 - **Primary question:** How does the Kernel know when official source-backed claims may be outdated?
@@ -1559,7 +1560,8 @@ Possible artifacts:
 
 ## KROAD-018 — Final Kernel Release Gate
 
-- **Status:** not_started
+- **Status:** superseded_by_coverage_execution_program
+- **Unified execution mapping:** `DCOV-EXEC-005`; this mapping preserves scope and does not mark KROAD-018 completed.
 - **Purpose:** Determine whether the Kernel is ready for stable ecosystem-wide use using quantitative criteria, not subjective judgment.
 - **Depends on:** KROAD-001 through KROAD-017, or documented exceptions
 - **Primary question:** Is the Kernel operationally ready, or does it still behave like a boutique reference document?
@@ -1638,13 +1640,11 @@ Use this order unless a future merged PR updates this plan with evidence-backed 
 8. KROAD-009 — Vertical Slice
 9. KROAD-010 — Downstream Consumer Contract
 10. KROAD-011 — Project Gate Intake
-11. KROAD-012 — External Evidence Producer Boundary
-12. KROAD-013 — Runtime / Browser Evidence Layer
-13. KROAD-014 — Provisional Re-Audit Policy
-14. KROAD-015 — Decision Reopen / Feedback Loop
-15. KROAD-016 — Cross-Turn / Sequence Enforcement
-16. KROAD-017 — Official Docs Freshness Monitor
-17. KROAD-018 — Final Kernel Release Gate
+11. DCOV-EXEC-001 — Coverage Guarantee Foundation and Execution Unblock
+12. DCOV-EXEC-002 — Evidence-Bound Element and Resolver Expansion
+13. DCOV-EXEC-003 — Runtime-Evidence Families and Provisional Re-Audit
+14. DCOV-EXEC-004 — Reopen Lifecycle and Cross-Stage Integrity
+15. DCOV-EXEC-005 — Freshness, Remaining Coverage, and Release Assessment
 
 Note: KROAD-008 may be implemented partly alongside KROAD-005 and KROAD-006, because every resolver rule should be authored with valid, invalid, and adversarial fixtures.
 
@@ -1657,7 +1657,7 @@ Before doing any next task:
 1. Read `planning/NEXT_WORK.md`.
 2. Read this file.
 3. Inspect live repository state.
-4. Identify the next unchecked KROAD item.
+4. Identify the single next executable package in `planning/NEXT_WORK.md`.
 5. Confirm dependencies.
 6. Implement only the next scoped task.
 7. Update `planning/NEXT_WORK.md` in the same PR.

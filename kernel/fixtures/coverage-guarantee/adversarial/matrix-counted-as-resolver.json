@@ -1,0 +1,27 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_MATRIX_ONLY_RESOLVER_CREDIT"
+  ],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "set",
+        "artifact": "catalog",
+        "path": "/records/9/coverage_chain/resolver_rule/status",
+        "value": "complete"
+      },
+      {
+        "op": "set",
+        "artifact": "catalog",
+        "path": "/records/9/coverage_chain/resolver_rule/evidence_refs",
+        "value": []
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

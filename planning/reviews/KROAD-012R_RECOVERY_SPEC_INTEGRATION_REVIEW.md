@@ -1,5 +1,9 @@
 # KROAD-012R Recovery Specification Integration — Bounded Repair Record
 
+Superseded: manual parent_authority promotion was removed from the active execution model.
+
+All authority-promotion predicates below are preserved as historical PR #41 evidence only. They are not active package dependencies.
+
 ## Status
 
 - `action_kind`: `repair`

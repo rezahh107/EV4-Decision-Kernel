@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/coverage-guarantee-contract.v1.schema.json",
+  "title": "EV4 Coverage Guarantee Contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_id",
+    "contract_version",
+    "contract_class",
+    "authority",
+    "thresholds",
+    "state_machine",
+    "coverage_semantics",
+    "denominator_integrity",
+    "material_progress",
+    "coverage_sensitive_paths",
+    "merge_gate",
+    "forbidden_claims",
+    "expected_state_after_dcov_exec_001"
+  ],
+  "properties": {
+    "contract_id": { "const": "coverage-guarantee-contract.v1" },
+    "contract_version": { "const": "1.0.0" },
+    "contract_class": { "const": "repository_governance_policy" },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["machine_readable_source", "human_readable_view", "manual_state_promotion_allowed"],
+      "properties": {
+        "machine_readable_source": { "const": "kernel/decision-governance/coverage-guarantee-contract.v1.json" },
+        "human_readable_view": { "const": "docs/decision-governance/COVERAGE_GUARANTEE_CONTRACT.md" },
+        "manual_state_promotion_allowed": { "const": false }
+      }
+    },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimum_content_floor", "owner_acceptance_target", "critical_p0_and_safety_coverage"],
+      "properties": {
+        "minimum_content_floor": { "const": 90 },
+        "owner_acceptance_target": { "const": 95 },
+        "critical_p0_and_safety_coverage": { "const": 100 }
+      }
+    },
+    "state_machine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ordered_states", "eligibility"],
+      "properties": {
+        "ordered_states": {
+          "const": ["policy_active", "measurement_active", "threshold_enforced"]
+        },
+        "eligibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["policy_active", "measurement_active", "threshold_enforced"],
+          "properties": {
+            "policy_active": { "$ref": "#/$defs/eligibility" },
+            "measurement_active": { "$ref": "#/$defs/eligibility" },
+            "threshold_enforced": { "$ref": "#/$defs/eligibility" }
+          }
+        }
+      }
+    },
+    "coverage_semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["element", "question", "critical"],
+      "properties": {
+        "element": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["definition_id", "covered_statuses", "non_credit_artifacts"],
+          "properties": {
+            "definition_id": { "const": "all_applicable_obligations_end_to_end_or_validated_not_applicable" },
+            "covered_statuses": { "const": ["end_to_end_covered", "not_applicable_with_validated_reason"] },
+            "non_credit_artifacts": {
+              "const": ["decision_card_only", "matrix_only", "resolver_rule_only", "fixture_only", "schema_only", "documentation_only", "ci_pass_only"]
+            }
+          }
+        },
+        "question": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["definition_id", "required_chain", "not_applicable_requirements"],
+          "properties": {
+            "definition_id": { "const": "complete_applicable_question_chain" },
+            "required_chain": {
+              "const": ["catalog", "matrix", "resolver_rule", "deterministic_evaluator", "valid_fixture", "invalid_fixture", "adversarial_fixture", "l2_audit", "required_runtime_or_consumer_proof", "coverage_credit"]
+            },
+            "not_applicable_requirements": {
+              "const": ["machine_readable_reason", "supporting_evidence", "validator_acceptance"]
+            }
+          }
+        },
+        "critical": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["measured_separately", "aggregate_may_hide_gap", "threshold_state_requires_percent"],
+          "properties": {
+            "measured_separately": { "const": true },
+            "aggregate_may_hide_gap": { "const": false },
+            "threshold_state_requires_percent": { "const": 100 }
+          }
+        }
+      }
+    },
+    "denominator_integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["known_scope_includes", "coverage_percent_requires_validated_denominator", "reduction_requires_record_level_reasons"],
+      "properties": {
+        "known_scope_includes": { "const": ["confirmed", "candidate", "unresolved"] },
+        "coverage_percent_requires_validated_denominator": { "const": true },
+        "reduction_requires_record_level_reasons": { "const": true }
+      }
+    },
+    "material_progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["measurement_active_options", "policy_active_rule", "limited_exception", "zero_delta_rule", "three_consecutive_zero_delta_fail"],
+      "properties": {
+        "measurement_active_options": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["option_1", "option_2", "option_3"],
+          "properties": {
+            "option_1": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["coverage_delta_gte_percentage_points"],
+              "properties": { "coverage_delta_gte_percentage_points": { "const": 5 } }
+            },
+            "option_2": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["formula"],
+              "properties": { "formula": { "const": "max(2, ceil(0.05 * current_denominator))" } }
+            },
+            "option_3": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["complete_p0_family_across_all_applicable_elements", "measurable_numerator_increase_required"],
+              "properties": {
+                "complete_p0_family_across_all_applicable_elements": { "const": true },
+                "measurable_numerator_increase_required": { "const": true }
+              }
+            }
+          }
+        },
+        "policy_active_rule": { "const": "complete_materially_bounded_obligations_and_close_one_real_family_slice" },
+        "limited_exception": { "const": "machine_readable_reason_plus_closed_family_plus_numerator_or_completed_obligation_growth" },
+        "zero_delta_rule": { "const": "blocking_defect_only_with_next_content_expansion_package" },
+        "three_consecutive_zero_delta_fail": { "const": true }
+      }
+    },
+    "coverage_sensitive_paths": {
+      "type": "array",
+      "minItems": 8,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "merge_gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exact_head_ci_green", "independent_pr_inspector_green", "explicit_owner_merge_command"],
+      "properties": {
+        "exact_head_ci_green": { "const": "required" },
+        "independent_pr_inspector_green": { "const": "required" },
+        "explicit_owner_merge_command": { "const": "required" }
+      }
+    },
+    "forbidden_claims": {
+      "type": "array",
+      "minItems": 5,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "expected_state_after_dcov_exec_001": { "const": "policy_active" }
+  },
+  "$defs": {
+    "eligibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requirements"],
+      "properties": {
+        "requirements": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

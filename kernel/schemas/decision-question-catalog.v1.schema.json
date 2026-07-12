@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/decision-question-catalog.v1.schema.json",
+  "title": "EV4 Decision Question Catalog v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["catalog_id", "version", "status", "source_base_commit", "known_scope_count", "confirmed_denominator_count", "denominator_state", "records"],
+  "properties": {
+    "catalog_id": { "const": "decision-question-catalog.v1" },
+    "version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" },
+    "status": { "enum": ["active_seed", "active"] },
+    "source_base_commit": { "$ref": "#/$defs/sha40" },
+    "known_scope_count": { "type": "integer", "minimum": 1 },
+    "confirmed_denominator_count": { "type": "integer", "minimum": 0 },
+    "denominator_state": { "enum": ["unresolved", "validated"] },
+    "records": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/record" } }
+  },
+  "$defs": {
+    "sha40": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "sourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_type", "path", "artifact_version", "retrieval_identity", "content_hash", "repository_commit", "repository_blob_sha", "provenance_classification", "verification_mode"],
+      "properties": {
+        "source_type": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "artifact_version": { "type": "string", "minLength": 1 },
+        "retrieval_identity": { "type": "string", "minLength": 1 },
+        "content_hash": { "$ref": "#/$defs/sha256" },
+        "repository_commit": { "$ref": "#/$defs/sha40" },
+        "repository_blob_sha": { "$ref": "#/$defs/sha40" },
+        "json_pointer": { "type": ["string", "null"] },
+        "provenance_classification": { "enum": ["existing_repository_contract", "verified_current_repository_fact", "verified_current_official_fact", "recovered_historical_requirement", "recovered_from_multiple_sources", "derived_architectural_requirement", "unresolved_candidate"] },
+        "verification_mode": { "enum": ["local_file", "git_blob_at_commit"] }
+      }
+    },
+    "chainLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "evidence_refs", "not_applicable_reason"],
+      "properties": {
+        "status": { "enum": ["complete", "incomplete", "candidate", "unresolved", "not_applicable_with_validated_reason"] },
+        "evidence_refs": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "not_applicable_reason": { "type": ["object", "null"], "required": ["reason_code", "evidence_refs", "validator_accepted"], "properties": { "reason_code": { "type": "string", "minLength": 1 }, "evidence_refs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }, "validator_accepted": { "const": true } }, "additionalProperties": false }
+      }
+    },
+    "chain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["catalog", "matrix", "resolver_rule", "deterministic_evaluator", "valid_fixture", "invalid_fixture", "adversarial_fixture", "l2_audit", "required_runtime_or_consumer_proof", "coverage_credit"],
+      "properties": {
+        "catalog": { "$ref": "#/$defs/chainLink" },
+        "matrix": { "$ref": "#/$defs/chainLink" },
+        "resolver_rule": { "$ref": "#/$defs/chainLink" },
+        "deterministic_evaluator": { "$ref": "#/$defs/chainLink" },
+        "valid_fixture": { "$ref": "#/$defs/chainLink" },
+        "invalid_fixture": { "$ref": "#/$defs/chainLink" },
+        "adversarial_fixture": { "$ref": "#/$defs/chainLink" },
+        "l2_audit": { "$ref": "#/$defs/chainLink" },
+        "required_runtime_or_consumer_proof": { "$ref": "#/$defs/chainLink" },
+        "coverage_credit": { "$ref": "#/$defs/chainLink" }
+      }
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["question_id", "record_type", "question_text", "decision_family_id", "trigger_context", "candidate_options", "evidence_state", "denominator_membership", "source_references", "coverage_chain", "critical", "resolution_state", "known_limitations", "duplicate_of", "superseded_by"],
+      "properties": {
+        "question_id": { "type": "string", "pattern": "^DQ-[A-Z0-9_-]+$" },
+        "record_type": { "enum": ["explicit_decision_question", "matrix_family_question_gap"] },
+        "question_text": { "type": ["string", "null"], "minLength": 1 },
+        "decision_family_id": { "type": "string", "minLength": 1 },
+        "trigger_context": { "type": ["string", "null"] },
+        "candidate_options": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "evidence_state": { "enum": ["confirmed", "candidate", "unresolved", "pending_official_confirmation", "not_applicable_with_validated_reason", "superseded"] },
+        "denominator_membership": { "enum": ["confirmed", "candidate", "unresolved", "excluded_duplicate", "excluded_superseded", "not_applicable_with_validated_reason"] },
+        "source_references": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/sourceRef" } },
+        "coverage_chain": { "$ref": "#/$defs/chain" },
+        "critical": { "type": "boolean" },
+        "resolution_state": { "enum": ["covered", "partial", "unresolved", "pending_official_confirmation", "not_applicable_with_validated_reason", "superseded"] },
+        "known_limitations": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "duplicate_of": { "type": ["string", "null"] },
+        "superseded_by": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

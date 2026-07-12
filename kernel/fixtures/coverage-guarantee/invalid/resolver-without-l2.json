@@ -1,0 +1,49 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "invalid",
+  "expected_diagnostic_codes": [
+    "COV_RESOLVER_L2_INCOMPLETE"
+  ],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "set",
+        "artifact": "catalog",
+        "path": "/records/0/coverage_chain/coverage_credit/status",
+        "value": "complete"
+      },
+      {
+        "op": "set",
+        "artifact": "catalog",
+        "path": "/records/0/coverage_chain/coverage_credit/evidence_refs",
+        "value": [
+          "fixture.claim"
+        ]
+      },
+      {
+        "op": "set",
+        "artifact": "catalog",
+        "path": "/records/0/coverage_chain/required_runtime_or_consumer_proof/status",
+        "value": "complete"
+      },
+      {
+        "op": "set",
+        "artifact": "catalog",
+        "path": "/records/0/coverage_chain/required_runtime_or_consumer_proof/evidence_refs",
+        "value": [
+          "fixture.proof"
+        ]
+      },
+      {
+        "op": "set",
+        "artifact": "catalog",
+        "path": "/records/0/coverage_chain/l2_audit/status",
+        "value": "incomplete"
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

@@ -15,8 +15,8 @@ Agents working here must not implement a full platform unless explicitly instruc
 Current safe operating mode:
 
 ```text
-Kernel-local MVK implementation, validation hardening, source manifests, Elementor V4 doc coverage index, decision cards, Architect/CE source-card consumption boundaries, external evidence workspace contracts, and Behavioral Rule Coverage v0.4.1 advisory audit governance.
-Full registry expansion, release automation, reusable workflows, cross-repo integration, runtime collectors, target-project availability exporters, Builder execution proof, downstream enforcement, and production readiness remain out of scope until explicitly prompted.
+Kernel-local MVK implementation, validation hardening, source manifests, Decision Cards, bounded Resolver chains, Coverage Guarantee v1 policy, source-bound Element/Question reconciliation, deterministic coverage diagnostics, and the unified five-package Coverage Execution Program.
+Release automation, reusable workflow centralization, general runtime collectors, target-project availability exporters, Builder execution platforms, broad cross-repository orchestration, and production-readiness proof remain out of scope unless a bounded work package explicitly requires them.
 ```
 
 ---
@@ -110,7 +110,34 @@ Do not create these until an explicit later wave asks for them:
 - production readiness proof carriers
 ```
 
-The current target is a small, enforceable Kernel-local MVK plus source/card consumption boundaries, Elementor V4 doc coverage indexing, external evidence contracts, and an honest v0.4.1 behavioral audit model. Keep validation local, deterministic, and fixture-proven.
+The active target is the existing Kernel-local MVK plus the bounded Coverage Execution Program. Keep coverage source-bound, deterministic, fixture-proven and honest when denominators remain unresolved.
+
+---
+
+## 4.1 Coverage Governance Precedence
+
+Coverage-sensitive work uses this precedence without weakening higher-level platform or safety constraints:
+
+```yaml
+contract_class: repository_governance_policy
+precedence:
+  - approved_repository_governance
+  - coverage_guarantee_contract
+  - unified_coverage_execution_roadmap
+  - work_packages
+  - implementation_prompts
+```
+
+Only an explicit owner instruction may:
+
+- reduce the 90% minimum content floor, 95% owner target, or 100% critical P0/safety threshold;
+- weaken the definition of Element or Question coverage;
+- remove legitimate denominator members;
+- remove independent exact-head PR inspection;
+- grant Merge authority to an agent;
+- substitute file, schema, validator, Commit, PR or KROAD counts for real content progress.
+
+The maintainer may make other bounded technical decisions about paths, schemas, diagnostics, fixtures, validation and package composition without owner consultation.
 
 ---
 

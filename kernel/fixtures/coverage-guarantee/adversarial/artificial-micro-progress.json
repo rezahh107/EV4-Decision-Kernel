@@ -1,0 +1,54 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_MATERIAL_PROGRESS_INSUFFICIENT"
+  ],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "replace_artifact",
+        "artifact": "impacts",
+        "value": [
+          {
+            "impact_id": "coverage-impact.fixture.micro",
+            "impact_version": "1.0.0",
+            "work_package_id": "DCOV-EXEC-X",
+            "work_type": "content_expansion",
+            "coverage_sensitive": true,
+            "impact_classification": "coverage_increase",
+            "changed_paths": [
+              "planning/coverage/decision-question-catalog.v1.json"
+            ],
+            "bootstrap_exception": false,
+            "reason": "fixture_material_progress_test",
+            "coverage_state_before": "policy_active",
+            "coverage_state_after": "policy_active",
+            "baseline_before": "coverage-baseline.v1.0.0",
+            "baseline_after": "coverage-baseline.v1.0.0",
+            "completed_obligation_ids": [
+              "OB-MICRO-ONE"
+            ],
+            "remaining_obligation_ids": [
+              "OB-NEXT"
+            ],
+            "closed_family_ids": [],
+            "element_coverage_delta": 0,
+            "question_coverage_delta": 0,
+            "known_gaps": [
+              "Fixture-only synthetic progress history."
+            ],
+            "zero_delta": false,
+            "blocking_defect": null,
+            "next_content_expansion_package": "DCOV-EXEC-002",
+            "exact_head_sha": "derived_at_pr_runtime"
+          }
+        ]
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "invalid",
+  "expected_diagnostic_codes": [
+    "COV_CATALOG_MISSING"
+  ],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "remove_artifact",
+        "artifact": "catalog"
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

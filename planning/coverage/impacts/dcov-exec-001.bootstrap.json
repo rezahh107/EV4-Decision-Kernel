@@ -1,0 +1,59 @@
+{
+  "impact_id": "coverage-impact.dcov-exec-001.bootstrap",
+  "impact_version": "1.0.0",
+  "work_package_id": "DCOV-EXEC-001",
+  "work_type": "foundation_bootstrap",
+  "coverage_sensitive": true,
+  "impact_classification": "coverage_foundation",
+  "changed_paths": [
+    "kernel/decision-governance/coverage-guarantee-contract.v1.json",
+    "kernel/schemas/coverage-guarantee-contract.v1.schema.json",
+    "kernel/schemas/coverage-impact.v1.schema.json",
+    "kernel/schemas/coverage-baseline.v1.schema.json",
+    "kernel/schemas/element-reconciliation-ledger.v1.schema.json",
+    "kernel/schemas/decision-question-catalog.v1.schema.json",
+    "kernel/validator/validate-coverage-guarantee.mjs",
+    "planning/coverage/coverage-baseline.v1.json",
+    "planning/coverage/open-decision-debt.v1.json",
+    "planning/coverage/element-reconciliation-ledger.v1.json",
+    "planning/coverage/decision-question-catalog.v1.json",
+    "planning/NEXT_WORK.md",
+    "planning/KERNEL_EXECUTION_PLAN.md",
+    ".github/workflows/validate-mvk.yml"
+  ],
+  "bootstrap_exception": true,
+  "reason": "introduces_the_coverage_measurement_system",
+  "coverage_state_before": "not_measurable",
+  "coverage_state_after": "policy_active",
+  "baseline_before": null,
+  "baseline_after": "coverage-baseline.v1.0.0",
+  "completed_obligation_ids": [
+    "OB-EXEC-001-CONTRACT",
+    "OB-EXEC-001-LEDGER",
+    "OB-EXEC-001-CATALOG",
+    "OB-EXEC-001-BASELINE-DEBT",
+    "OB-EXEC-001-VALIDATOR-FIXTURES",
+    "OB-EXEC-001-CI",
+    "OB-EXEC-001-ROADMAP"
+  ],
+  "remaining_obligation_ids": [
+    "OB-EXEC-002-RECONCILE-ELEMENTS",
+    "OB-EXEC-002-EXPAND-CATALOG",
+    "OB-EXEC-002-CLOSE-SELECTED-P0-FAMILY",
+    "OB-EXEC-002-LAYOUT-BOUNDED-PROOF",
+    "OB-EXEC-005-VALIDATE-DENOMINATORS",
+    "OB-EXEC-005-CRITICAL-100"
+  ],
+  "closed_family_ids": [],
+  "element_coverage_delta": null,
+  "question_coverage_delta": null,
+  "known_gaps": [
+    "Element and Question denominators remain unresolved.",
+    "Coverage percentages remain null.",
+    "Only layout_structure has an active Resolver-backed fixture-scoped chain, and required real proof remains incomplete."
+  ],
+  "zero_delta": false,
+  "blocking_defect": null,
+  "next_content_expansion_package": "DCOV-EXEC-002",
+  "exact_head_sha": "derived_at_pr_runtime"
+}
