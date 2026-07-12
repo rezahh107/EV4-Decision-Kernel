@@ -1,6 +1,6 @@
 # EV4 Decision Kernel
 
-**Status:** working-reference / Kernel-local MVK foundation with source manifest, doc coverage index, decision-card layer, Architect/CE consumption boundaries, external evidence workspace contracts, decision-governance foundation, and Behavioral Rule Coverage v0.4.1 advisory audit model  
+**Status:** working-reference / Kernel-local MVK foundation with source manifest, doc coverage index, decision-card layer, Architect/CE consumption boundaries, external evidence workspace contracts, decision-governance foundation, and Behavioral Rule Coverage v0.4.1 advisory audit model
 **Owner:** `rezahh107/EV4-Decision-Kernel`
 
 ## Purpose
@@ -39,6 +39,17 @@ kernel/validator/validate-decision-governance-foundation.mjs
 ```
 
 This foundation distinguishes decision families, evidence domains, safety gates, source-boundary rules, capability-proof rules, and execution-risk controls. It is not a full matrix implementation, full Elementor feature registry, or full control-level registry.
+
+## Decision Coverage Recovery Memory
+
+The proposed recovery specification and bounded operationalization map are maintained in:
+
+```text
+docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md
+planning/EV4_DECISION_COVERAGE_OPERATIONALIZATION_MAP.md
+```
+
+They distinguish the long-term product objective from the deliberately small MVK vertical slice. Their authority remains `proposed_recovery_specification_pending_evidence_validation`; they activate no new decision family, Registry, Resolver Rule, producer integration, metric or readiness claim.
 
 ## Role Boundary
 

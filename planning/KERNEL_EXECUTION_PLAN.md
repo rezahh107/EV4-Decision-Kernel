@@ -177,6 +177,62 @@ Use these statuses in this file and in `planning/NEXT_WORK.md`:
 
 ---
 
+## Decision Coverage Recovery Overlay
+
+- **Status:** proposed; pending review, merge and evidence closure.
+- **Parent specification:** `docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md`.
+- **Operational map:** `planning/EV4_DECISION_COVERAGE_OPERATIONALIZATION_MAP.md`.
+- **Origin:** `newly_proposed_architecture`.
+
+This overlay restores the distinction between the deliberately small MVK vertical slice and the broader product objective. It does not renumber, redefine or implement KROAD-012 through KROAD-018. It creates no new Resolver coverage.
+
+### Durable ordering
+
+```text
+DCOV-WP-001 recovery documentation and promotion evidence
+→ parent_authority=approved_recovery_source_of_record
+→ DCOV-WP-002 reconciliation/source-ledger schemas and validators
+→ DCOV-WP-003 evidence-backed element reconciliation data
+→ DCOV-WP-004 recovered decision-question catalog draft
+→ DCOV-WP-005 governed demand corpus and metric calibration
+→ approved compatibility foundation
+→ family-bounded Resolver expansion
+→ fixture/L2 expansion
+→ consumer enforcement expansion
+→ calibrated coverage baseline
+→ KROAD-018 readiness assessment
+```
+
+### Dependency boundaries
+
+- KROAD-012 retains its existing purpose: external evidence producer boundaries.
+- KROAD-012 research may proceed in parallel when it does not commit unapproved identifiers, schemas or repository paths.
+- Any KROAD-012 implementation that depends on recovery identifiers or contracts waits for the applicable evidence-closed `DCOV-WP-*` package.
+- KROAD-013 through KROAD-017 remain evidence/runtime/lifecycle/freshness work and are not substitutes for Resolver expansion.
+- KROAD-018 remains an assessment gate and cannot create missing decision coverage.
+- Every recovery-spec-sourced implementation package (`DCOV-WP-002` and later) requires `parent_authority=approved_recovery_source_of_record`; package lifecycle status alone cannot bypass the promotion gate.
+- `DCOV-WP-002` is the first candidate implementation package after the documentation anchor, but remains blocked until the parent is explicitly promoted to `approved_recovery_source_of_record` through the full promotion gate and repository placement is approved. Merge, CI success and `DCOV-WP-001 evidence_closed` do not by themselves imply that authority state.
+
+### First PR boundaries
+
+1. PR 1 / `DCOV-WP-001`: parent specification, correction ledger, dependency DAG, Rule composition, roadmap memory and operational map only.
+2. PR 2 / `DCOV-WP-002`: reconciliation/source-ledger schemas, validators and schema fixtures only.
+3. PR 3 / `DCOV-WP-003`: verified element/source data only.
+4. PR 4 / `DCOV-WP-004`: question-catalog schema, validator and recovered draft only.
+5. PR 5 / `DCOV-WP-005`: demand-corpus contract and governed initial corpus, split further if data risk warrants.
+
+No package may mix recovery, schema design, data population, Resolver implementation, consumer enforcement and runtime integration unless a documented technical dependency proves inseparability.
+
+### Decision Record compatibility
+
+Disposition: `introduce_v2_extension_profile`. Existing Decision Record v2 remains the base. No v3 schema is approved or created by this overlay.
+
+### Coverage interpretation
+
+The user objective is at least 95% practical decision-demand coverage. Denominator, weights, uncertainty and hard gates remain proposed until a governed corpus is calibrated.
+
+---
+
 # Roadmap Items
 
 ---
