@@ -165,7 +165,7 @@ selected_option: flexbox
 
 All six semantic dependencies are owned by `rezahh107/EV4-Decision-Kernel` and pin the accepted Kernel commit `76a82e28543ff8f0babca11b7d7dccac96b92894`.
 
-| Role | Contract identity | Kernel path | SHA-256 file bytes |
+| Role | Contract identity | Kernel path | SHA-256 Hash |
 |---|---|---|---|
 | Decision Record schema | `decision-record.v2` | `kernel/schemas/decision-record.v2.schema.json` | `a20bfa42335d9696d259abb5e1c6a78e2d8a2a7df4e56bfa2d4eb68a6f9293fa` |
 | L2 correctness audit | `auditDecisionRecord` | `kernel/validator/validate-l2-decision-correctness.mjs` | `980c249b1ae73e0f3b8d65a6c68c63111e2ad8d660cd9965b899c8fec0fca3c1` |
