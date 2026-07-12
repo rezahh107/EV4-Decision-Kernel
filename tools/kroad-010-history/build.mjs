@@ -52,6 +52,34 @@ function bootstrapCopyPaths() {
   ]);
 }
 
+function currentCoverageValidationPaths() {
+  return [
+    '.github/PULL_REQUEST_TEMPLATE.md',
+    '.github/workflows/validate-mvk.yml',
+    'AGENTS.md',
+    'docs/decision-governance/COVERAGE_GUARANTEE_CONTRACT.md',
+    'docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md',
+    'kernel/decision-cards/elements.core.v0.json',
+    'kernel/decision-governance/coverage-guarantee-contract.v1.json',
+    'kernel/decision-governance/p0-decision-matrices.v0.json',
+    'kernel/fixtures/coverage-guarantee',
+    'kernel/official-sources/elementor-v4-source-manifest.v0.json',
+    'kernel/registries/elements.core.v0.json',
+    'kernel/schemas/coverage-baseline.v1.schema.json',
+    'kernel/schemas/coverage-guarantee-contract.v1.schema.json',
+    'kernel/schemas/coverage-impact.v1.schema.json',
+    'kernel/schemas/decision-question-catalog.v1.schema.json',
+    'kernel/schemas/element-reconciliation-ledger.v1.schema.json',
+    'kernel/schemas/open-decision-debt.v1.schema.json',
+    'kernel/validator/validate-coverage-guarantee.mjs',
+    'planning/EV4_DECISION_COVERAGE_OPERATIONALIZATION_MAP.md',
+    'planning/KERNEL_EXECUTION_PLAN.md',
+    'planning/coverage',
+    'planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md',
+    'tools/validate-roadmap-memory.mjs',
+  ];
+}
+
 export function createBuilder(tempRoot) {
   const repository = join(tempRoot, 'builder');
   git(ROOT, ['clone', '--no-hardlinks', ROOT, repository]);
@@ -220,6 +248,7 @@ export function createActivationSource(builder) {
     'tools/kroad-010-history/common.mjs',
     'tools/kroad-010-history/build.mjs',
     'tools/kroad-010-history/validate.mjs',
+    ...currentCoverageValidationPaths(),
   ]) {
     copyPath(ROOT, repository, path);
   }

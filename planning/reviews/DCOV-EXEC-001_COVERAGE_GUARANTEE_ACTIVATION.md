@@ -44,6 +44,7 @@ files_modified:
   - planning/KERNEL_EXECUTION_PLAN.md
   - planning/NEXT_WORK.md
   - planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md
+  - tools/kroad-010-history/build.mjs
   - tools/validate-roadmap-memory.mjs
 files_created:
   - docs/decision-governance/COVERAGE_GUARANTEE_CONTRACT.md
@@ -139,12 +140,21 @@ mvk:
 roadmap_memory:
   command: npm run validate:roadmap-memory
   local_result: passed
+history_matrix:
+  command: npm run validate:kroad-010-history-matrix
+  local_result: passed
+  methods_passed:
+    - merge_commit
+    - squash
+    - rebase
 ci:
   wired: true
   exact_head_runs: derived_at_pr_runtime
 ```
 
 The validator derives hashes, denominator state, numerators, percentages and contract-state eligibility. It rejects fabricated percentages, invalid denominator reductions, Matrix-only credit, incomplete Resolver/L2/proof chains, unsupported readiness, missing impact records, artificial micro-progress and three consecutive zero-delta packages.
+
+The first exact-head CI run exposed that the KROAD-010 synthetic-history builder copied the updated `package.json` but not the new Coverage Guarantee validation dependencies. The focused repair copies that dependency set into each synthetic activation source. The complete merge-commit, squash, rebase and mutation-guard matrix then passed without changing coverage rules, thresholds or diagnostics.
 
 ## Roadmap result
 
