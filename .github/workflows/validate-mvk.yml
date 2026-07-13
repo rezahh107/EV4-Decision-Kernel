@@ -42,7 +42,7 @@ jobs:
       - name: Validate KROAD-010 source syntax and JSON
         run: |
           node --check kernel/validator/validate-coverage-guarantee.mjs
-          node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
+          node --check kernel/fixtures/coverage-guarantee/support/validate-coverage-guarantee-legacy.mjs
           node --check kernel/validator/validate-downstream-consumer-contract.mjs
           node --check kernel/validator/validate-downstream-consumer-canonical-lock.mjs
           node --check kernel/validator/validate-downstream-consumer-lineage.mjs

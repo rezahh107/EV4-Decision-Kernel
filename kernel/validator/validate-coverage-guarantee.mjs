@@ -11,8 +11,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const LEGACY_VALIDATOR = join(
-  dirname(fileURLToPath(import.meta.url)),
-  'validate-coverage-guarantee-legacy.mjs',
+  ROOT,
+  'kernel/fixtures/coverage-guarantee/support/validate-coverage-guarantee-legacy.mjs',
 );
 const TEMPORAL_FIXTURE_ROOT = join(
   ROOT,
@@ -334,7 +334,7 @@ function collectProofReferences() {
     try {
       walk(JSON.parse(readFileSync(join(ROOT, pathFromRoot), 'utf8')));
     } catch {
-      // The preserved validator owns structural diagnostics for canonical artifacts.
+      // The legacy validator owns structural diagnostics for missing canonical artifacts.
     }
   }
   const unique = new Map();
