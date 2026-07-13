@@ -85,7 +85,6 @@
     "kernel/fixtures/coverage-guarantee/invalid/root-delete-slash-pointer.json",
     "kernel/fixtures/coverage-guarantee/invalid/root-set-empty-pointer.json",
     "kernel/fixtures/coverage-guarantee/invalid/root-set-slash-pointer.json",
-    "kernel/fixtures/coverage-guarantee/support/validate-coverage-guarantee-legacy.mjs",
     "kernel/fixtures/coverage-guarantee/trusted-time/adversarial/capture-after-trusted-ingestion.fixture",
     "kernel/fixtures/coverage-guarantee/trusted-time/adversarial/proof-stale-backdated-head.fixture",
     "kernel/fixtures/coverage-guarantee/trusted-time/invalid/trusted-validation-time-future-skew.fixture",

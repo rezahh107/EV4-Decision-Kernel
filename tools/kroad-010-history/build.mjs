@@ -82,6 +82,7 @@ function currentCoverageValidationPaths() {
     'kernel/schemas/element-reconciliation-ledger.v1.schema.json',
     'kernel/schemas/open-decision-debt.v1.schema.json',
     'kernel/validator/validate-coverage-guarantee.mjs',
+    'kernel/validator/validate-coverage-guarantee-legacy.mjs',
     'planning/EV4_DECISION_COVERAGE_OPERATIONALIZATION_MAP.md',
     'planning/KERNEL_EXECUTION_PLAN.md',
     'planning/coverage',
