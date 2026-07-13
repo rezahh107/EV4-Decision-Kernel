@@ -1,0 +1,78 @@
+name: Required Authoritative Coverage Trust
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+  id-token: write
+
+jobs:
+  authoritative-coverage-trust:
+    name: PRF-012 Authoritative Coverage Trust
+    uses: rezahh107/PR-Inspector/.github/workflows/coverage-trust-gate.yml@8b9b803a9f1e916f360d8871e43f5c48a11b5974
+    permissions:
+      contents: read
+      pull-requests: read
+      id-token: write
+
+  authoritative-target-validation:
+    name: PRF-012 Authoritative Target Validation
+    needs: authoritative-coverage-trust
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout externally verified exact PR head
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: ${{ needs.authoritative-coverage-trust.outputs.verified_repository }}
+          ref: ${{ needs.authoritative-coverage-trust.outputs.verified_head_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify checkout and bootstrap scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ needs.authoritative-coverage-trust.outputs.verified_head_sha }}"
+          test "${{ needs.authoritative-coverage-trust.outputs.proof_credit_authorized }}" = "false"
+
+      - name: Set up Node.js LTS
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: lts/*
+          package-manager-cache: false
+
+      - name: Install validator dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Run authoritative exact-head validation
+        shell: bash
+        env:
+          COVERAGE_REPOSITORY: ${{ needs.authoritative-coverage-trust.outputs.verified_repository }}
+          COVERAGE_PR_NUMBER: ${{ needs.authoritative-coverage-trust.outputs.verified_pr_number }}
+          COVERAGE_BASE_SHA: ${{ needs.authoritative-coverage-trust.outputs.verified_base_sha }}
+          COVERAGE_HEAD_SHA: ${{ needs.authoritative-coverage-trust.outputs.verified_head_sha }}
+        run: |
+          set -euo pipefail
+          node --check kernel/validator/validate-coverage-guarantee.mjs
+          node --check kernel/validator/validate-coverage-guarantee-prf010.mjs
+          node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
+          git diff --check
+          git diff --check "${COVERAGE_BASE_SHA}..${COVERAGE_HEAD_SHA}"
+          npm run validate:coverage
+          npm run validate:mvk
+          npm run validate:roadmap-memory
+          node tools/validate-kroad-010-prototype-integrity.mjs
+          npm run validate:kroad-010-history-matrix
+
+      - name: Upload protected history-matrix evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: protected-kroad-010-history-matrix-${{ needs.authoritative-coverage-trust.outputs.verified_head_sha }}
+          path: kroad-010-history-matrix-report.json
+          if-no-files-found: error
+          retention-days: 14
