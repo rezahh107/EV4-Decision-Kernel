@@ -148,6 +148,9 @@ const VERSION_FIELDS = [
 let activeSchemaValidators = {};
 let activeFixtureArtifacts = null;
 let activeFixtureRuntimeContext = null;
+const commitExistsCache = new Map();
+const commitAncestorCache = new Map();
+const repositoryContentCache = new Map();
 
 class FixtureMutationError extends Error {
   constructor(code, message) {
@@ -423,13 +426,18 @@ function repositoryContentAtCommit(repository, commit, path) {
   if (fixtureContent !== null && commit === activeFixtureRuntimeContext?.headSha) {
     return fixtureContent;
   }
+  const key = repository + '|' + commit + '|' + path;
+  if (repositoryContentCache.has(key)) return repositoryContentCache.get(key);
   try {
-    return execFileSync(
+    const content = execFileSync(
       'git',
       ['show', commit + ':' + path],
       { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
     );
+    repositoryContentCache.set(key, content);
+    return content;
   } catch {
+    repositoryContentCache.set(key, null);
     return null;
   }
 }
@@ -446,13 +454,16 @@ function repositoryJsonAtCommit(repository, commit, path) {
 
 function commitExistsOrFixture(commit) {
   if (commit === activeFixtureRuntimeContext?.headSha) return true;
+  if (commitExistsCache.has(commit)) return commitExistsCache.get(commit);
   try {
     execFileSync('git', ['cat-file', '-e', commit + '^{commit}'], {
       cwd: ROOT,
       stdio: 'ignore',
     });
+    commitExistsCache.set(commit, true);
     return true;
   } catch {
+    commitExistsCache.set(commit, false);
     return false;
   }
 }
@@ -461,15 +472,26 @@ function commitIsAncestorOrFixture(ancestor, descendant) {
   if (ancestor === descendant) return true;
   if (descendant === activeFixtureRuntimeContext?.headSha
     && ancestor === activeFixtureRuntimeContext?.headSha) return true;
+  const key = String(ancestor) + '|' + String(descendant);
+  if (commitAncestorCache.has(key)) return commitAncestorCache.get(key);
   try {
     execFileSync('git', ['merge-base', '--is-ancestor', ancestor, descendant], {
       cwd: ROOT,
       stdio: 'ignore',
     });
+    commitAncestorCache.set(key, true);
     return true;
   } catch {
+    commitAncestorCache.set(key, false);
     return false;
   }
+}
+
+function evidenceCommitPreexistsValidatedBase(commit, context) {
+  const baseSha = context.runtimeContext?.baseSha;
+  return /^[0-9a-f]{40}$/.test(baseSha || '')
+    && commitExistsOrFixture(commit)
+    && commitIsAncestorOrFixture(commit, baseSha);
 }
 
 function repositoryJsonAtEvidenceHead(ref, path) {
@@ -606,6 +628,9 @@ function notApplicableDispositionDiagnostics(ref, artifact, context) {
     || (runtimeHead && !commitIsAncestorOrFixture(evidenceHead, runtimeHead))) {
     diagnostics.push(diagnostic('COV_NOT_APPLICABLE_EVIDENCE_HEAD_MISMATCH', 'The disposition evidence head must be an immutable ancestor of the validated head.', ref.evidence_id));
   }
+  if (!evidenceCommitPreexistsValidatedBase(evidenceHead, context)) {
+    diagnostics.push(diagnostic('COV_NOT_APPLICABLE_SOURCE_NOT_BASE_ANCHORED', 'A not-applicable disposition can derive credit only from source evidence that predates and is reachable from the validated PR base.', ref.evidence_id));
+  }
 
   for (const source of artifact.source_lineage || []) {
     const verifiedSource = verifiedSources.find((candidate) =>
@@ -641,11 +666,10 @@ function notApplicableDispositionDiagnostics(ref, artifact, context) {
   return diagnostics;
 }
 
-function proofProducerBindingAtHead(receipt, receiptType) {
-  const head = receipt?.provenance?.evidence_head_sha;
+function proofProducerBindingAtCommit(receipt, receiptType, commit) {
   const registry = repositoryJsonAtCommit(
     EXPECTED_REPOSITORY,
-    head,
+    commit,
     PATHS.proofProducerRegistry,
   );
   if (!registry || !activeSchemaValidators.proofProducerRegistry
@@ -659,6 +683,33 @@ function proofProducerBindingAtHead(receipt, receiptType) {
       && producer.producer_role === receipt.provenance.producer_role
       && producer.receipt_types.includes(receiptType)) || null;
   return { registry, binding, invalid: false };
+}
+
+function normalizedProducerBinding(binding) {
+  if (!binding) return null;
+  return {
+    producer_id: binding.producer_id,
+    producer_repository: binding.producer_repository,
+    producer_role: binding.producer_role,
+    receipt_types: sortedUnique(binding.receipt_types),
+    allowed_environment_ids: sortedUnique(binding.allowed_environment_ids),
+    allowed_consumer_ids: sortedUnique(binding.allowed_consumer_ids),
+    registration_source: binding.registration_source,
+    active: binding.active,
+  };
+}
+
+function producerBindingPreexistsBase(receipt, receiptType, context, headBinding) {
+  const baseSha = context.runtimeContext?.baseSha;
+  const base = proofProducerBindingAtCommit(receipt, receiptType, baseSha);
+  return !base.invalid
+    && base.binding
+    && evidenceCommitPreexistsValidatedBase(
+      headBinding.registration_source?.repository_commit,
+      context,
+    )
+    && JSON.stringify(normalizedProducerBinding(base.binding))
+      === JSON.stringify(normalizedProducerBinding(headBinding));
 }
 
 function proofProducerRegistrationDiagnostics(producer) {
@@ -822,8 +873,15 @@ function proofReceiptDiagnostics(artifact, role, context) {
   } else if (runtimeHead && !commitIsAncestorOrFixture(evidenceHead, runtimeHead)) {
     diagnostics.push(diagnostic('COV_PROOF_HEAD_MISMATCH', 'Proof evidence head must be an ancestor of the validated exact head.', artifact.receipt_id));
   }
+  if (!evidenceCommitPreexistsValidatedBase(evidenceHead, context)) {
+    diagnostics.push(diagnostic('COV_PROOF_EVIDENCE_NOT_BASE_ANCHORED', 'Proof credit requires immutable capture evidence that predates and is reachable from the validated PR base.', artifact.receipt_id));
+  }
 
-  const registered = proofProducerBindingAtHead(artifact, receiptType);
+  const registered = proofProducerBindingAtCommit(
+    artifact,
+    receiptType,
+    evidenceHead,
+  );
   const registrationDiagnostics = proofProducerRegistrationDiagnostics(
     registered.binding,
   );
@@ -831,6 +889,14 @@ function proofReceiptDiagnostics(artifact, role, context) {
   if (registered.invalid || !registered.binding) {
     diagnostics.push(diagnostic('COV_PROOF_PRODUCER_UNKNOWN', 'Proof producer must be registered at the exact evidence head for this receipt type.', artifact.receipt_id));
   } else {
+    if (!producerBindingPreexistsBase(
+      artifact,
+      receiptType,
+      context,
+      registered.binding,
+    )) {
+      diagnostics.push(diagnostic('COV_PROOF_PRODUCER_NOT_BASE_ANCHORED', 'A producer added or changed in the current PR cannot authorize proof credit in that same PR.', artifact.receipt_id));
+    }
     const allowed = receiptType === 'runtime_proof'
       ? registered.binding.allowed_environment_ids.includes(artifact.runtime_scope.environment_id)
       : registered.binding.allowed_consumer_ids.includes(artifact.consumer.consumer_id);

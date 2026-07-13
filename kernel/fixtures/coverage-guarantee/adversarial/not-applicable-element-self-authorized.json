@@ -39,7 +39,7 @@
                 "artifact_role": "not_applicable_evidence",
                 "artifact_path": "kernel/decision-governance/coverage-guarantee-contract.v1.json",
                 "artifact_version": "1.0.0",
-            "content_sha256": "3e0885b2f1940bd49d95f6a91f3018a38be27c633042c6c50fde3fcf6bbd0211",
+            "content_sha256": "ef07abb9d02c45d80b68d7d21218d9474534d570f9a620165f5ddc23bdc2c987",
                 "head_binding": "git_runtime_head",
                 "repository_commit": null,
                 "json_pointer": "",

@@ -25,11 +25,11 @@ A Decision Question earns credit only through this complete applicable chain:
 
 `Catalog → Matrix → Resolver Rule → Deterministic Evaluator → Valid Fixture → Invalid Fixture → Adversarial Fixture → L2 Audit → Required Runtime or Consumer Proof → Coverage Credit`
 
-Matrix-only Families receive no Resolver credit. A not-applicable link requires a dedicated disposition under `planning/coverage/dispositions/not-applicable/`. The validator derives acceptance only when the disposition's intrinsic subject, reason, validator rule, exact evidence head and independently resolved source statement all match. A producer-supplied `validator_accepted` flag has no authority.
+Matrix-only Families receive no Resolver credit. A not-applicable link requires a dedicated disposition under `planning/coverage/dispositions/not-applicable/`. The validator derives acceptance only when the disposition's intrinsic subject, reason, validator rule, exact evidence head and independently resolved source statement all match, and that source predates and is reachable from the validated PR base. A producer-supplied `validator_accepted` flag has no authority.
 
 Every obligation or Question-chain link that contributes credit must use typed repository evidence. The validator resolves the path and JSON Pointer or symbol, then verifies intrinsic role-specific identity: Question, Family, Matrix, active Rule, fixture target, audit target, proof subject, or credit subject as applicable. A carrier's self-declared `subject_record_id` and `coverage_subject_id` are never sufficient. JavaScript symbols require the exact binding in `coverage-evidence-subject-registry.v1.json`; symbol existence alone grants no credit.
 
-Runtime and consumer proof require their dedicated receipts under `planning/coverage/proofs/`, but a dedicated path and schema are only syntax. The validator also resolves every immutable capture lineage item, recomputes hashes, checks exact-head ancestry and freshness, matches a producer registered at the evidence head, binds capture time exactly to the enclosing receipt, and confines raw bytes to the role-specific capture directory. Runtime observations use the contract's finite vocabulary and must be `observed_pass`; consumer proof must be `accepted`, while `rejected` is blocking negative evidence. The producer registry is initially empty because this PR has no authoritative external capture or consumer source.
+Runtime and consumer proof require their dedicated receipts under `planning/coverage/proofs/`, but a dedicated path and schema are only syntax. The validator also resolves every immutable capture lineage item, recomputes hashes, checks exact-head ancestry and freshness, matches a producer registered unchanged at both the evidence head and validated PR base, binds capture time exactly to the enclosing receipt, and confines raw bytes to the role-specific capture directory. The producer registration and capture evidence must predate and be reachable from the PR base; producer or capture files introduced by the coverage-claiming PR cannot authorize that same PR. Runtime observations use the contract's finite vocabulary and must be `observed_pass`; consumer proof must be `accepted`, while `rejected` is blocking negative evidence. The producer registry is initially empty because this PR has no authoritative external capture or consumer source.
 
 Coverage credit is an in-memory validator derivation projected into the dedicated receipt format. Producer-authored `coverage_granted: true` has no authority. The projection must match the current schema-and-hash-validated baseline identity and exactly every preceding link's evidence ID, immutable hash, subject and head; missing, extra, duplicate, stale or cross-Question evidence fails closed. This does not make the unresolved denominator measurement-active. Generic fixtures, planning files and review prose cannot satisfy proof or credit roles. These contracts do not assert that any real runtime proof, consumer acceptance or coverage credit currently exists.
 
@@ -105,7 +105,8 @@ The validator compares this block with the authoritative JSON contract. Editing 
       "schema": "kernel/schemas/coverage-not-applicable-disposition.v1.schema.json",
       "directory": "planning/coverage/dispositions/not-applicable/",
       "acceptance": "validator_derived_from_exact_subject_reason_head_and_lineage",
-      "producer_acceptance_flag_allowed": false
+      "producer_acceptance_flag_allowed": false,
+      "source_must_preexist_validated_base": true
     },
     "proof_provenance": {
       "producer_registry": "kernel/decision-governance/coverage-proof-producer-registry.v1.json",
@@ -116,6 +117,8 @@ The validator compares this block with the authoritative JSON contract. Editing 
       "all_lineage_hashes_recomputed": true,
       "capture_time_binding": "exact_receipt_observation_time",
       "raw_capture_path_binding": "role_specific_dedicated_directory",
+      "producer_and_capture_must_preexist_validated_base": true,
+      "same_pr_producer_or_capture_credit_allowed": false,
       "runtime_allowed_observation_types": [
         "dom_structure",
         "computed_style",

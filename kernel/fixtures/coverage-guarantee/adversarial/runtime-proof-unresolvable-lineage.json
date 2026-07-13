@@ -2,7 +2,8 @@
   "fixture_version": "1.0.0",
   "fixture_kind": "adversarial",
   "expected_diagnostic_codes": [
-    "COV_PROOF_PRODUCER_UNKNOWN",
+    "COV_PROOF_PRODUCER_NOT_BASE_ANCHORED",
+    "COV_PROOF_EVIDENCE_NOT_BASE_ANCHORED",
     "COV_PROOF_LINEAGE_UNRESOLVED"
   ],
   "expected_derived": {
@@ -73,6 +74,40 @@
           "release_readiness": false,
           "production_readiness": false
         }
+      },
+      "planning/coverage/producers/fixture-registration.json": {
+        "version": "1.0.0",
+        "coverage_proof_producer_registration": {
+          "registration_type": "coverage_proof_producer",
+          "producer_id": "unregistered.runtime.fixture",
+          "producer_repository": "example/forged-runtime-producer",
+          "producer_role": "Responsive",
+          "receipt_types": ["runtime_proof"]
+        }
+      },
+      "kernel/decision-governance/coverage-proof-producer-registry.v1.json": {
+        "registry_id": "coverage-proof-producer-registry.v1",
+        "version": "1.0.0",
+        "status": "active_fail_closed",
+        "repository": "rezahh107/EV4-Decision-Kernel",
+        "producers": [
+          {
+            "producer_id": "unregistered.runtime.fixture",
+            "producer_repository": "example/forged-runtime-producer",
+            "producer_role": "Responsive",
+            "receipt_types": ["runtime_proof"],
+            "allowed_environment_ids": ["browser.fixture.invalid"],
+            "allowed_consumer_ids": [],
+            "registration_source": {
+              "repository": "rezahh107/EV4-Decision-Kernel",
+              "repository_commit": "dc45fe87eda245057010ea35acaf6627614b110d",
+              "artifact_path": "planning/coverage/producers/fixture-registration.json",
+              "content_sha256": "0208d8ebf8fb7655ef2c52258a6c6cc03f16a21e26785330f6976c15e4f4fc6a",
+              "json_pointer": "/coverage_proof_producer_registration"
+            },
+            "active": true
+          }
+        ]
       }
     },
     "mutations": [

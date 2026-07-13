@@ -133,7 +133,8 @@
             "schema": "kernel/schemas/coverage-not-applicable-disposition.v1.schema.json",
             "directory": "planning/coverage/dispositions/not-applicable/",
             "acceptance": "validator_derived_from_exact_subject_reason_head_and_lineage",
-            "producer_acceptance_flag_allowed": false
+            "producer_acceptance_flag_allowed": false,
+            "source_must_preexist_validated_base": true
           }
         },
         "proof_provenance": {
@@ -146,6 +147,8 @@
             "all_lineage_hashes_recomputed": true,
             "capture_time_binding": "exact_receipt_observation_time",
             "raw_capture_path_binding": "role_specific_dedicated_directory",
+            "producer_and_capture_must_preexist_validated_base": true,
+            "same_pr_producer_or_capture_credit_allowed": false,
             "runtime_allowed_observation_types": ["dom_structure", "computed_style", "responsive_layout", "interaction_state", "accessibility_tree"],
             "runtime_credit_result": "observed_pass",
             "consumer_credit_result": "accepted"

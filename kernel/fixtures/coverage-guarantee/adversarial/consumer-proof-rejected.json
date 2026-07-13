@@ -4,6 +4,7 @@
   "expected_diagnostic_codes": [
     "COV_CONSUMER_PROOF_REJECTED",
     "COV_PROOF_PRODUCER_UNKNOWN",
+    "COV_PROOF_EVIDENCE_NOT_BASE_ANCHORED",
     "COV_PROOF_LINEAGE_UNRESOLVED"
   ],
   "expected_derived": {
