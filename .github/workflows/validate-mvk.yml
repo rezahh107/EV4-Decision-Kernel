@@ -59,6 +59,11 @@ jobs:
             kernel/fixtures/contract-lock/downstream_consumer/primary-validator-baseline.v0.json \
             kernel/fixtures/history-matrix/downstream_consumer/history-matrix.v0.json
 
+      - name: Validate patch whitespace
+        run: |
+          git diff --check
+          git diff --check "${{ github.event.pull_request.base.sha || github.event.before }}..${{ github.event.pull_request.head.sha || github.sha }}"
+
       - name: Validate Coverage Guarantee contract, data, fixtures, and impact
         run: npm run validate:coverage
         env:
