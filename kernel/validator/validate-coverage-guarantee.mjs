@@ -31,6 +31,10 @@ const PATHS = {
   runtimeProofSchema: 'kernel/schemas/coverage-runtime-proof-receipt.v1.schema.json',
   consumerProofSchema: 'kernel/schemas/coverage-consumer-proof-receipt.v1.schema.json',
   coverageCreditSchema: 'kernel/schemas/coverage-credit-receipt.v1.schema.json',
+  notApplicableDispositionSchema: 'kernel/schemas/coverage-not-applicable-disposition.v1.schema.json',
+  proofProducerRegistry: 'kernel/decision-governance/coverage-proof-producer-registry.v1.json',
+  proofProducerRegistrySchema: 'kernel/schemas/coverage-proof-producer-registry.v1.schema.json',
+  proofCaptureSchema: 'kernel/schemas/coverage-proof-capture.v1.schema.json',
   denominatorDispositionSchema: 'kernel/schemas/coverage-denominator-disposition.v1.schema.json',
   markdown: 'docs/decision-governance/COVERAGE_GUARANTEE_CONTRACT.md',
   workflow: '.github/workflows/validate-mvk.yml',
@@ -49,6 +53,9 @@ const SCHEMA_PATHS = {
   runtimeProof: PATHS.runtimeProofSchema,
   consumerProof: PATHS.consumerProofSchema,
   coverageCredit: PATHS.coverageCreditSchema,
+  notApplicableDisposition: PATHS.notApplicableDispositionSchema,
+  proofProducerRegistry: PATHS.proofProducerRegistrySchema,
+  proofCapture: PATHS.proofCaptureSchema,
   denominatorDisposition: PATHS.denominatorDispositionSchema,
 };
 
@@ -114,9 +121,16 @@ const ROLE_PATH_RULES = {
   p0_family: ['kernel/decision-governance/p0-decision-matrices.'],
   safety_gate: ['kernel/decision-cards/', 'kernel/decision-governance/'],
   runtime_check: ['planning/coverage/proofs/runtime/'],
-  not_applicable_evidence: ['kernel/', 'planning/', 'docs/'],
+  not_applicable_evidence: ['planning/coverage/dispositions/not-applicable/'],
   denominator_change: ['kernel/', 'planning/', 'docs/'],
 };
+
+const PROOF_CAPTURE_PATHS = {
+  runtime_proof: 'planning/coverage/captures/runtime/',
+  consumer_proof: 'planning/coverage/captures/consumer/',
+};
+
+const CREDIT_SOURCE_CHAIN = CHAIN_NAMES.filter((name) => name !== 'coverage_credit');
 
 const VERSION_FIELDS = [
   'version',
@@ -132,6 +146,8 @@ const VERSION_FIELDS = [
 ];
 
 let activeSchemaValidators = {};
+let activeFixtureArtifacts = null;
+let activeFixtureRuntimeContext = null;
 
 class FixtureMutationError extends Error {
   constructor(code, message) {
@@ -322,11 +338,24 @@ function safeEvidencePath(path) {
   return absolute.startsWith(ROOT + sep) && !path.split('/').includes('..');
 }
 
+function fixtureArtifactContent(path) {
+  if (!activeFixtureArtifacts?.has(path)) return null;
+  const value = activeFixtureArtifacts.get(path);
+  return typeof value === 'string' ? value : JSON.stringify(value);
+}
+
 function evidenceContent(ref) {
   if (!safeEvidencePath(ref.artifact_path)) {
     return { error: diagnostic('COV_EVIDENCE_PATH_INVALID', 'Evidence path must remain inside the repository.', ref.artifact_path || '(missing)') };
   }
   try {
+    const fixtureContent = fixtureArtifactContent(ref.artifact_path);
+    if (fixtureContent !== null
+      && ((ref.head_binding === 'git_runtime_head' && ref.repository_commit === null)
+        || (ref.head_binding === 'pinned_commit'
+          && ref.repository_commit === activeFixtureRuntimeContext?.headSha))) {
+      return { content: fixtureContent };
+    }
     if (ref.head_binding === 'pinned_commit') {
       if (!/^[0-9a-f]{40}$/.test(ref.repository_commit || '')) {
         return { error: diagnostic('COV_EVIDENCE_HEAD_BINDING_INVALID', 'Pinned evidence requires a 40-character repository commit.', ref.evidence_id) };
@@ -364,6 +393,13 @@ function artifactVersionMatches(content, ref) {
 function repositoryContentAtEvidenceHead(ref, path) {
   if (!safeEvidencePath(path)) return null;
   try {
+    const fixtureContent = fixtureArtifactContent(path);
+    if (fixtureContent !== null
+      && ((ref.head_binding === 'git_runtime_head' && ref.repository_commit === null)
+        || (ref.head_binding === 'pinned_commit'
+          && ref.repository_commit === activeFixtureRuntimeContext?.headSha))) {
+      return fixtureContent;
+    }
     if (ref.head_binding === 'pinned_commit') {
       return execFileSync(
         'git',
@@ -378,6 +414,62 @@ function repositoryContentAtEvidenceHead(ref, path) {
     return null;
   }
   return null;
+}
+
+function repositoryContentAtCommit(repository, commit, path) {
+  if (repository !== EXPECTED_REPOSITORY || !/^[0-9a-f]{40}$/.test(commit || '')
+    || !safeEvidencePath(path)) return null;
+  const fixtureContent = fixtureArtifactContent(path);
+  if (fixtureContent !== null && commit === activeFixtureRuntimeContext?.headSha) {
+    return fixtureContent;
+  }
+  try {
+    return execFileSync(
+      'git',
+      ['show', commit + ':' + path],
+      { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
+    );
+  } catch {
+    return null;
+  }
+}
+
+function repositoryJsonAtCommit(repository, commit, path) {
+  const content = repositoryContentAtCommit(repository, commit, path);
+  if (content === null) return null;
+  try {
+    return JSON.parse(content);
+  } catch {
+    return null;
+  }
+}
+
+function commitExistsOrFixture(commit) {
+  if (commit === activeFixtureRuntimeContext?.headSha) return true;
+  try {
+    execFileSync('git', ['cat-file', '-e', commit + '^{commit}'], {
+      cwd: ROOT,
+      stdio: 'ignore',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function commitIsAncestorOrFixture(ancestor, descendant) {
+  if (ancestor === descendant) return true;
+  if (descendant === activeFixtureRuntimeContext?.headSha
+    && ancestor === activeFixtureRuntimeContext?.headSha) return true;
+  try {
+    execFileSync('git', ['merge-base', '--is-ancestor', ancestor, descendant], {
+      cwd: ROOT,
+      stdio: 'ignore',
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function repositoryJsonAtEvidenceHead(ref, path) {
@@ -458,10 +550,474 @@ function receiptSubjectMatches(subject, context, expectedFamily, expectedRuleId)
   return true;
 }
 
+function resolvedLineageValue(source) {
+  const content = repositoryContentAtCommit(
+    source?.repository,
+    source?.repository_commit,
+    source?.artifact_path,
+  );
+  if (content === null) return { content: null, value: null, located: false };
+  let artifact;
+  try {
+    artifact = JSON.parse(content);
+  } catch {
+    return { content, value: null, located: false };
+  }
+  const located = valueAtPointer(artifact, source.json_pointer);
+  return { content, value: located.value, located: located.found };
+}
+
+function notApplicableDispositionDiagnostics(ref, artifact, context) {
+  const diagnostics = [];
+  if (!ref.artifact_path.startsWith('planning/coverage/dispositions/not-applicable/')) {
+    diagnostics.push(diagnostic('COV_NOT_APPLICABLE_ARTIFACT_FORBIDDEN', 'Not-applicable credit requires a dedicated disposition artifact.', ref.evidence_id));
+  }
+  const schemaValid = artifact && activeSchemaValidators.notApplicableDisposition
+    && activeSchemaValidators.notApplicableDisposition(artifact);
+  if (!schemaValid) {
+    diagnostics.push(diagnostic('COV_NOT_APPLICABLE_DISPOSITION_INVALID', 'Not-applicable evidence must resolve to the dedicated schema-valid disposition type.', ref.evidence_id));
+    return diagnostics;
+  }
+
+  const expectedReason = context.notApplicableReasonCode;
+  const expectedFamily = expectedDecisionFamily(ref, context);
+  const subjectRecord = context.elementRecord || context.questionRecord;
+  const verifiedSources = subjectRecord?.source_references || [];
+  const subject = artifact.subject || {};
+  const subjectMatches = subject.subject_record_id === context.subjectRecordId
+    && subject.coverage_subject_id === context.coverageSubjectId
+    && subject.record_kind === context.recordKind
+    && subject.obligation_id === (context.obligationId || null)
+    && subject.question_id === (context.questionId || null)
+    && subject.question_link === (context.linkName || null)
+    && subject.decision_family_id === expectedFamily;
+  if (!subjectMatches) {
+    diagnostics.push(diagnostic('COV_NOT_APPLICABLE_DISPOSITION_SUBJECT_MISMATCH', 'The disposition does not intrinsically identify the exact obligation or Question link.', ref.evidence_id));
+  }
+  if (artifact.reason?.reason_code !== expectedReason
+    || artifact.reason?.validator_rule_id !== 'COV-NOT-APPLICABLE-V1'
+    || artifact.reason?.validator_rule_version !== '1.0.0') {
+    diagnostics.push(diagnostic('COV_NOT_APPLICABLE_DISPOSITION_REASON_MISMATCH', 'The disposition reason and validator rule must match the requested non-applicability reason.', ref.evidence_id));
+  }
+
+  const evidenceHead = artifact.evidence_head?.exact_head_sha;
+  const runtimeHead = context.runtimeContext?.headSha;
+  if (!commitExistsOrFixture(evidenceHead)
+    || (runtimeHead && !commitIsAncestorOrFixture(evidenceHead, runtimeHead))) {
+    diagnostics.push(diagnostic('COV_NOT_APPLICABLE_EVIDENCE_HEAD_MISMATCH', 'The disposition evidence head must be an immutable ancestor of the validated head.', ref.evidence_id));
+  }
+
+  for (const source of artifact.source_lineage || []) {
+    const verifiedSource = verifiedSources.find((candidate) =>
+      candidate.path === source.artifact_path
+        && candidate.repository_commit === source.repository_commit
+        && candidate.artifact_version === source.artifact_version
+        && candidate.content_hash === source.content_sha256
+        && (candidate.json_pointer || '') === (source.json_pointer || ''));
+    if (!verifiedSource) {
+      diagnostics.push(diagnostic('COV_NOT_APPLICABLE_LINEAGE_SOURCE_MISMATCH', 'Disposition lineage must equal a verified source reference of the affected record.', source.source_id || ref.evidence_id));
+    }
+    const resolved = resolvedLineageValue(source);
+    if (resolved.content === null || !resolved.located) {
+      diagnostics.push(diagnostic('COV_NOT_APPLICABLE_LINEAGE_UNRESOLVED', 'Every disposition lineage item must resolve at its exact repository commit and pointer.', source.source_id || ref.evidence_id));
+      continue;
+    }
+    if (source.repository_commit !== evidenceHead
+      || sha256Text(resolved.content) !== source.content_sha256
+      || !artifactVersionMatches(resolved.content, {
+        artifact_version: source.artifact_version,
+        content_sha256: source.content_sha256,
+      })) {
+      diagnostics.push(diagnostic('COV_NOT_APPLICABLE_LINEAGE_MISMATCH', 'Disposition lineage head, hash, or version does not match the resolved source.', source.source_id));
+    }
+    const statement = resolved.value?.coverage_non_applicability || resolved.value;
+    if (statement?.applicability !== 'not_applicable'
+      || statement?.subject_record_id !== context.subjectRecordId
+      || statement?.coverage_subject_id !== context.coverageSubjectId
+      || statement?.reason_code !== expectedReason) {
+      diagnostics.push(diagnostic('COV_NOT_APPLICABLE_LINEAGE_SUBJECT_MISMATCH', 'The source must intrinsically state non-applicability for the exact subject and reason.', source.source_id));
+    }
+  }
+  return diagnostics;
+}
+
+function proofProducerBindingAtHead(receipt, receiptType) {
+  const head = receipt?.provenance?.evidence_head_sha;
+  const registry = repositoryJsonAtCommit(
+    EXPECTED_REPOSITORY,
+    head,
+    PATHS.proofProducerRegistry,
+  );
+  if (!registry || !activeSchemaValidators.proofProducerRegistry
+    || !activeSchemaValidators.proofProducerRegistry(registry)) {
+    return { registry, binding: null, invalid: true };
+  }
+  const binding = (registry.producers || []).find((producer) =>
+    producer.active === true
+      && producer.producer_id === receipt.provenance.producer_id
+      && producer.producer_repository === receipt.provenance.producer_repository
+      && producer.producer_role === receipt.provenance.producer_role
+      && producer.receipt_types.includes(receiptType)) || null;
+  return { registry, binding, invalid: false };
+}
+
+function proofProducerRegistrationDiagnostics(producer) {
+  const diagnostics = [];
+  if (!producer) return diagnostics;
+  const source = producer.registration_source;
+  const resolved = resolvedLineageValue({
+    ...source,
+    artifact_version: 'sha256:' + source.content_sha256,
+  });
+  const statement = resolved.value?.coverage_proof_producer_registration
+    || resolved.value;
+  if (resolved.content === null || !resolved.located
+    || sha256Text(resolved.content) !== source.content_sha256
+    || statement?.registration_type !== 'coverage_proof_producer'
+    || statement?.producer_id !== producer.producer_id
+    || statement?.producer_repository !== producer.producer_repository
+    || statement?.producer_role !== producer.producer_role
+    || !arraysEqual(statement?.receipt_types || [], producer.receipt_types || [])) {
+    diagnostics.push(diagnostic('COV_PROOF_PRODUCER_REGISTRATION_UNVERIFIED', 'Registered producer identity and receipt roles must resolve intrinsically from immutable source evidence.', producer.producer_id));
+  }
+  return diagnostics;
+}
+
+function proofTimeDiagnostics(receipt, receiptType, context) {
+  const diagnostics = [];
+  const observedAt = receiptType === 'runtime_proof'
+    ? receipt.runtime_scope?.captured_at
+    : receipt.contract_result?.observed_at;
+  const observed = Date.parse(observedAt || '');
+  const validationTime = Date.parse(context.runtimeContext?.headCommittedAt || '');
+  if (!Number.isFinite(observed) || !Number.isFinite(validationTime)) {
+    diagnostics.push(diagnostic('COV_PROOF_TIME_INVALID', 'Proof observation time and validation-head time must be parseable.', receipt.receipt_id));
+    return diagnostics;
+  }
+  if (observed > validationTime) {
+    diagnostics.push(diagnostic('COV_PROOF_FUTURE_DATED', 'Future-dated proof cannot create coverage credit.', receipt.receipt_id));
+  }
+  const maxAgeDays = context.bundle?.contract?.evidence_binding?.proof_provenance?.max_age_days ?? 30;
+  if (validationTime - observed > maxAgeDays * 24 * 60 * 60 * 1000) {
+    diagnostics.push(diagnostic('COV_PROOF_STALE', 'Proof observation exceeds the contract freshness window.', receipt.receipt_id));
+  }
+  return diagnostics;
+}
+
+function proofLineageDiagnostics(receipt, receiptType, context, producerBinding) {
+  const diagnostics = [];
+  const expectedCaptureType = receiptType === 'runtime_proof'
+    ? 'runtime_observation'
+    : 'consumer_contract';
+  const expectedPrefix = PROOF_CAPTURE_PATHS[receiptType];
+  const referencedSourceIds = receiptType === 'runtime_proof'
+    ? (receipt.observations || []).map((item) => item.capture_source_id)
+    : [receipt.contract_result?.capture_source_id].filter(Boolean);
+  const lineageIds = (receipt.source_lineage || []).map((source) => source.source_id);
+  if (!arraysEqual(referencedSourceIds, lineageIds)
+    || referencedSourceIds.length !== lineageIds.length) {
+    diagnostics.push(diagnostic('COV_PROOF_LINEAGE_SET_MISMATCH', 'Receipt observations must reference every lineage capture exactly once.', receipt.receipt_id));
+  }
+
+  for (const source of receipt.source_lineage || []) {
+    if (!source.artifact_path?.startsWith(expectedPrefix)) {
+      diagnostics.push(diagnostic('COV_PROOF_CAPTURE_PATH_FORBIDDEN', 'Proof lineage must use the dedicated capture directory for its receipt type.', source.source_id));
+    }
+    const resolved = resolvedLineageValue(source);
+    if (resolved.content === null || !resolved.located) {
+      diagnostics.push(diagnostic('COV_PROOF_LINEAGE_UNRESOLVED', 'Every proof lineage item must resolve at its exact repository commit and pointer.', source.source_id));
+      continue;
+    }
+    if (source.repository_commit !== receipt.provenance.evidence_head_sha) {
+      diagnostics.push(diagnostic('COV_PROOF_LINEAGE_HEAD_MISMATCH', 'Every lineage item must bind to the receipt evidence head.', source.source_id));
+    }
+    if (sha256Text(resolved.content) !== source.content_sha256
+      || !artifactVersionMatches(resolved.content, {
+        artifact_version: source.artifact_version,
+        content_sha256: source.content_sha256,
+      })) {
+      diagnostics.push(diagnostic('COV_PROOF_LINEAGE_HASH_MISMATCH', 'Proof lineage content hash or version does not match the immutable capture.', source.source_id));
+    }
+    const capture = resolved.value;
+    const captureValid = capture && activeSchemaValidators.proofCapture
+      && activeSchemaValidators.proofCapture(capture);
+    if (!captureValid) {
+      diagnostics.push(diagnostic('COV_PROOF_CAPTURE_INVALID', 'Resolved proof lineage must be a schema-valid capture receipt.', source.source_id));
+      continue;
+    }
+    if (capture.capture_type !== expectedCaptureType
+      || capture.repository !== EXPECTED_REPOSITORY
+      || capture.exact_head_sha !== receipt.provenance.evidence_head_sha
+      || !receiptSubjectMatches(
+        capture.subject,
+        context,
+        context.expectedFamily,
+        context.expectedRuleId,
+      )) {
+      diagnostics.push(diagnostic('COV_PROOF_CAPTURE_SUBJECT_MISMATCH', 'Capture type, head, and intrinsic subject must match the proof receipt.', source.source_id));
+    }
+    if (!producerBinding
+      || capture.producer?.producer_id !== receipt.provenance.producer_id
+      || capture.producer?.producer_repository !== receipt.provenance.producer_repository
+      || capture.producer?.producer_role !== receipt.provenance.producer_role) {
+      diagnostics.push(diagnostic('COV_PROOF_CAPTURE_PRODUCER_MISMATCH', 'Capture producer must match the registered receipt producer.', source.source_id));
+    }
+    const expectedResult = receiptType === 'runtime_proof'
+      ? receipt.runtime_scope?.result
+      : receipt.contract_result?.result;
+    const expectedObservedAt = receiptType === 'runtime_proof'
+      ? receipt.runtime_scope?.captured_at
+      : receipt.contract_result?.observed_at;
+    const scopeMatches = receiptType === 'runtime_proof'
+      ? capture.scope?.environment_id === receipt.runtime_scope?.environment_id
+        && capture.scope?.observation_type === receipt.runtime_scope?.observation_kind
+      : capture.scope?.consumer_id === receipt.consumer?.consumer_id
+        && capture.scope?.contract_id === receipt.contract_result?.contract_id;
+    if (!scopeMatches || capture.result !== expectedResult) {
+      diagnostics.push(diagnostic('COV_PROOF_CAPTURE_RESULT_MISMATCH', 'Capture scope and result must match the enclosing proof receipt.', source.source_id));
+    }
+    if (capture.captured_at !== expectedObservedAt) {
+      diagnostics.push(diagnostic('COV_PROOF_CAPTURE_TIME_MISMATCH', 'Capture time must exactly match the verified receipt observation time.', source.source_id));
+    }
+    const rawPrefix = expectedPrefix + 'raw/';
+    if (!capture.raw_evidence?.artifact_path?.startsWith(rawPrefix)) {
+      diagnostics.push(diagnostic('COV_PROOF_RAW_CAPTURE_PATH_FORBIDDEN', 'Raw proof bytes must remain in the dedicated immutable capture directory.', source.source_id));
+    }
+    const rawContent = repositoryContentAtCommit(
+      EXPECTED_REPOSITORY,
+      receipt.provenance.evidence_head_sha,
+      capture.raw_evidence?.artifact_path,
+    );
+    if (rawContent === null
+      || sha256Text(rawContent) !== capture.raw_evidence?.content_sha256) {
+      diagnostics.push(diagnostic('COV_PROOF_RAW_CAPTURE_UNVERIFIED', 'Capture raw evidence must resolve and match its immutable hash.', source.source_id));
+    }
+  }
+  return diagnostics;
+}
+
+function proofReceiptDiagnostics(artifact, role, context) {
+  const diagnostics = [];
+  const receiptType = role === 'consumer_proof' ? 'consumer_proof' : 'runtime_proof';
+  const schemaKey = receiptType === 'runtime_proof' ? 'runtimeProof' : 'consumerProof';
+  const schemaValid = artifact && activeSchemaValidators[schemaKey]
+    && activeSchemaValidators[schemaKey](artifact);
+  if (!schemaValid) {
+    diagnostics.push(diagnostic('COV_EVIDENCE_PROOF_RECEIPT_INVALID', 'Runtime and consumer proof require their dedicated schema-valid receipt type.', context.evidenceId));
+    return diagnostics;
+  }
+  if (!receiptSubjectMatches(
+    artifact.subject,
+    context,
+    context.expectedFamily,
+    context.expectedRuleId,
+  )) {
+    diagnostics.push(diagnostic('COV_EVIDENCE_PROOF_SUBJECT_MISMATCH', 'Proof receipt subject does not match the expected record, obligation or Question, Family, and Rule.', context.evidenceId));
+  }
+
+  const evidenceHead = artifact.provenance?.evidence_head_sha;
+  const runtimeHead = context.runtimeContext?.headSha;
+  if (!commitExistsOrFixture(evidenceHead)) {
+    diagnostics.push(diagnostic('COV_PROOF_HEAD_UNRESOLVED', 'Proof evidence head must resolve to an immutable repository commit.', artifact.receipt_id));
+  } else if (runtimeHead && !commitIsAncestorOrFixture(evidenceHead, runtimeHead)) {
+    diagnostics.push(diagnostic('COV_PROOF_HEAD_MISMATCH', 'Proof evidence head must be an ancestor of the validated exact head.', artifact.receipt_id));
+  }
+
+  const registered = proofProducerBindingAtHead(artifact, receiptType);
+  const registrationDiagnostics = proofProducerRegistrationDiagnostics(
+    registered.binding,
+  );
+  diagnostics.push(...registrationDiagnostics);
+  if (registered.invalid || !registered.binding) {
+    diagnostics.push(diagnostic('COV_PROOF_PRODUCER_UNKNOWN', 'Proof producer must be registered at the exact evidence head for this receipt type.', artifact.receipt_id));
+  } else {
+    const allowed = receiptType === 'runtime_proof'
+      ? registered.binding.allowed_environment_ids.includes(artifact.runtime_scope.environment_id)
+      : registered.binding.allowed_consumer_ids.includes(artifact.consumer.consumer_id);
+    if (!allowed) {
+      diagnostics.push(diagnostic('COV_PROOF_PRODUCER_SCOPE_MISMATCH', 'Registered producer scope does not authorize this environment or consumer.', artifact.receipt_id));
+    }
+  }
+
+  if (receiptType === 'consumer_proof'
+    && artifact.contract_result?.result !== 'accepted') {
+    diagnostics.push(diagnostic('COV_CONSUMER_PROOF_REJECTED', 'A consumer rejection is blocking negative evidence and cannot create proof credit.', artifact.receipt_id));
+  }
+  if (receiptType === 'runtime_proof'
+    && (artifact.runtime_scope?.result !== 'observed_pass'
+      || (artifact.observations || []).some((item) => item.result !== 'observed_pass'
+        || item.observation_type !== artifact.runtime_scope.observation_kind))) {
+    diagnostics.push(diagnostic('COV_RUNTIME_PROOF_OBSERVATION_INVALID', 'Runtime credit requires allowed, consistent observed_pass results.', artifact.receipt_id));
+  }
+  diagnostics.push(...proofTimeDiagnostics(artifact, receiptType, context));
+  diagnostics.push(...proofLineageDiagnostics(
+    artifact,
+    receiptType,
+    context,
+    registrationDiagnostics.length === 0 ? registered.binding : null,
+  ));
+  return diagnostics;
+}
+
+function creditSourceEvidence(record, runtimeContext) {
+  const items = [];
+  for (const name of CREDIT_SOURCE_CHAIN) {
+    const link = record?.coverage_chain?.[name];
+    const refs = link?.status === 'not_applicable_with_validated_reason'
+      ? link.not_applicable_reason?.evidence_refs
+      : link?.evidence_refs;
+    for (const ref of refs || []) {
+      if (!ref || typeof ref !== 'object' || Array.isArray(ref)) continue;
+      items.push({
+        link_name: name,
+        evidence_id: ref.evidence_id,
+        subject_record_id: ref.subject_record_id,
+        coverage_subject_id: ref.coverage_subject_id,
+        content_sha256: ref.content_sha256,
+        evidence_head_sha: ref.head_binding === 'pinned_commit'
+          ? ref.repository_commit
+          : runtimeContext?.headSha,
+      });
+    }
+  }
+  return items.sort((left, right) => {
+    const linkOrder = CREDIT_SOURCE_CHAIN.indexOf(left.link_name)
+      - CREDIT_SOURCE_CHAIN.indexOf(right.link_name);
+    return linkOrder || left.evidence_id.localeCompare(right.evidence_id);
+  });
+}
+
+function currentBaselineIdentityEligible(bundle) {
+  if (!bundle?.baseline || !activeSchemaValidators.baseline
+    || !activeSchemaValidators.baseline(bundle.baseline)) return false;
+  const requiredPaths = new Set([PATHS.contract, PATHS.ledger, PATHS.catalog]);
+  const hashes = new Map((bundle.baseline.content_hashes || [])
+    .map((item) => [item.path, item.sha256]));
+  for (const path of requiredPaths) {
+    if (!hashes.has(path) || !existsSync(join(ROOT, path))
+      || sha256Text(readText(path)) !== hashes.get(path)) return false;
+  }
+  return true;
+}
+
+function generatedCoverageCreditProjection(record, bundle, context) {
+  const questionId = record.question_id;
+  const baselineId = bundle?.baseline?.baseline_id;
+  const ruleId = context.expectedRuleId;
+  if (!baselineId || !ruleId || !currentBaselineIdentityEligible(bundle)) return null;
+  return {
+    credit_id: 'coverage-credit.' + questionId.toLowerCase().replaceAll('_', '-') + '.v1',
+    credit_version: '1.0.0',
+    receipt_type: 'coverage_credit_projection',
+    subject: {
+      subject_record_id: questionId,
+      coverage_subject_id: questionId + '#coverage_credit',
+      question_id: questionId,
+      decision_family_id: record.decision_family_id,
+      rule_id: ruleId,
+    },
+    baseline_id: baselineId,
+    derivation: {
+      rule_id: 'COV-QUESTION-CREDIT-V1',
+      rule_version: '1.0.0',
+      mode: 'validator_recomputed',
+      required_chain: CREDIT_SOURCE_CHAIN,
+    },
+    source_evidence: creditSourceEvidence(record, context.runtimeContext),
+    claims: {
+      coverage_granted: false,
+      readiness: false,
+      release_readiness: false,
+      production_readiness: false,
+    },
+  };
+}
+
+function creditEvidenceKey(item) {
+  return [
+    item?.link_name,
+    item?.evidence_id,
+    item?.subject_record_id,
+    item?.coverage_subject_id,
+    item?.content_sha256,
+    item?.evidence_head_sha,
+  ].join('|');
+}
+
+function coverageCreditProjectionDiagnostics(artifact, context) {
+  const diagnostics = [];
+  const schemaValid = artifact && activeSchemaValidators.coverageCredit
+    && activeSchemaValidators.coverageCredit(artifact);
+  if (!schemaValid) {
+    diagnostics.push(diagnostic('COV_EVIDENCE_CREDIT_RECEIPT_INVALID', 'Coverage credit requires a schema-valid validator projection.', context.evidenceId));
+  }
+  if (artifact?.coverage_granted === true
+    || artifact?.derivation?.coverage_granted === true
+    || artifact?.claims?.coverage_granted === true) {
+    diagnostics.push(diagnostic('COV_CREDIT_PRODUCER_ASSERTION_FORBIDDEN', 'Producer-authored coverage_granted cannot create Question credit.', context.evidenceId));
+  }
+  if (!schemaValid) return diagnostics;
+
+  const expected = generatedCoverageCreditProjection(
+    context.questionRecord,
+    context.bundle,
+    context,
+  );
+  if (!expected) {
+    diagnostics.push(diagnostic('COV_CREDIT_DERIVATION_CHAIN_UNVERIFIED', 'The validator cannot generate credit without the active Rule and current baseline.', context.evidenceId));
+    return diagnostics;
+  }
+  if (!receiptSubjectMatches(
+    artifact.subject,
+    context,
+    context.expectedFamily,
+    context.expectedRuleId,
+  )) {
+    diagnostics.push(diagnostic('COV_EVIDENCE_CREDIT_SUBJECT_MISMATCH', 'Coverage credit projection does not match the exact Question, Family, and Rule.', context.evidenceId));
+  }
+  if (artifact.baseline_id !== expected.baseline_id) {
+    diagnostics.push(diagnostic('COV_CREDIT_BASELINE_MISMATCH', 'Coverage credit baseline must equal the current schema-and-hash-validated baseline identity.', context.evidenceId));
+  }
+  if (artifact.credit_id !== expected.credit_id
+    || JSON.stringify(artifact.derivation) !== JSON.stringify(expected.derivation)) {
+    diagnostics.push(diagnostic('COV_CREDIT_DERIVATION_MISMATCH', 'Coverage credit identity and derivation must equal the validator-generated projection.', context.evidenceId));
+  }
+
+  const actualEvidence = artifact.source_evidence || [];
+  const actualKeys = actualEvidence.map(creditEvidenceKey);
+  const expectedKeys = expected.source_evidence.map(creditEvidenceKey);
+  if (new Set(actualKeys).size !== actualKeys.length) {
+    diagnostics.push(diagnostic('COV_CREDIT_SOURCE_EVIDENCE_DUPLICATE', 'Coverage credit source evidence cannot contain duplicate link evidence.', context.evidenceId));
+  }
+  if (actualEvidence.some((item) => item.subject_record_id !== context.questionId
+    || !String(item.coverage_subject_id || '').startsWith(context.questionId + '#'))) {
+    diagnostics.push(diagnostic('COV_CREDIT_SOURCE_EVIDENCE_CROSS_SUBJECT', 'Coverage credit cannot reuse evidence from another Question.', context.evidenceId));
+  }
+  const expectedSet = new Set(expectedKeys);
+  const actualSet = new Set(actualKeys);
+  if (expectedKeys.some((key) => !actualSet.has(key))) {
+    diagnostics.push(diagnostic('COV_CREDIT_SOURCE_EVIDENCE_MISSING', 'Coverage credit must include every required preceding link evidence identity and hash.', context.evidenceId));
+  }
+  if (actualKeys.some((key) => !expectedSet.has(key))) {
+    diagnostics.push(diagnostic('COV_CREDIT_SOURCE_EVIDENCE_EXTRA', 'Coverage credit cannot include unverified or unrelated source evidence.', context.evidenceId));
+  }
+  const expectedById = new Map(expected.source_evidence.map((item) => [
+    item.link_name + '|' + item.evidence_id,
+    item,
+  ]));
+  if (actualEvidence.some((item) => {
+    const expectedItem = expectedById.get(item.link_name + '|' + item.evidence_id);
+    return expectedItem && expectedItem.evidence_head_sha !== item.evidence_head_sha;
+  })) {
+    diagnostics.push(diagnostic('COV_CREDIT_SOURCE_EVIDENCE_STALE', 'Coverage credit source evidence head is stale or cross-head.', context.evidenceId));
+  }
+  return diagnostics;
+}
+
 function evidenceSemanticDiagnostics(ref, content, context) {
   const diagnostics = [];
   const role = ref.artifact_role;
-  if (role === 'denominator_change' || role === 'not_applicable_evidence') return diagnostics;
+  if (role === 'denominator_change') return diagnostics;
   let artifact = null;
   try {
     artifact = JSON.parse(content);
@@ -475,6 +1031,21 @@ function evidenceSemanticDiagnostics(ref, content, context) {
   const expectedFamily = expectedDecisionFamily(ref, context);
   const activeRule = expectedFamily ? activeRuleForFamily(ref, expectedFamily) : null;
   const expectedRuleId = activeRule?.rule_id || null;
+  const resolvedContext = {
+    ...context,
+    evidenceId: ref.evidence_id,
+    expectedFamily,
+    expectedRuleId,
+  };
+
+  if (role === 'not_applicable_evidence') {
+    diagnostics.push(...notApplicableDispositionDiagnostics(
+      ref,
+      artifact,
+      resolvedContext,
+    ));
+    return diagnostics;
+  }
 
   if (role === 'catalog_record' || role === 'decision_question') {
     const expectedQuestionId = context.questionId
@@ -571,21 +1142,11 @@ function evidenceSemanticDiagnostics(ref, content, context) {
     if (!ref.artifact_path.startsWith(dedicatedPrefix)) {
       diagnostics.push(diagnostic('COV_EVIDENCE_PROOF_ARTIFACT_FORBIDDEN', 'Generic fixtures, planning files, and review prose cannot satisfy runtime or consumer proof roles.', ref.evidence_id));
     }
-    const schemaKey = runtime ? 'runtimeProof' : 'consumerProof';
-    const schemaValid = artifact && activeSchemaValidators[schemaKey]
-      && activeSchemaValidators[schemaKey](artifact);
-    if (!schemaValid) {
-      diagnostics.push(diagnostic('COV_EVIDENCE_PROOF_RECEIPT_INVALID', 'Runtime and consumer proof require their dedicated schema-valid receipt type.', ref.evidence_id));
-      return diagnostics;
-    }
-    if (!receiptSubjectMatches(
-      artifact.subject,
-      context,
-      expectedFamily,
-      expectedRuleId,
-    )) {
-      diagnostics.push(diagnostic('COV_EVIDENCE_PROOF_SUBJECT_MISMATCH', 'Proof receipt subject does not match the expected record, obligation or Question, Family, and Rule.', ref.evidence_id));
-    }
+    diagnostics.push(...proofReceiptDiagnostics(
+      artifact,
+      role,
+      resolvedContext,
+    ));
     return diagnostics;
   }
 
@@ -593,20 +1154,10 @@ function evidenceSemanticDiagnostics(ref, content, context) {
     if (!ref.artifact_path.startsWith('planning/coverage/credits/')) {
       diagnostics.push(diagnostic('COV_EVIDENCE_CREDIT_ARTIFACT_FORBIDDEN', 'Coverage credit requires a dedicated derived credit receipt.', ref.evidence_id));
     }
-    const schemaValid = artifact && activeSchemaValidators.coverageCredit
-      && activeSchemaValidators.coverageCredit(artifact);
-    if (!schemaValid) {
-      diagnostics.push(diagnostic('COV_EVIDENCE_CREDIT_RECEIPT_INVALID', 'Coverage credit requires a schema-valid derived credit receipt.', ref.evidence_id));
-      return diagnostics;
-    }
-    if (!receiptSubjectMatches(
-      artifact.subject,
-      context,
-      expectedFamily,
-      expectedRuleId,
-    )) {
-      diagnostics.push(diagnostic('COV_EVIDENCE_CREDIT_SUBJECT_MISMATCH', 'Coverage credit receipt does not match the exact Question, Family, and Rule.', ref.evidence_id));
-    }
+    diagnostics.push(...coverageCreditProjectionDiagnostics(
+      artifact,
+      resolvedContext,
+    ));
     return diagnostics;
   }
 
@@ -679,6 +1230,31 @@ function subjectRegistryDiagnostics(bundle) {
     if (!new RegExp('\\b' + escaped + '\\b').test(content)) {
       diagnostics.push(diagnostic('COV_EVIDENCE_SUBJECT_REGISTRY_BINDING_INVALID', 'Registered JS symbol must exist in its exact artifact path.', binding.binding_id));
     }
+  }
+  return diagnostics;
+}
+
+function proofProducerRegistryDiagnostics() {
+  const diagnostics = [];
+  let registry;
+  try {
+    registry = readJson(PATHS.proofProducerRegistry);
+  } catch {
+    return [diagnostic('COV_PROOF_PRODUCER_REGISTRY_MISSING', 'The proof producer registry is required and fail-closed.', PATHS.proofProducerRegistry)];
+  }
+  const schemaIssues = schemaDiagnostics(
+    'proofProducerRegistry',
+    registry,
+    activeSchemaValidators,
+  );
+  diagnostics.push(...schemaIssues);
+  if (schemaIssues.length > 0) return diagnostics;
+  const ids = (registry.producers || []).map((producer) => producer.producer_id);
+  if (ids.length !== new Set(ids).size) {
+    diagnostics.push(diagnostic('COV_PROOF_PRODUCER_REGISTRY_DUPLICATE', 'Proof producer IDs must be unique.', PATHS.proofProducerRegistry));
+  }
+  for (const producer of registry.producers || []) {
+    diagnostics.push(...proofProducerRegistrationDiagnostics(producer));
   }
   return diagnostics;
 }
@@ -795,74 +1371,125 @@ function evidenceRefsDiagnostics(
   return diagnostics;
 }
 
-function validNotApplicable(item, subjectRecordId, coverageSubjectId) {
+function validNotApplicable(
+  item,
+  subjectRecordId,
+  coverageSubjectId,
+  semanticContext = {},
+) {
   if (!item || item.status !== 'not_applicable_with_validated_reason') return true;
   const reason = item.not_applicable_reason;
+  if (reason && Object.prototype.hasOwnProperty.call(reason, 'validator_accepted')) {
+    return false;
+  }
   return Boolean(
     reason
     && typeof reason.reason_code === 'string'
     && reason.reason_code.length > 0
-    && reason.validator_accepted === true
+    && Array.isArray(reason.evidence_refs)
+    && reason.evidence_refs.length === 1
     && evidenceRefsDiagnostics(
       reason.evidence_refs,
       ['not_applicable_evidence'],
       subjectRecordId,
       true,
       coverageSubjectId,
+      {
+        ...semanticContext,
+        notApplicableReasonCode: reason.reason_code,
+      },
     ).length === 0
   );
 }
 
-function obligationCovered(item, group, record, contract) {
+function obligationCovered(item, group, record, bundle, validationContext = {}) {
   if (!COVERED_OBLIGATION_STATES.has(item?.status)) return false;
-  if (!validNotApplicable(item, record.record_id, item.obligation_id)) return false;
+  const semanticContext = {
+    ...validationContext,
+    bundle,
+    recordKind: 'element',
+    elementRecord: record,
+    elementId: record.element_id,
+    obligationId: item.obligation_id,
+    obligationGroup: group,
+  };
+  if (!validNotApplicable(
+    item,
+    record.record_id,
+    item.obligation_id,
+    semanticContext,
+  )) return false;
   if (item.status === 'not_applicable_with_validated_reason') return true;
-  const roles = contract?.evidence_binding?.element_obligation_roles?.[group] || [];
+  const roles = bundle?.contract?.evidence_binding?.element_obligation_roles?.[group] || [];
   return evidenceRefsDiagnostics(
     item.evidence_refs,
     roles,
     record.record_id,
     true,
     item.obligation_id,
-    {
-      recordKind: 'element',
-      elementId: record.element_id,
-      obligationId: item.obligation_id,
-      obligationGroup: group,
-    },
+    semanticContext,
   ).length === 0;
 }
 
-function elementCovered(record, contract) {
+function elementCovered(record, bundle, validationContext = {}) {
   const obligations = obligationEntries(record);
   return obligations.length > 0
-    && obligations.every(({ group, item }) => obligationCovered(item, group, record, contract));
+    && obligations.every(({ group, item }) => obligationCovered(
+      item,
+      group,
+      record,
+      bundle,
+      validationContext,
+    ));
 }
 
-function chainLinkCovered(link, name, record, contract) {
+function chainLinkCovered(link, name, record, bundle, validationContext = {}) {
   if (!COMPLETE_CHAIN_STATES.has(link?.status)) return false;
+  if (name === 'coverage_credit'
+    && link.status === 'not_applicable_with_validated_reason') return false;
   const coverageSubjectId = record.question_id + '#' + name;
-  if (!validNotApplicable(link, record.question_id, coverageSubjectId)) return false;
+  const semanticContext = {
+    ...validationContext,
+    bundle,
+    questionRecord: record,
+    recordKind: 'question',
+    questionId: record.question_id,
+    decisionFamilyId: record.decision_family_id,
+    linkName: name,
+  };
+  if (!validNotApplicable(
+    link,
+    record.question_id,
+    coverageSubjectId,
+    semanticContext,
+  )) return false;
   if (link.status === 'not_applicable_with_validated_reason') return true;
-  const roles = contract?.evidence_binding?.question_link_roles?.[name] || [];
+  const roles = bundle?.contract?.evidence_binding?.question_link_roles?.[name] || [];
   return evidenceRefsDiagnostics(
     link.evidence_refs,
     roles,
     record.question_id,
     true,
     coverageSubjectId,
-    {
-      recordKind: 'question',
-      questionId: record.question_id,
-      decisionFamilyId: record.decision_family_id,
-      linkName: name,
-    },
+    semanticContext,
   ).length === 0;
 }
 
-function questionCovered(record, contract) {
+function questionCovered(record, bundle, validationContext = {}) {
   const chain = record?.coverage_chain || {};
-  return CHAIN_NAMES.every((name) => chainLinkCovered(chain[name], name, record, contract));
+  return CREDIT_SOURCE_CHAIN.every((name) => chainLinkCovered(
+    chain[name],
+    name,
+    record,
+    bundle,
+    validationContext,
+  )) && chainLinkCovered(
+    chain.coverage_credit,
+    'coverage_credit',
+    record,
+    bundle,
+    validationContext,
+  );
 }
 
 function roundPercent(numerator, denominator) {
@@ -920,16 +1547,16 @@ function sourceDiagnostics(records, repositoryChecks) {
   return diagnostics;
 }
 
-function deriveCoverage(bundle) {
+function deriveCoverage(bundle, validationContext = {}) {
   const ledgerRecords = Array.isArray(bundle.ledger?.records) ? bundle.ledger.records : [];
   const catalogRecords = Array.isArray(bundle.catalog?.records) ? bundle.catalog.records : [];
 
   const elementDenominatorRecords = ledgerRecords.filter((record) => record.denominator_membership === 'confirmed');
   const questionDenominatorRecords = catalogRecords.filter((record) => record.denominator_membership === 'confirmed');
   const elementNumerator = elementDenominatorRecords
-    .filter((record) => elementCovered(record, bundle.contract)).length;
+    .filter((record) => elementCovered(record, bundle, validationContext)).length;
   const questionNumerator = questionDenominatorRecords
-    .filter((record) => questionCovered(record, bundle.contract)).length;
+    .filter((record) => questionCovered(record, bundle, validationContext)).length;
 
   const unresolvedElements = ledgerRecords.some((record) => ['candidate', 'unresolved'].includes(record.denominator_membership));
   const unresolvedQuestions = catalogRecords.some((record) => ['candidate', 'unresolved'].includes(record.denominator_membership));
@@ -946,14 +1573,14 @@ function deriveCoverage(bundle) {
   const criticalNumerator = catalogRecords
     .filter((record) => IN_SCOPE_MEMBERSHIPS.has(record.denominator_membership)
       && record.critical === true
-      && questionCovered(record, bundle.contract))
+      && questionCovered(record, bundle, validationContext))
     .length
     + ledgerRecords
       .filter((record) => IN_SCOPE_MEMBERSHIPS.has(record.denominator_membership))
       .flatMap((record) => obligationEntries(record)
         .filter(({ group, item }) => item.critical === true
           && group === 'required_safety_gates'
-          && obligationCovered(item, group, record, bundle.contract)))
+          && obligationCovered(item, group, record, bundle, validationContext)))
       .length;
   const criticalDenominator = criticalQuestionIds.length + criticalSafety.length;
 
@@ -995,7 +1622,7 @@ function denominatorRecordMap(bundle) {
   ]));
 }
 
-function deriveDenominatorTransition(baseBundle, headBundle) {
+function deriveDenominatorTransition(baseBundle, headBundle, validationContext = {}) {
   const hasBase = Boolean(baseBundle?.ledger && baseBundle?.catalog && baseBundle?.baseline);
   if (!hasBase) {
     return {
@@ -1005,7 +1632,7 @@ function deriveDenominatorTransition(baseBundle, headBundle) {
       removedRecordIds: [],
       changedRecordIds: [],
       baseDerived: null,
-      headDerived: deriveCoverage(headBundle),
+      headDerived: deriveCoverage(headBundle, validationContext),
       baseBundle: null,
       baseRecords: new Map(),
       headRecords: denominatorRecordMap(headBundle),
@@ -1027,8 +1654,8 @@ function deriveDenominatorTransition(baseBundle, headBundle) {
     addedRecordIds,
     removedRecordIds,
     changedRecordIds,
-    baseDerived: deriveCoverage(baseBundle),
-    headDerived: deriveCoverage(headBundle),
+    baseDerived: deriveCoverage(baseBundle, validationContext),
+    headDerived: deriveCoverage(headBundle, validationContext),
     baseBundle,
     baseRecords,
     headRecords,
@@ -1308,11 +1935,12 @@ function effectiveCoverageAfterDenominatorValidation(rawDerived, transition, dia
   };
 }
 
-function semanticDiagnostics(bundle) {
+function semanticDiagnostics(bundle, validationContext = {}) {
   const diagnostics = [];
   const ledgerRecords = bundle.ledger?.records || [];
   const catalogRecords = bundle.catalog?.records || [];
   diagnostics.push(...subjectRegistryDiagnostics(bundle));
+  diagnostics.push(...proofProducerRegistryDiagnostics());
 
   if (bundle.ledger && (!Array.isArray(bundle.ledger.records) || bundle.ledger.records.length === 0)) {
     diagnostics.push(diagnostic('COV_LEDGER_EMPTY', 'The Element Ledger must contain real records.', PATHS.ledger));
@@ -1366,7 +1994,8 @@ function semanticDiagnostics(bundle) {
   }
 
   for (const record of ledgerRecords) {
-    if (record.resolution_state === 'covered' && !elementCovered(record, bundle.contract)) {
+    if (record.resolution_state === 'covered'
+      && !elementCovered(record, bundle, validationContext)) {
       diagnostics.push(diagnostic('COV_ELEMENT_OBLIGATION_INCOMPLETE', 'Element cannot be covered while any applicable obligation is incomplete.', record.record_id));
     }
     for (const { group, item } of obligationEntries(record)) {
@@ -1379,7 +2008,10 @@ function semanticDiagnostics(bundle) {
           true,
           item.obligation_id,
           {
+            ...validationContext,
+            bundle,
             recordKind: 'element',
+            elementRecord: record,
             elementId: record.element_id,
             obligationId: item.obligation_id,
             obligationGroup: group,
@@ -1393,7 +2025,10 @@ function semanticDiagnostics(bundle) {
           false,
           item.obligation_id,
           {
+            ...validationContext,
+            bundle,
             recordKind: 'element',
+            elementRecord: record,
             elementId: record.element_id,
             obligationId: item.obligation_id,
             obligationGroup: group,
@@ -1401,14 +2036,44 @@ function semanticDiagnostics(bundle) {
         ));
       }
       if (item.status === 'not_applicable_with_validated_reason'
-        && !validNotApplicable(item, record.record_id, item.obligation_id)) {
-        diagnostics.push(diagnostic('COV_NOT_APPLICABLE_REASON_INVALID', 'Not-applicable obligations require reason, evidence and validator acceptance.', item.obligation_id));
+        && Object.prototype.hasOwnProperty.call(
+          item.not_applicable_reason || {},
+          'validator_accepted',
+        )) {
+        diagnostics.push(diagnostic('COV_NOT_APPLICABLE_PRODUCER_ASSERTION_FORBIDDEN', 'Producer-supplied validator_accepted cannot authorize non-applicability.', item.obligation_id));
+      }
+      if (item.status === 'not_applicable_with_validated_reason'
+        && !validNotApplicable(
+          item,
+          record.record_id,
+          item.obligation_id,
+          {
+            ...validationContext,
+            bundle,
+            recordKind: 'element',
+            elementRecord: record,
+            elementId: record.element_id,
+            obligationId: item.obligation_id,
+            obligationGroup: group,
+          },
+        )) {
+        diagnostics.push(diagnostic('COV_NOT_APPLICABLE_REASON_INVALID', 'Not-applicable obligations require a validator-derived exact disposition.', item.obligation_id));
         diagnostics.push(...evidenceRefsDiagnostics(
           item.not_applicable_reason?.evidence_refs,
           ['not_applicable_evidence'],
           record.record_id,
           true,
           item.obligation_id,
+          {
+            ...validationContext,
+            bundle,
+            recordKind: 'element',
+            elementRecord: record,
+            elementId: record.element_id,
+            obligationId: item.obligation_id,
+            obligationGroup: group,
+            notApplicableReasonCode: item.not_applicable_reason?.reason_code,
+          },
         ));
       }
     }
@@ -1428,6 +2093,9 @@ function semanticDiagnostics(bundle) {
           false,
           record.question_id + '#' + name,
           {
+            ...validationContext,
+            bundle,
+            questionRecord: record,
             recordKind: 'question',
             questionId: record.question_id,
             decisionFamilyId: record.decision_family_id,
@@ -1436,18 +2104,48 @@ function semanticDiagnostics(bundle) {
         ));
       }
       if (link?.status === 'not_applicable_with_validated_reason'
+        && name === 'coverage_credit') {
+        diagnostics.push(diagnostic('COV_CREDIT_NOT_APPLICABLE_FORBIDDEN', 'Coverage credit is validator-generated and cannot be dispositioned as not applicable.', record.question_id + '.' + name));
+      }
+      if (link?.status === 'not_applicable_with_validated_reason'
+        && Object.prototype.hasOwnProperty.call(
+          link.not_applicable_reason || {},
+          'validator_accepted',
+        )) {
+        diagnostics.push(diagnostic('COV_NOT_APPLICABLE_PRODUCER_ASSERTION_FORBIDDEN', 'Producer-supplied validator_accepted cannot authorize non-applicability.', record.question_id + '.' + name));
+      }
+      if (link?.status === 'not_applicable_with_validated_reason'
         && !validNotApplicable(
           link,
           record.question_id,
           record.question_id + '#' + name,
+          {
+            ...validationContext,
+            bundle,
+            questionRecord: record,
+            recordKind: 'question',
+            questionId: record.question_id,
+            decisionFamilyId: record.decision_family_id,
+            linkName: name,
+          },
         )) {
-        diagnostics.push(diagnostic('COV_NOT_APPLICABLE_REASON_INVALID', 'Not-applicable chain links require reason, evidence and validator acceptance.', record.question_id + '.' + name));
+        diagnostics.push(diagnostic('COV_NOT_APPLICABLE_REASON_INVALID', 'Not-applicable chain links require a validator-derived exact disposition.', record.question_id + '.' + name));
         diagnostics.push(...evidenceRefsDiagnostics(
           link.not_applicable_reason?.evidence_refs,
           ['not_applicable_evidence'],
           record.question_id,
           true,
           record.question_id + '#' + name,
+          {
+            ...validationContext,
+            bundle,
+            questionRecord: record,
+            recordKind: 'question',
+            questionId: record.question_id,
+            decisionFamilyId: record.decision_family_id,
+            linkName: name,
+            notApplicableReasonCode: link.not_applicable_reason?.reason_code,
+          },
         ));
       }
     }
@@ -1467,6 +2165,9 @@ function semanticDiagnostics(bundle) {
             true,
             record.question_id + '#' + name,
             {
+              ...validationContext,
+              bundle,
+              questionRecord: record,
               recordKind: 'question',
               questionId: record.question_id,
               decisionFamilyId: record.decision_family_id,
@@ -1485,7 +2186,7 @@ function semanticDiagnostics(bundle) {
       if (!COMPLETE_CHAIN_STATES.has(chain.required_runtime_or_consumer_proof?.status)) {
         diagnostics.push(diagnostic('COV_REQUIRED_PROOF_MISSING', 'Question credit requires every applicable runtime or consumer proof.', record.question_id));
       }
-      if (!questionCovered(record, bundle.contract)) {
+      if (!questionCovered(record, bundle, validationContext)) {
         diagnostics.push(diagnostic('COV_QUESTION_CHAIN_INCOMPLETE', 'Coverage credit cannot precede the complete applicable Question chain.', record.question_id));
       }
     }
@@ -1506,7 +2207,7 @@ function coveredObligationIds(bundle) {
         occurrences.set(item.obligation_id, []);
       }
       occurrences.get(item.obligation_id).push(
-        obligationCovered(item, group, record, bundle.contract),
+        obligationCovered(item, group, record, bundle),
       );
     }
   }
@@ -1541,9 +2242,9 @@ function closedFamilyIds(bundle) {
         .map((item) => ({ record, item })));
     return questions.length > 0
       && familyObligations.length > 0
-      && questions.every((record) => questionCovered(record, bundle.contract))
+      && questions.every((record) => questionCovered(record, bundle))
       && familyObligations.every(({ record, item }) =>
-        obligationCovered(item, 'applicable_p0_families', record, bundle.contract));
+        obligationCovered(item, 'applicable_p0_families', record, bundle));
   }));
 }
 
@@ -1750,6 +2451,9 @@ function normativeProjection(contract) {
       semantic_subject_binding_required: contract.evidence_binding.semantic_subject_binding_required,
       js_symbol_subject_registry: contract.evidence_binding.js_symbol_subject_registry,
       proof_receipt_schemas: contract.evidence_binding.proof_receipt_schemas,
+      not_applicable_disposition: contract.evidence_binding.not_applicable_disposition,
+      proof_provenance: contract.evidence_binding.proof_provenance,
+      coverage_credit_derivation: contract.evidence_binding.coverage_credit_derivation,
       generic_fixture_or_document_proof_allowed: contract.evidence_binding.generic_fixture_or_document_proof_allowed,
     },
     denominator_transition: {
@@ -2042,7 +2746,9 @@ function runtimeContextFromGit(overrides = {}) {
   const baseSha = overrides.baseSha
     || process.env.COVERAGE_BASE_SHA
     || mergeBaseFromGit();
-  const headSha = gitValue(['rev-parse', 'HEAD']);
+  const headSha = overrides.headSha || gitValue(['rev-parse', 'HEAD']);
+  const headCommittedAt = overrides.headCommittedAt
+    || gitValue(['show', '-s', '--format=%cI', headSha]);
   const environmentPr = Number.parseInt(process.env.COVERAGE_PR_NUMBER || '', 10);
   return {
     repository: overrides.repository
@@ -2052,6 +2758,7 @@ function runtimeContextFromGit(overrides = {}) {
       || (Number.isInteger(environmentPr) ? environmentPr : null),
     baseSha,
     headSha,
+    headCommittedAt,
     expectedBaseSha: overrides.expectedBaseSha
       || process.env.COVERAGE_BASE_SHA
       || null,
@@ -2066,9 +2773,14 @@ function runtimeContextFromGit(overrides = {}) {
 function validateBundle(bundle, options) {
   const repositoryChecks = options.repositoryChecks === true;
   const diagnostics = [];
-  const transition = deriveDenominatorTransition(options.baseBundle || null, bundle);
-  const currentImpacts = currentImpactRecords(options.baseBundle || null, bundle);
   const runtimeContext = options.runtimeContext || runtimeContextFromGit();
+  const validationContext = { runtimeContext };
+  const transition = deriveDenominatorTransition(
+    options.baseBundle || null,
+    bundle,
+    validationContext,
+  );
+  const currentImpacts = currentImpactRecords(options.baseBundle || null, bundle);
   const { validators, diagnostics: schemaSetup } = options.schemaSetup;
   diagnostics.push(...schemaSetup);
 
@@ -2085,11 +2797,11 @@ function validateBundle(bundle, options) {
   if (bundle.debt) diagnostics.push(...schemaDiagnostics('debt', bundle.debt, validators));
   for (const impact of bundle.impacts || []) diagnostics.push(...schemaDiagnostics('impact', impact, validators));
 
-  diagnostics.push(...semanticDiagnostics(bundle));
+  diagnostics.push(...semanticDiagnostics(bundle, validationContext));
   diagnostics.push(...sourceDiagnostics(bundle.ledger?.records || [], repositoryChecks));
   diagnostics.push(...sourceDiagnostics(bundle.catalog?.records || [], repositoryChecks));
 
-  const rawDerived = deriveCoverage(bundle);
+  const rawDerived = deriveCoverage(bundle, validationContext);
   const denominatorDiagnostics = baselineDiagnostics(
     bundle,
     rawDerived,
@@ -2209,6 +2921,8 @@ function runFixtureSuite(canonical, schemaSetup) {
   let failed = false;
   for (const path of fixtureFiles()) {
     let fixture;
+    activeFixtureArtifacts = null;
+    activeFixtureRuntimeContext = null;
     try {
       fixture = readJson(path);
       const mutated = applyMutations(canonical, fixture.scenario?.mutations || []);
@@ -2220,6 +2934,10 @@ function runFixtureSuite(canonical, schemaSetup) {
         currentWorkPackage: fixture.scenario?.current_work_package
           || currentWorkPackageFromRoadmap(),
       });
+      activeFixtureArtifacts = new Map(Object.entries(
+        fixture.scenario?.repository_artifacts || {},
+      ));
+      activeFixtureRuntimeContext = runtimeContext;
       const validation = validateBundle(mutated, {
         repositoryChecks: false,
         schemaSetup,
@@ -2229,6 +2947,8 @@ function runFixtureSuite(canonical, schemaSetup) {
         requestedState: fixture.scenario?.requested_state || null,
         claims: fixture.scenario?.claims || [],
       });
+      activeFixtureArtifacts = null;
+      activeFixtureRuntimeContext = null;
       for (const [field, value] of Object.entries(fixture.expected_derived || {})) {
         if (validation.derived[field] !== value) {
           validation.diagnostics.push(diagnostic(
@@ -2256,6 +2976,8 @@ function runFixtureSuite(canonical, schemaSetup) {
         missing,
       });
     } catch (error) {
+      activeFixtureArtifacts = null;
+      activeFixtureRuntimeContext = null;
       const observedCode = error instanceof FixtureMutationError
         ? error.code
         : 'COV_FIXTURE_EXECUTION_FAILED';
@@ -2279,8 +3001,8 @@ function runFixtureSuite(canonical, schemaSetup) {
   return { results, failed };
 }
 
-function deriveState(bundle, mainDiagnostics, fixturesPassed) {
-  const derived = deriveCoverage(bundle);
+function deriveState(bundle, mainDiagnostics, fixturesPassed, runtimeContext = runtimeContextFromGit()) {
+  const derived = deriveCoverage(bundle, { runtimeContext });
   const structuralCodes = new Set(mainDiagnostics.map((item) => item.code));
   const policyActive = mainDiagnostics.length === 0 && fixturesPassed;
   const measurementActive = policyActive
@@ -2342,7 +3064,12 @@ for (const requiredKind of ['valid', 'invalid', 'adversarial']) {
   }
 }
 
-const state = deriveState(canonical, main.diagnostics, !fixtures.failed && fixtures.results.length > 0);
+const state = deriveState(
+  canonical,
+  main.diagnostics,
+  !fixtures.failed && fixtures.results.length > 0,
+  runtimeContext,
+);
 const exactHead = runtimeContext.headSha || 'unavailable';
 
 const summary = {

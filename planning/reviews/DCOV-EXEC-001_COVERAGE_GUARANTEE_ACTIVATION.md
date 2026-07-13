@@ -142,6 +142,22 @@ files_created:
   - kernel/fixtures/coverage-guarantee/adversarial/progress-unchanged-states.json
   - kernel/fixtures/coverage-guarantee/adversarial/question-chain-free-form-credit.json
   - kernel/fixtures/coverage-guarantee/adversarial/denominator-unrelated-evidence-complete-reduction.json
+repair_files_created_for_reviewed_head_dc45fe87:
+  - kernel/decision-governance/coverage-proof-producer-registry.v1.json
+  - kernel/schemas/coverage-not-applicable-disposition.v1.schema.json
+  - kernel/schemas/coverage-proof-capture.v1.schema.json
+  - kernel/schemas/coverage-proof-producer-registry.v1.schema.json
+  - planning/coverage/dispositions/not-applicable/README.md
+  - kernel/fixtures/coverage-guarantee/adversarial/not-applicable-element-self-authorized.json
+  - kernel/fixtures/coverage-guarantee/adversarial/not-applicable-question-self-authorized.json
+  - kernel/fixtures/coverage-guarantee/adversarial/not-applicable-disposition-wrong-subject.json
+  - kernel/fixtures/coverage-guarantee/adversarial/runtime-proof-unresolvable-lineage.json
+  - kernel/fixtures/coverage-guarantee/adversarial/consumer-proof-rejected.json
+  - kernel/fixtures/coverage-guarantee/adversarial/consumer-proof-wrong-head-unknown-producer.json
+  - kernel/fixtures/coverage-guarantee/adversarial/coverage-credit-wrong-baseline.json
+  - kernel/fixtures/coverage-guarantee/adversarial/coverage-credit-missing-source-evidence.json
+  - kernel/fixtures/coverage-guarantee/adversarial/coverage-credit-extra-cross-question-evidence.json
+  - kernel/fixtures/coverage-guarantee/adversarial/coverage-credit-producer-assertion.json
 ```
 
 ## Coverage foundation result
@@ -190,10 +206,10 @@ syntax:
 validator:
   command: npm run validate:coverage
   local_result: passed
-  self_tests_passed: 64
+  self_tests_passed: 74
   valid_fixtures_passed: 4
   negative_fixtures_passed: 18
-  adversarial_fixtures_passed: 42
+  adversarial_fixtures_passed: 52
   stable_diagnostic_assertions: passed
 mvk:
   command: npm run validate:mvk
@@ -223,26 +239,52 @@ The validator derives hashes, denominator state, numerators, percentages and con
 ```yaml
 review_identity:
   pull_request: 43
-  reviewed_head_sha: 29210f52b0cfa84d31721247001d938e1505ec7c
-  previous_reviewed_head_sha: 76ec0ba0ecf6492bf3f80fc733de404292af2970
+  reviewed_head_sha: dc45fe87eda245057010ea35acaf6627614b110d
+  previous_reviewed_head_sha: 29210f52b0cfa84d31721247001d938e1505ec7c
   base_sha: 487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8
   review_validity_at_repair_start: CURRENT
   protocol_version: v1.9.0
-  canonical_review_package_sha256: 061871e21622a8248be31ff2204c690e9fde9d5f35e6ccf79694869c376f2348
+  canonical_review_package_sha256: 01a09efb6e02910a88e27d998e1f36d441086d1016b19d333a64c090397d492c
   inspector_commit: 65e6b1b46c3e8da7c782c666cd3562947f2b7923
   review_status: RED_DO_NOT_MERGE
 repair_status:
-  PRF-001: implemented_pending_rereview
-  PRF-002: implemented_pending_rereview
-  PRF-006: implemented_pending_rereview
+  PRF-007: implemented_pending_rereview
+  PRF-008: implemented_pending_rereview
+  PRF-009: implemented_pending_rereview
 prior_findings_confirmed_repaired_by_reviewed_head:
-  - PRF-003
-  - PRF-004
-  - PRF-005
+  - PRF-001
+  - PRF-002
+  - PRF-006
 fresh_independent_review: required_on_resulting_head
 ```
 
 No finding is declared closed. `implemented_pending_rereview` means only that bounded implementation and direct local evidence exist; the resulting head requires a fresh independent PR Inspector decision.
+
+### PRF-007 — verifier-derived not-applicable dispositions
+
+- `status`: `implemented_pending_rereview`.
+- `underlying_invariant`: neither `validator_accepted` nor a typed carrier can authorize non-applicability. The validator must derive acceptance from a dedicated disposition whose intrinsic record/link subject, reason code, rule/version, exact evidence head and resolved source statement all match.
+- `repair`: removed `validator_accepted` from the Ledger and Catalog schemas; restricted `not_applicable_evidence` to `planning/coverage/dispositions/not-applicable/`; added the v1 disposition schema; and made Element/Question numerator functions call the same semantic disposition resolver used by diagnostics. Coverage credit itself cannot be marked not applicable.
+- `focused_evidence`: the Element and Question self-authorization fixtures use correctly hashed unrelated JSON/Markdown plus `validator_accepted: true` and fail. The dedicated wrong-subject disposition is schema-valid but fails intrinsic subject and lineage checks. All assert Element/Question numerators `0`, denominators `7`/`24`, and unresolved denominator states.
+- `stable_diagnostics`: `COV_NOT_APPLICABLE_PRODUCER_ASSERTION_FORBIDDEN`, `COV_NOT_APPLICABLE_ARTIFACT_FORBIDDEN`, `COV_NOT_APPLICABLE_DISPOSITION_INVALID`, `COV_NOT_APPLICABLE_DISPOSITION_SUBJECT_MISMATCH`, `COV_NOT_APPLICABLE_LINEAGE_SUBJECT_MISMATCH`, `COV_NOT_APPLICABLE_REASON_INVALID`.
+
+### PRF-008 — authoritative proof provenance
+
+- `status`: `implemented_pending_rereview`.
+- `underlying_invariant`: a dedicated schema-valid receipt is syntax, not proof. Every receipt must bind to an immutable reachable evidence head, a producer registered at that head, an authorized environment/consumer, a finite successful result, a fresh observation time, and capture lineage whose receipt and raw bytes resolve and hash correctly.
+- `repair`: added a fail-closed producer registry (initially empty because no authoritative producer evidence exists), capture schema, finite runtime vocabulary, exact-head/freshness checks, producer scope checks, exact receipt-to-capture time binding, role-specific raw-capture directories, recursive capture/raw lineage hash verification, and blocking handling for consumer `rejected` and runtime non-pass results.
+- `focused_evidence`: forged runtime lineage, consumer rejection, and wrong-head/unknown-producer fixtures use schema-valid dedicated receipts but fail exact provenance/result diagnostics without changing numerators or denominators.
+- `stable_diagnostics`: `COV_PROOF_PRODUCER_UNKNOWN`, `COV_PROOF_HEAD_UNRESOLVED`, `COV_PROOF_LINEAGE_UNRESOLVED`, `COV_CONSUMER_PROOF_REJECTED`, `COV_RUNTIME_PROOF_OBSERVATION_INVALID`, `COV_PROOF_CAPTURE_TIME_MISMATCH`, `COV_PROOF_RAW_CAPTURE_PATH_FORBIDDEN`, plus the dedicated capture/hash/head/freshness diagnostics.
+
+### PRF-009 — validator-generated coverage credit
+
+- `status`: `implemented_pending_rereview`.
+- `underlying_invariant`: the committed credit file is only a projection. Credit authority is an in-memory validator derivation from the current schema-and-hash-validated baseline identity and the exact ID, subject, content hash and immutable head of every preceding verified link. This identity check does not validate the unresolved denominator or activate measurement.
+- `repair`: removed the producer-authored `coverage_granted: true` contract; added `COV-QUESTION-CREDIT-V1`; made `questionCovered` validate all nine preceding links before recomputing the credit projection; and compares baseline plus the exact source-evidence set, rejecting duplicates, missing/extra items, cross-Question copies and stale heads.
+- `focused_evidence`: schema-valid wrong-baseline, missing-source, extra/cross-Question projections and an explicit producer-grant attempt all fail exact diagnostics; Question numerator remains `0`, effective denominators remain `7`/`24`, and state promotion remains ineligible.
+- `stable_diagnostics`: `COV_CREDIT_PRODUCER_ASSERTION_FORBIDDEN`, `COV_CREDIT_BASELINE_MISMATCH`, `COV_CREDIT_SOURCE_EVIDENCE_MISSING`, `COV_CREDIT_SOURCE_EVIDENCE_EXTRA`, `COV_CREDIT_SOURCE_EVIDENCE_CROSS_SUBJECT`, `COV_CREDIT_SOURCE_EVIDENCE_DUPLICATE`, `COV_CREDIT_SOURCE_EVIDENCE_STALE`.
+
+## Preserved repairs confirmed on the reviewed head
 
 ### PRF-001 — artifact-to-subject semantic binding
 
@@ -314,7 +356,7 @@ No finding is declared closed. `implemented_pending_rereview` means only that bo
 
 - Contract and Markdown remain v1 and retain thresholds 90/95/100 and the full Element/Question coverage definitions.
 - The denominator candidates, numerator zeroes, unresolved percentages and `policy_active` state are unchanged; no readiness, runtime, consumer or production proof was manufactured.
-- Dedicated receipt schemas define proof shape without creating any proof receipt or proof claim.
+- Dedicated receipt, disposition, capture and producer-registry schemas define verification boundaries without creating any proof receipt, producer authorization or proof claim.
 - Coverage Impact history remains append-only across the verified base/head boundary; the bootstrap record is still the single record new in PR #43 and is canonical sequence member 1.
 - CI now binds repository, PR, base and head values to both direct coverage validation and full MVK validation.
 - The KROAD-010 merge/squash/rebase builder copies the semantic subject registry and receipt/disposition schemas, rewrites only its synthetic impact base to its generated bootstrap anchor, and passes the same exact-head checks; production validation is not weakened.

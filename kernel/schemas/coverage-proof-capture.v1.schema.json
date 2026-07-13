@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/coverage-proof-capture.v1.schema.json",
+  "title": "EV4 Coverage Proof Capture v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["capture_id", "capture_version", "capture_type", "repository", "exact_head_sha", "producer", "subject", "scope", "captured_at", "result", "raw_evidence"],
+  "properties": {
+    "capture_id": { "type": "string", "pattern": "^proof-capture\\.[a-z0-9._-]+$" },
+    "capture_version": { "const": "1.0.0" },
+    "capture_type": { "enum": ["runtime_observation", "consumer_contract"] },
+    "repository": { "const": "rezahh107/EV4-Decision-Kernel" },
+    "exact_head_sha": { "$ref": "#/$defs/sha40" },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["producer_id", "producer_repository", "producer_role"],
+      "properties": {
+        "producer_id": { "type": "string", "minLength": 1 },
+        "producer_repository": { "type": "string", "pattern": "^[^/]+/[^/]+$" },
+        "producer_role": { "type": "string", "minLength": 1 }
+      }
+    },
+    "subject": { "$ref": "#/$defs/subject" },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["environment_id", "consumer_id", "observation_type", "contract_id"],
+      "properties": {
+        "environment_id": { "type": ["string", "null"], "minLength": 1 },
+        "consumer_id": { "type": ["string", "null"], "minLength": 1 },
+        "observation_type": {
+          "anyOf": [
+            { "enum": ["dom_structure", "computed_style", "responsive_layout", "interaction_state", "accessibility_tree"] },
+            { "type": "null" }
+          ]
+        },
+        "contract_id": { "type": ["string", "null"], "minLength": 1 }
+      }
+    },
+    "captured_at": { "type": "string", "format": "date-time" },
+    "result": { "enum": ["observed_pass", "observed_fail", "accepted", "rejected"] },
+    "raw_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_path", "media_type", "content_sha256"],
+      "properties": {
+        "artifact_path": { "type": "string", "minLength": 1 },
+        "media_type": { "enum": ["application/json", "text/plain", "image/png", "application/zip"] },
+        "content_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  },
+  "$defs": {
+    "sha40": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subject_record_id", "coverage_subject_id", "decision_family_id", "rule_id", "obligation_id", "question_id"],
+      "properties": {
+        "subject_record_id": { "type": "string", "minLength": 1 },
+        "coverage_subject_id": { "type": "string", "minLength": 1 },
+        "decision_family_id": { "type": ["string", "null"], "minLength": 1 },
+        "rule_id": { "type": ["string", "null"], "minLength": 1 },
+        "obligation_id": { "type": ["string", "null"], "minLength": 1 },
+        "question_id": { "type": ["string", "null"], "minLength": 1 }
+      }
+    }
+  }
+}

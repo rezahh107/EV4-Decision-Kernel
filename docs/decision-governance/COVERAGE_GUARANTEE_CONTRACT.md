@@ -25,11 +25,13 @@ A Decision Question earns credit only through this complete applicable chain:
 
 `Catalog → Matrix → Resolver Rule → Deterministic Evaluator → Valid Fixture → Invalid Fixture → Adversarial Fixture → L2 Audit → Required Runtime or Consumer Proof → Coverage Credit`
 
-Matrix-only Families receive no Resolver credit. A not-applicable link requires a machine-readable reason, supporting evidence and validator acceptance.
+Matrix-only Families receive no Resolver credit. A not-applicable link requires a dedicated disposition under `planning/coverage/dispositions/not-applicable/`. The validator derives acceptance only when the disposition's intrinsic subject, reason, validator rule, exact evidence head and independently resolved source statement all match. A producer-supplied `validator_accepted` flag has no authority.
 
 Every obligation or Question-chain link that contributes credit must use typed repository evidence. The validator resolves the path and JSON Pointer or symbol, then verifies intrinsic role-specific identity: Question, Family, Matrix, active Rule, fixture target, audit target, proof subject, or credit subject as applicable. A carrier's self-declared `subject_record_id` and `coverage_subject_id` are never sufficient. JavaScript symbols require the exact binding in `coverage-evidence-subject-registry.v1.json`; symbol existence alone grants no credit.
 
-Runtime and consumer proof require their dedicated schema-valid receipts under `planning/coverage/proofs/`. Coverage credit requires a dedicated derived credit receipt. Generic fixtures, planning files, and review prose cannot satisfy these roles. These receipt contracts do not assert that any real runtime or consumer proof currently exists.
+Runtime and consumer proof require their dedicated receipts under `planning/coverage/proofs/`, but a dedicated path and schema are only syntax. The validator also resolves every immutable capture lineage item, recomputes hashes, checks exact-head ancestry and freshness, matches a producer registered at the evidence head, binds capture time exactly to the enclosing receipt, and confines raw bytes to the role-specific capture directory. Runtime observations use the contract's finite vocabulary and must be `observed_pass`; consumer proof must be `accepted`, while `rejected` is blocking negative evidence. The producer registry is initially empty because this PR has no authoritative external capture or consumer source.
+
+Coverage credit is an in-memory validator derivation projected into the dedicated receipt format. Producer-authored `coverage_granted: true` has no authority. The projection must match the current schema-and-hash-validated baseline identity and exactly every preceding link's evidence ID, immutable hash, subject and head; missing, extra, duplicate, stale or cross-Question evidence fails closed. This does not make the unresolved denominator measurement-active. Generic fixtures, planning files and review prose cannot satisfy proof or credit roles. These contracts do not assert that any real runtime proof, consumer acceptance or coverage credit currently exists.
 
 ## Contract states
 
@@ -98,6 +100,39 @@ The validator compares this block with the authoritative JSON contract. Editing 
       "runtime_proof": "kernel/schemas/coverage-runtime-proof-receipt.v1.schema.json",
       "consumer_proof": "kernel/schemas/coverage-consumer-proof-receipt.v1.schema.json",
       "coverage_credit": "kernel/schemas/coverage-credit-receipt.v1.schema.json"
+    },
+    "not_applicable_disposition": {
+      "schema": "kernel/schemas/coverage-not-applicable-disposition.v1.schema.json",
+      "directory": "planning/coverage/dispositions/not-applicable/",
+      "acceptance": "validator_derived_from_exact_subject_reason_head_and_lineage",
+      "producer_acceptance_flag_allowed": false
+    },
+    "proof_provenance": {
+      "producer_registry": "kernel/decision-governance/coverage-proof-producer-registry.v1.json",
+      "producer_registry_schema": "kernel/schemas/coverage-proof-producer-registry.v1.schema.json",
+      "capture_schema": "kernel/schemas/coverage-proof-capture.v1.schema.json",
+      "max_age_days": 30,
+      "exact_head_required": true,
+      "all_lineage_hashes_recomputed": true,
+      "capture_time_binding": "exact_receipt_observation_time",
+      "raw_capture_path_binding": "role_specific_dedicated_directory",
+      "runtime_allowed_observation_types": [
+        "dom_structure",
+        "computed_style",
+        "responsive_layout",
+        "interaction_state",
+        "accessibility_tree"
+      ],
+      "runtime_credit_result": "observed_pass",
+      "consumer_credit_result": "accepted"
+    },
+    "coverage_credit_derivation": {
+      "authority": "validator_recomputed",
+      "rule_id": "COV-QUESTION-CREDIT-V1",
+      "rule_version": "1.0.0",
+      "baseline_binding": "current_validated_baseline_id",
+      "source_evidence_binding": "exact_all_preceding_link_ids_hashes_subjects_and_heads",
+      "producer_coverage_granted_allowed": false
     },
     "generic_fixture_or_document_proof_allowed": false
   },

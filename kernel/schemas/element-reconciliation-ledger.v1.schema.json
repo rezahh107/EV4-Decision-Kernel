@@ -84,7 +84,7 @@
         "status": { "enum": ["end_to_end_covered", "partial", "candidate", "unresolved", "pending_official_confirmation", "not_applicable_with_validated_reason", "superseded"] },
         "critical": { "type": "boolean" },
         "evidence_refs": { "type": "array", "items": { "$ref": "#/$defs/evidenceRef" }, "uniqueItems": true },
-        "not_applicable_reason": { "type": ["object", "null"], "required": ["reason_code", "evidence_refs", "validator_accepted"], "properties": { "reason_code": { "type": "string", "minLength": 1 }, "evidence_refs": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidenceRef" } }, "validator_accepted": { "const": true } }, "additionalProperties": false }
+        "not_applicable_reason": { "type": ["object", "null"], "required": ["reason_code", "evidence_refs"], "properties": { "reason_code": { "enum": ["source_explicitly_excludes_obligation"] }, "evidence_refs": { "type": "array", "minItems": 1, "maxItems": 1, "items": { "$ref": "#/$defs/evidenceRef" } } }, "additionalProperties": false }
       }
     },
     "obligations": {

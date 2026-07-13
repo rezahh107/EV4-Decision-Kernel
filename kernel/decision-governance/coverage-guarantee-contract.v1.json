@@ -130,13 +130,47 @@
       "decision_question",
       "p0_family",
       "safety_gate",
-      "runtime_check"
+      "runtime_check",
+      "not_applicable_evidence"
     ],
     "js_symbol_subject_registry": "kernel/decision-governance/coverage-evidence-subject-registry.v1.json",
     "proof_receipt_schemas": {
       "runtime_proof": "kernel/schemas/coverage-runtime-proof-receipt.v1.schema.json",
       "consumer_proof": "kernel/schemas/coverage-consumer-proof-receipt.v1.schema.json",
       "coverage_credit": "kernel/schemas/coverage-credit-receipt.v1.schema.json"
+    },
+    "not_applicable_disposition": {
+      "schema": "kernel/schemas/coverage-not-applicable-disposition.v1.schema.json",
+      "directory": "planning/coverage/dispositions/not-applicable/",
+      "acceptance": "validator_derived_from_exact_subject_reason_head_and_lineage",
+      "producer_acceptance_flag_allowed": false
+    },
+    "proof_provenance": {
+      "producer_registry": "kernel/decision-governance/coverage-proof-producer-registry.v1.json",
+      "producer_registry_schema": "kernel/schemas/coverage-proof-producer-registry.v1.schema.json",
+      "capture_schema": "kernel/schemas/coverage-proof-capture.v1.schema.json",
+      "max_age_days": 30,
+      "exact_head_required": true,
+      "all_lineage_hashes_recomputed": true,
+      "capture_time_binding": "exact_receipt_observation_time",
+      "raw_capture_path_binding": "role_specific_dedicated_directory",
+      "runtime_allowed_observation_types": [
+        "dom_structure",
+        "computed_style",
+        "responsive_layout",
+        "interaction_state",
+        "accessibility_tree"
+      ],
+      "runtime_credit_result": "observed_pass",
+      "consumer_credit_result": "accepted"
+    },
+    "coverage_credit_derivation": {
+      "authority": "validator_recomputed",
+      "rule_id": "COV-QUESTION-CREDIT-V1",
+      "rule_version": "1.0.0",
+      "baseline_binding": "current_validated_baseline_id",
+      "source_evidence_binding": "exact_all_preceding_link_ids_hashes_subjects_and_heads",
+      "producer_coverage_granted_allowed": false
     },
     "generic_fixture_or_document_proof_allowed": false,
     "question_link_roles": {
@@ -212,6 +246,7 @@
   "coverage_sensitive_paths": [
     "kernel/decision-governance/coverage-guarantee-contract.v1.json",
     "kernel/decision-governance/coverage-evidence-subject-registry.v1.json",
+    "kernel/decision-governance/coverage-proof-producer-registry.v1.json",
     "kernel/decision-governance/p0-decision-matrices.v0.json",
     "kernel/decision-governance/resolver-rule-registry.v0.json",
     "kernel/decision-governance/resolver-rules/",

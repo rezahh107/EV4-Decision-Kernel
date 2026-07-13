@@ -1,0 +1,108 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_PROOF_PRODUCER_UNKNOWN",
+    "COV_PROOF_LINEAGE_UNRESOLVED"
+  ],
+  "expected_derived": {
+    "elementNumerator": 0,
+    "questionNumerator": 0,
+    "elementDenominator": 7,
+    "questionDenominator": 24,
+    "elementDenominatorState": "unresolved",
+    "questionDenominatorState": "unresolved"
+  },
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "runtime_context": {
+      "headSha": "dc45fe87eda245057010ea35acaf6627614b110d",
+      "headCommittedAt": "2026-07-13T12:19:32+03:30"
+    },
+    "repository_artifacts": {
+      "planning/coverage/proofs/runtime/forged-lineage.json": {
+        "receipt_id": "runtime-proof.fixture.forged-lineage",
+        "receipt_version": "1.0.0",
+        "receipt_type": "runtime_proof",
+        "subject": {
+          "subject_record_id": "DQ-DIV_BLOCK-01",
+          "coverage_subject_id": "DQ-DIV_BLOCK-01#required_runtime_or_consumer_proof",
+          "decision_family_id": "layout_structure",
+          "rule_id": "resolver.rule.layout_structure.mvp.v0",
+          "obligation_id": null,
+          "question_id": "DQ-DIV_BLOCK-01"
+        },
+        "provenance": {
+          "repository": "rezahh107/EV4-Decision-Kernel",
+          "evidence_head_sha": "dc45fe87eda245057010ea35acaf6627614b110d",
+          "producer_id": "unregistered.runtime.fixture",
+          "producer_repository": "example/forged-runtime-producer",
+          "producer_role": "Responsive",
+          "verification_mode": "registered_immutable_capture_lineage"
+        },
+        "runtime_scope": {
+          "environment_id": "browser.fixture.invalid",
+          "observation_kind": "responsive_layout",
+          "captured_at": "2026-07-13T08:30:00Z",
+          "result": "observed_pass"
+        },
+        "observations": [
+          {
+            "observation_id": "OBS-FORGED-001",
+            "observation_type": "responsive_layout",
+            "result": "observed_pass",
+            "capture_source_id": "PSL-FORGED-RUNTIME"
+          }
+        ],
+        "source_lineage": [
+          {
+            "source_id": "PSL-FORGED-RUNTIME",
+            "source_kind": "authoritative_capture_receipt",
+            "repository": "rezahh107/EV4-Decision-Kernel",
+            "repository_commit": "dc45fe87eda245057010ea35acaf6627614b110d",
+            "artifact_path": "planning/coverage/captures/runtime/nonexistent.json",
+            "artifact_version": "1.0.0",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "json_pointer": ""
+          }
+        ],
+        "limitations": ["Adversarial fixture; no real runtime observation."],
+        "claims": {
+          "runtime_proof_verified": false,
+          "readiness": false,
+          "release_readiness": false,
+          "production_readiness": false
+        }
+      }
+    },
+    "mutations": [
+      {
+        "op": "set",
+        "artifact": "catalog",
+        "path": "/records/0/coverage_chain/required_runtime_or_consumer_proof",
+        "value": {
+          "status": "complete",
+          "evidence_refs": [
+            {
+              "evidence_id": "EVC-RUNTIME-FORGED-LINEAGE",
+              "subject_record_id": "DQ-DIV_BLOCK-01",
+              "coverage_subject_id": "DQ-DIV_BLOCK-01#required_runtime_or_consumer_proof",
+              "artifact_role": "runtime_proof",
+              "artifact_path": "planning/coverage/proofs/runtime/forged-lineage.json",
+              "artifact_version": "1.0.0",
+              "content_sha256": "7f47416a8509e3a7d58f4a90cdc761f9c1ac90d5563474be1ab5c1a8735ffe56",
+              "head_binding": "git_runtime_head",
+              "repository_commit": null,
+              "json_pointer": "",
+              "symbol": null
+            }
+          ],
+          "not_applicable_reason": null
+        }
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

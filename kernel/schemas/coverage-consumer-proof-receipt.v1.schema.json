@@ -4,12 +4,13 @@
   "title": "EV4 Coverage Consumer Proof Receipt v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["receipt_id", "receipt_version", "receipt_type", "subject", "consumer", "contract_result", "source_lineage", "limitations", "claims"],
+  "required": ["receipt_id", "receipt_version", "receipt_type", "subject", "provenance", "consumer", "contract_result", "source_lineage", "limitations", "claims"],
   "properties": {
     "receipt_id": { "type": "string", "pattern": "^consumer-proof\\.[a-z0-9._-]+$" },
     "receipt_version": { "const": "1.0.0" },
     "receipt_type": { "const": "consumer_proof" },
     "subject": { "$ref": "#/$defs/subject" },
+    "provenance": { "$ref": "#/$defs/provenance" },
     "consumer": {
       "type": "object",
       "additionalProperties": false,
@@ -22,18 +23,21 @@
     "contract_result": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["contract_id", "result", "observed_at"],
+      "required": ["contract_id", "result", "observed_at", "capture_source_id"],
       "properties": {
         "contract_id": { "type": "string", "minLength": 1 },
         "result": { "enum": ["accepted", "rejected"] },
-        "observed_at": { "type": "string", "format": "date-time" }
+        "observed_at": { "type": "string", "format": "date-time" },
+        "capture_source_id": { "type": "string", "pattern": "^PSL-[A-Z0-9_-]+$" }
       }
     },
-    "source_lineage": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/source" } },
+    "source_lineage": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/source" } },
     "limitations": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
     "claims": { "$ref": "#/$defs/claims" }
   },
   "$defs": {
+    "sha40": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "subject": {
       "type": "object",
       "additionalProperties": false,
@@ -51,21 +55,40 @@
         { "properties": { "question_id": { "type": "string" } } }
       ]
     },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "evidence_head_sha", "producer_id", "producer_repository", "producer_role", "verification_mode"],
+      "properties": {
+        "repository": { "const": "rezahh107/EV4-Decision-Kernel" },
+        "evidence_head_sha": { "$ref": "#/$defs/sha40" },
+        "producer_id": { "type": "string", "minLength": 1 },
+        "producer_repository": { "type": "string", "pattern": "^[^/]+/[^/]+$" },
+        "producer_role": { "type": "string", "minLength": 1 },
+        "verification_mode": { "const": "registered_immutable_capture_lineage" }
+      }
+    },
     "source": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["source_type", "retrieval_identity", "content_sha256"],
+      "required": ["source_id", "source_kind", "repository", "repository_commit", "artifact_path", "artifact_version", "content_sha256", "json_pointer"],
       "properties": {
-        "source_type": { "type": "string", "minLength": 1 },
-        "retrieval_identity": { "type": "string", "minLength": 1 },
-        "content_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        "source_id": { "type": "string", "pattern": "^PSL-[A-Z0-9_-]+$" },
+        "source_kind": { "const": "authoritative_capture_receipt" },
+        "repository": { "const": "rezahh107/EV4-Decision-Kernel" },
+        "repository_commit": { "$ref": "#/$defs/sha40" },
+        "artifact_path": { "type": "string", "minLength": 1 },
+        "artifact_version": { "type": "string", "minLength": 1 },
+        "content_sha256": { "$ref": "#/$defs/sha256" },
+        "json_pointer": { "type": "string" }
       }
     },
     "claims": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["readiness", "release_readiness", "production_readiness"],
+      "required": ["consumer_acceptance_verified", "readiness", "release_readiness", "production_readiness"],
       "properties": {
+        "consumer_acceptance_verified": { "const": false },
         "readiness": { "const": false },
         "release_readiness": { "const": false },
         "production_readiness": { "const": false }
