@@ -84,7 +84,7 @@ function collectProofReferences() {
     try {
       walk(JSON.parse(read(path)));
     } catch {
-      // The preserved validator owns canonical structure diagnostics.
+      // Preserved validator owns canonical structure diagnostics.
     }
   }
   return found;
@@ -94,6 +94,7 @@ function validateTopology(workflow, environment = process.env) {
   const diagnostics = [];
   const external = jobBlock(workflow, 'external-coverage-trust');
   const validation = jobBlock(workflow, 'validate-mvk');
+
   if (!external.includes(`uses: ${ISSUER_CALL}`)) {
     diagnostics.push(diagnostic(
       'COV_EXTERNAL_TRUST_ROOT_UNPINNED',
@@ -108,7 +109,7 @@ function validateTopology(workflow, environment = process.env) {
       WORKFLOW_PATH,
     ));
   }
-  if (external.includes('if:')) {
+  if (/^    if:/m.test(external)) {
     diagnostics.push(diagnostic(
       'COV_EXTERNAL_REQUIRED_JOB_DEAD',
       'The external identity job may not be conditionally disabled.',
@@ -123,7 +124,6 @@ function validateTopology(workflow, environment = process.env) {
     ));
   }
   if (!validation.includes('needs: external-coverage-trust')
-    || validation.includes('if:')
     || !validation.includes(
       'ref: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}',
     )) {
@@ -172,7 +172,7 @@ function validateTopology(workflow, environment = process.env) {
 
 function runFixtures() {
   const valid = `jobs:\n  external-coverage-trust:\n    uses: ${ISSUER_CALL}\n    permissions:\n      pull-requests: read\n      id-token: write\n  validate-mvk:\n    needs: external-coverage-trust\n    steps:\n      - with:\n          ref: \${{ needs.external-coverage-trust.outputs.verified_head_sha }}\n      - env:\n          COVERAGE_REPOSITORY: \${{ needs.external-coverage-trust.outputs.verified_repository }}\n          COVERAGE_PR_NUMBER: \${{ needs.external-coverage-trust.outputs.verified_pr_number }}\n          COVERAGE_BASE_SHA: \${{ needs.external-coverage-trust.outputs.verified_base_sha }}\n          COVERAGE_HEAD_SHA: \${{ needs.external-coverage-trust.outputs.verified_head_sha }}\n`;
-  const cases = [
+  const fixtures = [
     {
       id: 'caller-selected-pr-policy',
       expected: 'COV_EXTERNAL_CALLER_IDENTITY_INPUT_FORBIDDEN',
@@ -199,12 +199,15 @@ function runFixtures() {
     },
     { id: 'valid-dynamic-authoritative-path', expected: null, workflow: valid },
   ];
-  return cases.map((fixture) => {
+  return fixtures.map((fixture) => {
     const observed = validateTopology(fixture.workflow, {}).map((item) => item.code);
-    const passed = fixture.expected === null
-      ? observed.length === 0
-      : observed.length === 1 && observed[0] === fixture.expected;
-    return { ...fixture, observed, passed };
+    return {
+      id: fixture.id,
+      observed,
+      passed: fixture.expected === null
+        ? observed.length === 0
+        : observed.length === 1 && observed[0] === fixture.expected,
+    };
   });
 }
 
@@ -265,8 +268,8 @@ if (!existsSync(preservedValidator)) {
   process.exit(1);
 }
 
-// Compatibility values preserve PRF-010 ordering checks only after the external
-// gate has denied all proof references. They do not authorize proof credit.
+// Compatibility values preserve PRF-010 ordering checks only after external
+// verification has denied all proof references. They do not authorize proof.
 process.env.COVERAGE_VALIDATED_AT = new Date().toISOString();
 process.env.COVERAGE_VALIDATION_SOURCE = 'github_actions_runner_clock_v1';
 process.env.COVERAGE_TRUSTED_INGESTION_ATTESTATIONS = '{}';
