@@ -256,6 +256,13 @@ export function createActivationSource(builder) {
   for (const path of ORDINARY_PIN_FIXTURES) {
     repinFixture(repository, path, bootstrapAnchor);
   }
+
+  const coverageImpactPath =
+    'planning/coverage/impacts/dcov-exec-001.bootstrap.json';
+  const coverageImpact = readJson(repository, coverageImpactPath);
+  coverageImpact.base_sha = bootstrapAnchor;
+  writeJson(repository, coverageImpactPath, coverageImpact);
+
   repinFixture(
     repository,
     ANCESTOR_MISSING_CONTRACT_FIXTURE,

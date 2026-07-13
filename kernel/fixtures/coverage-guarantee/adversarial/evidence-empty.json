@@ -1,0 +1,16 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": ["COV_EVIDENCE_REQUIRED"],
+  "expected_derived": { "elementNumerator": 0 },
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      { "op": "set", "artifact": "ledger", "path": "/records/0/element_obligations/applicable_p0_families/0/status", "value": "end_to_end_covered" },
+      { "op": "set", "artifact": "ledger", "path": "/records/0/element_obligations/applicable_p0_families/0/evidence_refs", "value": [] }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

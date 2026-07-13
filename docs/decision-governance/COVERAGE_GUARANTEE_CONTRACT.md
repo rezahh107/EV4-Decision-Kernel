@@ -27,6 +27,8 @@ A Decision Question earns credit only through this complete applicable chain:
 
 Matrix-only Families receive no Resolver credit. A not-applicable link requires a machine-readable reason, supporting evidence and validator acceptance.
 
+Every obligation or Question-chain link that contributes credit must use typed repository evidence. The validator resolves the path and JSON Pointer or symbol, verifies the artifact role, subject record, exact `coverage_subject_id` for that obligation or chain link, content hash, artifact version and pinned-commit or runtime-head binding, and grants no numerator credit to empty, free-form, stale, cross-record, cross-subject or wrong-type references.
+
 ## Contract states
 
 1. `policy_active` — the contract, real non-empty data, baseline, debt, validator, negative fixtures and CI wiring exist.
@@ -37,13 +39,15 @@ The expected state after `DCOV-EXEC-001` is `policy_active`. Unresolved denomina
 
 ## Denominator integrity
 
-Known scope includes non-duplicate `confirmed`, `candidate` and `unresolved` records. Denominator reduction requires record-level reasons, source evidence, previous/new baselines, changed IDs, derived before/after values and a supersession chain. Deleting or disguising hard records to improve a percentage is invalid.
+Known scope includes non-duplicate `confirmed`, `candidate` and `unresolved` records. Denominator changes are derived from the verified base-to-head Ledger and Catalog transition. Every added, removed or reclassified ID requires a typed, source-backed record-level reason; duplicate and supersession dispositions require valid targets. Deleting or disguising hard records to improve a percentage is invalid.
+
+For every coverage-sensitive PR, exactly one newly added Coverage Impact Record must match the repository, PR number, merge base, current work package and the complete sensitive changed-path set. Its exact head is verified from Git and the CI event at runtime; a historical record cannot satisfy a later PR.
 
 ## Material progress
 
 After `measurement_active`, a content-expansion package must satisfy at least one of: a coverage increase of at least five percentage points; completion of `max(2, ceil(0.05 * current_denominator))` items; or completion of one P0 Family across every applicable Element with measurable numerator growth.
 
-During `policy_active`, a content package must complete a materially bounded set of obligation IDs and close at least one real Family or Element slice. A zero-delta package is limited to a blocking defect and must name the next content-expansion package. Three consecutive zero-delta coverage-sensitive packages fail validation.
+During `policy_active`, a content package must complete a materially bounded set of obligation IDs and close at least one real Family or Element slice. Completed IDs, closed Families, percentage deltas and zero-delta status are derived from the verified base-to-head artifacts rather than trusted declarations. A zero-delta package is limited to a blocking defect and must name the next content-expansion package. Three consecutive zero-delta coverage-sensitive packages fail validation.
 
 ## Merge eligibility
 
@@ -80,13 +84,23 @@ The validator compares this block with the authoritative JSON contract. Editing 
     "required_runtime_or_consumer_proof",
     "coverage_credit"
   ],
+  "evidence_binding": {
+    "carrier_kind": "typed_repository_artifact",
+    "head_binding_modes": [
+      "git_runtime_head",
+      "pinned_commit"
+    ]
+  },
+  "denominator_transition": "verified_base_head_diff_with_typed_record_reasons",
+  "coverage_impact_binding": "one_new_runtime_head_bound_record_per_sensitive_pr",
   "material_progress_rules": {
     "option_1": "coverage_delta_gte_5_percentage_points",
     "option_2": "max(2, ceil(0.05 * current_denominator))",
     "option_3": "complete_p0_family_with_measurable_numerator_growth",
     "policy_active": "complete_materially_bounded_obligations_and_close_one_real_family_slice",
     "zero_delta": "blocking_defect_only_with_next_content_expansion_package",
-    "three_consecutive_zero_delta_fail": true
+    "three_consecutive_zero_delta_fail": true,
+    "derived_from_verified_base_head": true
   },
   "merge_gate_requirements": [
     "exact_head_ci_green",

@@ -12,7 +12,9 @@
     "thresholds",
     "state_machine",
     "coverage_semantics",
+    "evidence_binding",
     "denominator_integrity",
+    "coverage_impact_binding",
     "material_progress",
     "coverage_sensitive_paths",
     "merge_gate",
@@ -106,20 +108,76 @@
         }
       }
     },
+    "evidence_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["carrier_kind", "required_fields", "head_binding_modes", "question_link_roles", "element_obligation_roles"],
+      "properties": {
+        "carrier_kind": { "const": "typed_repository_artifact" },
+        "required_fields": {
+          "const": ["evidence_id", "subject_record_id", "coverage_subject_id", "artifact_role", "artifact_path", "artifact_version", "content_sha256", "head_binding", "repository_commit", "json_pointer", "symbol"]
+        },
+        "head_binding_modes": { "const": ["git_runtime_head", "pinned_commit"] },
+        "question_link_roles": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["catalog", "matrix", "resolver_rule", "deterministic_evaluator", "valid_fixture", "invalid_fixture", "adversarial_fixture", "l2_audit", "required_runtime_or_consumer_proof", "coverage_credit"],
+          "properties": {
+            "catalog": { "const": ["catalog_record"] },
+            "matrix": { "const": ["matrix"] },
+            "resolver_rule": { "const": ["resolver_rule"] },
+            "deterministic_evaluator": { "const": ["deterministic_evaluator"] },
+            "valid_fixture": { "const": ["valid_fixture"] },
+            "invalid_fixture": { "const": ["invalid_fixture"] },
+            "adversarial_fixture": { "const": ["adversarial_fixture"] },
+            "l2_audit": { "const": ["l2_audit"] },
+            "required_runtime_or_consumer_proof": { "const": ["runtime_proof", "consumer_proof"] },
+            "coverage_credit": { "const": ["coverage_credit"] }
+          }
+        },
+        "element_obligation_roles": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["applicable_decision_questions", "applicable_p0_families", "required_safety_gates", "required_runtime_checks", "required_consumer_proofs"],
+          "properties": {
+            "applicable_decision_questions": { "const": ["decision_question"] },
+            "applicable_p0_families": { "const": ["p0_family"] },
+            "required_safety_gates": { "const": ["safety_gate"] },
+            "required_runtime_checks": { "const": ["runtime_check"] },
+            "required_consumer_proofs": { "const": ["consumer_proof"] }
+          }
+        }
+      }
+    },
     "denominator_integrity": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["known_scope_includes", "coverage_percent_requires_validated_denominator", "reduction_requires_record_level_reasons"],
+      "required": ["known_scope_includes", "coverage_percent_requires_validated_denominator", "reduction_requires_record_level_reasons", "base_head_diff_required", "all_changed_ids_require_record_level_reasons", "excluded_memberships_require_valid_targets"],
       "properties": {
         "known_scope_includes": { "const": ["confirmed", "candidate", "unresolved"] },
         "coverage_percent_requires_validated_denominator": { "const": true },
-        "reduction_requires_record_level_reasons": { "const": true }
+        "reduction_requires_record_level_reasons": { "const": true },
+        "base_head_diff_required": { "const": true },
+        "all_changed_ids_require_record_level_reasons": { "const": true },
+        "excluded_memberships_require_valid_targets": { "const": true }
+      }
+    },
+    "coverage_impact_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["one_new_record_per_coverage_sensitive_pr", "repository_pr_base_and_work_package_required", "exact_head_binding", "changed_paths_must_equal_verified_sensitive_diff", "historical_records_cannot_satisfy_current_pr"],
+      "properties": {
+        "one_new_record_per_coverage_sensitive_pr": { "const": true },
+        "repository_pr_base_and_work_package_required": { "const": true },
+        "exact_head_binding": { "const": "derived_from_git_and_ci_event" },
+        "changed_paths_must_equal_verified_sensitive_diff": { "const": true },
+        "historical_records_cannot_satisfy_current_pr": { "const": true }
       }
     },
     "material_progress": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["measurement_active_options", "policy_active_rule", "limited_exception", "zero_delta_rule", "three_consecutive_zero_delta_fail"],
+      "required": ["measurement_active_options", "policy_active_rule", "limited_exception", "zero_delta_rule", "three_consecutive_zero_delta_fail", "derived_from_verified_base_head"],
       "properties": {
         "measurement_active_options": {
           "type": "object",
@@ -152,7 +210,8 @@
         "policy_active_rule": { "const": "complete_materially_bounded_obligations_and_close_one_real_family_slice" },
         "limited_exception": { "const": "machine_readable_reason_plus_closed_family_plus_numerator_or_completed_obligation_growth" },
         "zero_delta_rule": { "const": "blocking_defect_only_with_next_content_expansion_package" },
-        "three_consecutive_zero_delta_fail": { "const": true }
+        "three_consecutive_zero_delta_fail": { "const": true },
+        "derived_from_verified_base_head": { "const": true }
       }
     },
     "coverage_sensitive_paths": {

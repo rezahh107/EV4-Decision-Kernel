@@ -1,0 +1,18 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "valid",
+  "expected_diagnostic_codes": [],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "replace_artifact",
+        "artifact": "baseline",
+        "value_from_artifact": "baseline"
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

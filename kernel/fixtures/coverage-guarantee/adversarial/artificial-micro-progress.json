@@ -14,6 +14,9 @@
           {
             "impact_id": "coverage-impact.fixture.micro",
             "impact_version": "1.0.0",
+            "repository": "rezahh107/EV4-Decision-Kernel",
+            "pull_request": 43,
+            "base_sha": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
             "work_package_id": "DCOV-EXEC-X",
             "work_type": "content_expansion",
             "coverage_sensitive": true,

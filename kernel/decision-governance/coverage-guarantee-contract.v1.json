@@ -96,6 +96,45 @@
       "threshold_state_requires_percent": 100
     }
   },
+  "evidence_binding": {
+    "carrier_kind": "typed_repository_artifact",
+    "required_fields": [
+      "evidence_id",
+      "subject_record_id",
+      "coverage_subject_id",
+      "artifact_role",
+      "artifact_path",
+      "artifact_version",
+      "content_sha256",
+      "head_binding",
+      "repository_commit",
+      "json_pointer",
+      "symbol"
+    ],
+    "head_binding_modes": [
+      "git_runtime_head",
+      "pinned_commit"
+    ],
+    "question_link_roles": {
+      "catalog": ["catalog_record"],
+      "matrix": ["matrix"],
+      "resolver_rule": ["resolver_rule"],
+      "deterministic_evaluator": ["deterministic_evaluator"],
+      "valid_fixture": ["valid_fixture"],
+      "invalid_fixture": ["invalid_fixture"],
+      "adversarial_fixture": ["adversarial_fixture"],
+      "l2_audit": ["l2_audit"],
+      "required_runtime_or_consumer_proof": ["runtime_proof", "consumer_proof"],
+      "coverage_credit": ["coverage_credit"]
+    },
+    "element_obligation_roles": {
+      "applicable_decision_questions": ["decision_question"],
+      "applicable_p0_families": ["p0_family"],
+      "required_safety_gates": ["safety_gate"],
+      "required_runtime_checks": ["runtime_check"],
+      "required_consumer_proofs": ["consumer_proof"]
+    }
+  },
   "denominator_integrity": {
     "known_scope_includes": [
       "confirmed",
@@ -103,7 +142,17 @@
       "unresolved"
     ],
     "coverage_percent_requires_validated_denominator": true,
-    "reduction_requires_record_level_reasons": true
+    "reduction_requires_record_level_reasons": true,
+    "base_head_diff_required": true,
+    "all_changed_ids_require_record_level_reasons": true,
+    "excluded_memberships_require_valid_targets": true
+  },
+  "coverage_impact_binding": {
+    "one_new_record_per_coverage_sensitive_pr": true,
+    "repository_pr_base_and_work_package_required": true,
+    "exact_head_binding": "derived_from_git_and_ci_event",
+    "changed_paths_must_equal_verified_sensitive_diff": true,
+    "historical_records_cannot_satisfy_current_pr": true
   },
   "material_progress": {
     "measurement_active_options": {
@@ -121,7 +170,8 @@
     "policy_active_rule": "complete_materially_bounded_obligations_and_close_one_real_family_slice",
     "limited_exception": "machine_readable_reason_plus_closed_family_plus_numerator_or_completed_obligation_growth",
     "zero_delta_rule": "blocking_defect_only_with_next_content_expansion_package",
-    "three_consecutive_zero_delta_fail": true
+    "three_consecutive_zero_delta_fail": true,
+    "derived_from_verified_base_head": true
   },
   "coverage_sensitive_paths": [
     "kernel/decision-governance/coverage-guarantee-contract.v1.json",
@@ -132,6 +182,7 @@
     "kernel/schemas/element-reconciliation-ledger.v1.schema.json",
     "kernel/schemas/decision-question-catalog.v1.schema.json",
     "kernel/resolver-mvp/",
+    "kernel/fixtures/coverage-guarantee/",
     "kernel/validator/validate-coverage-guarantee.mjs",
     "kernel/validator/validate-l2-decision-correctness.mjs",
     "planning/coverage/",

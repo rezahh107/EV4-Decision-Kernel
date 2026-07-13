@@ -57,7 +57,12 @@ function validateMethod(repository, tempRoot, method, head, roles) {
     );
     assertExactDrift([historyResult.byte_drift_diagnostic]);
 
-    run('npm', ['run', 'validate:mvk'], worktree);
+    run('npm', ['run', 'validate:mvk'], worktree, {
+      env: {
+        COVERAGE_BASE_SHA: roles.bootstrapAnchor,
+        COVERAGE_HEAD_SHA: head,
+      },
+    });
     run('npm', ['run', 'validate:roadmap-memory'], worktree);
     assertClean(worktree);
 

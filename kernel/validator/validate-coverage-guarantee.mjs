@@ -7,7 +7,7 @@ import {
   readdirSync,
   statSync,
 } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
@@ -65,7 +65,50 @@ const COMPLETE_CHAIN_STATES = new Set([
 ]);
 
 const IN_SCOPE_MEMBERSHIPS = new Set(['confirmed', 'candidate', 'unresolved']);
+const EXCLUDED_MEMBERSHIPS = new Set([
+  'excluded_duplicate',
+  'excluded_superseded',
+  'not_applicable_with_validated_reason',
+]);
+const EXPECTED_REPOSITORY = 'rezahh107/EV4-Decision-Kernel';
 const SUPERSESSION_NOTE = 'Superseded: manual parent_authority promotion was removed from the active execution model.';
+
+const ROLE_PATH_RULES = {
+  catalog_record: ['kernel/decision-cards/', 'planning/coverage/decision-question-catalog.'],
+  matrix: ['kernel/decision-governance/p0-decision-matrices.'],
+  resolver_rule: ['kernel/decision-governance/resolver-rules/'],
+  deterministic_evaluator: ['kernel/resolver-mvp/', 'kernel/validator/'],
+  valid_fixture: ['kernel/fixtures/valid/'],
+  invalid_fixture: ['kernel/fixtures/invalid/'],
+  adversarial_fixture: ['kernel/fixtures/adversarial/'],
+  l2_audit: ['kernel/validator/validate-l2-', 'kernel/decision-governance/l2-'],
+  runtime_proof: ['kernel/fixtures/', 'planning/coverage/', 'planning/reviews/'],
+  consumer_proof: ['kernel/decision-governance/downstream-', 'kernel/fixtures/downstream-', 'planning/reviews/'],
+  coverage_credit: ['planning/coverage/', 'planning/reviews/'],
+  decision_question: ['kernel/decision-cards/', 'planning/coverage/decision-question-catalog.'],
+  p0_family: ['kernel/decision-governance/p0-decision-matrices.'],
+  safety_gate: ['kernel/decision-cards/', 'kernel/decision-governance/'],
+  runtime_check: ['kernel/validator/', 'kernel/fixtures/'],
+  not_applicable_evidence: ['kernel/', 'planning/', 'docs/'],
+  denominator_change: ['kernel/', 'planning/', 'docs/'],
+};
+
+const VERSION_FIELDS = [
+  'version',
+  'schema_version',
+  'contract_version',
+  'rule_version',
+  'fixture_version',
+  'baseline_version',
+  'impact_version',
+];
+
+class FixtureMutationError extends Error {
+  constructor(code, message) {
+    super(message);
+    this.code = code;
+  }
+}
 
 function readText(pathFromRoot) {
   return readFileSync(join(ROOT, pathFromRoot), 'utf8');
@@ -137,8 +180,18 @@ function clone(value) {
 }
 
 function pointerParts(pointer) {
-  if (pointer === '' || pointer === '/') return [];
-  if (!pointer.startsWith('/')) throw new Error('Mutation path must be a JSON Pointer: ' + pointer);
+  if (pointer === '' || pointer === '/') {
+    throw new FixtureMutationError(
+      'COV_FIXTURE_ROOT_POINTER_FORBIDDEN',
+      'Root mutation requires the explicit replace_artifact operation.',
+    );
+  }
+  if (!pointer.startsWith('/')) {
+    throw new FixtureMutationError(
+      'COV_FIXTURE_POINTER_INVALID',
+      'Mutation path must be a JSON Pointer: ' + pointer,
+    );
+  }
   return pointer.slice(1).split('/').map((part) => part.replaceAll('~1', '/').replaceAll('~0', '~'));
 }
 
@@ -162,14 +215,29 @@ function applyMutations(bundle, mutations) {
       continue;
     }
     if (mutation.op === 'replace_artifact') {
-      result[mutation.artifact] = clone(mutation.value);
+      const replacement = mutation.value_from_artifact
+        ? bundle[mutation.value_from_artifact]
+        : mutation.value;
+      if (replacement === undefined) {
+        throw new FixtureMutationError(
+          'COV_FIXTURE_REPLACEMENT_INVALID',
+          'Explicit artifact replacement requires a value or canonical artifact source.',
+        );
+      }
+      result[mutation.artifact] = clone(replacement);
       continue;
     }
     const target = result[mutation.artifact];
     if (target === undefined) throw new Error('Unknown mutation artifact: ' + mutation.artifact);
     const { parent, key } = parentAt(target, mutation.path, mutation.op === 'set');
     if (mutation.op === 'set') parent[key] = clone(mutation.value);
-    else if (mutation.op === 'delete') delete parent[key];
+    else if (mutation.op === 'delete') {
+      if (Array.isArray(parent) && /^[0-9]+$/.test(key)) {
+        parent.splice(Number.parseInt(key, 10), 1);
+      } else {
+        delete parent[key];
+      }
+    }
     else if (mutation.op === 'append') {
       if (!Array.isArray(parent[key])) throw new Error('Append target is not an array: ' + mutation.path);
       parent[key].push(clone(mutation.value));
@@ -191,28 +259,238 @@ function allObligations(record) {
   ];
 }
 
-function validNotApplicable(item) {
-  if (!item || !['not_applicable_with_validated_reason'].includes(item.status)) return true;
+function obligationEntries(record) {
+  const groups = record?.element_obligations || {};
+  return Object.entries(groups).flatMap(([group, items]) =>
+    (items || []).map((item) => ({ group, item })));
+}
+
+function evidencePointerParts(pointer) {
+  if (pointer === '' || pointer === '/') return [];
+  if (typeof pointer !== 'string' || !pointer.startsWith('/')) return null;
+  return pointer.slice(1).split('/').map((part) =>
+    part.replaceAll('~1', '/').replaceAll('~0', '~'));
+}
+
+function valueAtPointer(value, pointer) {
+  const parts = evidencePointerParts(pointer);
+  if (parts === null) return { found: false, value: undefined };
+  let current = value;
+  for (const part of parts) {
+    if (current === null || current === undefined
+      || !Object.prototype.hasOwnProperty.call(Object(current), part)) {
+      return { found: false, value: undefined };
+    }
+    current = current[part];
+  }
+  return { found: true, value: current };
+}
+
+function safeEvidencePath(path) {
+  if (typeof path !== 'string' || path.length === 0) return false;
+  const absolute = resolve(ROOT, path);
+  return absolute.startsWith(ROOT + sep) && !path.split('/').includes('..');
+}
+
+function evidenceContent(ref) {
+  if (!safeEvidencePath(ref.artifact_path)) {
+    return { error: diagnostic('COV_EVIDENCE_PATH_INVALID', 'Evidence path must remain inside the repository.', ref.artifact_path || '(missing)') };
+  }
+  try {
+    if (ref.head_binding === 'pinned_commit') {
+      if (!/^[0-9a-f]{40}$/.test(ref.repository_commit || '')) {
+        return { error: diagnostic('COV_EVIDENCE_HEAD_BINDING_INVALID', 'Pinned evidence requires a 40-character repository commit.', ref.evidence_id) };
+      }
+      return {
+        content: execFileSync(
+          'git',
+          ['show', ref.repository_commit + ':' + ref.artifact_path],
+          { cwd: ROOT, encoding: 'utf8' },
+        ),
+      };
+    }
+    if (ref.head_binding !== 'git_runtime_head' || ref.repository_commit !== null) {
+      return { error: diagnostic('COV_EVIDENCE_HEAD_BINDING_INVALID', 'Runtime-head evidence must use git_runtime_head and a null repository_commit.', ref.evidence_id) };
+    }
+    if (!existsSync(join(ROOT, ref.artifact_path)) || !statSync(join(ROOT, ref.artifact_path)).isFile()) {
+      return { error: diagnostic('COV_EVIDENCE_PATH_MISSING', 'Evidence artifact does not exist as a repository file.', ref.artifact_path) };
+    }
+    return { content: readText(ref.artifact_path) };
+  } catch {
+    return { error: diagnostic('COV_EVIDENCE_PATH_MISSING', 'Evidence artifact cannot be resolved at its required head.', ref.artifact_path || ref.evidence_id) };
+  }
+}
+
+function artifactVersionMatches(content, ref) {
+  if (ref.artifact_version === 'sha256:' + ref.content_sha256) return true;
+  try {
+    const value = JSON.parse(content);
+    return VERSION_FIELDS.some((field) => value?.[field] === ref.artifact_version);
+  } catch {
+    return false;
+  }
+}
+
+function evidenceCarrierDiagnostics(
+  ref,
+  expectedRoles,
+  subjectRecordId,
+  coverageSubjectId,
+) {
+  const diagnostics = [];
+  if (!ref || typeof ref !== 'object' || Array.isArray(ref)) {
+    return [diagnostic('COV_EVIDENCE_CARRIER_INVALID', 'Credit-bearing evidence must use a typed evidence carrier.', subjectRecordId)];
+  }
+  const required = [
+    'evidence_id',
+    'subject_record_id',
+    'coverage_subject_id',
+    'artifact_role',
+    'artifact_path',
+    'artifact_version',
+    'content_sha256',
+    'head_binding',
+    'repository_commit',
+    'json_pointer',
+    'symbol',
+  ];
+  if (required.some((field) => !Object.prototype.hasOwnProperty.call(ref, field))) {
+    diagnostics.push(diagnostic('COV_EVIDENCE_CARRIER_INVALID', 'Typed evidence carrier is missing a required field.', ref.evidence_id || subjectRecordId));
+    return diagnostics;
+  }
+  if (ref.subject_record_id !== subjectRecordId) {
+    diagnostics.push(diagnostic('COV_EVIDENCE_CROSS_RECORD', 'Evidence subject does not match the credit-bearing record.', ref.evidence_id));
+  }
+  if (ref.coverage_subject_id !== coverageSubjectId) {
+    diagnostics.push(diagnostic('COV_EVIDENCE_CROSS_SUBJECT', 'Evidence is bound to a different obligation or Question-chain link.', ref.evidence_id));
+  }
+  if (!expectedRoles.includes(ref.artifact_role)) {
+    diagnostics.push(diagnostic('COV_EVIDENCE_ROLE_MISMATCH', 'Evidence role is not valid for this obligation or chain link.', ref.evidence_id));
+  }
+  const pathRules = ROLE_PATH_RULES[ref.artifact_role] || [];
+  if (pathRules.length === 0 || !pathRules.some((prefix) => ref.artifact_path?.startsWith(prefix))) {
+    diagnostics.push(diagnostic('COV_EVIDENCE_ARTIFACT_TYPE_MISMATCH', 'Evidence artifact path is incompatible with its declared role.', ref.evidence_id));
+  }
+  const resolved = evidenceContent(ref);
+  if (resolved.error) {
+    diagnostics.push(resolved.error);
+    return diagnostics;
+  }
+  const observedHash = sha256Text(resolved.content);
+  if (ref.content_sha256 !== observedHash) {
+    diagnostics.push(diagnostic('COV_EVIDENCE_HASH_MISMATCH', 'Evidence content hash does not match the resolved artifact.', ref.evidence_id));
+  }
+  if (!artifactVersionMatches(resolved.content, ref)) {
+    diagnostics.push(diagnostic('COV_EVIDENCE_VERSION_MISMATCH', 'Evidence artifact version does not match the resolved artifact.', ref.evidence_id));
+  }
+  if (ref.json_pointer === null && ref.symbol === null) {
+    diagnostics.push(diagnostic('COV_EVIDENCE_LOCATOR_MISSING', 'Evidence requires a JSON Pointer or symbol locator.', ref.evidence_id));
+  }
+  if (ref.json_pointer !== null) {
+    try {
+      const parsed = JSON.parse(resolved.content);
+      if (!valueAtPointer(parsed, ref.json_pointer).found) {
+        diagnostics.push(diagnostic('COV_EVIDENCE_POINTER_INVALID', 'Evidence JSON Pointer does not resolve.', ref.evidence_id));
+      }
+    } catch {
+      diagnostics.push(diagnostic('COV_EVIDENCE_POINTER_INVALID', 'JSON Pointer evidence must reference a JSON artifact.', ref.evidence_id));
+    }
+  }
+  if (ref.symbol !== null) {
+    const escaped = String(ref.symbol).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (!new RegExp('\\b' + escaped + '\\b').test(resolved.content)) {
+      diagnostics.push(diagnostic('COV_EVIDENCE_SYMBOL_MISSING', 'Evidence symbol does not exist in the resolved artifact.', ref.evidence_id));
+    }
+  }
+  return diagnostics;
+}
+
+function evidenceRefsDiagnostics(
+  refs,
+  expectedRoles,
+  subjectRecordId,
+  requireTyped,
+  coverageSubjectId = subjectRecordId,
+) {
+  if (!Array.isArray(refs) || refs.length === 0) {
+    return requireTyped
+      ? [diagnostic('COV_EVIDENCE_REQUIRED', 'Credit-bearing state requires resolvable evidence.', subjectRecordId)]
+      : [];
+  }
+  const diagnostics = [];
+  for (const ref of refs) {
+    if (typeof ref === 'string') {
+      if (requireTyped) {
+        diagnostics.push(diagnostic('COV_EVIDENCE_CARRIER_INVALID', 'Free-form evidence references cannot create coverage credit.', subjectRecordId));
+      }
+      continue;
+    }
+    diagnostics.push(...evidenceCarrierDiagnostics(
+      ref,
+      expectedRoles,
+      subjectRecordId,
+      coverageSubjectId,
+    ));
+  }
+  return diagnostics;
+}
+
+function validNotApplicable(item, subjectRecordId, coverageSubjectId) {
+  if (!item || item.status !== 'not_applicable_with_validated_reason') return true;
   const reason = item.not_applicable_reason;
   return Boolean(
     reason
     && typeof reason.reason_code === 'string'
     && reason.reason_code.length > 0
-    && Array.isArray(reason.evidence_refs)
-    && reason.evidence_refs.length > 0
     && reason.validator_accepted === true
+    && evidenceRefsDiagnostics(
+      reason.evidence_refs,
+      ['not_applicable_evidence'],
+      subjectRecordId,
+      true,
+      coverageSubjectId,
+    ).length === 0
   );
 }
 
-function elementCovered(record) {
-  const obligations = allObligations(record);
-  return obligations.length > 0
-    && obligations.every((item) => COVERED_OBLIGATION_STATES.has(item.status) && validNotApplicable(item));
+function obligationCovered(item, group, record, contract) {
+  if (!COVERED_OBLIGATION_STATES.has(item?.status)) return false;
+  if (!validNotApplicable(item, record.record_id, item.obligation_id)) return false;
+  if (item.status === 'not_applicable_with_validated_reason') return true;
+  const roles = contract?.evidence_binding?.element_obligation_roles?.[group] || [];
+  return evidenceRefsDiagnostics(
+    item.evidence_refs,
+    roles,
+    record.record_id,
+    true,
+    item.obligation_id,
+  ).length === 0;
 }
 
-function questionCovered(record) {
+function elementCovered(record, contract) {
+  const obligations = obligationEntries(record);
+  return obligations.length > 0
+    && obligations.every(({ group, item }) => obligationCovered(item, group, record, contract));
+}
+
+function chainLinkCovered(link, name, record, contract) {
+  if (!COMPLETE_CHAIN_STATES.has(link?.status)) return false;
+  const coverageSubjectId = record.question_id + '#' + name;
+  if (!validNotApplicable(link, record.question_id, coverageSubjectId)) return false;
+  if (link.status === 'not_applicable_with_validated_reason') return true;
+  const roles = contract?.evidence_binding?.question_link_roles?.[name] || [];
+  return evidenceRefsDiagnostics(
+    link.evidence_refs,
+    roles,
+    record.question_id,
+    true,
+    coverageSubjectId,
+  ).length === 0;
+}
+
+function questionCovered(record, contract) {
   const chain = record?.coverage_chain || {};
-  return CHAIN_NAMES.every((name) => COMPLETE_CHAIN_STATES.has(chain[name]?.status) && validNotApplicable(chain[name]));
+  return CHAIN_NAMES.every((name) => chainLinkCovered(chain[name], name, record, contract));
 }
 
 function roundPercent(numerator, denominator) {
@@ -276,8 +554,10 @@ function deriveCoverage(bundle) {
 
   const elementDenominatorRecords = ledgerRecords.filter((record) => record.denominator_membership === 'confirmed');
   const questionDenominatorRecords = catalogRecords.filter((record) => record.denominator_membership === 'confirmed');
-  const elementNumerator = elementDenominatorRecords.filter(elementCovered).length;
-  const questionNumerator = questionDenominatorRecords.filter(questionCovered).length;
+  const elementNumerator = elementDenominatorRecords
+    .filter((record) => elementCovered(record, bundle.contract)).length;
+  const questionNumerator = questionDenominatorRecords
+    .filter((record) => questionCovered(record, bundle.contract)).length;
 
   const unresolvedElements = ledgerRecords.some((record) => ['candidate', 'unresolved'].includes(record.denominator_membership));
   const unresolvedQuestions = catalogRecords.some((record) => ['candidate', 'unresolved'].includes(record.denominator_membership));
@@ -292,9 +572,17 @@ function deriveCoverage(bundle) {
     .flatMap((record) => record.element_obligations?.required_safety_gates || [])
     .filter((item) => item.critical === true);
   const criticalNumerator = catalogRecords
-    .filter((record) => IN_SCOPE_MEMBERSHIPS.has(record.denominator_membership) && record.critical === true && questionCovered(record))
+    .filter((record) => IN_SCOPE_MEMBERSHIPS.has(record.denominator_membership)
+      && record.critical === true
+      && questionCovered(record, bundle.contract))
     .length
-    + criticalSafety.filter((item) => COVERED_OBLIGATION_STATES.has(item.status) && validNotApplicable(item)).length;
+    + ledgerRecords
+      .filter((record) => IN_SCOPE_MEMBERSHIPS.has(record.denominator_membership))
+      .flatMap((record) => obligationEntries(record)
+        .filter(({ group, item }) => item.critical === true
+          && group === 'required_safety_gates'
+          && obligationCovered(item, group, record, bundle.contract)))
+      .length;
   const criticalDenominator = criticalQuestionIds.length + criticalSafety.length;
 
   return {
@@ -316,7 +604,103 @@ function deriveCoverage(bundle) {
   };
 }
 
-function baselineDiagnostics(bundle, derived, repositoryChecks) {
+function sortedUnique(values) {
+  return [...new Set(values || [])].sort();
+}
+
+function arraysEqual(left, right) {
+  return JSON.stringify(sortedUnique(left)) === JSON.stringify(sortedUnique(right));
+}
+
+function denominatorRecordMap(bundle) {
+  const records = [
+    ...(bundle?.ledger?.records || []),
+    ...(bundle?.catalog?.records || []),
+  ];
+  return new Map(records.map((record) => [
+    record.record_id || record.question_id,
+    record,
+  ]));
+}
+
+function deriveDenominatorTransition(baseBundle, headBundle) {
+  const hasBase = Boolean(baseBundle?.ledger && baseBundle?.catalog && baseBundle?.baseline);
+  if (!hasBase) {
+    return {
+      initialBootstrap: true,
+      hasChange: false,
+      addedRecordIds: [],
+      removedRecordIds: [],
+      changedRecordIds: [],
+      baseDerived: null,
+      headDerived: deriveCoverage(headBundle),
+      baseBundle: null,
+      baseRecords: new Map(),
+      headRecords: denominatorRecordMap(headBundle),
+    };
+  }
+  const baseRecords = denominatorRecordMap(baseBundle);
+  const headRecords = denominatorRecordMap(headBundle);
+  const addedRecordIds = [...headRecords.keys()].filter((id) => !baseRecords.has(id)).sort();
+  const removedRecordIds = [...baseRecords.keys()].filter((id) => !headRecords.has(id)).sort();
+  const changedRecordIds = [...headRecords.keys()].filter((id) =>
+    baseRecords.has(id)
+      && baseRecords.get(id).denominator_membership
+        !== headRecords.get(id).denominator_membership).sort();
+  return {
+    initialBootstrap: false,
+    hasChange: addedRecordIds.length > 0
+      || removedRecordIds.length > 0
+      || changedRecordIds.length > 0,
+    addedRecordIds,
+    removedRecordIds,
+    changedRecordIds,
+    baseDerived: deriveCoverage(baseBundle),
+    headDerived: deriveCoverage(headBundle),
+    baseBundle,
+    baseRecords,
+    headRecords,
+  };
+}
+
+function expectedReasonShape(recordId, transition) {
+  const before = transition.baseRecords.get(recordId);
+  const after = transition.headRecords.get(recordId);
+  return {
+    change_kind: !before ? 'added' : !after ? 'removed' : 'reclassified',
+    previous_membership: before?.denominator_membership ?? null,
+    new_membership: after?.denominator_membership ?? null,
+  };
+}
+
+function denominatorTargetDiagnostics(reason, transition) {
+  const diagnostics = [];
+  const after = transition.headRecords.get(reason.record_id);
+  const membership = after?.denominator_membership;
+  const targetId = membership === 'excluded_duplicate'
+    ? after.duplicate_of
+    : membership === 'excluded_superseded'
+      ? after.superseded_by
+      : reason.target_record_id;
+  const targetRequired = membership === 'excluded_duplicate'
+    || membership === 'excluded_superseded'
+    || ['duplicate', 'superseded'].includes(reason.reason_code);
+  if (targetRequired) {
+    const target = transition.headRecords.get(targetId);
+    if (!targetId || targetId === reason.record_id || !target
+      || EXCLUDED_MEMBERSHIPS.has(target.denominator_membership)) {
+      diagnostics.push(diagnostic('COV_DENOMINATOR_TARGET_INVALID', 'Duplicate or supersession disposition requires a distinct active target record.', reason.record_id));
+    }
+    if (reason.target_record_id !== targetId) {
+      diagnostics.push(diagnostic('COV_DENOMINATOR_TARGET_INVALID', 'Reason target must match the record duplicate/supersession relationship.', reason.record_id));
+    }
+  } else if (reason.target_record_id !== null) {
+    diagnostics.push(diagnostic('COV_DENOMINATOR_TARGET_INVALID', 'This denominator reason must not name an unrelated target.', reason.record_id));
+  }
+  return diagnostics;
+}
+
+function baselineDiagnostics(bundle, derived, repositoryChecks, transition) {
   const diagnostics = [];
   const baseline = bundle.baseline;
   if (!baseline) return diagnostics;
@@ -355,11 +739,86 @@ function baselineDiagnostics(bundle, derived, repositoryChecks) {
   }
 
   const change = baseline.denominator_change;
+  if (!transition.initialBootstrap && transition.hasChange && !change) {
+    diagnostics.push(diagnostic('COV_DENOMINATOR_CHANGE_REQUIRED', 'The verified base-to-head denominator transition requires a Coverage Baseline change record.', 'baseline.denominator_change'));
+    if ((transition.baseDerived.elementDenominator > transition.headDerived.elementDenominator)
+      || (transition.baseDerived.questionDenominator > transition.headDerived.questionDenominator)) {
+      diagnostics.push(diagnostic('COV_DENOMINATOR_REDUCTION_UNJUSTIFIED', 'A derived denominator reduction cannot omit record-level reasons.', 'baseline.denominator_change'));
+    }
+  }
+  if (!transition.initialBootstrap && !transition.hasChange && change) {
+    diagnostics.push(diagnostic('COV_DENOMINATOR_TRANSITION_MISMATCH', 'denominator_change is present without a verified record or membership transition.', 'baseline.denominator_change'));
+  }
   if (change) {
-    const elementReduced = change.new_element_denominator < change.previous_element_denominator;
-    const questionReduced = change.new_question_denominator < change.previous_question_denominator;
-    if ((elementReduced || questionReduced) && (!Array.isArray(change.record_level_reasons) || change.record_level_reasons.length === 0)) {
-      diagnostics.push(diagnostic('COV_DENOMINATOR_REDUCTION_UNJUSTIFIED', 'A denominator reduction requires record-level reasons and source evidence.', 'baseline.denominator_change'));
+    const expected = {
+      previous_baseline_ref: transition.baseBundle?.baseline?.baseline_id
+        || bundle.baseline.previous_baseline_ref,
+      new_baseline_ref: baseline.baseline_id,
+      previous_element_denominator: transition.baseDerived?.elementDenominator,
+      new_element_denominator: transition.headDerived.elementDenominator,
+      previous_question_denominator: transition.baseDerived?.questionDenominator,
+      new_question_denominator: transition.headDerived.questionDenominator,
+      previous_element_percent: transition.baseDerived?.elementPercent ?? null,
+      new_element_percent: transition.headDerived.elementPercent,
+      previous_question_percent: transition.baseDerived?.questionPercent ?? null,
+      new_question_percent: transition.headDerived.questionPercent,
+    };
+    for (const [field, value] of Object.entries(expected)) {
+      if (value !== undefined && change[field] !== value) {
+        diagnostics.push(diagnostic('COV_DENOMINATOR_TRANSITION_MISMATCH', field + ' disagrees with the verified base-to-head transition.', 'baseline.denominator_change.' + field));
+      }
+    }
+    if (!arraysEqual(change.added_record_ids, transition.addedRecordIds)
+      || !arraysEqual(change.removed_record_ids, transition.removedRecordIds)
+      || !arraysEqual(change.changed_record_ids, transition.changedRecordIds)) {
+      diagnostics.push(diagnostic('COV_DENOMINATOR_TRANSITION_MISMATCH', 'Changed record IDs must equal the verified base-to-head record transition.', 'baseline.denominator_change'));
+    }
+    const requiredReasonIds = sortedUnique([
+      ...transition.addedRecordIds,
+      ...transition.removedRecordIds,
+      ...transition.changedRecordIds,
+    ]);
+    const reasons = Array.isArray(change.record_level_reasons)
+      ? change.record_level_reasons
+      : [];
+    const reasonIds = reasons.map((reason) => reason.record_id);
+    if (!arraysEqual(reasonIds, requiredReasonIds)
+      || reasonIds.length !== new Set(reasonIds).size) {
+      diagnostics.push(diagnostic('COV_DENOMINATOR_REASON_MISSING', 'Every changed denominator record requires exactly one source-backed reason.', 'baseline.denominator_change.record_level_reasons'));
+    }
+    for (const reason of reasons) {
+      const shape = expectedReasonShape(reason.record_id, transition);
+      if (reason.change_kind !== shape.change_kind
+        || reason.previous_membership !== shape.previous_membership
+        || reason.new_membership !== shape.new_membership) {
+        diagnostics.push(diagnostic('COV_DENOMINATOR_TRANSITION_MISMATCH', 'Record-level reason does not match the derived membership transition.', reason.record_id));
+      }
+      diagnostics.push(...evidenceRefsDiagnostics(
+        reason.source_evidence,
+        ['denominator_change'],
+        reason.record_id,
+        true,
+      ));
+      diagnostics.push(...denominatorTargetDiagnostics(reason, transition));
+    }
+    if (!transition.initialBootstrap) {
+      const expectedChain = [transition.baseBundle.baseline.baseline_id, baseline.baseline_id];
+      if (JSON.stringify(change.supersession_chain) !== JSON.stringify(expectedChain)) {
+        diagnostics.push(diagnostic('COV_DENOMINATOR_TRANSITION_MISMATCH', 'Supersession chain must bind the previous and new baselines.', 'baseline.denominator_change.supersession_chain'));
+      }
+    }
+    const elementReduced = transition.baseDerived
+      && transition.headDerived.elementDenominator < transition.baseDerived.elementDenominator;
+    const questionReduced = transition.baseDerived
+      && transition.headDerived.questionDenominator < transition.baseDerived.questionDenominator;
+    const declaredReduction = change.new_element_denominator
+      < change.previous_element_denominator
+      || change.new_question_denominator < change.previous_question_denominator;
+    if (((elementReduced || questionReduced)
+      && (reasons.length === 0 || diagnostics.some((item) =>
+        ['COV_DENOMINATOR_REASON_MISSING', 'COV_DENOMINATOR_TARGET_INVALID', 'COV_EVIDENCE_REQUIRED', 'COV_EVIDENCE_CARRIER_INVALID'].includes(item.code))))
+      || (declaredReduction && reasons.length === 0)) {
+      diagnostics.push(diagnostic('COV_DENOMINATOR_REDUCTION_UNJUSTIFIED', 'A denominator reduction requires complete record-level reasons, valid targets and typed source evidence.', 'baseline.denominator_change'));
     }
   }
 
@@ -410,13 +869,63 @@ function semanticDiagnostics(bundle) {
     diagnostics.push(diagnostic('COV_DENOMINATOR_COUNT_MISMATCH', 'Catalog summary counts must be derived from records.', PATHS.catalog));
   }
 
+  const allRecordsById = denominatorRecordMap(bundle);
+  for (const record of allRecordsById.values()) {
+    const recordId = record.record_id || record.question_id;
+    if (record.denominator_membership === 'excluded_duplicate') {
+      const target = allRecordsById.get(record.duplicate_of);
+      if (!target || record.duplicate_of === recordId
+        || EXCLUDED_MEMBERSHIPS.has(target.denominator_membership)) {
+        diagnostics.push(diagnostic('COV_DENOMINATOR_TARGET_INVALID', 'excluded_duplicate requires a distinct active duplicate target.', recordId));
+      }
+    }
+    if (record.denominator_membership === 'excluded_superseded') {
+      const target = allRecordsById.get(record.superseded_by);
+      if (!target || record.superseded_by === recordId
+        || EXCLUDED_MEMBERSHIPS.has(target.denominator_membership)) {
+        diagnostics.push(diagnostic('COV_DENOMINATOR_TARGET_INVALID', 'excluded_superseded requires a distinct active supersession target.', recordId));
+      }
+    }
+    if (record.denominator_membership === 'not_applicable_with_validated_reason'
+      && (record.evidence_state !== 'not_applicable_with_validated_reason'
+        || record.resolution_state !== 'not_applicable_with_validated_reason')) {
+      diagnostics.push(diagnostic('COV_DENOMINATOR_DISPOSITION_INVALID', 'A not-applicable denominator member must preserve the same evidence and resolution state.', recordId));
+    }
+  }
+
   for (const record of ledgerRecords) {
-    if (record.resolution_state === 'covered' && !elementCovered(record)) {
+    if (record.resolution_state === 'covered' && !elementCovered(record, bundle.contract)) {
       diagnostics.push(diagnostic('COV_ELEMENT_OBLIGATION_INCOMPLETE', 'Element cannot be covered while any applicable obligation is incomplete.', record.record_id));
     }
-    for (const item of allObligations(record)) {
-      if (item.status === 'not_applicable_with_validated_reason' && !validNotApplicable(item)) {
+    for (const { group, item } of obligationEntries(record)) {
+      const roles = bundle.contract?.evidence_binding?.element_obligation_roles?.[group] || [];
+      if (item.status === 'end_to_end_covered') {
+        diagnostics.push(...evidenceRefsDiagnostics(
+          item.evidence_refs,
+          roles,
+          record.record_id,
+          true,
+          item.obligation_id,
+        ));
+      } else {
+        diagnostics.push(...evidenceRefsDiagnostics(
+          item.evidence_refs,
+          roles,
+          record.record_id,
+          false,
+          item.obligation_id,
+        ));
+      }
+      if (item.status === 'not_applicable_with_validated_reason'
+        && !validNotApplicable(item, record.record_id, item.obligation_id)) {
         diagnostics.push(diagnostic('COV_NOT_APPLICABLE_REASON_INVALID', 'Not-applicable obligations require reason, evidence and validator acceptance.', item.obligation_id));
+        diagnostics.push(...evidenceRefsDiagnostics(
+          item.not_applicable_reason?.evidence_refs,
+          ['not_applicable_evidence'],
+          record.record_id,
+          true,
+          item.obligation_id,
+        ));
       }
     }
   }
@@ -425,8 +934,31 @@ function semanticDiagnostics(bundle) {
     const chain = record.coverage_chain || {};
     for (const name of CHAIN_NAMES) {
       const link = chain[name];
-      if (link?.status === 'not_applicable_with_validated_reason' && !validNotApplicable(link)) {
+      const roles = bundle.contract?.evidence_binding?.question_link_roles?.[name] || [];
+      if (Array.isArray(link?.evidence_refs)
+        && link.evidence_refs.some((ref) => ref && typeof ref === 'object')) {
+        diagnostics.push(...evidenceRefsDiagnostics(
+          link.evidence_refs,
+          roles,
+          record.question_id,
+          false,
+          record.question_id + '#' + name,
+        ));
+      }
+      if (link?.status === 'not_applicable_with_validated_reason'
+        && !validNotApplicable(
+          link,
+          record.question_id,
+          record.question_id + '#' + name,
+        )) {
         diagnostics.push(diagnostic('COV_NOT_APPLICABLE_REASON_INVALID', 'Not-applicable chain links require reason, evidence and validator acceptance.', record.question_id + '.' + name));
+        diagnostics.push(...evidenceRefsDiagnostics(
+          link.not_applicable_reason?.evidence_refs,
+          ['not_applicable_evidence'],
+          record.question_id,
+          true,
+          record.question_id + '#' + name,
+        ));
       }
     }
     if (chain.resolver_rule?.status === 'complete' && (!Array.isArray(chain.resolver_rule.evidence_refs) || chain.resolver_rule.evidence_refs.length === 0)) {
@@ -434,6 +966,19 @@ function semanticDiagnostics(bundle) {
     }
     const creditClaimed = chain.coverage_credit?.status === 'complete' || record.resolution_state === 'covered';
     if (creditClaimed) {
+      for (const name of CHAIN_NAMES) {
+        const link = chain[name];
+        if (link?.status === 'complete') {
+          const roles = bundle.contract?.evidence_binding?.question_link_roles?.[name] || [];
+          diagnostics.push(...evidenceRefsDiagnostics(
+            link.evidence_refs,
+            roles,
+            record.question_id,
+            true,
+            record.question_id + '#' + name,
+          ));
+        }
+      }
       const triplet = ['valid_fixture', 'invalid_fixture', 'adversarial_fixture'];
       if (triplet.some((name) => chain[name]?.status !== 'complete')) {
         diagnostics.push(diagnostic('COV_RESOLVER_FIXTURE_TRIPLET_INCOMPLETE', 'Resolver credit requires valid, invalid and adversarial fixtures.', record.question_id));
@@ -444,7 +989,7 @@ function semanticDiagnostics(bundle) {
       if (!COMPLETE_CHAIN_STATES.has(chain.required_runtime_or_consumer_proof?.status)) {
         diagnostics.push(diagnostic('COV_REQUIRED_PROOF_MISSING', 'Question credit requires every applicable runtime or consumer proof.', record.question_id));
       }
-      if (!questionCovered(record)) {
+      if (!questionCovered(record, bundle.contract)) {
         diagnostics.push(diagnostic('COV_QUESTION_CHAIN_INCOMPLETE', 'Coverage credit cannot precede the complete applicable Question chain.', record.question_id));
       }
     }
@@ -457,10 +1002,95 @@ function semanticDiagnostics(bundle) {
   return diagnostics;
 }
 
-function materialProgressDiagnostics(bundle, derived) {
+function coveredObligationIds(bundle) {
+  const occurrences = new Map();
+  for (const record of bundle?.ledger?.records || []) {
+    for (const { group, item } of obligationEntries(record)) {
+      if (!occurrences.has(item.obligation_id)) {
+        occurrences.set(item.obligation_id, []);
+      }
+      occurrences.get(item.obligation_id).push(
+        obligationCovered(item, group, record, bundle.contract),
+      );
+    }
+  }
+  return new Set([...occurrences.entries()]
+    .filter(([, states]) => states.length > 0 && states.every(Boolean))
+    .map(([id]) => id));
+}
+
+function allObligationIds(bundle) {
+  return new Set((bundle?.ledger?.records || [])
+    .flatMap((record) => allObligations(record))
+    .map((item) => item.obligation_id));
+}
+
+function familyObligationId(familyId) {
+  return 'OB-P0-' + String(familyId).toUpperCase().replace(/[^A-Z0-9]+/g, '_');
+}
+
+function closedFamilyIds(bundle) {
+  const catalog = bundle?.catalog?.records || [];
+  const ledger = bundle?.ledger?.records || [];
+  const families = sortedUnique(catalog
+    .filter((record) => IN_SCOPE_MEMBERSHIPS.has(record.denominator_membership))
+    .map((record) => record.decision_family_id));
+  return new Set(families.filter((familyId) => {
+    const questions = catalog.filter((record) =>
+      IN_SCOPE_MEMBERSHIPS.has(record.denominator_membership)
+        && record.decision_family_id === familyId);
+    const familyObligations = ledger.flatMap((record) =>
+      (record.element_obligations?.applicable_p0_families || [])
+        .filter((item) => item.obligation_id === familyObligationId(familyId))
+        .map((item) => ({ record, item })));
+    return questions.length > 0
+      && familyObligations.length > 0
+      && questions.every((record) => questionCovered(record, bundle.contract))
+      && familyObligations.every(({ record, item }) =>
+        obligationCovered(item, 'applicable_p0_families', record, bundle.contract));
+  }));
+}
+
+function deriveProgressTransition(transition, headBundle) {
+  if (transition.initialBootstrap || !transition.baseBundle) return null;
+  const baseCovered = coveredObligationIds(transition.baseBundle);
+  const headCovered = coveredObligationIds(headBundle);
+  const baseFamilies = closedFamilyIds(transition.baseBundle);
+  const headFamilies = closedFamilyIds(headBundle);
+  const completedObligationIds = [...headCovered]
+    .filter((id) => !baseCovered.has(id)).sort();
+  const closedFamilies = [...headFamilies]
+    .filter((id) => !baseFamilies.has(id)).sort();
+  const base = transition.baseDerived;
+  const head = transition.headDerived;
+  const elementCoverageDelta = base.elementPercent === null || head.elementPercent === null
+    ? null
+    : Number((head.elementPercent - base.elementPercent).toFixed(2));
+  const questionCoverageDelta = base.questionPercent === null || head.questionPercent === null
+    ? null
+    : Number((head.questionPercent - base.questionPercent).toFixed(2));
+  const numeratorGrowth = (head.elementNumerator - base.elementNumerator)
+    + (head.questionNumerator - base.questionNumerator);
+  return {
+    completedObligationIds,
+    closedFamilyIds: closedFamilies,
+    elementCoverageDelta,
+    questionCoverageDelta,
+    numeratorGrowth,
+    zeroDelta: numeratorGrowth === 0
+      && completedObligationIds.length === 0
+      && closedFamilies.length === 0,
+  };
+}
+
+function materialProgressDiagnostics(bundle, derived, transition, currentImpacts) {
   const diagnostics = [];
   const impacts = Array.isArray(bundle.impacts) ? bundle.impacts : [];
-  for (const impact of impacts) {
+  const progress = deriveProgressTransition(transition, bundle);
+  const allIds = allObligationIds(bundle);
+  const knownFamilies = new Set((bundle.catalog?.records || [])
+    .map((record) => record.decision_family_id));
+  for (const impact of currentImpacts) {
     if (impact.bootstrap_exception === true) {
       const validBootstrap = impact.work_package_id === 'DCOV-EXEC-001'
         && impact.work_type === 'foundation_bootstrap'
@@ -478,27 +1108,65 @@ function materialProgressDiagnostics(bundle, derived) {
       continue;
     }
 
+    if (impact.baseline_before !== transition.baseBundle?.baseline?.baseline_id
+      || impact.baseline_after !== bundle.baseline?.baseline_id) {
+      diagnostics.push(diagnostic('COV_PROGRESS_BASELINE_MISMATCH', 'Progress claims must bind the verified base and head baselines.', impact.impact_id));
+    }
+    const claimedIds = impact.completed_obligation_ids || [];
+    if (claimedIds.length !== new Set(claimedIds).size) {
+      diagnostics.push(diagnostic('COV_PROGRESS_DUPLICATE_OBLIGATION', 'Completed obligation IDs cannot be counted twice.', impact.impact_id));
+    }
+    if (claimedIds.some((id) => !allIds.has(id))) {
+      diagnostics.push(diagnostic('COV_PROGRESS_UNKNOWN_OBLIGATION', 'Completed obligation claim contains an unknown ID.', impact.impact_id));
+    }
+    if ((impact.closed_family_ids || []).some((id) => !knownFamilies.has(id))) {
+      diagnostics.push(diagnostic('COV_PROGRESS_UNKNOWN_FAMILY', 'Closed Family claim contains an unknown Family ID.', impact.impact_id));
+    }
+    if (!progress) {
+      diagnostics.push(diagnostic('COV_PROGRESS_BASELINE_MISMATCH', 'Non-bootstrap progress cannot be derived without verified base artifacts.', impact.impact_id));
+    } else {
+      const unchanged = claimedIds.filter((id) =>
+        allIds.has(id) && !progress.completedObligationIds.includes(id));
+      if (unchanged.length > 0
+        || !arraysEqual(claimedIds, progress.completedObligationIds)) {
+        diagnostics.push(diagnostic('COV_PROGRESS_UNCHANGED_OBLIGATION', 'Completed obligations must transition from incomplete to evidence-bound complete.', impact.impact_id));
+      }
+      if (!arraysEqual(impact.closed_family_ids, progress.closedFamilyIds)) {
+        diagnostics.push(diagnostic('COV_PROGRESS_FAMILY_MISMATCH', 'Closed Families must be derived from all applicable Questions and Element obligations.', impact.impact_id));
+      }
+      if (impact.element_coverage_delta !== progress.elementCoverageDelta
+        || impact.question_coverage_delta !== progress.questionCoverageDelta) {
+        diagnostics.push(diagnostic('COV_PROGRESS_DELTA_MISMATCH', 'Coverage deltas must equal the derived base-to-head percentages.', impact.impact_id));
+      }
+      if (impact.zero_delta !== progress.zeroDelta) {
+        diagnostics.push(diagnostic('COV_PROGRESS_ZERO_DELTA_MISMATCH', 'zero_delta must equal the derived numerator and obligation transition.', impact.impact_id));
+      }
+    }
+
     if (impact.coverage_sensitive && impact.work_type === 'content_expansion') {
       if (derived.elementDenominatorState === 'validated' && derived.questionDenominatorState === 'validated') {
         const denominator = Math.max(derived.elementDenominator, derived.questionDenominator);
         const minimumItems = Math.max(2, Math.ceil(0.05 * denominator));
-        const option1 = Math.max(impact.element_coverage_delta || 0, impact.question_coverage_delta || 0) >= 5;
-        const option2 = (impact.completed_obligation_ids || []).length >= minimumItems;
-        const option3 = (impact.closed_family_ids || []).length >= 1
-          && Math.max(impact.element_coverage_delta || 0, impact.question_coverage_delta || 0) > 0;
+        const option1 = progress
+          && Math.max(progress.elementCoverageDelta || 0, progress.questionCoverageDelta || 0) >= 5;
+        const option2 = progress
+          && progress.completedObligationIds.length >= minimumItems;
+        const option3 = progress
+          && progress.closedFamilyIds.length >= 1
+          && progress.numeratorGrowth > 0;
         if (!option1 && !option2 && !option3) {
           diagnostics.push(diagnostic('COV_MATERIAL_PROGRESS_INSUFFICIENT', 'Content expansion does not satisfy any measurement-active progress option.', impact.impact_id));
         }
       } else {
-        const boundedSet = (impact.completed_obligation_ids || []).length >= 2;
-        const closedSlice = (impact.closed_family_ids || []).length >= 1;
+        const boundedSet = progress && progress.completedObligationIds.length >= 2;
+        const closedSlice = progress && progress.closedFamilyIds.length >= 1;
         if (!boundedSet || !closedSlice) {
           diagnostics.push(diagnostic('COV_MATERIAL_PROGRESS_INSUFFICIENT', 'During policy_active, content expansion must complete bounded obligations and close one real Family slice.', impact.impact_id));
         }
       }
     }
 
-    if (impact.zero_delta === true) {
+    if ((progress?.zeroDelta ?? impact.zero_delta) === true) {
       const validZeroDelta = impact.work_type === 'blocking_defect'
         && impact.blocking_defect
         && typeof impact.next_content_expansion_package === 'string'
@@ -523,6 +1191,12 @@ function normativeProjection(contract) {
     state_names: contract.state_machine.ordered_states,
     element_coverage_definition: contract.coverage_semantics.element.definition_id,
     question_coverage_chain: contract.coverage_semantics.question.required_chain,
+    evidence_binding: {
+      carrier_kind: contract.evidence_binding.carrier_kind,
+      head_binding_modes: contract.evidence_binding.head_binding_modes,
+    },
+    denominator_transition: 'verified_base_head_diff_with_typed_record_reasons',
+    coverage_impact_binding: 'one_new_runtime_head_bound_record_per_sensitive_pr',
     material_progress_rules: {
       option_1: 'coverage_delta_gte_' + contract.material_progress.measurement_active_options.option_1.coverage_delta_gte_percentage_points + '_percentage_points',
       option_2: contract.material_progress.measurement_active_options.option_2.formula,
@@ -530,6 +1204,7 @@ function normativeProjection(contract) {
       policy_active: contract.material_progress.policy_active_rule,
       zero_delta: contract.material_progress.zero_delta_rule,
       three_consecutive_zero_delta_fail: contract.material_progress.three_consecutive_zero_delta_fail,
+      derived_from_verified_base_head: contract.material_progress.derived_from_verified_base_head,
     },
     merge_gate_requirements: Object.keys(contract.merge_gate),
   };
@@ -599,6 +1274,16 @@ function repositoryWiringDiagnostics() {
   if (!workflow.includes('npm run validate:coverage')) {
     diagnostics.push(diagnostic('COV_CI_WIRING_MISSING', 'The existing Validate MVK workflow must call npm run validate:coverage.', PATHS.workflow));
   }
+  for (const binding of [
+    'COVERAGE_REPOSITORY',
+    'COVERAGE_PR_NUMBER',
+    'COVERAGE_BASE_SHA',
+    'COVERAGE_HEAD_SHA',
+  ]) {
+    if (!workflow.includes(binding)) {
+      diagnostics.push(diagnostic('COV_CI_RUNTIME_BINDING_MISSING', 'CI must bind Coverage Impact validation to ' + binding + '.', PATHS.workflow));
+    }
+  }
   return diagnostics;
 }
 
@@ -613,44 +1298,93 @@ function gitLines(args) {
   }
 }
 
-function changedPathsFromGit() {
+function gitValue(args) {
+  try {
+    return execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim();
+  } catch {
+    return null;
+  }
+}
+
+function mergeBaseFromGit() {
+  return gitValue(['merge-base', 'HEAD', 'origin/main'])
+    || gitValue(['rev-parse', 'HEAD^']);
+}
+
+function changedPathsFromGit(baseSha) {
   const changed = new Set([
     ...gitLines(['diff', '--name-only', 'HEAD']),
     ...gitLines(['ls-files', '--others', '--exclude-standard']),
   ]);
-  try {
-    const mergeBase = execFileSync('git', ['merge-base', 'HEAD', 'origin/main'], { cwd: ROOT, encoding: 'utf8' }).trim();
-    for (const path of gitLines(['diff', '--name-only', mergeBase + '..HEAD'])) changed.add(path);
-  } catch {
-    for (const path of gitLines(['diff', '--name-only', 'HEAD^..HEAD'])) changed.add(path);
-  }
-  return [...changed];
+  for (const path of gitLines(['diff', '--name-only', baseSha + '..HEAD'])) changed.add(path);
+  return [...changed].sort();
 }
 
 function pathMatchesSensitive(path, patterns) {
   return patterns.some((pattern) => path === pattern || path.startsWith(pattern));
 }
 
-function impactRequirementDiagnostics(bundle, changedPaths) {
+function currentImpactRecords(baseBundle, headBundle) {
+  const baseIds = new Set((baseBundle?.impacts || []).map((impact) => impact.impact_id));
+  return (headBundle.impacts || []).filter((impact) => !baseIds.has(impact.impact_id));
+}
+
+function impactRequirementDiagnostics(bundle, changedPaths, currentImpacts, runtimeContext) {
   const diagnostics = [];
-  const sensitive = changedPaths.filter((path) => pathMatchesSensitive(path, bundle.contract?.coverage_sensitive_paths || []));
-  if (sensitive.length > 0 && (!Array.isArray(bundle.impacts) || bundle.impacts.length === 0)) {
+  const sensitive = changedPaths
+    .filter((path) => pathMatchesSensitive(
+      path,
+      bundle.contract?.coverage_sensitive_paths || [],
+    )).sort();
+  if (sensitive.length > 0 && currentImpacts.length === 0) {
     diagnostics.push(diagnostic('COV_IMPACT_RECORD_MISSING', 'Coverage-sensitive changes require a Coverage Impact Record.', sensitive[0]));
+    return diagnostics;
+  }
+  if (sensitive.length > 0 && currentImpacts.length !== 1) {
+    diagnostics.push(diagnostic('COV_IMPACT_RECORD_MULTIPLE', 'Exactly one newly added Coverage Impact Record must bind the current coverage-sensitive PR.', PATHS.impactDir));
+    return diagnostics;
+  }
+  if (sensitive.length === 0 || currentImpacts.length === 0) return diagnostics;
+
+  const impact = currentImpacts[0];
+  if (impact.repository !== EXPECTED_REPOSITORY
+    || (runtimeContext.repository && impact.repository !== runtimeContext.repository)) {
+    diagnostics.push(diagnostic('COV_IMPACT_REPOSITORY_MISMATCH', 'Coverage Impact repository does not match the validated checkout.', impact.impact_id));
+  }
+  if (runtimeContext.pullRequestNumber
+    && impact.pull_request !== runtimeContext.pullRequestNumber) {
+    diagnostics.push(diagnostic('COV_IMPACT_PR_MISMATCH', 'Coverage Impact PR number does not match the CI pull-request event.', impact.impact_id));
+  }
+  if (impact.base_sha !== runtimeContext.baseSha
+    || (runtimeContext.expectedBaseSha
+      && impact.base_sha !== runtimeContext.expectedBaseSha)) {
+    diagnostics.push(diagnostic('COV_IMPACT_BASE_MISMATCH', 'Coverage Impact base SHA does not match the verified merge base.', impact.impact_id));
+  }
+  if (impact.exact_head_sha !== 'derived_at_pr_runtime') {
+    diagnostics.push(diagnostic('COV_IMPACT_HEAD_BINDING_INVALID', 'Committed impact records must bind the exact head through Git/CI runtime derivation.', impact.impact_id));
+  }
+  if (runtimeContext.expectedHeadSha
+    && runtimeContext.headSha !== runtimeContext.expectedHeadSha) {
+    diagnostics.push(diagnostic('COV_IMPACT_HEAD_MISMATCH', 'Checked-out Git HEAD does not match the CI pull-request head.', impact.impact_id));
+  }
+  if (impact.work_package_id !== runtimeContext.currentWorkPackage
+    || !impact.impact_id.includes(impact.work_package_id.toLowerCase())) {
+    diagnostics.push(diagnostic('COV_IMPACT_WORK_PACKAGE_MISMATCH', 'Coverage Impact work package must match repository roadmap memory and impact identity.', impact.impact_id));
+  }
+  if (!arraysEqual(impact.changed_paths, sensitive)
+    || impact.changed_paths.length !== sensitive.length) {
+    diagnostics.push(diagnostic('COV_IMPACT_CHANGED_PATHS_MISMATCH', 'Coverage Impact changed_paths must exactly equal the verified sensitive diff.', impact.impact_id));
   }
   return diagnostics;
 }
 
 function impactHistoryAppendOnlyDiagnostics() {
   const diagnostics = [];
-  let base = null;
-  try {
-    base = execFileSync('git', ['merge-base', 'HEAD', 'origin/main'], { cwd: ROOT, encoding: 'utf8' }).trim();
-  } catch {
-    base = 'HEAD^';
-  }
+  const base = mergeBaseFromGit() || 'HEAD^';
   const lines = [
-    ...gitLines(['diff', '--name-status', base + '..HEAD', '--', PATHS.impactDir]),
-    ...gitLines(['diff', '--name-status', 'HEAD', '--', PATHS.impactDir]),
+    ...gitLines(['diff', '--name-status', base, '--', PATHS.impactDir]),
+    ...gitLines(['ls-files', '--others', '--exclude-standard', PATHS.impactDir])
+      .map((path) => 'A\t' + path),
   ];
   for (const line of lines) {
     const status = line.split(/\s+/)[0];
@@ -669,6 +1403,38 @@ function loadImpactRecords() {
     .map((name) => readJson(PATHS.impactDir + '/' + name));
 }
 
+function readJsonAtCommit(commit, path) {
+  try {
+    return JSON.parse(execFileSync(
+      'git',
+      ['show', commit + ':' + path],
+      { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
+    ));
+  } catch {
+    return null;
+  }
+}
+
+function loadImpactRecordsAtCommit(commit) {
+  return gitLines(['ls-tree', '-r', '--name-only', commit, '--', PATHS.impactDir])
+    .filter((path) => path.endsWith('.json'))
+    .sort()
+    .map((path) => readJsonAtCommit(commit, path))
+    .filter(Boolean);
+}
+
+function loadBundleAtCommit(commit) {
+  if (!commit) return null;
+  return {
+    contract: readJsonAtCommit(commit, PATHS.contract),
+    ledger: readJsonAtCommit(commit, PATHS.ledger),
+    catalog: readJsonAtCommit(commit, PATHS.catalog),
+    baseline: readJsonAtCommit(commit, PATHS.baseline),
+    debt: readJsonAtCommit(commit, PATHS.debt),
+    impacts: loadImpactRecordsAtCommit(commit),
+  };
+}
+
 function loadCanonicalBundle() {
   return {
     contract: readJson(PATHS.contract),
@@ -680,9 +1446,43 @@ function loadCanonicalBundle() {
   };
 }
 
+function currentWorkPackageFromRoadmap() {
+  const match = readText('planning/NEXT_WORK.md')
+    .match(/Current PR[\s\S]*?DCOV-EXEC-[0-9]{3}/);
+  return match?.[0].match(/DCOV-EXEC-[0-9]{3}/)?.[0] || null;
+}
+
+function runtimeContextFromGit(overrides = {}) {
+  const baseSha = overrides.baseSha
+    || process.env.COVERAGE_BASE_SHA
+    || mergeBaseFromGit();
+  const headSha = gitValue(['rev-parse', 'HEAD']);
+  const environmentPr = Number.parseInt(process.env.COVERAGE_PR_NUMBER || '', 10);
+  return {
+    repository: overrides.repository
+      || process.env.COVERAGE_REPOSITORY
+      || EXPECTED_REPOSITORY,
+    pullRequestNumber: overrides.pullRequestNumber
+      || (Number.isInteger(environmentPr) ? environmentPr : null),
+    baseSha,
+    headSha,
+    expectedBaseSha: overrides.expectedBaseSha
+      || process.env.COVERAGE_BASE_SHA
+      || null,
+    expectedHeadSha: overrides.expectedHeadSha
+      || process.env.COVERAGE_HEAD_SHA
+      || null,
+    currentWorkPackage: overrides.currentWorkPackage
+      || currentWorkPackageFromRoadmap(),
+  };
+}
+
 function validateBundle(bundle, options) {
   const repositoryChecks = options.repositoryChecks === true;
   const diagnostics = [];
+  const transition = deriveDenominatorTransition(options.baseBundle || null, bundle);
+  const currentImpacts = currentImpactRecords(options.baseBundle || null, bundle);
+  const runtimeContext = options.runtimeContext || runtimeContextFromGit();
   const { validators, diagnostics: schemaSetup } = options.schemaSetup;
   diagnostics.push(...schemaSetup);
 
@@ -704,8 +1504,18 @@ function validateBundle(bundle, options) {
   diagnostics.push(...sourceDiagnostics(bundle.catalog?.records || [], repositoryChecks));
 
   const derived = deriveCoverage(bundle);
-  diagnostics.push(...baselineDiagnostics(bundle, derived, repositoryChecks));
-  diagnostics.push(...materialProgressDiagnostics(bundle, derived));
+  diagnostics.push(...baselineDiagnostics(
+    bundle,
+    derived,
+    repositoryChecks,
+    transition,
+  ));
+  diagnostics.push(...materialProgressDiagnostics(
+    bundle,
+    derived,
+    transition,
+    currentImpacts,
+  ));
 
   if (options.requestedState === 'measurement_active'
     && (derived.elementDenominatorState !== 'validated'
@@ -760,11 +1570,21 @@ function validateBundle(bundle, options) {
   if (repositoryChecks) {
     diagnostics.push(...markdownDiagnostics(bundle.contract));
     diagnostics.push(...repositoryWiringDiagnostics());
-    diagnostics.push(...impactRequirementDiagnostics(bundle, options.changedPaths || []));
     diagnostics.push(...impactHistoryAppendOnlyDiagnostics());
   }
+  diagnostics.push(...impactRequirementDiagnostics(
+    bundle,
+    options.changedPaths || [],
+    currentImpacts,
+    runtimeContext,
+  ));
 
-  return { diagnostics: dedupeDiagnostics(diagnostics), derived };
+  return {
+    diagnostics: dedupeDiagnostics(diagnostics),
+    derived,
+    transition,
+    currentImpacts,
+  };
 }
 
 function fixtureFiles() {
@@ -789,15 +1609,32 @@ function runFixtureSuite(canonical, schemaSetup) {
     try {
       fixture = readJson(path);
       const mutated = applyMutations(canonical, fixture.scenario?.mutations || []);
+      const baseBundle = fixture.scenario?.base_bundle === 'canonical_coverage_bundle'
+        ? applyMutations(canonical, fixture.scenario?.base_mutations || [])
+        : null;
+      const runtimeContext = runtimeContextFromGit({
+        ...(fixture.scenario?.runtime_context || {}),
+        currentWorkPackage: fixture.scenario?.current_work_package
+          || currentWorkPackageFromRoadmap(),
+      });
       const validation = validateBundle(mutated, {
         repositoryChecks: false,
         schemaSetup,
+        baseBundle,
+        runtimeContext,
         changedPaths: fixture.scenario?.changed_paths || [],
         requestedState: fixture.scenario?.requested_state || null,
         claims: fixture.scenario?.claims || [],
       });
-      if ((fixture.scenario?.changed_paths || []).length > 0) {
-        validation.diagnostics.push(...impactRequirementDiagnostics(mutated, fixture.scenario.changed_paths));
+      for (const [field, value] of Object.entries(fixture.expected_derived || {})) {
+        if (validation.derived[field] !== value) {
+          validation.diagnostics.push(diagnostic(
+            'COV_FIXTURE_DERIVED_MISMATCH',
+            field + ' expected ' + JSON.stringify(value)
+              + ', observed ' + JSON.stringify(validation.derived[field]) + '.',
+            path,
+          ));
+        }
       }
       const observed = new Set(validation.diagnostics.map((item) => item.code));
       const expected = fixture.expected_diagnostic_codes || [];
@@ -816,8 +1653,24 @@ function runFixtureSuite(canonical, schemaSetup) {
         missing,
       });
     } catch (error) {
-      failed = true;
-      results.push({ path, kind: fixture?.fixture_kind || 'unknown', passed: false, expected: fixture?.expected_diagnostic_codes || [], observed: ['COV_FIXTURE_EXECUTION_FAILED'], missing: fixture?.expected_diagnostic_codes || [], error: error.message });
+      const observedCode = error instanceof FixtureMutationError
+        ? error.code
+        : 'COV_FIXTURE_EXECUTION_FAILED';
+      const expected = fixture?.expected_diagnostic_codes || [];
+      const kind = fixture?.fixture_kind || 'unknown';
+      const passed = kind !== 'valid'
+        && expected.length > 0
+        && expected.includes(observedCode);
+      if (!passed) failed = true;
+      results.push({
+        path,
+        kind,
+        passed,
+        expected,
+        observed: [observedCode],
+        missing: expected.filter((code) => code !== observedCode),
+        error: error.message,
+      });
     }
   }
   return { results, failed };
@@ -858,10 +1711,14 @@ try {
   process.exit(1);
 }
 
-const changedPaths = changedPathsFromGit();
+const runtimeContext = runtimeContextFromGit();
+const baseBundle = loadBundleAtCommit(runtimeContext.baseSha);
+const changedPaths = changedPathsFromGit(runtimeContext.baseSha);
 const main = validateBundle(canonical, {
   repositoryChecks: true,
   schemaSetup,
+  baseBundle,
+  runtimeContext,
   changedPaths,
   requestedState: null,
   claims: [],
@@ -882,7 +1739,7 @@ for (const requiredKind of ['valid', 'invalid', 'adversarial']) {
 }
 
 const state = deriveState(canonical, main.diagnostics, !fixtures.failed && fixtures.results.length > 0);
-const exactHead = gitLines(['rev-parse', 'HEAD'])[0] || 'unavailable';
+const exactHead = runtimeContext.headSha || 'unavailable';
 
 const summary = {
   validator: 'validate-coverage-guarantee.mjs',
@@ -912,6 +1769,18 @@ const summary = {
     critical_p0_and_safety_percent: main.derived.criticalPercent,
   },
   contract_state: state,
+  transition: {
+    base_sha: runtimeContext.baseSha,
+    exact_head_sha: exactHead,
+    repository: runtimeContext.repository,
+    pull_request: runtimeContext.pullRequestNumber,
+    current_work_package: runtimeContext.currentWorkPackage,
+    initial_bootstrap: main.transition.initialBootstrap,
+    added_record_ids: main.transition.addedRecordIds,
+    removed_record_ids: main.transition.removedRecordIds,
+    changed_record_ids: main.transition.changedRecordIds,
+    current_impact_ids: main.currentImpacts.map((impact) => impact.impact_id),
+  },
   fixtures: {
     total: fixtures.results.length,
     passed: fixtures.results.filter((result) => result.passed).length,

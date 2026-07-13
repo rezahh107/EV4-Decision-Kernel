@@ -49,9 +49,19 @@ jobs:
 
       - name: Validate Coverage Guarantee contract, data, fixtures, and impact
         run: npm run validate:coverage
+        env:
+          COVERAGE_REPOSITORY: ${{ github.repository }}
+          COVERAGE_PR_NUMBER: ${{ github.event.pull_request.number }}
+          COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          COVERAGE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Validate MVK fixtures and gates
         run: npm run validate:mvk
+        env:
+          COVERAGE_REPOSITORY: ${{ github.repository }}
+          COVERAGE_PR_NUMBER: ${{ github.event.pull_request.number }}
+          COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          COVERAGE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Validate roadmap memory consistency
         if: ${{ always() }}

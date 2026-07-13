@@ -1,0 +1,21 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": ["COV_DENOMINATOR_CHANGE_REQUIRED", "COV_DENOMINATOR_TARGET_INVALID"],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "base_bundle": "canonical_coverage_bundle",
+    "mutations": [
+      { "op": "set", "artifact": "ledger", "path": "/records/0/denominator_membership", "value": "excluded_duplicate" },
+      { "op": "set", "artifact": "ledger", "path": "/records/0/duplicate_of", "value": "EL-NOT-PRESENT" },
+      { "op": "set", "artifact": "ledger", "path": "/known_scope_count", "value": 14 },
+      { "op": "set", "artifact": "ledger", "path": "/confirmed_denominator_count", "value": 6 },
+      { "op": "set", "artifact": "baseline", "path": "/known_element_scope_count", "value": 14 },
+      { "op": "set", "artifact": "baseline", "path": "/element_denominator", "value": 6 },
+      { "op": "set", "artifact": "baseline", "path": "/coverage/critical_p0_and_safety_denominator", "value": 36 }
+    ],
+    "changed_paths": ["planning/coverage/element-reconciliation-ledger.v1.json"],
+    "requested_state": null,
+    "claims": []
+  }
+}
