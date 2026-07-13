@@ -9,7 +9,7 @@ const PRF010_VALIDATOR = join(VALIDATOR_DIR, 'validate-coverage-guarantee-prf010
 const LEGACY_VALIDATOR = join(VALIDATOR_DIR, 'validate-coverage-guarantee-legacy.mjs');
 const WORKFLOW_PATH = '.github/workflows/validate-mvk.yml';
 const TARGET_REPOSITORY = 'rezahh107/EV4-Decision-Kernel';
-const ISSUER_SHA = 'de320aef2f88b01fa3273b221d2518965903c9cc';
+const ISSUER_SHA = '73b8e3857dbc1596fe7b04def04b94f2609440b2';
 const ISSUER_CALL = 'rezahh107/PR-Inspector/.github/workflows/coverage-trust-gate.yml@'
   + ISSUER_SHA;
 const TRUST_ENV_NAMES = [
