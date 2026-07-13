@@ -98,6 +98,7 @@
   },
   "evidence_binding": {
     "carrier_kind": "typed_repository_artifact",
+    "semantic_subject_binding_required": true,
     "required_fields": [
       "evidence_id",
       "subject_record_id",
@@ -115,6 +116,29 @@
       "git_runtime_head",
       "pinned_commit"
     ],
+    "json_role_resolvers": [
+      "catalog_record",
+      "matrix",
+      "resolver_rule",
+      "valid_fixture",
+      "invalid_fixture",
+      "adversarial_fixture",
+      "l2_audit",
+      "runtime_proof",
+      "consumer_proof",
+      "coverage_credit",
+      "decision_question",
+      "p0_family",
+      "safety_gate",
+      "runtime_check"
+    ],
+    "js_symbol_subject_registry": "kernel/decision-governance/coverage-evidence-subject-registry.v1.json",
+    "proof_receipt_schemas": {
+      "runtime_proof": "kernel/schemas/coverage-runtime-proof-receipt.v1.schema.json",
+      "consumer_proof": "kernel/schemas/coverage-consumer-proof-receipt.v1.schema.json",
+      "coverage_credit": "kernel/schemas/coverage-credit-receipt.v1.schema.json"
+    },
+    "generic_fixture_or_document_proof_allowed": false,
     "question_link_roles": {
       "catalog": ["catalog_record"],
       "matrix": ["matrix"],
@@ -145,14 +169,25 @@
     "reduction_requires_record_level_reasons": true,
     "base_head_diff_required": true,
     "all_changed_ids_require_record_level_reasons": true,
-    "excluded_memberships_require_valid_targets": true
+    "excluded_memberships_require_valid_targets": true,
+    "reason_evidence_must_match_affected_record_source_or_disposition": true,
+    "disposition_schema": "kernel/schemas/coverage-denominator-disposition.v1.schema.json"
   },
   "coverage_impact_binding": {
     "one_new_record_per_coverage_sensitive_pr": true,
     "repository_pr_base_and_work_package_required": true,
     "exact_head_binding": "derived_from_git_and_ci_event",
     "changed_paths_must_equal_verified_sensitive_diff": true,
-    "historical_records_cannot_satisfy_current_pr": true
+    "historical_records_cannot_satisfy_current_pr": true,
+    "history_ordering": {
+      "sequence_field": "sequence_number",
+      "predecessor_field": "previous_impact_id",
+      "sequence_starts_at": 1,
+      "gaps_allowed": false,
+      "forks_allowed": false,
+      "filename_order_controls_execution": false,
+      "filename_sequence_disagreement_allowed": false
+    }
   },
   "material_progress": {
     "measurement_active_options": {
@@ -175,6 +210,7 @@
   },
   "coverage_sensitive_paths": [
     "kernel/decision-governance/coverage-guarantee-contract.v1.json",
+    "kernel/decision-governance/coverage-evidence-subject-registry.v1.json",
     "kernel/decision-governance/p0-decision-matrices.v0.json",
     "kernel/decision-governance/resolver-rule-registry.v0.json",
     "kernel/decision-governance/resolver-rules/",

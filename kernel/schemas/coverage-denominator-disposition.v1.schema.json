@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/coverage-denominator-disposition.v1.schema.json",
+  "title": "EV4 Coverage Denominator Disposition v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["disposition_id", "disposition_version", "record_id", "reason_code", "previous_membership", "new_membership", "target_record_id", "source_lineage"],
+  "properties": {
+    "disposition_id": { "type": "string", "pattern": "^denominator-disposition\\.[a-z0-9._-]+$" },
+    "disposition_version": { "const": "1.0.0" },
+    "record_id": { "type": "string", "minLength": 1 },
+    "reason_code": { "enum": ["added_source_evidence", "duplicate", "superseded", "not_applicable", "scope_correction", "source_correction"] },
+    "previous_membership": { "type": ["string", "null"] },
+    "new_membership": { "type": ["string", "null"] },
+    "target_record_id": { "type": ["string", "null"] },
+    "source_lineage": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "artifact_version", "retrieval_identity", "content_hash", "repository_commit"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "artifact_version": { "type": "string", "minLength": 1 },
+          "retrieval_identity": { "type": "string", "minLength": 1 },
+          "content_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "repository_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+          "json_pointer": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}

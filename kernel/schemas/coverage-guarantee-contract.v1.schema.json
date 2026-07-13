@@ -111,13 +111,24 @@
     "evidence_binding": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["carrier_kind", "required_fields", "head_binding_modes", "question_link_roles", "element_obligation_roles"],
+      "required": ["carrier_kind", "semantic_subject_binding_required", "required_fields", "head_binding_modes", "json_role_resolvers", "js_symbol_subject_registry", "proof_receipt_schemas", "generic_fixture_or_document_proof_allowed", "question_link_roles", "element_obligation_roles"],
       "properties": {
         "carrier_kind": { "const": "typed_repository_artifact" },
+        "semantic_subject_binding_required": { "const": true },
         "required_fields": {
           "const": ["evidence_id", "subject_record_id", "coverage_subject_id", "artifact_role", "artifact_path", "artifact_version", "content_sha256", "head_binding", "repository_commit", "json_pointer", "symbol"]
         },
         "head_binding_modes": { "const": ["git_runtime_head", "pinned_commit"] },
+        "json_role_resolvers": { "const": ["catalog_record", "matrix", "resolver_rule", "valid_fixture", "invalid_fixture", "adversarial_fixture", "l2_audit", "runtime_proof", "consumer_proof", "coverage_credit", "decision_question", "p0_family", "safety_gate", "runtime_check"] },
+        "js_symbol_subject_registry": { "const": "kernel/decision-governance/coverage-evidence-subject-registry.v1.json" },
+        "proof_receipt_schemas": {
+          "const": {
+            "runtime_proof": "kernel/schemas/coverage-runtime-proof-receipt.v1.schema.json",
+            "consumer_proof": "kernel/schemas/coverage-consumer-proof-receipt.v1.schema.json",
+            "coverage_credit": "kernel/schemas/coverage-credit-receipt.v1.schema.json"
+          }
+        },
+        "generic_fixture_or_document_proof_allowed": { "const": false },
         "question_link_roles": {
           "type": "object",
           "additionalProperties": false,
@@ -152,26 +163,39 @@
     "denominator_integrity": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["known_scope_includes", "coverage_percent_requires_validated_denominator", "reduction_requires_record_level_reasons", "base_head_diff_required", "all_changed_ids_require_record_level_reasons", "excluded_memberships_require_valid_targets"],
+      "required": ["known_scope_includes", "coverage_percent_requires_validated_denominator", "reduction_requires_record_level_reasons", "base_head_diff_required", "all_changed_ids_require_record_level_reasons", "excluded_memberships_require_valid_targets", "reason_evidence_must_match_affected_record_source_or_disposition", "disposition_schema"],
       "properties": {
         "known_scope_includes": { "const": ["confirmed", "candidate", "unresolved"] },
         "coverage_percent_requires_validated_denominator": { "const": true },
         "reduction_requires_record_level_reasons": { "const": true },
         "base_head_diff_required": { "const": true },
         "all_changed_ids_require_record_level_reasons": { "const": true },
-        "excluded_memberships_require_valid_targets": { "const": true }
+        "excluded_memberships_require_valid_targets": { "const": true },
+        "reason_evidence_must_match_affected_record_source_or_disposition": { "const": true },
+        "disposition_schema": { "const": "kernel/schemas/coverage-denominator-disposition.v1.schema.json" }
       }
     },
     "coverage_impact_binding": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["one_new_record_per_coverage_sensitive_pr", "repository_pr_base_and_work_package_required", "exact_head_binding", "changed_paths_must_equal_verified_sensitive_diff", "historical_records_cannot_satisfy_current_pr"],
+      "required": ["one_new_record_per_coverage_sensitive_pr", "repository_pr_base_and_work_package_required", "exact_head_binding", "changed_paths_must_equal_verified_sensitive_diff", "historical_records_cannot_satisfy_current_pr", "history_ordering"],
       "properties": {
         "one_new_record_per_coverage_sensitive_pr": { "const": true },
         "repository_pr_base_and_work_package_required": { "const": true },
         "exact_head_binding": { "const": "derived_from_git_and_ci_event" },
         "changed_paths_must_equal_verified_sensitive_diff": { "const": true },
-        "historical_records_cannot_satisfy_current_pr": { "const": true }
+        "historical_records_cannot_satisfy_current_pr": { "const": true },
+        "history_ordering": {
+          "const": {
+            "sequence_field": "sequence_number",
+            "predecessor_field": "previous_impact_id",
+            "sequence_starts_at": 1,
+            "gaps_allowed": false,
+            "forks_allowed": false,
+            "filename_order_controls_execution": false,
+            "filename_sequence_disagreement_allowed": false
+          }
+        }
       }
     },
     "material_progress": {

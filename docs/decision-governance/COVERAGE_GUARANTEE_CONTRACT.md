@@ -27,7 +27,9 @@ A Decision Question earns credit only through this complete applicable chain:
 
 Matrix-only Families receive no Resolver credit. A not-applicable link requires a machine-readable reason, supporting evidence and validator acceptance.
 
-Every obligation or Question-chain link that contributes credit must use typed repository evidence. The validator resolves the path and JSON Pointer or symbol, verifies the artifact role, subject record, exact `coverage_subject_id` for that obligation or chain link, content hash, artifact version and pinned-commit or runtime-head binding, and grants no numerator credit to empty, free-form, stale, cross-record, cross-subject or wrong-type references.
+Every obligation or Question-chain link that contributes credit must use typed repository evidence. The validator resolves the path and JSON Pointer or symbol, then verifies intrinsic role-specific identity: Question, Family, Matrix, active Rule, fixture target, audit target, proof subject, or credit subject as applicable. A carrier's self-declared `subject_record_id` and `coverage_subject_id` are never sufficient. JavaScript symbols require the exact binding in `coverage-evidence-subject-registry.v1.json`; symbol existence alone grants no credit.
+
+Runtime and consumer proof require their dedicated schema-valid receipts under `planning/coverage/proofs/`. Coverage credit requires a dedicated derived credit receipt. Generic fixtures, planning files, and review prose cannot satisfy these roles. These receipt contracts do not assert that any real runtime or consumer proof currently exists.
 
 ## Contract states
 
@@ -39,7 +41,7 @@ The expected state after `DCOV-EXEC-001` is `policy_active`. Unresolved denomina
 
 ## Denominator integrity
 
-Known scope includes non-duplicate `confirmed`, `candidate` and `unresolved` records. Denominator changes are derived from the verified base-to-head Ledger and Catalog transition. Every added, removed or reclassified ID requires a typed, source-backed record-level reason; duplicate and supersession dispositions require valid targets. Deleting or disguising hard records to improve a percentage is invalid.
+Known scope includes non-duplicate `confirmed`, `candidate` and `unresolved` records. Denominator changes are derived from the verified base-to-head Ledger and Catalog transition. Every added, removed or reclassified ID requires a typed record-level reason whose evidence is either the affected record's exact verified source reference or a schema-valid disposition naming the exact record, reason, before/after memberships, target relationship, and source lineage. Unrelated Matrix or governance evidence cannot justify a reduction. Duplicate and supersession dispositions require valid targets. Deleting or disguising hard records to improve a percentage is invalid.
 
 For every coverage-sensitive PR, exactly one newly added Coverage Impact Record must match the repository, PR number, merge base, current work package and the complete sensitive changed-path set. Its exact head is verified from Git and the CI event at runtime; a historical record cannot satisfy a later PR.
 
@@ -47,7 +49,7 @@ For every coverage-sensitive PR, exactly one newly added Coverage Impact Record 
 
 After `measurement_active`, a content-expansion package must satisfy at least one of: a coverage increase of at least five percentage points; completion of `max(2, ceil(0.05 * current_denominator))` items; or completion of one P0 Family across every applicable Element with measurable numerator growth.
 
-During `policy_active`, a content package must complete a materially bounded set of obligation IDs and close at least one real Family or Element slice. Completed IDs, closed Families, percentage deltas and zero-delta status are derived from the verified base-to-head artifacts rather than trusted declarations. A zero-delta package is limited to a blocking defect and must name the next content-expansion package. Three consecutive zero-delta coverage-sensitive packages fail validation.
+During `policy_active`, a content package must complete a materially bounded set of obligation IDs and close at least one real Family or Element slice. Completed IDs, closed Families, percentage deltas and zero-delta status are derived from the verified base-to-head artifacts rather than trusted declarations. A zero-delta package is limited to a blocking defect and must name the next content-expansion package. Impact chronology uses a contiguous `sequence_number` plus `previous_impact_id`; gaps, duplicates, forks, predecessor mismatches, and filename/sequence disagreement fail closed. The three-consecutive rule uses only that canonical sequence, never filename order.
 
 ## Merge eligibility
 
@@ -89,10 +91,33 @@ The validator compares this block with the authoritative JSON contract. Editing 
     "head_binding_modes": [
       "git_runtime_head",
       "pinned_commit"
-    ]
+    ],
+    "semantic_subject_binding_required": true,
+    "js_symbol_subject_registry": "kernel/decision-governance/coverage-evidence-subject-registry.v1.json",
+    "proof_receipt_schemas": {
+      "runtime_proof": "kernel/schemas/coverage-runtime-proof-receipt.v1.schema.json",
+      "consumer_proof": "kernel/schemas/coverage-consumer-proof-receipt.v1.schema.json",
+      "coverage_credit": "kernel/schemas/coverage-credit-receipt.v1.schema.json"
+    },
+    "generic_fixture_or_document_proof_allowed": false
   },
-  "denominator_transition": "verified_base_head_diff_with_typed_record_reasons",
-  "coverage_impact_binding": "one_new_runtime_head_bound_record_per_sensitive_pr",
+  "denominator_transition": {
+    "mode": "verified_base_head_diff_with_typed_record_reasons",
+    "semantic_reason_evidence_required": true,
+    "disposition_schema": "kernel/schemas/coverage-denominator-disposition.v1.schema.json"
+  },
+  "coverage_impact_binding": {
+    "current_pr": "one_new_runtime_head_bound_record_per_sensitive_pr",
+    "history_ordering": {
+      "sequence_field": "sequence_number",
+      "predecessor_field": "previous_impact_id",
+      "sequence_starts_at": 1,
+      "gaps_allowed": false,
+      "forks_allowed": false,
+      "filename_order_controls_execution": false,
+      "filename_sequence_disagreement_allowed": false
+    }
+  },
   "material_progress_rules": {
     "option_1": "coverage_delta_gte_5_percentage_points",
     "option_2": "max(2, ceil(0.05 * current_denominator))",

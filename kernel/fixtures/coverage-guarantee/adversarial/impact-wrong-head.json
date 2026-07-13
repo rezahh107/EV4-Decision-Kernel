@@ -11,6 +11,8 @@
       "value": [{
         "impact_id": "coverage-impact.dcov-exec-002.wrong-head",
         "impact_version": "1.0.0",
+        "sequence_number": 1,
+        "previous_impact_id": null,
         "repository": "rezahh107/EV4-Decision-Kernel",
         "pull_request": 43,
         "base_sha": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",

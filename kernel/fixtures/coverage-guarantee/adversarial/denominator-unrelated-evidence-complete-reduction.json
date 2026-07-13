@@ -1,0 +1,103 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_DENOMINATOR_EVIDENCE_SUBJECT_MISMATCH",
+    "COV_DENOMINATOR_EVIDENCE_REASON_MISMATCH",
+    "COV_DENOMINATOR_REDUCTION_UNJUSTIFIED"
+  ],
+  "expected_derived": {
+    "elementDenominator": 6,
+    "elementNumerator": 0
+  },
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "base_bundle": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "set",
+        "artifact": "ledger",
+        "path": "/records/0/denominator_membership",
+        "value": "unresolved"
+      },
+      {
+        "op": "set",
+        "artifact": "ledger",
+        "path": "/confirmed_denominator_count",
+        "value": 6
+      },
+      {
+        "op": "set",
+        "artifact": "baseline",
+        "path": "/baseline_id",
+        "value": "coverage-baseline.v1.0.1"
+      },
+      {
+        "op": "set",
+        "artifact": "baseline",
+        "path": "/baseline_version",
+        "value": "1.0.1"
+      },
+      {
+        "op": "set",
+        "artifact": "baseline",
+        "path": "/element_denominator",
+        "value": 6
+      },
+      {
+        "op": "set",
+        "artifact": "baseline",
+        "path": "/denominator_change",
+        "value": {
+          "previous_baseline_ref": "coverage-baseline.v1.0.0",
+          "new_baseline_ref": "coverage-baseline.v1.0.1",
+          "previous_element_denominator": 7,
+          "new_element_denominator": 6,
+          "previous_question_denominator": 24,
+          "new_question_denominator": 24,
+          "added_record_ids": [],
+          "removed_record_ids": [],
+          "changed_record_ids": ["EL-DIV_BLOCK"],
+          "record_level_reasons": [
+            {
+              "record_id": "EL-DIV_BLOCK",
+              "change_kind": "reclassified",
+              "previous_membership": "confirmed",
+              "new_membership": "unresolved",
+              "reason_code": "scope_correction",
+              "source_evidence": [
+                {
+                  "evidence_id": "EVC-DENOMINATOR-UNRELATED-MATRIX",
+                  "subject_record_id": "EL-DIV_BLOCK",
+                  "coverage_subject_id": "EL-DIV_BLOCK",
+                  "artifact_role": "denominator_change",
+                  "artifact_path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+                  "artifact_version": "0.4.0",
+                  "content_sha256": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+                  "head_binding": "pinned_commit",
+                  "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+                  "json_pointer": "/matrices/0",
+                  "symbol": null
+                }
+              ],
+              "target_record_id": null
+            }
+          ],
+          "previous_element_percent": null,
+          "new_element_percent": null,
+          "previous_question_percent": null,
+          "new_question_percent": null,
+          "supersession_chain": [
+            "coverage-baseline.v1.0.0",
+            "coverage-baseline.v1.0.1"
+          ]
+        }
+      }
+    ],
+    "changed_paths": [
+      "planning/coverage/element-reconciliation-ledger.v1.json"
+    ],
+    "requested_state": null,
+    "claims": []
+  }
+}

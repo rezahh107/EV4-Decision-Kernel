@@ -2,6 +2,7 @@
   "fixture_version": "1.0.0",
   "fixture_kind": "adversarial",
   "expected_diagnostic_codes": [
+    "COV_IMPACT_FILENAME_SEQUENCE_MISMATCH",
     "COV_THREE_CONSECUTIVE_ZERO_DELTA"
   ],
   "scenario": {
@@ -14,6 +15,8 @@
           {
             "impact_id": "coverage-impact.fixture.zero-1",
             "impact_version": "1.0.0",
+            "sequence_number": 1,
+            "previous_impact_id": null,
             "repository": "rezahh107/EV4-Decision-Kernel",
             "pull_request": 43,
             "base_sha": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
@@ -51,6 +54,8 @@
           {
             "impact_id": "coverage-impact.fixture.zero-2",
             "impact_version": "1.0.0",
+            "sequence_number": 2,
+            "previous_impact_id": "coverage-impact.fixture.zero-1",
             "repository": "rezahh107/EV4-Decision-Kernel",
             "pull_request": 43,
             "base_sha": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
@@ -88,6 +93,8 @@
           {
             "impact_id": "coverage-impact.fixture.zero-3",
             "impact_version": "1.0.0",
+            "sequence_number": 3,
+            "previous_impact_id": "coverage-impact.fixture.zero-2",
             "repository": "rezahh107/EV4-Decision-Kernel",
             "pull_request": 43,
             "base_sha": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
@@ -123,6 +130,15 @@
             "exact_head_sha": "derived_at_pr_runtime"
           }
         ]
+      },
+      {
+        "op": "replace_artifact",
+        "artifact": "impactSourcePaths",
+        "value": {
+          "coverage-impact.fixture.zero-1": "planning/coverage/impacts/z-zero-one.json",
+          "coverage-impact.fixture.zero-2": "planning/coverage/impacts/a-zero-two.json",
+          "coverage-impact.fixture.zero-3": "planning/coverage/impacts/m-zero-three.json"
+        }
       }
     ],
     "changed_paths": [],

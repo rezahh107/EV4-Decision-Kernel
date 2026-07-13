@@ -1,0 +1,67 @@
+{
+  "registry_id": "coverage-evidence-subject-registry.v1",
+  "version": "1.0.0",
+  "status": "semantic_binding_only_no_coverage_credit",
+  "bindings": [
+    {
+      "binding_id": "coverage-subject.layout-structure.resolve-layout-structure",
+      "artifact_role": "deterministic_evaluator",
+      "artifact_path": "kernel/resolver-mvp/resolve-high-risk-p0.mjs",
+      "symbol": "resolveLayoutStructure",
+      "decision_family_id": "layout_structure",
+      "rule_id": "resolver.rule.layout_structure.mvp.v0",
+      "eligible_question_ids": [
+        "DQ-DIV_BLOCK-01",
+        "DQ-DIV_BLOCK-02",
+        "DQ-DIV_BLOCK-03",
+        "DQ-FLEXBOX-01",
+        "DQ-FLEXBOX-02",
+        "DQ-FLEXBOX-03",
+        "DQ-GRID-01",
+        "DQ-GRID-02",
+        "DQ-GRID-03"
+      ],
+      "coverage_credit_granted": false
+    },
+    {
+      "binding_id": "coverage-subject.layout-structure.resolve-decision",
+      "artifact_role": "deterministic_evaluator",
+      "artifact_path": "kernel/resolver-mvp/resolve-high-risk-p0.mjs",
+      "symbol": "resolveDecision",
+      "decision_family_id": "layout_structure",
+      "rule_id": "resolver.rule.layout_structure.mvp.v0",
+      "eligible_question_ids": [
+        "DQ-DIV_BLOCK-01",
+        "DQ-DIV_BLOCK-02",
+        "DQ-DIV_BLOCK-03",
+        "DQ-FLEXBOX-01",
+        "DQ-FLEXBOX-02",
+        "DQ-FLEXBOX-03",
+        "DQ-GRID-01",
+        "DQ-GRID-02",
+        "DQ-GRID-03"
+      ],
+      "coverage_credit_granted": false
+    },
+    {
+      "binding_id": "coverage-subject.layout-structure.l2-audit",
+      "artifact_role": "l2_audit",
+      "artifact_path": "kernel/validator/validate-l2-decision-correctness.mjs",
+      "symbol": "auditDecisionRecord",
+      "decision_family_id": "layout_structure",
+      "rule_id": "resolver.rule.layout_structure.mvp.v0",
+      "eligible_question_ids": [
+        "DQ-DIV_BLOCK-01",
+        "DQ-DIV_BLOCK-02",
+        "DQ-DIV_BLOCK-03",
+        "DQ-FLEXBOX-01",
+        "DQ-FLEXBOX-02",
+        "DQ-FLEXBOX-03",
+        "DQ-GRID-01",
+        "DQ-GRID-02",
+        "DQ-GRID-03"
+      ],
+      "coverage_credit_granted": false
+    }
+  ]
+}

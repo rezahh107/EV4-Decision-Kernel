@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/coverage-consumer-proof-receipt.v1.schema.json",
+  "title": "EV4 Coverage Consumer Proof Receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["receipt_id", "receipt_version", "receipt_type", "subject", "consumer", "contract_result", "source_lineage", "limitations", "claims"],
+  "properties": {
+    "receipt_id": { "type": "string", "pattern": "^consumer-proof\\.[a-z0-9._-]+$" },
+    "receipt_version": { "const": "1.0.0" },
+    "receipt_type": { "const": "consumer_proof" },
+    "subject": { "$ref": "#/$defs/subject" },
+    "consumer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["consumer_id", "owner_role"],
+      "properties": {
+        "consumer_id": { "type": "string", "minLength": 1 },
+        "owner_role": { "enum": ["Architect", "CE", "Builder", "Responsive", "Project Gate"] }
+      }
+    },
+    "contract_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_id", "result", "observed_at"],
+      "properties": {
+        "contract_id": { "type": "string", "minLength": 1 },
+        "result": { "enum": ["accepted", "rejected"] },
+        "observed_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "source_lineage": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/source" } },
+    "limitations": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "claims": { "$ref": "#/$defs/claims" }
+  },
+  "$defs": {
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subject_record_id", "coverage_subject_id", "decision_family_id", "rule_id", "obligation_id", "question_id"],
+      "properties": {
+        "subject_record_id": { "type": "string", "minLength": 1 },
+        "coverage_subject_id": { "type": "string", "minLength": 1 },
+        "decision_family_id": { "type": ["string", "null"], "minLength": 1 },
+        "rule_id": { "type": ["string", "null"], "minLength": 1 },
+        "obligation_id": { "type": ["string", "null"], "minLength": 1 },
+        "question_id": { "type": ["string", "null"], "minLength": 1 }
+      },
+      "anyOf": [
+        { "properties": { "obligation_id": { "type": "string" } } },
+        { "properties": { "question_id": { "type": "string" } } }
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_type", "retrieval_identity", "content_sha256"],
+      "properties": {
+        "source_type": { "type": "string", "minLength": 1 },
+        "retrieval_identity": { "type": "string", "minLength": 1 },
+        "content_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["readiness", "release_readiness", "production_readiness"],
+      "properties": {
+        "readiness": { "const": false },
+        "release_readiness": { "const": false },
+        "production_readiness": { "const": false }
+      }
+    }
+  }
+}

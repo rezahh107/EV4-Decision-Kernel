@@ -41,7 +41,13 @@ files_modified:
   - AGENTS.md
   - docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md
   - docs/decision-governance/COVERAGE_GUARANTEE_CONTRACT.md
+  - kernel/decision-governance/coverage-evidence-subject-registry.v1.json
   - kernel/decision-governance/coverage-guarantee-contract.v1.json
+  - kernel/schemas/coverage-evidence-subject-registry.v1.schema.json
+  - kernel/schemas/coverage-runtime-proof-receipt.v1.schema.json
+  - kernel/schemas/coverage-consumer-proof-receipt.v1.schema.json
+  - kernel/schemas/coverage-credit-receipt.v1.schema.json
+  - kernel/schemas/coverage-denominator-disposition.v1.schema.json
   - kernel/schemas/coverage-baseline.v1.schema.json
   - kernel/schemas/coverage-guarantee-contract.v1.schema.json
   - kernel/schemas/coverage-impact.v1.schema.json
@@ -96,6 +102,7 @@ files_created:
   - kernel/fixtures/coverage-guarantee/adversarial/three-consecutive-zero-delta.json
   - kernel/fixtures/coverage-guarantee/valid/explicit-artifact-replacement.json
   - kernel/fixtures/coverage-guarantee/valid/typed-evidence-carrier.json
+  - kernel/fixtures/coverage-guarantee/valid/denominator-source-bound-reclassification.json
   - kernel/fixtures/coverage-guarantee/invalid/root-append-empty-pointer.json
   - kernel/fixtures/coverage-guarantee/invalid/root-append-slash-pointer.json
   - kernel/fixtures/coverage-guarantee/invalid/root-delete-empty-pointer.json
@@ -113,11 +120,16 @@ files_created:
   - kernel/fixtures/coverage-guarantee/adversarial/evidence-cross-subject.json
   - kernel/fixtures/coverage-guarantee/adversarial/evidence-empty.json
   - kernel/fixtures/coverage-guarantee/adversarial/evidence-free-form.json
+  - kernel/fixtures/coverage-guarantee/adversarial/evidence-generic-consumer-and-credit-artifacts.json
+  - kernel/fixtures/coverage-guarantee/adversarial/evidence-layout-obligation-wrong-family-matrix.json
+  - kernel/fixtures/coverage-guarantee/adversarial/evidence-non-layout-question-layout-chain.json
   - kernel/fixtures/coverage-guarantee/adversarial/evidence-nonexistent-path.json
+  - kernel/fixtures/coverage-guarantee/adversarial/evidence-planning-review-as-runtime-proof.json
   - kernel/fixtures/coverage-guarantee/adversarial/evidence-stale-hash.json
   - kernel/fixtures/coverage-guarantee/adversarial/evidence-wrong-artifact-type.json
   - kernel/fixtures/coverage-guarantee/adversarial/evidence-wrong-symbol.json
   - kernel/fixtures/coverage-guarantee/adversarial/impact-historical-bootstrap-only.json
+  - kernel/fixtures/coverage-guarantee/adversarial/impact-chronology-duplicate-gap-fork.json
   - kernel/fixtures/coverage-guarantee/adversarial/impact-incomplete-changed-paths.json
   - kernel/fixtures/coverage-guarantee/adversarial/impact-unrelated-repository.json
   - kernel/fixtures/coverage-guarantee/adversarial/impact-wrong-head.json
@@ -129,6 +141,7 @@ files_created:
   - kernel/fixtures/coverage-guarantee/adversarial/progress-partial-shared-obligation.json
   - kernel/fixtures/coverage-guarantee/adversarial/progress-unchanged-states.json
   - kernel/fixtures/coverage-guarantee/adversarial/question-chain-free-form-credit.json
+  - kernel/fixtures/coverage-guarantee/adversarial/denominator-unrelated-evidence-complete-reduction.json
 ```
 
 ## Coverage foundation result
@@ -177,10 +190,10 @@ syntax:
 validator:
   command: npm run validate:coverage
   local_result: passed
-  self_tests_passed: 57
-  valid_fixtures_passed: 3
+  self_tests_passed: 64
+  valid_fixtures_passed: 4
   negative_fixtures_passed: 18
-  adversarial_fixtures_passed: 36
+  adversarial_fixtures_passed: 42
   stable_diagnostic_assertions: passed
 mvk:
   command: npm run validate:mvk
@@ -203,49 +216,68 @@ ci:
   exact_head_runs: derived_at_pr_runtime
 ```
 
-The validator derives hashes, denominator state, numerators, percentages and contract-state eligibility. It rejects fabricated percentages, invalid denominator reductions, Matrix-only credit, incomplete Resolver/L2/proof chains, unsupported readiness, missing impact records, artificial micro-progress and three consecutive zero-delta packages.
+The validator derives hashes, denominator state, numerators, percentages and contract-state eligibility. It rejects fabricated percentages, semantically unrelated same-role evidence, generic runtime/consumer/credit artifacts, invalid denominator reductions, Matrix-only credit, incomplete Resolver/L2/proof chains, unsupported readiness, missing impact records, artificial micro-progress and canonically ordered three-consecutive zero-delta packages.
 
 ## PR Inspector repair record
 
 ```yaml
 review_identity:
   pull_request: 43
-  reviewed_head_sha: 76ec0ba0ecf6492bf3f80fc733de404292af2970
+  reviewed_head_sha: 29210f52b0cfa84d31721247001d938e1505ec7c
+  previous_reviewed_head_sha: 76ec0ba0ecf6492bf3f80fc733de404292af2970
   base_sha: 487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8
+  review_validity_at_repair_start: CURRENT
   protocol_version: v1.9.0
-  canonical_review_package_sha256: 2ca193b98555f0d57039aea65066c155de0e189355430740e9857e1dadd3817c
+  canonical_review_package_sha256: 061871e21622a8248be31ff2204c690e9fde9d5f35e6ccf79694869c376f2348
   inspector_commit: 65e6b1b46c3e8da7c782c666cd3562947f2b7923
   review_status: RED_DO_NOT_MERGE
 repair_status:
   PRF-001: implemented_pending_rereview
   PRF-002: implemented_pending_rereview
-  PRF-003: implemented_pending_rereview
-  PRF-004: implemented_pending_rereview
-  PRF-005: implemented_pending_rereview
-fresh_independent_review: pending_external_rereview
+  PRF-006: implemented_pending_rereview
+prior_findings_confirmed_repaired_by_reviewed_head:
+  - PRF-003
+  - PRF-004
+  - PRF-005
+fresh_independent_review: required_on_resulting_head
 ```
 
-No finding is declared closed. The statuses above mean only that a bounded repair and local verification exist on a new, not-yet-independently-reviewed head.
+No finding is declared closed. `implemented_pending_rereview` means only that bounded implementation and direct local evidence exist; the resulting head requires a fresh independent PR Inspector decision.
 
-### PRF-001 — evidence-bound coverage credit
+### PRF-001 — artifact-to-subject semantic binding
 
-- `surface_symptom`: free-form, empty or invented `evidence_refs` could coexist with covered/complete states.
-- `underlying_invariant`: every credit-bearing obligation and Question-chain link must have typed evidence bound to the same record and exact obligation/link, a permitted artifact role, a repository path, version, content hash, head, and resolving JSON Pointer or symbol.
+- `surface_symptom`: a valid same-role layout artifact could be relabeled as evidence for a media/text Question or another obligation.
+- `underlying_invariant`: carrier metadata is necessary but never sufficient; the resolved JSON value or registered JS symbol must intrinsically match the expected Question, Family, Matrix, active Rule, fixture kind and target, L2 target, proof subject, or credit subject.
 - `failure_boundary`: the numerator derivation and semantic validation boundary, before any measurement or threshold state is eligible.
-- `affected_components`: contract JSON/Markdown, contract/Ledger/Catalog/Baseline schemas, evidence resolver, Element and Question coverage derivation, adversarial fixtures.
-- `assumptions`: Git objects and checked-out repository files are the resolvable evidence boundary; legacy strings may describe incomplete states but never create credit.
-- `repair`: typed carriers are resolved from either a pinned commit or the runtime head; role/path, record, obligation/link, hash, version, pointer/symbol and head mismatches emit stable diagnostics and prevent numerator growth.
-- `focused_evidence`: empty, free-form, nonexistent-path, wrong-artifact-type, wrong-symbol, stale-hash, cross-record, cross-subject, full-Element and full-Question bypass fixtures all retain a zero numerator.
+- `affected_components`: authoritative contract and Markdown view; role-path rules; role-specific semantic resolver; JS subject registry and schema; runtime, consumer and credit receipt schemas; Element/Question derivation; adversarial fixtures.
+- `assumptions`: family-wide artifacts may be shared only inside their registered Family and active Rule; registry bindings grant no coverage credit by themselves.
+- `repair`: Matrix and P0 evidence compare intrinsic `decision_family_id`/`matrix_id`; Resolver evidence compares active Family/Rule/Matrix; fixture evidence compares case kind, intrinsic Family and the active Rule registry path; evaluator/L2 symbols require exact registry bindings whose Questions belong to the same Family; proof and credit roles accept only their dedicated schema-valid receipts and exact receipt subjects.
+- `focused_evidence`: `evidence-layout-obligation-wrong-family-matrix.json`, `evidence-non-layout-question-layout-chain.json`, `evidence-planning-review-as-runtime-proof.json`, and `evidence-generic-consumer-and-credit-artifacts.json` assert exact semantic diagnostics while `elementNumerator` and `questionNumerator` remain zero.
+- `stable_diagnostics`: `COV_EVIDENCE_P0_FAMILY_SUBJECT_MISMATCH`, `COV_EVIDENCE_RESOLVER_SUBJECT_MISMATCH`, `COV_EVIDENCE_EVALUATOR_SUBJECT_MISMATCH`, `COV_EVIDENCE_FIXTURE_SUBJECT_MISMATCH`, `COV_EVIDENCE_L2_SUBJECT_MISMATCH`, `COV_EVIDENCE_PROOF_ARTIFACT_FORBIDDEN`, `COV_EVIDENCE_PROOF_RECEIPT_INVALID`, `COV_EVIDENCE_CREDIT_ARTIFACT_FORBIDDEN`, `COV_EVIDENCE_CREDIT_RECEIPT_INVALID`.
 
-### PRF-002 — verified denominator transition
+### PRF-002 — denominator reason evidence binding
 
-- `surface_symptom`: record deletion or reclassification could shrink the denominator without an audited transition.
-- `underlying_invariant`: Ledger/Catalog record IDs, memberships and derived counts must be diffed from the verified base to head; every changed record needs exactly one typed, source-bound reason and valid target where applicable.
+- `surface_symptom`: an unrelated Matrix or governance file could justify a record-level denominator reduction when the carrier self-declared the affected record.
+- `underlying_invariant`: every reason must resolve either to the affected record's exact verified source reference or to a schema-valid disposition matching `record_id`, `reason_code`, before/after memberships, target relationship, and source lineage.
 - `failure_boundary`: baseline validation before denominator state, percentage derivation, or state eligibility.
-- `affected_components`: baseline schema, base/head bundle loader, transition derivation, duplicate/supersession validation, baseline diagnostics and adversarial fixtures.
-- `assumptions`: CI supplies the PR base SHA and exact head; local validation derives the merge base when CI bindings are absent.
-- `repair`: added/removed/changed IDs, before/after memberships, denominators, percentages and ordered supersession chain are recomputed; omitted/partial reasons, invalid exclusion targets and mismatched declared values fail closed.
-- `focused_evidence`: record removal, all exclusion dispositions, invalid duplicate/supersession targets, partial reason coverage and mismatched before/after fixtures assert exact diagnostics.
+- `affected_components`: baseline reason validation, record source matching, denominator disposition schema, reduction eligibility and valid/adversarial fixtures.
+- `assumptions`: a direct record source match is exact on path, version, hash, commit and JSON Pointer; a disposition must carry the stronger semantic reason fields.
+- `repair`: every source carrier is compared with the affected record's verified before/head source references; dedicated dispositions are schema-validated and field-compared; semantically invalid reasons force `COV_DENOMINATOR_REDUCTION_UNJUSTIFIED` even when generic carrier checks pass.
+- `focused_evidence`: `denominator-unrelated-evidence-complete-reduction.json` proves a structurally valid unrelated Matrix cannot reduce the denominator; `denominator-source-bound-reclassification.json` proves the exact record-source path remains valid.
+- `stable_diagnostics`: `COV_DENOMINATOR_EVIDENCE_SUBJECT_MISMATCH`, `COV_DENOMINATOR_EVIDENCE_REASON_MISMATCH`, `COV_DENOMINATOR_EVIDENCE_LINEAGE_MISMATCH`, `COV_DENOMINATOR_REDUCTION_UNJUSTIFIED`.
+
+### PRF-006 — canonical Coverage Impact chronology
+
+- `surface_symptom`: the last-three zero-delta rule used lexicographic filename order, allowing a newly named file to sort before older impacts.
+- `underlying_invariant`: impact execution order is a contiguous immutable sequence with one predecessor; filename order never determines chronology.
+- `failure_boundary`: Coverage Impact history validation before latest-state or three-consecutive-zero-delta evaluation.
+- `affected_components`: impact contract/schema, bootstrap record, impact loader/source-path map, material-progress ordering and adversarial fixtures.
+- `assumptions`: append-only Git history makes merged sequence fields immutable; a new impact must extend exactly one predecessor.
+- `repair`: every impact requires `sequence_number` and `previous_impact_id`; duplicate numbers, gaps, forks, predecessor mismatch and filename/sequence disagreement fail; latest-impact and last-three logic sort only by canonical sequence.
+- `focused_evidence`: `three-consecutive-zero-delta.json` deliberately maps chronological records to lexically reordered filenames and still emits `COV_THREE_CONSECUTIVE_ZERO_DELTA`; `impact-chronology-duplicate-gap-fork.json` asserts all structural chronology guards.
+- `stable_diagnostics`: `COV_IMPACT_SEQUENCE_DUPLICATE`, `COV_IMPACT_SEQUENCE_GAP`, `COV_IMPACT_HISTORY_FORK`, `COV_IMPACT_PREDECESSOR_MISMATCH`, `COV_IMPACT_FILENAME_SEQUENCE_MISMATCH`, `COV_THREE_CONSECUTIVE_ZERO_DELTA`.
+
+### Prior findings confirmed repaired by the current review
 
 ### PRF-003 — current-PR Coverage Impact binding
 
@@ -282,9 +314,10 @@ No finding is declared closed. The statuses above mean only that a bounded repai
 
 - Contract and Markdown remain v1 and retain thresholds 90/95/100 and the full Element/Question coverage definitions.
 - The denominator candidates, numerator zeroes, unresolved percentages and `policy_active` state are unchanged; no readiness, runtime, consumer or production proof was manufactured.
-- Coverage Impact history remains append-only across the verified base/head boundary; the bootstrap record is still the single record new in PR #43.
+- Dedicated receipt schemas define proof shape without creating any proof receipt or proof claim.
+- Coverage Impact history remains append-only across the verified base/head boundary; the bootstrap record is still the single record new in PR #43 and is canonical sequence member 1.
 - CI now binds repository, PR, base and head values to both direct coverage validation and full MVK validation.
-- The KROAD-010 merge/squash/rebase builder rewrites only its synthetic impact base to its generated bootstrap anchor and passes the same exact-head checks; production validation is not weakened.
+- The KROAD-010 merge/squash/rebase builder copies the semantic subject registry and receipt/disposition schemas, rewrites only its synthetic impact base to its generated bootstrap anchor, and passes the same exact-head checks; production validation is not weakened.
 - Rollback behavior is fail-closed: missing base artifacts are treated as initial bootstrap only when the actual base lacks the coverage bundle, while later sensitive changes require a newly added impact.
 
 The first exact-head CI run exposed that the KROAD-010 synthetic-history builder copied the updated `package.json` but not the new Coverage Guarantee validation dependencies. The focused repair copies that dependency set into each synthetic activation source. The complete merge-commit, squash, rebase and mutation-guard matrix then passed without changing coverage rules, thresholds or diagnostics.

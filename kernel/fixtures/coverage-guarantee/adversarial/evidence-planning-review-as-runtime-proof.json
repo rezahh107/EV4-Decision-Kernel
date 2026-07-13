@@ -1,0 +1,43 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_EVIDENCE_PROOF_ARTIFACT_FORBIDDEN",
+    "COV_EVIDENCE_PROOF_RECEIPT_INVALID"
+  ],
+  "expected_derived": {
+    "questionNumerator": 0
+  },
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "set",
+        "artifact": "catalog",
+        "path": "/records/18/coverage_chain/required_runtime_or_consumer_proof",
+        "value": {
+          "status": "complete",
+          "evidence_refs": [
+            {
+              "evidence_id": "EVC-PLANNING-REVIEW-AS-RUNTIME-PROOF",
+              "subject_record_id": "DQ-IMAGE-01",
+              "coverage_subject_id": "DQ-IMAGE-01#required_runtime_or_consumer_proof",
+              "artifact_role": "runtime_proof",
+              "artifact_path": "planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md",
+              "artifact_version": "sha256:e4e778efb51c6aed10289ac36b177a85e1f310059052229be84c87517f31fdb8",
+              "content_sha256": "e4e778efb51c6aed10289ac36b177a85e1f310059052229be84c87517f31fdb8",
+              "head_binding": "pinned_commit",
+              "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+              "json_pointer": null,
+              "symbol": "KROAD-012"
+            }
+          ],
+          "not_applicable_reason": null
+        }
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}
