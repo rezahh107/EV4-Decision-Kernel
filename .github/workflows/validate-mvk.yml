@@ -2,9 +2,6 @@ name: Validate MVK
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
 
 permissions:
   contents: read
@@ -12,27 +9,32 @@ permissions:
 jobs:
   external-coverage-trust:
     name: External Coverage Trust Gate
-    uses: rezahh107/PR-Inspector/.github/workflows/coverage-trust-gate.yml@7b9958056e485d5f3bca0040c991a9ff8326cee5
-    with:
-      target_repository: ${{ github.repository }}
-      target_head_sha: ${{ github.event.pull_request.head.sha || github.sha }}
-      target_base_sha: ${{ github.event.pull_request.base.sha || github.event.before }}
-      pull_request_number: ${{ github.event.pull_request.number || 0 }}
-      issuer_workflow_sha: 7b9958056e485d5f3bca0040c991a9ff8326cee5
-      proof_credit_mode: bootstrap_deny
+    uses: rezahh107/PR-Inspector/.github/workflows/coverage-trust-gate.yml@8b9b803a9f1e916f360d8871e43f5c48a11b5974
     permissions:
       contents: read
+      pull-requests: read
+      id-token: write
 
   validate-mvk:
     name: Validate MVK
     needs: external-coverage-trust
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - name: Checkout exact repository head with full history
+      - name: Checkout externally verified exact PR head
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
+          persist-credentials: false
+
+      - name: Verify checkout matches external authoritative identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ needs.external-coverage-trust.outputs.verified_head_sha }}"
+          test "${{ needs.external-coverage-trust.outputs.proof_credit_authorized }}" = "false"
 
       - name: Set up Node.js LTS
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -46,6 +48,7 @@ jobs:
       - name: Validate KROAD-010 source syntax and JSON
         run: |
           node --check kernel/validator/validate-coverage-guarantee.mjs
+          node --check kernel/validator/validate-coverage-guarantee-prf010.mjs
           node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
           node --check kernel/validator/validate-downstream-consumer-contract.mjs
           node --check kernel/validator/validate-downstream-consumer-canonical-lock.mjs
@@ -66,23 +69,23 @@ jobs:
       - name: Validate patch whitespace
         run: |
           git diff --check
-          git diff --check "${{ github.event.pull_request.base.sha || github.event.before }}..${{ github.event.pull_request.head.sha || github.sha }}"
+          git diff --check "${{ needs.external-coverage-trust.outputs.verified_base_sha }}..${{ needs.external-coverage-trust.outputs.verified_head_sha }}"
 
       - name: Validate Coverage Guarantee contract, data, fixtures, and impact
         run: npm run validate:coverage
         env:
-          COVERAGE_REPOSITORY: ${{ github.repository }}
-          COVERAGE_PR_NUMBER: ${{ github.event.pull_request.number }}
-          COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-          COVERAGE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          COVERAGE_REPOSITORY: ${{ needs.external-coverage-trust.outputs.verified_repository }}
+          COVERAGE_PR_NUMBER: ${{ needs.external-coverage-trust.outputs.verified_pr_number }}
+          COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}
+          COVERAGE_HEAD_SHA: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
 
       - name: Validate MVK fixtures and gates
         run: npm run validate:mvk
         env:
-          COVERAGE_REPOSITORY: ${{ github.repository }}
-          COVERAGE_PR_NUMBER: ${{ github.event.pull_request.number }}
-          COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-          COVERAGE_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          COVERAGE_REPOSITORY: ${{ needs.external-coverage-trust.outputs.verified_repository }}
+          COVERAGE_PR_NUMBER: ${{ needs.external-coverage-trust.outputs.verified_pr_number }}
+          COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}
+          COVERAGE_HEAD_SHA: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
 
       - name: Validate roadmap memory consistency
         if: ${{ always() }}
