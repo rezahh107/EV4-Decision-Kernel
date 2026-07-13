@@ -163,7 +163,7 @@
     "denominator_integrity": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["known_scope_includes", "coverage_percent_requires_validated_denominator", "reduction_requires_record_level_reasons", "base_head_diff_required", "all_changed_ids_require_record_level_reasons", "excluded_memberships_require_valid_targets", "reason_evidence_must_match_affected_record_source_or_disposition", "disposition_schema"],
+      "required": ["known_scope_includes", "coverage_percent_requires_validated_denominator", "reduction_requires_record_level_reasons", "base_head_diff_required", "all_changed_ids_require_record_level_reasons", "excluded_memberships_require_valid_targets", "reason_evidence_must_match_affected_record_source_or_disposition", "disposition_schema", "invalid_change_effective_coverage"],
       "properties": {
         "known_scope_includes": { "const": ["confirmed", "candidate", "unresolved"] },
         "coverage_percent_requires_validated_denominator": { "const": true },
@@ -172,7 +172,8 @@
         "all_changed_ids_require_record_level_reasons": { "const": true },
         "excluded_memberships_require_valid_targets": { "const": true },
         "reason_evidence_must_match_affected_record_source_or_disposition": { "const": true },
-        "disposition_schema": { "const": "kernel/schemas/coverage-denominator-disposition.v1.schema.json" }
+        "disposition_schema": { "const": "kernel/schemas/coverage-denominator-disposition.v1.schema.json" },
+        "invalid_change_effective_coverage": { "const": "preserve_verified_base_metrics" }
       }
     },
     "coverage_impact_binding": {

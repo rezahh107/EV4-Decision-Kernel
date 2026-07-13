@@ -262,9 +262,9 @@ No finding is declared closed. `implemented_pending_rereview` means only that bo
 - `failure_boundary`: baseline validation before denominator state, percentage derivation, or state eligibility.
 - `affected_components`: baseline reason validation, record source matching, denominator disposition schema, reduction eligibility and valid/adversarial fixtures.
 - `assumptions`: a direct record source match is exact on path, version, hash, commit and JSON Pointer; a disposition must carry the stronger semantic reason fields.
-- `repair`: every source carrier is compared with the affected record's verified before/head source references; dedicated dispositions are schema-validated and field-compared; semantically invalid reasons force `COV_DENOMINATOR_REDUCTION_UNJUSTIFIED` even when generic carrier checks pass.
-- `focused_evidence`: `denominator-unrelated-evidence-complete-reduction.json` proves a structurally valid unrelated Matrix cannot reduce the denominator; `denominator-source-bound-reclassification.json` proves the exact record-source path remains valid.
-- `stable_diagnostics`: `COV_DENOMINATOR_EVIDENCE_SUBJECT_MISMATCH`, `COV_DENOMINATOR_EVIDENCE_REASON_MISMATCH`, `COV_DENOMINATOR_EVIDENCE_LINEAGE_MISMATCH`, `COV_DENOMINATOR_REDUCTION_UNJUSTIFIED`.
+- `repair`: every source carrier is compared with the affected record's verified before/head source references; dedicated dispositions are schema-validated and field-compared; semantically invalid reasons force `COV_DENOMINATOR_REDUCTION_UNJUSTIFIED` even when generic carrier checks pass. Any invalid denominator transition is quarantined from effective coverage derivation, which preserves the verified base metrics.
+- `focused_evidence`: `denominator-unrelated-evidence-complete-reduction.json` proves a structurally valid unrelated Matrix cannot reduce the effective denominator (`7` remains `7`); `denominator-source-bound-reclassification.json` proves the exact record-source path remains valid and may derive `6`.
+- `stable_diagnostics`: `COV_DENOMINATOR_EVIDENCE_SUBJECT_MISMATCH`, `COV_DENOMINATOR_EVIDENCE_REASON_MISMATCH`, `COV_DENOMINATOR_EVIDENCE_LINEAGE_MISMATCH`, `COV_DENOMINATOR_REDUCTION_UNJUSTIFIED`, `COV_DENOMINATOR_CHANGE_QUARANTINED`.
 
 ### PRF-006 — canonical Coverage Impact chronology
 

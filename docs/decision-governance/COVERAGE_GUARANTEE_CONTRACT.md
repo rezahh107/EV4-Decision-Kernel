@@ -41,7 +41,7 @@ The expected state after `DCOV-EXEC-001` is `policy_active`. Unresolved denomina
 
 ## Denominator integrity
 
-Known scope includes non-duplicate `confirmed`, `candidate` and `unresolved` records. Denominator changes are derived from the verified base-to-head Ledger and Catalog transition. Every added, removed or reclassified ID requires a typed record-level reason whose evidence is either the affected record's exact verified source reference or a schema-valid disposition naming the exact record, reason, before/after memberships, target relationship, and source lineage. Unrelated Matrix or governance evidence cannot justify a reduction. Duplicate and supersession dispositions require valid targets. Deleting or disguising hard records to improve a percentage is invalid.
+Known scope includes non-duplicate `confirmed`, `candidate` and `unresolved` records. Denominator changes are derived from the verified base-to-head Ledger and Catalog transition. Every added, removed or reclassified ID requires a typed record-level reason whose evidence is either the affected record's exact verified source reference or a schema-valid disposition naming the exact record, reason, before/after memberships, target relationship, and source lineage. Unrelated Matrix or governance evidence cannot justify a reduction. Duplicate and supersession dispositions require valid targets. Deleting or disguising hard records to improve a percentage is invalid. When a denominator transition is invalid, its raw attempted values remain available only for diagnostics; effective coverage metrics preserve the verified base values, so a rejected transition cannot reduce a denominator or increase a numerator.
 
 For every coverage-sensitive PR, exactly one newly added Coverage Impact Record must match the repository, PR number, merge base, current work package and the complete sensitive changed-path set. Its exact head is verified from Git and the CI event at runtime; a historical record cannot satisfy a later PR.
 
@@ -104,7 +104,8 @@ The validator compares this block with the authoritative JSON contract. Editing 
   "denominator_transition": {
     "mode": "verified_base_head_diff_with_typed_record_reasons",
     "semantic_reason_evidence_required": true,
-    "disposition_schema": "kernel/schemas/coverage-denominator-disposition.v1.schema.json"
+    "disposition_schema": "kernel/schemas/coverage-denominator-disposition.v1.schema.json",
+    "invalid_change_effective_coverage": "preserve_verified_base_metrics"
   },
   "coverage_impact_binding": {
     "current_pr": "one_new_runtime_head_bound_record_per_sensitive_pr",

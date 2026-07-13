@@ -83,6 +83,20 @@ const EXCLUDED_MEMBERSHIPS = new Set([
 ]);
 const EXPECTED_REPOSITORY = 'rezahh107/EV4-Decision-Kernel';
 const SUPERSESSION_NOTE = 'Superseded: manual parent_authority promotion was removed from the active execution model.';
+const DENOMINATOR_TRANSITION_FAILURE_CODES = new Set([
+  'COV_DENOMINATOR_CHANGE_REQUIRED',
+  'COV_DENOMINATOR_COUNT_MISMATCH',
+  'COV_DENOMINATOR_DISPOSITION_INVALID',
+  'COV_DENOMINATOR_EVIDENCE_LINEAGE_MISMATCH',
+  'COV_DENOMINATOR_EVIDENCE_REASON_MISMATCH',
+  'COV_DENOMINATOR_EVIDENCE_SUBJECT_MISMATCH',
+  'COV_DENOMINATOR_REASON_MISSING',
+  'COV_DENOMINATOR_REDUCTION_UNJUSTIFIED',
+  'COV_DENOMINATOR_TARGET_INVALID',
+  'COV_DENOMINATOR_TRANSITION_MISMATCH',
+  'COV_EVIDENCE_CARRIER_INVALID',
+  'COV_EVIDENCE_REQUIRED',
+]);
 
 const ROLE_PATH_RULES = {
   catalog_record: ['kernel/decision-cards/', 'planning/coverage/decision-question-catalog.'],
@@ -1280,6 +1294,20 @@ function baselineDiagnostics(bundle, derived, repositoryChecks, transition) {
   return diagnostics;
 }
 
+function effectiveCoverageAfterDenominatorValidation(rawDerived, transition, diagnostics) {
+  const invalidTransition = !transition.initialBootstrap
+    && transition.hasChange
+    && transition.baseDerived
+    && diagnostics.some((item) => DENOMINATOR_TRANSITION_FAILURE_CODES.has(item.code));
+  if (!invalidTransition) {
+    return { derived: rawDerived, quarantined: false };
+  }
+  return {
+    derived: { ...transition.baseDerived },
+    quarantined: true,
+  };
+}
+
 function semanticDiagnostics(bundle) {
   const diagnostics = [];
   const ledgerRecords = bundle.ledger?.records || [];
@@ -1728,6 +1756,7 @@ function normativeProjection(contract) {
       mode: 'verified_base_head_diff_with_typed_record_reasons',
       semantic_reason_evidence_required: contract.denominator_integrity.reason_evidence_must_match_affected_record_source_or_disposition,
       disposition_schema: contract.denominator_integrity.disposition_schema,
+      invalid_change_effective_coverage: contract.denominator_integrity.invalid_change_effective_coverage,
     },
     coverage_impact_binding: {
       current_pr: 'one_new_runtime_head_bound_record_per_sensitive_pr',
@@ -2060,13 +2089,27 @@ function validateBundle(bundle, options) {
   diagnostics.push(...sourceDiagnostics(bundle.ledger?.records || [], repositoryChecks));
   diagnostics.push(...sourceDiagnostics(bundle.catalog?.records || [], repositoryChecks));
 
-  const derived = deriveCoverage(bundle);
-  diagnostics.push(...baselineDiagnostics(
+  const rawDerived = deriveCoverage(bundle);
+  const denominatorDiagnostics = baselineDiagnostics(
     bundle,
-    derived,
+    rawDerived,
     repositoryChecks,
     transition,
-  ));
+  );
+  diagnostics.push(...denominatorDiagnostics);
+  const effectiveCoverage = effectiveCoverageAfterDenominatorValidation(
+    rawDerived,
+    transition,
+    diagnostics,
+  );
+  const derived = effectiveCoverage.derived;
+  if (effectiveCoverage.quarantined) {
+    diagnostics.push(diagnostic(
+      'COV_DENOMINATOR_CHANGE_QUARANTINED',
+      'An invalid denominator transition cannot alter effective coverage metrics; the verified base metrics remain authoritative.',
+      'baseline.denominator_change',
+    ));
+  }
   diagnostics.push(...materialProgressDiagnostics(
     bundle,
     derived,

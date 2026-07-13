@@ -4,11 +4,14 @@
   "expected_diagnostic_codes": [
     "COV_DENOMINATOR_EVIDENCE_SUBJECT_MISMATCH",
     "COV_DENOMINATOR_EVIDENCE_REASON_MISMATCH",
-    "COV_DENOMINATOR_REDUCTION_UNJUSTIFIED"
+    "COV_DENOMINATOR_REDUCTION_UNJUSTIFIED",
+    "COV_DENOMINATOR_CHANGE_QUARANTINED"
   ],
   "expected_derived": {
-    "elementDenominator": 6,
-    "elementNumerator": 0
+    "elementDenominator": 7,
+    "elementNumerator": 0,
+    "questionDenominator": 24,
+    "questionNumerator": 0
   },
   "scenario": {
     "base": "canonical_coverage_bundle",

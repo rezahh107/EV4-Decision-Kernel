@@ -171,7 +171,8 @@
     "all_changed_ids_require_record_level_reasons": true,
     "excluded_memberships_require_valid_targets": true,
     "reason_evidence_must_match_affected_record_source_or_disposition": true,
-    "disposition_schema": "kernel/schemas/coverage-denominator-disposition.v1.schema.json"
+    "disposition_schema": "kernel/schemas/coverage-denominator-disposition.v1.schema.json",
+    "invalid_change_effective_coverage": "preserve_verified_base_metrics"
   },
   "coverage_impact_binding": {
     "one_new_record_per_coverage_sensitive_pr": true,
