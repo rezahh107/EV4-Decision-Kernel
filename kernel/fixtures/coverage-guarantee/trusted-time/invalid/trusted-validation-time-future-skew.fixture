@@ -1,0 +1,30 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_id": "trusted-time.validation-future-skew",
+  "fixture_kind": "invalid",
+  "expected_diagnostic_codes": [
+    "COV_TRUSTED_VALIDATION_TIME_FUTURE_SKEW"
+  ],
+  "expected_derived": {
+    "elementNumerator": 0,
+    "questionNumerator": 0,
+    "elementDenominator": 7,
+    "questionDenominator": 24,
+    "elementDenominatorState": "unresolved",
+    "questionDenominatorState": "unresolved",
+    "measurementActive": false,
+    "thresholdEnforced": false
+  },
+  "scenario": {
+    "ci_mode": true,
+    "host_now": "2026-07-13T12:00:30Z",
+    "environment": {
+      "GITHUB_ACTIONS": "true",
+      "GITHUB_REPOSITORY": "rezahh107/EV4-Decision-Kernel",
+      "GITHUB_WORKFLOW_REF": "rezahh107/EV4-Decision-Kernel/.github/workflows/validate-mvk.yml@refs/pull/43/merge",
+      "COVERAGE_VALIDATION_SOURCE": "github_actions_runner_clock_v1",
+      "COVERAGE_TRUSTED_INGESTION_ATTESTATIONS": "{}",
+      "COVERAGE_VALIDATED_AT": "2026-07-13T12:10:31Z"
+    }
+  }
+}

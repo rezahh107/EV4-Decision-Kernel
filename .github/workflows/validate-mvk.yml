@@ -28,9 +28,21 @@ jobs:
       - name: Install MVK validator dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
 
+      - name: Capture trusted Coverage validation clock
+        shell: bash
+        run: |
+          set -euo pipefail
+          validated_at="$(/bin/date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          {
+            printf 'COVERAGE_VALIDATED_AT=%s\n' "$validated_at"
+            printf 'COVERAGE_VALIDATION_SOURCE=github_actions_runner_clock_v1\n'
+            printf 'COVERAGE_TRUSTED_INGESTION_ATTESTATIONS={}\n'
+          } >> "$GITHUB_ENV"
+
       - name: Validate KROAD-010 source syntax and JSON
         run: |
           node --check kernel/validator/validate-coverage-guarantee.mjs
+          node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
           node --check kernel/validator/validate-downstream-consumer-contract.mjs
           node --check kernel/validator/validate-downstream-consumer-canonical-lock.mjs
           node --check kernel/validator/validate-downstream-consumer-lineage.mjs
