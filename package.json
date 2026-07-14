@@ -19,7 +19,8 @@
     "validate:roadmap-memory": "node tools/validate-roadmap-memory.mjs",
     "validate:behavioral-coverage:advisory": "node tools/audit-behavioral-coverage.mjs --mode advisory",
     "validate:behavioral-coverage:strict": "node tools/audit-behavioral-coverage.mjs --mode strict",
-    "validate:coverage": "npm run validate:kroad-010-source && git diff --check \"${COVERAGE_BASE_SHA}..${COVERAGE_HEAD_SHA}\" && npm run validate:mvk && npm run validate:roadmap-memory && node tools/validate-kroad-010-prototype-integrity.mjs && npm run validate:kroad-010-history-matrix && npm run validate:behavioral-coverage:advisory"
+    "validate:coverage": "npm run validate:kroad-010-source && git diff --check \"${COVERAGE_BASE_SHA}..${COVERAGE_HEAD_SHA}\" && npm run validate:mvk && npm run validate:roadmap-memory && node tools/validate-kroad-010-prototype-integrity.mjs && npm run validate:kroad-010-history-matrix && npm run validate:behavioral-coverage:advisory",
+    "validate:prf-013-boundary": "node tools/validate-prf-013-boundary.mjs"
   },
   "dependencies": {
     "ajv": "8.17.1",

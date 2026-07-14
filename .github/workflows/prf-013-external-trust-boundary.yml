@@ -1,0 +1,119 @@
+name: PRF-013 External Trust Boundary
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+  statuses: read
+
+concurrency:
+  group: prf-013-external-trust-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+  cancel-in-progress: true
+
+env:
+  EXPECTED_REPOSITORY_ID: "1292378784"
+  EXPECTED_TRUST_APP_SLUG: "pr-inspector"
+  EXPECTED_TRUST_CHECK_NAME: "PR Inspector / external-trust-result"
+  EXPECTED_ISSUER_WORKFLOW_SHA: "8b9b803a9f1e916f360d8871e43f5c48a11b5974"
+  PROOF_CREDIT_AUTHORIZED: "false"
+
+jobs:
+  verify-external-head-result:
+    name: PRF-013 external head trust boundary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify dynamic PR identity and external head-associated result
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const expectedRepositoryId = Number(process.env.EXPECTED_REPOSITORY_ID);
+            const expectedAppSlug = process.env.EXPECTED_TRUST_APP_SLUG;
+            const expectedCheckName = process.env.EXPECTED_TRUST_CHECK_NAME;
+            const expectedIssuerWorkflowSha = process.env.EXPECTED_ISSUER_WORKFLOW_SHA;
+
+            if (process.env.PROOF_CREDIT_AUTHORIZED !== 'false') {
+              core.setFailed('PRF013_PROOF_CREDIT_NOT_DISABLED: proof_credit_authorized must remain false');
+              return;
+            }
+
+            if (context.eventName !== 'pull_request') {
+              core.setFailed(`PRF013_UNSUPPORTED_EVENT: expected pull_request, got ${context.eventName}`);
+              return;
+            }
+
+            const eventPullRequest = context.payload.pull_request;
+            if (!eventPullRequest?.number || !eventPullRequest?.base?.sha || !eventPullRequest?.head?.sha) {
+              core.setFailed('PRF013_MISSING_EVENT_PR_IDENTITY: pull_request payload is incomplete');
+              return;
+            }
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const prNumber = Number(eventPullRequest.number);
+            const { data: apiPullRequest } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: prNumber,
+            });
+
+            const failures = [];
+            if (apiPullRequest.base.repo.id !== expectedRepositoryId) {
+              failures.push(`PRF013_REPOSITORY_ID_MISMATCH: expected ${expectedRepositoryId}, got ${apiPullRequest.base.repo.id}`);
+            }
+            if (apiPullRequest.number !== prNumber) {
+              failures.push(`PRF013_PR_NUMBER_MISMATCH: event ${prNumber}, api ${apiPullRequest.number}`);
+            }
+            if (apiPullRequest.base.sha !== eventPullRequest.base.sha) {
+              failures.push(`PRF013_BASE_SHA_MISMATCH: event ${eventPullRequest.base.sha}, api ${apiPullRequest.base.sha}`);
+            }
+            if (apiPullRequest.head.sha !== eventPullRequest.head.sha) {
+              failures.push(`PRF013_HEAD_SHA_MISMATCH: event ${eventPullRequest.head.sha}, api ${apiPullRequest.head.sha}`);
+            }
+            if (failures.length > 0) {
+              core.setFailed(failures.join('\n'));
+              return;
+            }
+
+            const verifiedHeadSha = apiPullRequest.head.sha;
+            const verifiedBaseSha = apiPullRequest.base.sha;
+            const { data: checkRuns } = await github.rest.checks.listForRef({
+              owner,
+              repo,
+              ref: verifiedHeadSha,
+              check_name: expectedCheckName,
+              filter: 'latest',
+            });
+
+            const matchingRun = checkRuns.check_runs.find((run) => {
+              if (run.head_sha !== verifiedHeadSha) return false;
+              if (run.name !== expectedCheckName) return false;
+              if (run.app?.slug !== expectedAppSlug) return false;
+              if (run.status !== 'completed' || run.conclusion !== 'success') return false;
+              const outputText = `${run.output?.title ?? ''}\n${run.output?.summary ?? ''}\n${run.output?.text ?? ''}`;
+              return outputText.includes(`repository_id=${expectedRepositoryId}`)
+                && outputText.includes(`pr_number=${prNumber}`)
+                && outputText.includes(`base_sha=${verifiedBaseSha}`)
+                && outputText.includes(`head_sha=${verifiedHeadSha}`)
+                && outputText.includes(`issuer_workflow_sha=${expectedIssuerWorkflowSha}`)
+                && outputText.includes('proof_credit_authorized=false')
+                && /run_id=\d+/.test(outputText)
+                && /run_attempt=\d+/.test(outputText)
+                && /attestation_digest=sha256:[0-9a-f]{64}/i.test(outputText);
+            });
+
+            if (!matchingRun) {
+              core.setFailed([
+                'PRF013_EXTERNAL_HEAD_RESULT_MISSING:',
+                `expected check name=${expectedCheckName}`,
+                `expected app slug=${expectedAppSlug}`,
+                `expected head_sha=${verifiedHeadSha}`,
+                'A same-name check from another source, a base-bound result, a stale prior-head result, or a result missing bindings is not accepted.',
+              ].join('\n'));
+              return;
+            }
+
+            core.info(`Verified PRF-013 external result check_run_id=${matchingRun.id} on head_sha=${verifiedHeadSha}`);

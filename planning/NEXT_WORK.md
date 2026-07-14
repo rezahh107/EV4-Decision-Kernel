@@ -110,6 +110,7 @@ If evidence is missing or uncertain, do not tick the item; add a note explaining
 
 ## Open Notes
 
+- PRF-013 repository-wide trust-boundary repair is `implemented_pending_rereview` only. Evidence added in this PR is the target-side verifier workflow `.github/workflows/prf-013-external-trust-boundary.yml`, the required-status configuration contract `.github/branch-protection/prf-013-required-status-checks.json`, the local static validator `tools/validate-prf-013-boundary.mjs`, and the governance note `docs/governance/PRF_013_EXTERNAL_TRUST_BOUNDARY.md`. This does not authorize proof credit and does not finally close PRF-013 before fresh independent rereview.
 - Decision Resolver must be three-state: `auto_resolved` / `conditional` / `unresolvable`.
 - Decision Record Schema v2 is contract-backed by `kernel/schemas/decision-record.v2.schema.json`; legacy MVK decision-record schemas are not v2-compliant unless explicitly migrated.
 - KROAD-005 resolver-contract artifacts are not Resolver MVP logic and do not assign real final decisions.

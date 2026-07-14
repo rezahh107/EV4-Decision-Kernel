@@ -1,0 +1,40 @@
+{
+  "status": "configuration_contract",
+  "scope": "repository-wide PRF-013 protected merge boundary for rezahh107/EV4-Decision-Kernel",
+  "owner": "repository administrators",
+  "what_it_is": "Branch-protection/ruleset configuration that must be applied outside Git after the external GitHub App check-run path is demonstrated on a test PR.",
+  "what_it_is_not": "This file is not live GitHub branch protection evidence and does not itself enable required checks.",
+  "required_status_checks": [
+    {
+      "context": "PR Inspector / external-trust-result",
+      "expected_source": "GitHub App slug: pr-inspector",
+      "source_policy": "exact_app_source_only_not_any_source",
+      "association": "pull_request_head_sha",
+      "stale_when": "pull_request_head_sha_changes"
+    },
+    {
+      "context": "PRF-013 external head trust boundary",
+      "expected_source": "GitHub Actions workflow: .github/workflows/prf-013-external-trust-boundary.yml",
+      "source_policy": "repository_workflow_verifier",
+      "association": "pull_request_head_sha",
+      "stale_when": "pull_request_head_sha_changes"
+    }
+  ],
+  "forbidden_configuration": [
+    "Do not use any-source matching for PR Inspector / external-trust-result.",
+    "Do not require a pull_request_target base-bound job as the protected head result.",
+    "Do not merge PR #43 merely to install this guard.",
+    "Do not authorize proof credit or trusted ingestion."
+  ],
+  "activation_gate": {
+    "prf_013_status": "implemented_pending_rereview",
+    "activate_after": [
+      "minimal separately reviewed default-branch bootstrap merge",
+      "test PR demonstrates a successful check run on the verified head SHA",
+      "test PR demonstrates same-name check from another source does not satisfy required PR Inspector source",
+      "missing external result blocks merge",
+      "new PR head invalidates the previous result"
+    ],
+    "proof_credit_authorized": false
+  }
+}
