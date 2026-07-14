@@ -190,56 +190,33 @@ Use these statuses in this file and in `planning/NEXT_WORK.md`:
 
 ---
 
-## Unified Coverage Execution Program
+## Proposed Unified Coverage Execution Program — Non-Executable
 
-- **Status:** active.
-- **Contract:** `kernel/decision-governance/coverage-guarantee-contract.v1.json`.
-- **Operational map:** `planning/EV4_DECISION_COVERAGE_OPERATIONALIZATION_MAP.md`.
-- **Current package:** `DCOV-EXEC-001`.
-- **Only next executable package after Merge:** `DCOV-EXEC-002`.
-- **Active package count:** exactly five.
+- **Status:** proposed.
+- **Authority:** none until every external governance promotion predicate is independently satisfied.
+- **Current executable package:** none.
+- **Next allowed roadmap item:** KROAD-012.
+- **Proposed package count:** exactly five, retained only as non-authoritative design context.
 
-The program converts merged recovery context into executable, source-bound coverage policy. Contract states and percentages are computed; no manual authority or activation workflow is part of the dependency graph.
+This proposed decomposition cannot activate Coverage, supersede KROAD-012 through KROAD-018, authorize implementation, or create proof credit. Merge metadata, CI success, repository placement, PR text, and target-authored closure remain insufficient promotion authority.
 
-### Package dependencies and obligations
+### Proposed package mapping
 
-| Package | Depends on | Stable obligation groups | Acceptance and evidence | Do not |
-|---|---|---|---|---|
-| `DCOV-EXEC-001` | PR #41 merged | `OB-EXEC-001-CONTRACT`, `LEDGER`, `CATALOG`, `BASELINE-DEBT`, `VALIDATOR-FIXTURES`, `CI`, `ROADMAP` | authoritative v1 JSON + Markdown mirror; non-empty source-bound data; proposed baseline; open debt; bootstrap impact; exact-code valid/invalid/adversarial fixtures; existing-CI run; derived `policy_active` | no Resolver expansion, runtime platform, readiness or Merge |
-| `DCOV-EXEC-002` | `DCOV-EXEC-001` merged | `OB-EXEC-002-PRODUCER-BOUNDARY`, `RECONCILE-ELEMENTS`, `EXPAND-CATALOG`, `CLOSE-SELECTED-P0-FAMILY`, `LAYOUT-BOUNDED-PROOF` | producer observation/version/hash/lineage boundaries needed by selected content; real Element/Question expansion; one materially sized P0/high-risk Matrix → Resolver → Evaluator → Fixture Triplet → L2 chain; bounded required proof; actual obligation/numerator growth | no producer-boundary documentation-only PR; no external implementation platform |
-| `DCOV-EXEC-003` | `DCOV-EXEC-002` merged | `OB-EXEC-003-BOUNDED-RUNTIME-EVIDENCE`, `ADDITIONAL-RESOLVER-CHAINS`, `PROVISIONAL-REAUDIT`, `SOURCE-RUNTIME-DISTINCTION` | Family-required runtime contracts and fixtures; more complete Resolver chains; deterministic provisional/re-audit behavior; source/runtime distinction; coverage growth | no general browser/runtime monitoring platform |
-| `DCOV-EXEC-004` | `DCOV-EXEC-003` merged | `OB-EXEC-004-ADDITIONAL-FAMILIES`, `REOPEN-VERSION-LIFECYCLE`, `SEQUENCE-REPLAY`, `UNAUTHORIZED-UPGRADE-REJECTION` | more real Families; immutable reopen lineage; sequence-aware replay/diff or equivalent tests; rejected claim/option upgrades; coverage growth | no static-document-only sequence claim; no broad lifecycle platform |
-| `DCOV-EXEC-005` | `DCOV-EXEC-004` merged | `OB-EXEC-005-SOURCE-FRESHNESS`, `CLOSE-REMAINING-CRITICAL`, `VALIDATE-DENOMINATORS`, `COMPUTE-THRESHOLDS`, `CRITICAL-100`, `FINAL-ASSESSMENT` | active-Rule freshness; remaining critical closure; validated denominator; derived 90%/95%/100%; final assessment | no manufactured coverage; no readiness from CI alone |
+| Candidate package | Proposed dependency | Preserved intent |
+|---|---|---|
+| `DCOV-EXEC-001` | external governance promotion carrier | candidate contract, source-bound seed data, validators, fixtures, and fail-closed proposal state |
+| `DCOV-EXEC-002` | approved promotion plus KROAD-012 producer-boundary evidence | producer boundary, Element reconciliation, Catalog expansion, and one bounded P0 Family slice |
+| `DCOV-EXEC-003` | prior approved package evidence | bounded runtime evidence, additional Resolver chains, provisional re-audit, and source/runtime distinction |
+| `DCOV-EXEC-004` | prior approved package evidence | additional Families, immutable reopen/version lineage, and sequence-aware replay |
+| `DCOV-EXEC-005` | prior approved package evidence | source freshness, validated denominators, derived thresholds, critical 100%, and final assessment |
 
-### Evidence and progress rules
+### Roadmap relationship
 
-- Every coverage-sensitive package commits a valid Coverage Impact Record.
-- Before `measurement_active`, content expansion closes a bounded real Family/Element slice and completes a material set of obligation IDs.
-- After `measurement_active`, progress uses computed percentage/numerator/family criteria from the contract.
-- File, schema, validator, Commit, PR and KROAD counts are never content-progress proxies.
-- A zero-delta package is limited to a blocking defect and names the next content package; three consecutive zero-delta packages fail.
-- Program share is `unresolved` until a validated denominator supports derivation.
-
-### Historical KROAD-to-package mapping
-
-KROAD-012 through KROAD-018 keep their IDs, detailed scope and acceptance intent below. Mapping does not mark them complete.
-
-| Historical item | Former active status | Unified package | Preserved intent |
-|---|---|---|---|
-| KROAD-012 | `superseded_by_coverage_execution_program` | `DCOV-EXEC-002` | external producer identity, declared inputs, version/hash/lineage, observed-only claims, no inference/tier promotion, fail-closed fixtures |
-| KROAD-013 | `superseded_by_coverage_execution_program` | `DCOV-EXEC-003` | runtime/browser evidence, viewport/state/direction, saved-source/runtime distinction, limitations |
-| KROAD-014 | `superseded_by_coverage_execution_program` | `DCOV-EXEC-003` | provisional thresholds, evidence changes, re-audit triggers and fail-closed transitions |
-| KROAD-015 | `superseded_by_coverage_execution_program` | `DCOV-EXEC-004` | reopen causes, immutable history, version lineage and earliest invalidated dependency |
-| KROAD-016 | `superseded_by_coverage_execution_program` | `DCOV-EXEC-004` | cross-stage ordering, replay/diff evidence and unauthorized change rejection |
-| KROAD-017 | `superseded_by_coverage_execution_program` | `DCOV-EXEC-005` | bounded freshness, stale-source diagnostics and Rule/source coupling |
-| KROAD-018 | `superseded_by_coverage_execution_program` | `DCOV-EXEC-005` | quantitative assessment using validated coverage; assessment cannot create coverage |
+KROAD-012 through KROAD-018 retain their original IDs, status, order, dependencies, acceptance criteria, and evidence requirements. The package names above are historical proposal context only and do not replace the active roadmap.
 
 ### Decision Record compatibility
 
-Decision Record v2 remains the base. A future extension or version change requires a proven semantic need and compatible consumer evidence; this program creates no v3 contract by default.
-
----
-
+Decision Record v2 remains the base. Any future extension or version change requires proven semantic need and compatible consumer evidence; this proposal creates no v3 contract by default.
 # Roadmap Items
 
 ---

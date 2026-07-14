@@ -2596,11 +2596,17 @@ function authorityReferenceDiagnostics() {
     || !recovery.includes('do not independently or collectively imply this authority transition')) {
     diagnostics.push(diagnostic('COV_EXTERNAL_PROMOTION_PREDICATE_MISSING', 'The trusted-base promotion predicate is incomplete.', 'docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md'));
   }
-  if (!plan.includes('**Status:** proposed')
-    || plan.includes('Coverage Execution Program — Active')
-    || plan.includes('replaces KROAD-012 through KROAD-018')) {
-    diagnostics.push(diagnostic('COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN', 'The Coverage recovery overlay must remain proposed and non-executable.', 'planning/KERNEL_EXECUTION_PLAN.md'));
-  }
+  const proposedProgramMatch = plan.match(
+  /## Proposed Unified Coverage Execution Program — Non-Executable[\s\S]*?(?=\n## |\n# Roadmap Items)/,
+);
+const proposedProgram = proposedProgramMatch?.[0] || '';
+if (!plan.includes('# Coverage Guarantee Proposal Overlay — Non-Executable')
+  || !proposedProgram.includes('- **Status:** proposed.')
+  || proposedProgram.includes('**Status:** active')
+  || proposedProgram.includes('superseded_by_coverage_execution_program')
+  || proposedProgram.includes('derived `policy_active`')) {
+  diagnostics.push(diagnostic('COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN', 'The Coverage recovery overlay and proposed package section must remain explicitly non-executable.', 'planning/KERNEL_EXECUTION_PLAN.md'));
+}
   if (!next.includes('KROAD-012')
     || next.includes('superseded_by_coverage_execution_program')
     || !next.includes('blocked_pending_external_governance_approval')) {
@@ -3116,6 +3122,25 @@ function deriveState(bundle, mainDiagnostics, fixturesPassed, runtimeContext = r
             ? 'not_measurable_pending_external_promotion'
             : 'inactive',
   };
+}
+
+if (process.env.COVERAGE_IMPACT_MUTATION_CASE) {
+  try {
+    const payload = JSON.parse(process.env.COVERAGE_IMPACT_MUTATION_CASE);
+    const observed = impactRequirementDiagnostics(
+      payload.bundle || {},
+      payload.changed_paths || [],
+      payload.current_impacts || [],
+      payload.runtime_context || {},
+    );
+    process.stdout.write(JSON.stringify({
+      codes: [...new Set(observed.map((item) => item.code))].sort(),
+    }));
+    process.exit(0);
+  } catch (error) {
+    console.error('COV_ENFORCEMENT_SURFACE_MUTATION_FIXTURE_FAILED: ' + error.message);
+    process.exit(2);
+  }
 }
 
 const schemaSetup = buildSchemaValidators();

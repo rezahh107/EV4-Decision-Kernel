@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -100,6 +101,22 @@ function jobBlock(workflow, jobName) {
     }
   }
   return lines.slice(start + 1, end).join('\n');
+}
+
+function markdownSection(text, heading) {
+  const lines = text.split(/\r?\n/);
+  const start = lines.findIndex((line) => line === heading);
+  if (start < 0) return '';
+  const level = heading.match(/^#+/)?.[0].length || 1;
+  let end = lines.length;
+  for (let index = start + 1; index < lines.length; index += 1) {
+    const match = lines[index].match(/^(#+)\s/);
+    if (match && match[1].length <= level) {
+      end = index;
+      break;
+    }
+  }
+  return lines.slice(start, end).join('\n');
 }
 
 function stepBlocks(job) {
@@ -210,11 +227,22 @@ function promotionDiagnostics(contract, recoverySpec, nextWork, executionPlan) {
     || nextWork.includes('Coverage Guarantee v1 is being activated')) {
     diagnostics.push(diagnostic('COV_ROADMAP_SELF_PROMOTION_FORBIDDEN', 'KROAD-012 must remain next-allowed while external governance approval is absent.', NEXT_WORK_PATH));
   }
-  if (!executionPlan.includes('Status:** proposed')
-    || executionPlan.includes('Coverage Execution Program — Active')
-    || executionPlan.includes('replaces KROAD-012 through KROAD-018')) {
-    diagnostics.push(diagnostic('COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN', 'The recovery overlay must remain proposed and may not supersede KROAD-012 through KROAD-018.', EXECUTION_PLAN_PATH));
-  }
+  const proposalOverlay = markdownSection(
+  executionPlan,
+  '# Coverage Guarantee Proposal Overlay — Non-Executable',
+);
+const proposedProgram = markdownSection(
+  executionPlan,
+  '## Proposed Unified Coverage Execution Program — Non-Executable',
+);
+if (!proposalOverlay.includes('- **Status:** proposed')
+  || !proposedProgram.includes('- **Status:** proposed.')
+  || proposedProgram.includes('**Status:** active')
+  || proposedProgram.includes('Only next executable')
+  || proposedProgram.includes('superseded_by_coverage_execution_program')
+  || proposedProgram.includes('derived `policy_active`')) {
+  diagnostics.push(diagnostic('COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN', 'Both the Coverage overlay and proposed package section must remain explicitly non-executable and may not supersede KROAD-012 through KROAD-018.', EXECUTION_PLAN_PATH));
+}
   return diagnostics;
 }
 
@@ -237,13 +265,52 @@ function sensitivityDiagnostics(contract, mutationFixture) {
       diagnostics.push(diagnostic('COV_SENSITIVE_ENFORCEMENT_PATH_MISSING', `Coverage sensitivity is missing ${required}.`, CONTRACT_PATH));
     }
   }
-  for (const fixture of mutationFixture?.cases || []) {
-    const sensitive = pathMatchesSensitive(fixture.changed_path, patterns);
-    const observed = sensitive
-      ? (fixture.impact_record_present ? 'COV_IMPACT_CHANGED_PATHS_MISMATCH' : 'COV_IMPACT_RECORD_MISSING')
-      : null;
-    if (observed !== fixture.expected_diagnostic) {
-      diagnostics.push(diagnostic('COV_ENFORCEMENT_SURFACE_MUTATION_FIXTURE_FAILED', `Mutation fixture failed: ${fixture.id}.`, MUTATION_FIXTURE_PATH));
+  const cases = mutationFixture?.cases;
+  if (!Array.isArray(cases) || cases.length === 0) {
+    diagnostics.push(diagnostic('COV_ENFORCEMENT_SURFACE_MUTATION_FIXTURE_MISSING', 'Enforcement-surface impact mutation fixtures must be present and non-empty.', MUTATION_FIXTURE_PATH));
+    return diagnostics;
+  }
+  const baseSha = '1'.repeat(40);
+  const headSha = '2'.repeat(40);
+  for (const fixture of cases) {
+    const currentImpacts = fixture.impact_record_present ? [{
+      impact_id: 'coverage-impact.dcov-exec-001.fixture',
+      repository: TARGET_REPOSITORY,
+      pull_request: 43,
+      base_sha: baseSha,
+      exact_head_sha: 'derived_at_pr_runtime',
+      work_package_id: 'DCOV-EXEC-001',
+      changed_paths: fixture.impact_changed_paths || [],
+    }] : [];
+    const payload = {
+      bundle: { contract: { coverage_sensitive_paths: patterns } },
+      changed_paths: [fixture.changed_path],
+      current_impacts: currentImpacts,
+      runtime_context: {
+        repository: TARGET_REPOSITORY,
+        pullRequestNumber: 43,
+        baseSha,
+        expectedBaseSha: baseSha,
+        headSha,
+        expectedHeadSha: headSha,
+        currentWorkPackage: 'DCOV-EXEC-001',
+      },
+    };
+    try {
+      const output = execFileSync(process.execPath, [LEGACY_VALIDATOR], {
+        cwd: ROOT,
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          COVERAGE_IMPACT_MUTATION_CASE: JSON.stringify(payload),
+        },
+      });
+      const observed = new Set(JSON.parse(output).codes || []);
+      if (!observed.has(fixture.expected_diagnostic)) {
+        diagnostics.push(diagnostic('COV_ENFORCEMENT_SURFACE_MUTATION_FIXTURE_FAILED', `Mutation fixture failed: ${fixture.id}; expected ${fixture.expected_diagnostic}, observed ${[...observed].join(',') || 'none'}.`, MUTATION_FIXTURE_PATH));
+      }
+    } catch (error) {
+      diagnostics.push(diagnostic('COV_ENFORCEMENT_SURFACE_MUTATION_FIXTURE_FAILED', `Mutation fixture execution failed: ${fixture.id}: ${error.message}.`, MUTATION_FIXTURE_PATH));
     }
   }
   return diagnostics;
