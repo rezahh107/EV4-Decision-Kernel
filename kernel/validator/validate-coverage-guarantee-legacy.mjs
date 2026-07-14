@@ -3014,9 +3014,13 @@ function runFixtureSuite(canonical, schemaSetup) {
     activeFixtureRuntimeContext = null;
     try {
       fixture = readJson(path);
-      const mutated = applyMutations(canonical, fixture.scenario?.mutations || []);
+      const fixtureCanonical = {
+        ...canonical,
+        impacts: (canonical.impacts || []).filter((impact) => impact.bootstrap_exception === true),
+      };
+      const mutated = applyMutations(fixtureCanonical, fixture.scenario?.mutations || []);
       const baseBundle = fixture.scenario?.base_bundle === 'canonical_coverage_bundle'
-        ? applyMutations(canonical, fixture.scenario?.base_mutations || [])
+        ? applyMutations(fixtureCanonical, fixture.scenario?.base_mutations || [])
         : null;
       const runtimeContext = runtimeContextFromGit({
         ...(fixture.scenario?.runtime_context || {}),
