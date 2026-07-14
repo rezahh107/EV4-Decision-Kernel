@@ -66,7 +66,7 @@ switch (testCase) {
     });
     break;
   default:
-    throw new Error(`unknown test case: ${testCase}`);
+    throw new Error('unknown test case: ' + testCase);
 }
 
 const outcome = await runWithDiagnostics({root, execute, cleanup});
