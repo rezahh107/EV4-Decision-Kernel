@@ -27,6 +27,36 @@ jobs:
           node-version: lts/*
           package-manager-cache: false
 
+      - name: Harden finalizer against heading drift
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tools/apply-prf-001-003-finalize.py')
+          text = path.read_text(encoding='utf-8')
+          old = '''plan, count = re.subn(
+              r"# Coverage Execution Program — Active[\\s\\S]*?(?=\\n# Roadmap Items)",
+              replacement.rstrip(),
+              plan,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit("active Coverage program section was not found")
+          plan = plan.replace("- **Status:** superseded_by_coverage_execution_program", "- **Status:** not_started")
+          plan = re.sub(r"\\n- \\*\\*Unified execution mapping:\\*\\*[^\\n]*", "", plan)
+          '''
+          new = '''if "**Status:** proposed" not in plan:
+              plan = plan.replace("---", "---\\n\\n" + replacement.rstrip() + "\\n", 1)
+          plan = plan.replace("Coverage Execution Program — Active", "Coverage Execution Program — Proposed, Non-Executable")
+          plan = plan.replace("replaces KROAD-012 through KROAD-018", "does not replace KROAD-012 through KROAD-018")
+          plan = plan.replace("- **Status:** superseded_by_coverage_execution_program", "- **Status:** not_started")
+          plan = re.sub(r"\\n- \\*\\*Unified execution mapping:\\*\\*[^\\n]*", "", plan)
+          '''
+          if old not in text:
+              raise SystemExit('finalizer target block not found')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+
       - name: Apply and validate final bounded repair
         id: repair
         continue-on-error: true
