@@ -215,6 +215,16 @@ export function runMutationGuards(
     }
   }
 
+  const declaredMethods = new Set(config.methods || []);
+  for (const method of REQUIRED_METHODS) {
+    if (!declaredMethods.has(method)) {
+      throw new MatrixError(
+        'HISTORY_MATRIX_CONFIG_METHOD_MISSING',
+        method,
+      );
+    }
+  }
+
   const policyCases = new Set(readJson(ROOT, POLICY_PATH).cases || []);
   for (const required of config.prototype_integrity_cases || []) {
     if (!policyCases.has(required)) {
