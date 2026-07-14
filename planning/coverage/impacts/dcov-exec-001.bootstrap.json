@@ -5,7 +5,7 @@
   "previous_impact_id": null,
   "repository": "rezahh107/EV4-Decision-Kernel",
   "pull_request": 43,
-  "base_sha": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+  "base_sha": "3779937e407d9493932442f324a8d054459eb7b9",
   "work_package_id": "DCOV-EXEC-001",
   "work_type": "foundation_bootstrap",
   "coverage_sensitive": true,
@@ -164,7 +164,7 @@
   "zero_delta": true,
   "blocking_defect": {
     "defect_id": "PRF-001-EXTERNAL-GOVERNANCE-AUTHORITY-MISSING",
-    "reason": "The target repository has no separately supplied external project-owner governance approval carrier."
+    "reason": "No separately supplied external project-owner governance approval carrier exists."
   },
   "next_content_expansion_package": "KROAD-012",
   "exact_head_sha": "derived_at_pr_runtime"

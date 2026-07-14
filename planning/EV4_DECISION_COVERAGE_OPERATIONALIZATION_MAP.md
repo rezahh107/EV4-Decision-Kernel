@@ -2,14 +2,14 @@
 
 ## Status
 
-- `status`: `active_unified_execution_map`
+- `status`: `proposed_unapproved_execution_overlay`
 - `contract`: `kernel/decision-governance/coverage-guarantee-contract.v1.json`
-- `current_work_package`: `DCOV-EXEC-001`
-- `only_next_executable_after_merge`: `DCOV-EXEC-002`
+- `current_work_package`: `none_blocked_pending_external_governance_approval`
+- `only_next_executable_after_merge`: `none`
 - `next_work_type`: `content_expansion`
 - `package_count`: `5`
 
-PR #41 merged the recovery context at `487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8`. This map replaces the fragmented proposed package path with five bounded executable packages. Contract states are computed; no manual promotion workflow is active.
+PR #41 merged the recovery context at `487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8`. This map is a proposed package decomposition only. It does not replace KROAD-012 through KROAD-018 and is non-executable until the full external governance promotion gate is independently satisfied.
 
 ## Machine-readable dependency map
 
@@ -29,7 +29,7 @@ packages:
       - OB-EXEC-001-VALIDATOR-FIXTURES
       - OB-EXEC-001-CI
       - OB-EXEC-001-ROADMAP
-    state_after: policy_active
+    state_after: not_measurable_pending_external_promotion
   - work_package_id: DCOV-EXEC-002
     work_type: content_expansion
     depends_on:
@@ -73,23 +73,23 @@ packages:
 
 ## DCOV-EXEC-001 — Coverage Guarantee Foundation and Execution Unblock
 
-This Draft PR creates the authoritative v1 contract and human view, source-bound non-empty Ledger and Catalog, proposed baseline, open debt, bootstrap impact, deterministic validator, exact-code fixtures, existing-CI wiring and unified roadmap memory.
+This Draft PR proposes a candidate v1 contract and human view, source-bound non-empty Ledger and Catalog, proposed baseline, open debt, bootstrap impact, deterministic validator, exact-code fixtures, existing-CI wiring and unified roadmap memory.
 
 Acceptance:
 
-- active manual authority lock count is zero;
+- the full external project-owner governance promotion carrier is verified;
 - Ledger and Catalog are non-empty and source-bound;
 - denominator candidates are preserved;
 - percentages are `null` while denominator state is unresolved;
 - valid, invalid and adversarial fixtures pass with intended diagnostics;
 - exact-head CI is green before independent inspection;
-- state derives as `policy_active`.
+- state remains `not_measurable_pending_external_promotion` while approval is absent.
 
 Non-goals: Resolver-family expansion, runtime platform, external producer implementation, measurement activation, readiness and Merge.
 
 ## DCOV-EXEC-002 — Evidence-Bound Element and Resolver Expansion
 
-This is the only next executable package after `DCOV-EXEC-001` merges.
+This package is not executable under the current authority state. KROAD-012 remains next allowed.
 
 Required content result:
 
@@ -122,13 +122,13 @@ The IDs and original acceptance intent remain discoverable in `planning/KERNEL_E
 
 | Historical item | Historical execution status | Unified package | Preserved obligation groups |
 |---|---|---|---|
-| KROAD-012 | `superseded_by_coverage_execution_program` | DCOV-EXEC-002 | producer identity; declared input/version/hash; observation-only claims; lineage; no tier promotion; invalid/adversarial rejection; bounded consumer/runtime proof |
-| KROAD-013 | `superseded_by_coverage_execution_program` | DCOV-EXEC-003 | browser/runtime evidence schema; viewport/state/direction evidence; saved-source/runtime distinction; runtime limitations |
-| KROAD-014 | `superseded_by_coverage_execution_program` | DCOV-EXEC-003 | provisional triggers; re-audit conditions; evidence upgrade/downgrade; fail-closed status transitions |
-| KROAD-015 | `superseded_by_coverage_execution_program` | DCOV-EXEC-004 | reopen causes; immutable history; version lineage; earliest invalidated dependency |
-| KROAD-016 | `superseded_by_coverage_execution_program` | DCOV-EXEC-004 | cross-turn ordering; replay/diff enforcement; unauthorized option/claim upgrade rejection |
-| KROAD-017 | `superseded_by_coverage_execution_program` | DCOV-EXEC-005 | source freshness; stale-source diagnostics; Rule/source coupling; bounded monitoring |
-| KROAD-018 | `superseded_by_coverage_execution_program` | DCOV-EXEC-005 | validated denominator; computed thresholds; critical hard gate; final assessment only |
+| KROAD-012 | `not_started` | DCOV-EXEC-002 | producer identity; declared input/version/hash; observation-only claims; lineage; no tier promotion; invalid/adversarial rejection; bounded consumer/runtime proof |
+| KROAD-013 | `not_started` | DCOV-EXEC-003 | browser/runtime evidence schema; viewport/state/direction evidence; saved-source/runtime distinction; runtime limitations |
+| KROAD-014 | `not_started` | DCOV-EXEC-003 | provisional triggers; re-audit conditions; evidence upgrade/downgrade; fail-closed status transitions |
+| KROAD-015 | `not_started` | DCOV-EXEC-004 | reopen causes; immutable history; version lineage; earliest invalidated dependency |
+| KROAD-016 | `not_started` | DCOV-EXEC-004 | cross-turn ordering; replay/diff enforcement; unauthorized option/claim upgrade rejection |
+| KROAD-017 | `not_started` | DCOV-EXEC-005 | source freshness; stale-source diagnostics; Rule/source coupling; bounded monitoring |
+| KROAD-018 | `not_started` | DCOV-EXEC-005 | validated denominator; computed thresholds; critical hard gate; final assessment only |
 
 ## Package progress
 

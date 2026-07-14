@@ -14,7 +14,7 @@
   "content_hashes": [
     {
       "path": "kernel/decision-governance/coverage-guarantee-contract.v1.json",
-      "sha256": "ef07abb9d02c45d80b68d7d21218d9474534d570f9a620165f5ddc23bdc2c987"
+      "sha256": "d6504685671ce2b8a0ef7c3fd5e5af3074a6e93c12319a59afa0566e922ec048"
     },
     {
       "path": "planning/coverage/element-reconciliation-ledger.v1.json",

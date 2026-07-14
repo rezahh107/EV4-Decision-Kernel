@@ -10,6 +10,18 @@ Future LLM sessions must read this file before proposing, implementing, or audit
 
 ---
 
+# Coverage Guarantee Proposal Overlay — Non-Executable
+
+- **Status:** proposed
+- **Authority:** blocked pending an external project-owner governance carrier satisfying every trusted-base promotion predicate.
+- **Scope:** candidate Coverage contract, data, validators and fixtures only.
+- **Do not:** treat merge metadata, CI success, repository placement, PR text or target-authored closure as implementation authority.
+- **Roadmap effect:** none; KROAD-012 through KROAD-018 retain their original status, order, dependencies and acceptance criteria.
+- **Next allowed item:** KROAD-012.
+
+The proposed DCOV package decomposition is retained only as non-authoritative design context. It cannot replace or supersede any KROAD item until the full external promotion gate is independently satisfied.
+
+
 ## Current Architecture Direction
 
 `EV4-Decision-Kernel` is a decision-governance repository for Elementor V4 pipeline decisions.
@@ -1156,8 +1168,7 @@ Possible artifacts:
 
 ## KROAD-012 — External Evidence Producer Boundary
 
-- **Status:** superseded_by_coverage_execution_program
-- **Unified execution mapping:** `DCOV-EXEC-002`; this mapping preserves scope and does not mark KROAD-012 completed.
+- **Status:** not_started
 - **Purpose:** Define what external evidence producers can and cannot prove.
 - **Depends on:** KROAD-001, KROAD-011
 - **Primary question:** What does each external evidence source prove, and what does it not prove?
@@ -1246,8 +1257,7 @@ Possible artifacts:
 
 ## KROAD-013 — Runtime / Browser Evidence Layer
 
-- **Status:** superseded_by_coverage_execution_program
-- **Unified execution mapping:** `DCOV-EXEC-003`; this mapping preserves scope and does not mark KROAD-013 completed.
+- **Status:** not_started
 - **Purpose:** Introduce actual runtime/browser evidence into Kernel decision governance.
 - **Depends on:** KROAD-012
 - **Primary question:** Can the Kernel distinguish source/editor claims from rendered browser facts?
@@ -1303,8 +1313,7 @@ Possible artifacts:
 
 ## KROAD-014 — Provisional Re-Audit Policy
 
-- **Status:** superseded_by_coverage_execution_program
-- **Unified execution mapping:** `DCOV-EXEC-003`; this mapping preserves scope and does not mark KROAD-014 completed.
+- **Status:** not_started
 - **Purpose:** Ensure decisions made with incomplete evidence remain provisional and are re-audited when stronger evidence arrives.
 - **Depends on:** KROAD-003, KROAD-012, KROAD-013
 - **Primary question:** Which decisions may remain provisional, which may not, and when must re-audit happen?
@@ -1362,8 +1371,7 @@ Possible artifacts:
 
 ## KROAD-015 — Decision Reopen / Feedback Loop
 
-- **Status:** superseded_by_coverage_execution_program
-- **Unified execution mapping:** `DCOV-EXEC-004`; this mapping preserves scope and does not mark KROAD-015 completed.
+- **Status:** not_started
 - **Purpose:** Make decision records reopenable when downstream failure, new evidence, or rule revision invalidates or weakens the original decision.
 - **Depends on:** KROAD-003, KROAD-007, KROAD-014
 - **Primary question:** How does the system repair root decisions instead of only failing downstream?
@@ -1440,8 +1448,7 @@ Possible artifacts:
 
 ## KROAD-016 — Cross-Turn / Sequence Enforcement
 
-- **Status:** superseded_by_coverage_execution_program
-- **Unified execution mapping:** `DCOV-EXEC-004`; this mapping preserves scope and does not mark KROAD-016 completed.
+- **Status:** not_started
 - **Purpose:** Ensure EV4 pipeline stages cannot mutate, overclaim, or silently reinterpret decisions across Architect → CE → Builder → Responsive.
 - **Depends on:** KROAD-010, KROAD-011, KROAD-015
 - **Primary question:** Can the system detect when a downstream stage changes the meaning of an upstream decision?
@@ -1499,8 +1506,7 @@ Possible artifacts:
 
 ## KROAD-017 — Official Docs Freshness Monitor
 
-- **Status:** superseded_by_coverage_execution_program
-- **Unified execution mapping:** `DCOV-EXEC-005`; this mapping preserves scope and does not mark KROAD-017 completed.
+- **Status:** not_started
 - **Purpose:** Prevent Kernel official-source knowledge from becoming stale when Elementor documentation changes.
 - **Depends on:** KROAD-001, KROAD-004
 - **Primary question:** How does the Kernel know when official source-backed claims may be outdated?
@@ -1560,8 +1566,7 @@ Possible artifacts:
 
 ## KROAD-018 — Final Kernel Release Gate
 
-- **Status:** superseded_by_coverage_execution_program
-- **Unified execution mapping:** `DCOV-EXEC-005`; this mapping preserves scope and does not mark KROAD-018 completed.
+- **Status:** not_started
 - **Purpose:** Determine whether the Kernel is ready for stable ecosystem-wide use using quantitative criteria, not subjective judgment.
 - **Depends on:** KROAD-001 through KROAD-017, or documented exceptions
 - **Primary question:** Is the Kernel operationally ready, or does it still behave like a boutique reference document?
