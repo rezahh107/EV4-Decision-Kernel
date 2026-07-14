@@ -11,6 +11,7 @@
   "coverage_sensitive": true,
   "impact_classification": "coverage_foundation",
   "changed_paths": [
+    ".github/workflows/validate-mvk.yml",
     "docs/decision-governance/COVERAGE_GUARANTEE_CONTRACT.md",
     "kernel/decision-governance/coverage-evidence-subject-registry.v1.json",
     "kernel/decision-governance/coverage-guarantee-contract.v1.json",
@@ -46,6 +47,7 @@
     "kernel/fixtures/coverage-guarantee/adversarial/fabricated-percentage.json",
     "kernel/fixtures/coverage-guarantee/adversarial/false-readiness-claim.json",
     "kernel/fixtures/coverage-guarantee/adversarial/impact-chronology-duplicate-gap-fork.json",
+    "kernel/fixtures/coverage-guarantee/adversarial/impact-enforcement-paths-mismatch.json",
     "kernel/fixtures/coverage-guarantee/adversarial/impact-historical-bootstrap-only.json",
     "kernel/fixtures/coverage-guarantee/adversarial/impact-incomplete-changed-paths.json",
     "kernel/fixtures/coverage-guarantee/adversarial/impact-unrelated-repository.json",
@@ -74,6 +76,11 @@
     "kernel/fixtures/coverage-guarantee/invalid/element-incomplete-obligations.json",
     "kernel/fixtures/coverage-guarantee/invalid/empty-catalog.json",
     "kernel/fixtures/coverage-guarantee/invalid/empty-ledger.json",
+    "kernel/fixtures/coverage-guarantee/invalid/enforcement-surface-impact-mutations.json",
+    "kernel/fixtures/coverage-guarantee/invalid/impact-missing-legacy-validator.json",
+    "kernel/fixtures/coverage-guarantee/invalid/impact-missing-package.json",
+    "kernel/fixtures/coverage-guarantee/invalid/impact-missing-prf010-validator.json",
+    "kernel/fixtures/coverage-guarantee/invalid/impact-missing-workflow.json",
     "kernel/fixtures/coverage-guarantee/invalid/measurement-without-valid-baseline.json",
     "kernel/fixtures/coverage-guarantee/invalid/missing-catalog.json",
     "kernel/fixtures/coverage-guarantee/invalid/missing-ledger.json",
@@ -109,7 +116,10 @@
     "kernel/schemas/coverage-runtime-proof-receipt.v1.schema.json",
     "kernel/schemas/decision-question-catalog.v1.schema.json",
     "kernel/schemas/element-reconciliation-ledger.v1.schema.json",
+    "kernel/validator/validate-coverage-guarantee-legacy.mjs",
+    "kernel/validator/validate-coverage-guarantee-prf010.mjs",
     "kernel/validator/validate-coverage-guarantee.mjs",
+    "package.json",
     "planning/KERNEL_EXECUTION_PLAN.md",
     "planning/NEXT_WORK.md",
     "planning/coverage/coverage-baseline.v1.json",
@@ -120,9 +130,9 @@
     "planning/coverage/open-decision-debt.v1.json"
   ],
   "bootstrap_exception": true,
-  "reason": "introduces_the_coverage_measurement_system",
+  "reason": "introduces_proposed_coverage_measurement_system_pending_external_promotion",
   "coverage_state_before": "not_measurable",
-  "coverage_state_after": "policy_active",
+  "coverage_state_after": "not_measurable",
   "baseline_before": null,
   "baseline_after": "coverage-baseline.v1.0.0",
   "completed_obligation_ids": [
@@ -146,12 +156,16 @@
   "element_coverage_delta": null,
   "question_coverage_delta": null,
   "known_gaps": [
+    "External project-owner governance approval is absent; Coverage policy remains non-active.",
     "Element and Question denominators remain unresolved.",
     "Coverage percentages remain null.",
     "Only layout_structure has an active Resolver-backed fixture-scoped chain, and required real proof remains incomplete."
   ],
-  "zero_delta": false,
-  "blocking_defect": null,
-  "next_content_expansion_package": "DCOV-EXEC-002",
+  "zero_delta": true,
+  "blocking_defect": {
+    "defect_id": "PRF-001-EXTERNAL-GOVERNANCE-AUTHORITY-MISSING",
+    "reason": "The target repository has no separately supplied external project-owner governance approval carrier."
+  },
+  "next_content_expansion_package": "KROAD-012",
   "exact_head_sha": "derived_at_pr_runtime"
 }
