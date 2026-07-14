@@ -116,6 +116,7 @@
     "kernel/schemas/coverage-runtime-proof-receipt.v1.schema.json",
     "kernel/schemas/decision-question-catalog.v1.schema.json",
     "kernel/schemas/element-reconciliation-ledger.v1.schema.json",
+    "kernel/validator/validate-coverage-guarantee-history.mjs",
     "kernel/validator/validate-coverage-guarantee-legacy.mjs",
     "kernel/validator/validate-coverage-guarantee-prf010.mjs",
     "kernel/validator/validate-coverage-guarantee.mjs",
