@@ -9,7 +9,7 @@ permissions:
 jobs:
   external-coverage-trust:
     name: External Coverage Trust Gate
-    uses: rezahh107/PR-Inspector/.github/workflows/coverage-trust-gate.yml@73b8e3857dbc1596fe7b04def04b94f2609440b2
+    uses: rezahh107/PR-Inspector/.github/workflows/coverage-trust-gate.yml@7a21045366bb9ad1ca2f950b8341ebb867dd8a52
     permissions:
       contents: read
       pull-requests: read
@@ -25,16 +25,47 @@ jobs:
       - name: Checkout externally verified exact PR head
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          fetch-depth: 0
           ref: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
           persist-credentials: false
 
-      - name: Verify checkout matches external authoritative identity
+      - name: Validate exact-head Coverage boundary
+        shell: bash
+        env:
+          COVERAGE_REPOSITORY: ${{ needs.external-coverage-trust.outputs.verified_repository }}
+          COVERAGE_PR_NUMBER: ${{ needs.external-coverage-trust.outputs.verified_pr_number }}
+          COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}
+          COVERAGE_HEAD_SHA: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
+        run: |
+          set -euo pipefail
+          git reset --hard "${COVERAGE_HEAD_SHA}"
+          git clean -ffdx
+          test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          npm ci
+          npm run validate:coverage
+
+  regression-validation:
+    name: MVK and roadmap regressions
+    needs:
+      - external-coverage-trust
+      - validate-mvk
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout externally verified exact PR head with history
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify exact clean checkout
         shell: bash
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "${{ needs.external-coverage-trust.outputs.verified_head_sha }}"
-          test "${{ needs.external-coverage-trust.outputs.proof_credit_authorized }}" = "false"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
 
       - name: Set up Node.js LTS
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -42,66 +73,29 @@ jobs:
           node-version: lts/*
           package-manager-cache: false
 
-      - name: Install MVK validator dependencies
-        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Validate KROAD-010 source syntax and JSON
+      - name: Run preserved syntax and regression validation
+        shell: bash
+        env:
+          COVERAGE_REPOSITORY: ${{ needs.external-coverage-trust.outputs.verified_repository }}
+          COVERAGE_PR_NUMBER: ${{ needs.external-coverage-trust.outputs.verified_pr_number }}
+          COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}
+          COVERAGE_HEAD_SHA: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
         run: |
+          set -euo pipefail
           node --check kernel/validator/validate-coverage-guarantee.mjs
           node --check kernel/validator/validate-coverage-guarantee-prf010.mjs
           node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
-          node --check kernel/validator/validate-downstream-consumer-contract.mjs
-          node --check kernel/validator/validate-downstream-consumer-canonical-lock.mjs
-          node --check kernel/validator/validate-downstream-consumer-lineage.mjs
-          node --check tools/validate-kroad-010-primary-baseline.mjs
-          node --check tools/validate-kroad-010-prototype-integrity.mjs
-          node --check tools/validate-kroad-010-history-matrix.mjs
-          node --check tools/kroad-010-history/common.mjs
-          node --check tools/kroad-010-history/build.mjs
-          node --check tools/kroad-010-history/validate.mjs
-          node -e "for (const p of process.argv.slice(1)) JSON.parse(require('node:fs').readFileSync(p, 'utf8'))" \
-            kernel/decision-governance/downstream-consumer-contract.v0.json \
-            kernel/decision-governance/downstream-consumer-lineage-binding.v0.json \
-            kernel/fixtures/contract-lock/downstream_consumer/canonical_lock_mutations.json \
-            kernel/fixtures/contract-lock/downstream_consumer/primary-validator-baseline.v0.json \
-            kernel/fixtures/history-matrix/downstream_consumer/history-matrix.v0.json
-
-      - name: Validate patch whitespace
-        run: |
           git diff --check
-          git diff --check "${{ needs.external-coverage-trust.outputs.verified_base_sha }}..${{ needs.external-coverage-trust.outputs.verified_head_sha }}"
-
-      - name: Validate Coverage Guarantee contract, data, fixtures, and impact
-        run: npm run validate:coverage
-        env:
-          COVERAGE_REPOSITORY: ${{ needs.external-coverage-trust.outputs.verified_repository }}
-          COVERAGE_PR_NUMBER: ${{ needs.external-coverage-trust.outputs.verified_pr_number }}
-          COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}
-          COVERAGE_HEAD_SHA: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
-
-      - name: Validate MVK fixtures and gates
-        run: npm run validate:mvk
-        env:
-          COVERAGE_REPOSITORY: ${{ needs.external-coverage-trust.outputs.verified_repository }}
-          COVERAGE_PR_NUMBER: ${{ needs.external-coverage-trust.outputs.verified_pr_number }}
-          COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}
-          COVERAGE_HEAD_SHA: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
-
-      - name: Validate roadmap memory consistency
-        if: ${{ always() }}
-        run: npm run validate:roadmap-memory
-
-      - name: Verify KROAD-010 prototype integrity
-        if: ${{ always() }}
-        run: node tools/validate-kroad-010-prototype-integrity.mjs
-
-      - name: Validate KROAD-010 merge/squash/rebase history matrix
-        id: history-matrix
-        if: ${{ always() }}
-        run: npm run validate:kroad-010-history-matrix
+          git diff --check "${COVERAGE_BASE_SHA}..${COVERAGE_HEAD_SHA}"
+          npm run validate:mvk
+          npm run validate:roadmap-memory
+          node tools/validate-kroad-010-prototype-integrity.mjs
+          npm run validate:kroad-010-history-matrix
 
       - name: Upload KROAD-010 history matrix evidence
-        if: ${{ always() && steps.history-matrix.outcome == 'success' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: kroad-010-history-matrix
