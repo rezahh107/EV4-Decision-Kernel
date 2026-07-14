@@ -5,6 +5,10 @@ const ROOT = process.cwd();
 const REQUIRED_FILES = [
   'planning/NEXT_WORK.md',
   'planning/KERNEL_EXECUTION_PLAN.md',
+  'planning/decisions/AIGOV_ADOPTION_DECISION.md',
+  'planning/reviews/AIGOV_ADOPTION_AUDIT.md',
+  'docs/governance/AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT_v1.1.0.fa.md',
+  'docs/governance/AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT_v1.1.0.fa.md.gz.b64',
   'AGENTS.md',
 ];
 
@@ -64,7 +68,7 @@ function assertStatusAuthority(nextWork) {
 
 function assertExactlyOneNextTask(nextWork) {
   const section = extractSection(nextWork, 'Next Task');
-  const nextTasks = [...section.matchAll(/^- \[ \] ((?:KROAD-\d{3})|(?:DCOV-EXEC-\d{3}))\s+—\s+.+$/gm)];
+  const nextTasks = [...section.matchAll(/^- \[ \] ((?:KROAD-\d{3})|(?:DCOV-EXEC-\d{3})|(?:AIGOV-ADOPT-\d{3}))\s+—\s+.+$/gm)];
   if (nextTasks.length !== 1) {
     fail(
       'planning/NEXT_WORK.md',
@@ -74,36 +78,83 @@ function assertExactlyOneNextTask(nextWork) {
   }
 }
 
-function assertExternalPromotionBoundary(nextWork, executionPlan) {
-  const current = extractSection(nextWork, 'Current PR');
+function assertAigovAdoptionBoundary(nextWork, adoptionDecision, adoptionAudit, ssotManifest) {
   const next = extractSection(nextWork, 'Next Task');
+  const nextProduct = extractSection(nextWork, 'Next Product Task');
 
-  if (!/^- \[ \] `?DCOV-EXEC-001`?\s+—\s+Coverage Guarantee proposal and validation foundation$/m.test(current)) {
+  if (!/^- \[ \] AIGOV-ADOPT-000\s+—\s+Authority and status reconciliation$/m.test(next)) {
     fail(
       'planning/NEXT_WORK.md',
-      'Current PR is not recorded as the non-executable DCOV-EXEC-001 proposal.',
-      'Record DCOV-EXEC-001 under Current PR as a proposal and validation foundation only.',
+      'The current governance task is not AIGOV-ADOPT-000.',
+      'Keep AIGOV-ADOPT-000 as the single current task until it is merged and post-merge verified.',
     );
   }
-  if (!/`implementation_eligibility`:\s+`blocked_pending_external_governance_approval`/.test(current)) {
+  if (!/`status`:\s+`in_progress`/.test(next)) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'AIGOV-ADOPT-000 is not classified as in_progress.',
+      'Set the current governance increment status to in_progress.',
+    );
+  }
+  if (!/^- \[ \] KROAD-012\s+—\s+External Evidence Producer Boundary$/m.test(nextProduct)) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'KROAD-012 is not preserved as the next product task.',
+      'Keep KROAD-012 under Next Product Task while the governance adoption sequence is active.',
+    );
+  }
+  if (!/`status`:\s+`next_product_task_blocked_by_governance_adoption`/.test(nextProduct)) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'KROAD-012 does not record the higher-priority governance dependency.',
+      'Set KROAD-012 to next_product_task_blocked_by_governance_adoption.',
+    );
+  }
+  if (!/plan_id:\s+GOV-ADOPTION-EV4-DECISION-KERNEL-D0E4652-V1/.test(adoptionDecision)) {
+    fail(
+      'planning/decisions/AIGOV_ADOPTION_DECISION.md',
+      'The approved frozen-plan identity is missing or changed.',
+      'Restore the exact approved plan ID.',
+    );
+  }
+  if (!/current_increment:\s+AIGOV-ADOPT-000/.test(adoptionDecision)) {
+    fail(
+      'planning/decisions/AIGOV_ADOPTION_DECISION.md',
+      'The adoption decision does not bind the current increment.',
+      'Record AIGOV-ADOPT-000 as the current increment.',
+    );
+  }
+  if (!/repository_adoption_status:\s+blocked_open_enforcement_gaps/.test(adoptionAudit)) {
+    fail(
+      'planning/reviews/AIGOV_ADOPTION_AUDIT.md',
+      'The audit overstates repository adoption.',
+      'Keep repository adoption blocked until the full sequence closes on main.',
+    );
+  }
+  if (!/raw_source_sha256:\s+"30ed521c5364ef5131f225c8e61bc8e49e721ae8d6bef5ca08c3941c1d523757"/.test(ssotManifest)) {
+    fail(
+      'docs/governance/AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT_v1.1.0.fa.md',
+      'The exact SSOT source digest is missing or changed.',
+      'Restore the audited v1.1.0 SHA-256 identity.',
+    );
+  }
+}
+
+function assertExternalPromotionBoundary(nextWork, executionPlan) {
+  const coverage = extractSection(nextWork, 'Blocked Coverage Proposal');
+
+  if (!/^- \[ \] `?DCOV-EXEC-001`?\s+—\s+Coverage Guarantee proposal and validation foundation$/m.test(coverage)) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'The non-executable DCOV-EXEC-001 proposal is not preserved.',
+      'Record DCOV-EXEC-001 under Blocked Coverage Proposal.',
+    );
+  }
+  if (!/`implementation_eligibility`:\s+`blocked_pending_external_governance_approval`/.test(coverage)) {
     fail(
       'planning/NEXT_WORK.md',
       'DCOV-EXEC-001 is not fail-closed on missing external governance approval.',
       'Set implementation_eligibility to blocked_pending_external_governance_approval.',
-    );
-  }
-  if (!/^- \[ \] KROAD-012\s+—\s+External Evidence Producer Boundary$/m.test(next)) {
-    fail(
-      'planning/NEXT_WORK.md',
-      'The only next allowed roadmap item must remain KROAD-012.',
-      'Keep only KROAD-012 under Next Task while the Coverage proposal lacks external approval.',
-    );
-  }
-  if (!/`status`:\s+`next_allowed`/.test(next)) {
-    fail(
-      'planning/NEXT_WORK.md',
-      'KROAD-012 is not classified as next_allowed.',
-      'Set KROAD-012 status to next_allowed.',
     );
   }
   if (/superseded_by_coverage_execution_program/.test(nextWork)) {
@@ -209,6 +260,12 @@ const files = Object.fromEntries(REQUIRED_FILES.map((filePath) => [filePath, rea
 
 assertStatusAuthority(files['planning/NEXT_WORK.md']);
 assertExactlyOneNextTask(files['planning/NEXT_WORK.md']);
+assertAigovAdoptionBoundary(
+  files['planning/NEXT_WORK.md'],
+  files['planning/decisions/AIGOV_ADOPTION_DECISION.md'],
+  files['planning/reviews/AIGOV_ADOPTION_AUDIT.md'],
+  files['docs/governance/AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT_v1.1.0.fa.md'],
+);
 assertExternalPromotionBoundary(files['planning/NEXT_WORK.md'], files['planning/KERNEL_EXECUTION_PLAN.md']);
 assertCompletedItemsHaveEvidence(files['planning/NEXT_WORK.md']);
 assertKernelDoesNotOverrideCompletedStatus(files['planning/NEXT_WORK.md'], files['planning/KERNEL_EXECUTION_PLAN.md']);
