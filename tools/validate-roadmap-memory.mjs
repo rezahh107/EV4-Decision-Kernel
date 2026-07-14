@@ -1,5 +1,7 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import zlib from 'node:zlib';
 
 const ROOT = process.cwd();
 const REQUIRED_FILES = [
@@ -8,7 +10,14 @@ const REQUIRED_FILES = [
   'planning/decisions/AIGOV_ADOPTION_DECISION.md',
   'planning/reviews/AIGOV_ADOPTION_AUDIT.md',
   'docs/governance/AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT_v1.1.0.fa.md',
-  'docs/governance/AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT_v1.1.0.fa.md.gz.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-001.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-002.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-003.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-004.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-005.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-006.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-007.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-008.b64',
   'AGENTS.md',
 ];
 
@@ -140,6 +149,64 @@ function assertAigovAdoptionBoundary(nextWork, adoptionDecision, adoptionAudit, 
   }
 }
 
+function assertSsotPayload(files) {
+  const partPaths = Array.from(
+    { length: 8 },
+    (_, index) => `docs/governance/ssot-v1.1.0-payload/part-${String(index + 1).padStart(3, '0')}.b64`,
+  );
+  const expectedPartSha256 = [
+    '9c9ef266832b7748ed4f51851d70638ccf7ade1f519a612113ff669e8cb1a753',
+    'cc3b95570207848f4fcbbc0fe6bd912638619efae0c67acdeb89b6af13ec0c2a',
+    'e8d42957e7665dc3c1db4c364b7dd242e13e545a31cc6124b34ad28e0284fcd5',
+    '1701611223e4561456569b09a517751c03a48fb487685387fad50e1da2df7c26',
+    '1014c5bfe2b366586a4582d49a36a643236b180a4676b013f2aed78f54e05e78',
+    'f578e37ca4b9e29fb8505eba97c4d357a6510b7afd2a0ecdbebf0032c060bf43',
+    'ef29003748aee9069ce3975a5abcc313bc63fd84d61a9b714609fcf18a2dd9ab',
+    '8bf646b1cae69fe7a7780d92ec5a23f13eeebf82cbe20f85c6cb52e890d4b55c',
+  ];
+  const normalizedParts = partPaths.map((partPath, index) => {
+    const value = files[partPath].trim();
+    const digest = crypto.createHash('sha256').update(value, 'utf8').digest('hex');
+    if (digest !== expectedPartSha256[index]) {
+      fail(
+        partPath,
+        `SSOT payload part digest mismatch: expected ${expectedPartSha256[index]}, found ${digest}.`,
+        'Restore the exact audited Base64 payload part.',
+      );
+    }
+    return value;
+  });
+
+  const encodedPayload = normalizedParts.join('');
+  if (encodedPayload.length !== 42288) {
+    fail(
+      'docs/governance/ssot-v1.1.0-payload/',
+      `SSOT payload encoded length mismatch: expected 42288, found ${encodedPayload.length}.`,
+      'Restore all eight exact payload parts in lexical order.',
+    );
+    return;
+  }
+
+  try {
+    const compressed = Buffer.from(encodedPayload, 'base64');
+    const source = zlib.gunzipSync(compressed);
+    const digest = crypto.createHash('sha256').update(source).digest('hex');
+    if (source.length !== 101922 || digest !== '30ed521c5364ef5131f225c8e61bc8e49e721ae8d6bef5ca08c3941c1d523757') {
+      fail(
+        'docs/governance/ssot-v1.1.0-payload/',
+        `Reconstructed SSOT identity mismatch: size=${source.length}, sha256=${digest}.`,
+        'Restore the exact audited v1.1.0 source payload.',
+      );
+    }
+  } catch (error) {
+    fail(
+      'docs/governance/ssot-v1.1.0-payload/',
+      `SSOT payload reconstruction failed: ${error.message}`,
+      'Restore valid deterministic gzip Base64 payload parts.',
+    );
+  }
+}
+
 function assertExternalPromotionBoundary(nextWork, executionPlan) {
   const coverage = extractSection(nextWork, 'Blocked Coverage Proposal');
 
@@ -258,6 +325,7 @@ function assertNoStalePreMergeWording() {
 
 const files = Object.fromEntries(REQUIRED_FILES.map((filePath) => [filePath, readRequired(filePath)]));
 
+assertSsotPayload(files);
 assertStatusAuthority(files['planning/NEXT_WORK.md']);
 assertExactlyOneNextTask(files['planning/NEXT_WORK.md']);
 assertAigovAdoptionBoundary(
