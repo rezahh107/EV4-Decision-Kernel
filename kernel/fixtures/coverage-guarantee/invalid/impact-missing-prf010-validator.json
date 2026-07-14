@@ -1,0 +1,22 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "invalid",
+  "expected_diagnostic_codes": [
+    "COV_IMPACT_RECORD_MISSING"
+  ],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "replace_artifact",
+        "artifact": "impacts",
+        "value": []
+      }
+    ],
+    "changed_paths": [
+      "kernel/validator/validate-coverage-guarantee-prf010.mjs"
+    ],
+    "requested_state": null,
+    "claims": []
+  }
+}
