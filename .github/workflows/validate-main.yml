@@ -51,7 +51,20 @@ jobs:
         run: git diff --check
 
       - name: Validate MVK fixtures and gates
-        run: npm run validate:mvk
+        env:
+          COVERAGE_REPOSITORY: ${{ github.repository }}
+          COVERAGE_BASE_SHA: ${{ github.event.before }}
+          COVERAGE_HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "${COVERAGE_REPOSITORY}" = "rezahh107/EV4-Decision-Kernel"
+          test "${COVERAGE_BASE_SHA}" != "0000000000000000000000000000000000000000"
+          [[ "${COVERAGE_BASE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          [[ "${COVERAGE_HEAD_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
+          git merge-base --is-ancestor "${COVERAGE_BASE_SHA}" "${COVERAGE_HEAD_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          npm run validate:mvk
 
       - name: Validate roadmap memory consistency
         if: ${{ always() }}
