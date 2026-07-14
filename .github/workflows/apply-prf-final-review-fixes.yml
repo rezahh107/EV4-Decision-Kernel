@@ -1,0 +1,294 @@
+name: Apply bounded final Coverage review repair
+
+on:
+  pull_request:
+    types: [synchronize]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'dcov/coverage-guarantee-activation'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact repair head
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Node.js LTS
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: lts/*
+          package-manager-cache: false
+
+      - name: Apply bounded source repair
+        shell: bash
+        env:
+          COVERAGE_REPOSITORY: ${{ github.repository }}
+          COVERAGE_PR_NUMBER: ${{ github.event.pull_request.number }}
+          COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path('.')
+
+          plan_path = root / 'planning/KERNEL_EXECUTION_PLAN.md'
+          plan = plan_path.read_text(encoding='utf-8')
+          proposed_program = '''## Proposed Unified Coverage Execution Program — Non-Executable
+
+          - **Status:** proposed.
+          - **Authority:** none until every external governance promotion predicate is independently satisfied.
+          - **Current executable package:** none.
+          - **Next allowed roadmap item:** KROAD-012.
+          - **Proposed package count:** exactly five, retained only as non-authoritative design context.
+
+          This proposed decomposition cannot activate Coverage, supersede KROAD-012 through KROAD-018, authorize implementation, or create proof credit. Merge metadata, CI success, repository placement, PR text, and target-authored closure remain insufficient promotion authority.
+
+          ### Proposed package mapping
+
+          | Candidate package | Proposed dependency | Preserved intent |
+          |---|---|---|
+          | `DCOV-EXEC-001` | external governance promotion carrier | candidate contract, source-bound seed data, validators, fixtures, and fail-closed proposal state |
+          | `DCOV-EXEC-002` | approved promotion plus KROAD-012 producer-boundary evidence | producer boundary, Element reconciliation, Catalog expansion, and one bounded P0 Family slice |
+          | `DCOV-EXEC-003` | prior approved package evidence | bounded runtime evidence, additional Resolver chains, provisional re-audit, and source/runtime distinction |
+          | `DCOV-EXEC-004` | prior approved package evidence | additional Families, immutable reopen/version lineage, and sequence-aware replay |
+          | `DCOV-EXEC-005` | prior approved package evidence | source freshness, validated denominators, derived thresholds, critical 100%, and final assessment |
+
+          ### Roadmap relationship
+
+          KROAD-012 through KROAD-018 retain their original IDs, status, order, dependencies, acceptance criteria, and evidence requirements. The package names above are historical proposal context only and do not replace the active roadmap.
+
+          ### Decision Record compatibility
+
+          Decision Record v2 remains the base. Any future extension or version change requires proven semantic need and compatible consumer evidence; this proposal creates no v3 contract by default.
+          '''
+          plan, count = re.subn(
+              r'## Unified Coverage Execution Program[\s\S]*?(?=\n# Roadmap Items)',
+              proposed_program.rstrip(),
+              plan,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit('active Coverage program section replacement failed')
+          plan_path.write_text(plan, encoding='utf-8')
+
+          wrapper_path = root / 'kernel/validator/validate-coverage-guarantee.mjs'
+          wrapper = wrapper_path.read_text(encoding='utf-8')
+          wrapper = wrapper.replace(
+              "import { existsSync, readFileSync } from 'node:fs';",
+              "import { execFileSync } from 'node:child_process';\nimport { existsSync, readFileSync } from 'node:fs';",
+              1,
+          )
+          helper_marker = '''function stepBlocks(job) {'''
+          section_helper = '''function markdownSection(text, heading) {
+            const lines = text.split(/\\r?\\n/);
+            const start = lines.findIndex((line) => line === heading);
+            if (start < 0) return '';
+            const level = heading.match(/^#+/)?.[0].length || 1;
+            let end = lines.length;
+            for (let index = start + 1; index < lines.length; index += 1) {
+              const match = lines[index].match(/^(#+)\\s/);
+              if (match && match[1].length <= level) {
+                end = index;
+                break;
+              }
+            }
+            return lines.slice(start, end).join('\\n');
+          }
+
+          '''
+          if section_helper.strip() not in wrapper:
+              if helper_marker not in wrapper:
+                  raise SystemExit('wrapper section-helper marker missing')
+              wrapper = wrapper.replace(helper_marker, section_helper + helper_marker, 1)
+
+          old_plan_check = '''  if (!executionPlan.includes('Status:** proposed')
+            || executionPlan.includes('Coverage Execution Program — Active')
+            || executionPlan.includes('replaces KROAD-012 through KROAD-018')) {
+            diagnostics.push(diagnostic('COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN', 'The recovery overlay must remain proposed and may not supersede KROAD-012 through KROAD-018.', EXECUTION_PLAN_PATH));
+          }'''
+          new_plan_check = '''  const proposalOverlay = markdownSection(
+            executionPlan,
+            '# Coverage Guarantee Proposal Overlay — Non-Executable',
+          );
+          const proposedProgram = markdownSection(
+            executionPlan,
+            '## Proposed Unified Coverage Execution Program — Non-Executable',
+          );
+          if (!proposalOverlay.includes('- **Status:** proposed')
+            || !proposedProgram.includes('- **Status:** proposed.')
+            || proposedProgram.includes('**Status:** active')
+            || proposedProgram.includes('Only next executable')
+            || proposedProgram.includes('superseded_by_coverage_execution_program')
+            || proposedProgram.includes('derived `policy_active`')) {
+            diagnostics.push(diagnostic('COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN', 'Both the Coverage overlay and proposed package section must remain explicitly non-executable and may not supersede KROAD-012 through KROAD-018.', EXECUTION_PLAN_PATH));
+          }'''
+          if old_plan_check not in wrapper:
+              raise SystemExit('wrapper promotion check marker missing')
+          wrapper = wrapper.replace(old_plan_check, new_plan_check, 1)
+
+          old_sensitivity = '''function sensitivityDiagnostics(contract, mutationFixture) {
+            const diagnostics = [];
+            const patterns = contract?.coverage_sensitive_paths || [];
+            for (const required of REQUIRED_SENSITIVE_PATHS) {
+              if (!patterns.includes(required)) {
+                diagnostics.push(diagnostic('COV_SENSITIVE_ENFORCEMENT_PATH_MISSING', `Coverage sensitivity is missing ${required}.`, CONTRACT_PATH));
+              }
+            }
+            for (const fixture of mutationFixture?.cases || []) {
+              const sensitive = pathMatchesSensitive(fixture.changed_path, patterns);
+              const observed = sensitive
+                ? (fixture.impact_record_present ? 'COV_IMPACT_CHANGED_PATHS_MISMATCH' : 'COV_IMPACT_RECORD_MISSING')
+                : null;
+              if (observed !== fixture.expected_diagnostic) {
+                diagnostics.push(diagnostic('COV_ENFORCEMENT_SURFACE_MUTATION_FIXTURE_FAILED', `Mutation fixture failed: ${fixture.id}.`, MUTATION_FIXTURE_PATH));
+              }
+            }
+            return diagnostics;
+          }'''
+          new_sensitivity = '''function sensitivityDiagnostics(contract, mutationFixture) {
+            const diagnostics = [];
+            const patterns = contract?.coverage_sensitive_paths || [];
+            for (const required of REQUIRED_SENSITIVE_PATHS) {
+              if (!patterns.includes(required)) {
+                diagnostics.push(diagnostic('COV_SENSITIVE_ENFORCEMENT_PATH_MISSING', `Coverage sensitivity is missing ${required}.`, CONTRACT_PATH));
+              }
+            }
+            const cases = mutationFixture?.cases;
+            if (!Array.isArray(cases) || cases.length === 0) {
+              diagnostics.push(diagnostic('COV_ENFORCEMENT_SURFACE_MUTATION_FIXTURE_MISSING', 'Enforcement-surface impact mutation fixtures must be present and non-empty.', MUTATION_FIXTURE_PATH));
+              return diagnostics;
+            }
+            const baseSha = '1'.repeat(40);
+            const headSha = '2'.repeat(40);
+            for (const fixture of cases) {
+              const currentImpacts = fixture.impact_record_present ? [{
+                impact_id: 'coverage-impact.dcov-exec-001.fixture',
+                repository: TARGET_REPOSITORY,
+                pull_request: 43,
+                base_sha: baseSha,
+                exact_head_sha: 'derived_at_pr_runtime',
+                work_package_id: 'DCOV-EXEC-001',
+                changed_paths: fixture.impact_changed_paths || [],
+              }] : [];
+              const payload = {
+                bundle: { contract: { coverage_sensitive_paths: patterns } },
+                changed_paths: [fixture.changed_path],
+                current_impacts: currentImpacts,
+                runtime_context: {
+                  repository: TARGET_REPOSITORY,
+                  pullRequestNumber: 43,
+                  baseSha,
+                  expectedBaseSha: baseSha,
+                  headSha,
+                  expectedHeadSha: headSha,
+                  currentWorkPackage: 'DCOV-EXEC-001',
+                },
+              };
+              try {
+                const output = execFileSync(process.execPath, [LEGACY_VALIDATOR], {
+                  cwd: ROOT,
+                  encoding: 'utf8',
+                  env: {
+                    ...process.env,
+                    COVERAGE_IMPACT_MUTATION_CASE: JSON.stringify(payload),
+                  },
+                });
+                const observed = new Set(JSON.parse(output).codes || []);
+                if (!observed.has(fixture.expected_diagnostic)) {
+                  diagnostics.push(diagnostic('COV_ENFORCEMENT_SURFACE_MUTATION_FIXTURE_FAILED', `Mutation fixture failed: ${fixture.id}; expected ${fixture.expected_diagnostic}, observed ${[...observed].join(',') || 'none'}.`, MUTATION_FIXTURE_PATH));
+                }
+              } catch (error) {
+                diagnostics.push(diagnostic('COV_ENFORCEMENT_SURFACE_MUTATION_FIXTURE_FAILED', `Mutation fixture execution failed: ${fixture.id}: ${error.message}.`, MUTATION_FIXTURE_PATH));
+              }
+            }
+            return diagnostics;
+          }'''
+          if old_sensitivity not in wrapper:
+              raise SystemExit('wrapper sensitivity block marker missing')
+          wrapper = wrapper.replace(old_sensitivity, new_sensitivity, 1)
+          wrapper_path.write_text(wrapper, encoding='utf-8')
+
+          legacy_path = root / 'kernel/validator/validate-coverage-guarantee-legacy.mjs'
+          legacy = legacy_path.read_text(encoding='utf-8')
+          old_legacy_plan = '''  if (!plan.includes('**Status:** proposed')
+            || plan.includes('Coverage Execution Program — Active')
+            || plan.includes('replaces KROAD-012 through KROAD-018')) {
+            diagnostics.push(diagnostic('COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN', 'The Coverage recovery overlay must remain proposed and non-executable.', 'planning/KERNEL_EXECUTION_PLAN.md'));
+          }'''
+          new_legacy_plan = '''  const proposedProgramMatch = plan.match(
+            /## Proposed Unified Coverage Execution Program — Non-Executable[\\s\\S]*?(?=\\n## |\\n# Roadmap Items)/,
+          );
+          const proposedProgram = proposedProgramMatch?.[0] || '';
+          if (!plan.includes('# Coverage Guarantee Proposal Overlay — Non-Executable')
+            || !proposedProgram.includes('- **Status:** proposed.')
+            || proposedProgram.includes('**Status:** active')
+            || proposedProgram.includes('superseded_by_coverage_execution_program')
+            || proposedProgram.includes('derived `policy_active`')) {
+            diagnostics.push(diagnostic('COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN', 'The Coverage recovery overlay and proposed package section must remain explicitly non-executable.', 'planning/KERNEL_EXECUTION_PLAN.md'));
+          }'''
+          if old_legacy_plan not in legacy:
+              raise SystemExit('legacy promotion check marker missing')
+          legacy = legacy.replace(old_legacy_plan, new_legacy_plan, 1)
+
+          self_test_marker = '''const schemaSetup = buildSchemaValidators();'''
+          impact_self_test = '''if (process.env.COVERAGE_IMPACT_MUTATION_CASE) {
+            try {
+              const payload = JSON.parse(process.env.COVERAGE_IMPACT_MUTATION_CASE);
+              const observed = impactRequirementDiagnostics(
+                payload.bundle || {},
+                payload.changed_paths || [],
+                payload.current_impacts || [],
+                payload.runtime_context || {},
+              );
+              process.stdout.write(JSON.stringify({
+                codes: [...new Set(observed.map((item) => item.code))].sort(),
+              }));
+              process.exit(0);
+            } catch (error) {
+              console.error('COV_ENFORCEMENT_SURFACE_MUTATION_FIXTURE_FAILED: ' + error.message);
+              process.exit(2);
+            }
+          }
+
+          '''
+          if impact_self_test.strip() not in legacy:
+              if self_test_marker not in legacy:
+                  raise SystemExit('legacy self-test insertion marker missing')
+              legacy = legacy.replace(self_test_marker, impact_self_test + self_test_marker, 1)
+          legacy_path.write_text(legacy, encoding='utf-8')
+
+          workflow_path = root / '.github/workflows/apply-prf-final-review-fixes.yml'
+          workflow_path.unlink()
+          PY
+
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'fix(coverage): close final review gaps'
+
+          export COVERAGE_HEAD_SHA="$(git rev-parse HEAD)"
+          test "$(git merge-base HEAD origin/main)" = "${COVERAGE_BASE_SHA}"
+          node --check kernel/validator/validate-coverage-guarantee.mjs
+          node --check kernel/validator/validate-coverage-guarantee-prf010.mjs
+          node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
+          git diff --check
+          npm ci
+          npm run validate:coverage
+          npm run validate:mvk
+          npm run validate:roadmap-memory
+          node tools/validate-kroad-010-prototype-integrity.mjs
+          npm run validate:kroad-010-history-matrix
+          git diff --check "${COVERAGE_BASE_SHA}..${COVERAGE_HEAD_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          git push origin HEAD:dcov/coverage-guarantee-activation
