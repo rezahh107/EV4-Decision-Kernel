@@ -50,6 +50,18 @@ Implemented:
 - an exact-path mismatch adversarial fixture covers incomplete enforcement-surface records;
 - the current Coverage Impact Record is bound to the recomputed sensitive diff.
 
+## Final review-gap repair
+
+The final bounded pass additionally:
+
+- replaced the contradictory active Coverage execution section with an explicitly proposed, non-executable package mapping;
+- made the promotion validator inspect the exact proposal section rather than accepting an unrelated `proposed` substring elsewhere in the document;
+- made the enforcement mutation matrix execute the real `impactRequirementDiagnostics()` path through an isolated legacy-validator self-test instead of synthesizing expected diagnostic codes;
+- retained `planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md` as a historical, non-authoritative history-matrix fixture;
+- removed every temporary repair carrier before the resulting source commit.
+
+The source-changing repair commit was validated before push. This handoff-only follow-up creates the exact head on which normal GitHub Actions and fresh independent review must run.
+
 ## Preserved boundaries
 
 - Coverage thresholds remain 90/95/100.
