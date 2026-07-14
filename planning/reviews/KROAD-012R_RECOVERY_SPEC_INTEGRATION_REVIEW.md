@@ -1,47 +1,48 @@
-# KROAD-012R Recovery Specification Integration — Bounded Repair Record
+# KROAD-012R Recovery Specification Integration — Historical Record
 
-Superseded: manual parent_authority promotion was removed from the active execution model.
+## Authority classification
 
-All authority-promotion predicates below are preserved as historical PR #41 evidence only. They are not active package dependencies.
+- `record_status`: `historical_non_authoritative`
+- `implementation_authority`: `none`
+- `current_approval_carrier`: `absent`
+- `merge_performed`: `false`
+- `approval_performed`: `false`
+- `deployment_performed`: `false`
 
-## Status
+This file is retained only because deterministic history-matrix fixtures consume its path. It is not an active package dependency, project-owner approval, source-of-record promotion, evidence closure, merge authorization, or implementation-eligibility carrier.
 
-- `action_kind`: `repair`
-- `review_status`: `implemented_pending_rereview`
-- `reviewed_head_sha`: `197f2a9ae56f93d8f6a46402343d3d74420dbf0f`
-- `authority`: documentation repair evidence only
-- `merge_performed`: false
-- `approval_performed`: false
-- `deployment_performed`: false
-- `base_sha`: `ccab57d9f0be0286dc68297404ef040a77e80b36`
-- `final_head_evidence`: recorded in the PR conversation after the repaired commit is pushed; this committed file does not self-assert its own commit SHA.
+The target repository, this PR, CI success, merge metadata, repository placement and target-authored review records cannot satisfy or repeal the external governance promotion gate.
 
-## Invariant Extraction
+## Historical context
 
-| Finding | Surface symptom | Underlying invariant | Failure boundary | Affected components | Repair status |
-|---|---|---|---|---|---|
-| `PRF-001` | duplicate ARCH requirement identities expressed the same normative rules | one normative invariant must have one canonical Requirement ID; aliases cannot be independent requirements | future prompts and work packages could bind to divergent IDs | parent Requirement Index, inline references, Operationalization Map | `implemented_pending_rereview` |
-| `PRF-002` | `DCOV-WP-002` could be read as eligible after merge/evidence closure without parent authority promotion | every recovery-spec-sourced implementation package must fail closed until `parent_authority=approved_recovery_source_of_record` is explicitly recorded after the full promotion gate | schema work could start while the parent remained proposed-only | parent promotion gate, Operationalization Map, Execution Plan, NEXT_WORK | `implemented_pending_rereview` |
+The earlier repair identified a valid invariant:
 
-Assumptions preserved:
+```text
+parent_authority=approved_recovery_source_of_record
+```
 
-- Existing KROAD-012 through KROAD-018 meanings are unchanged.
-- `DCOV-WP-002` is not activated by this repair.
-- Merge, CI success, package `evidence_closed`, and placement approval do not imply parent authority.
-- The parent remains `proposed_recovery_specification_pending_evidence_validation` until its full promotion gate is satisfied.
+Recovery-spec-sourced implementation remains fail-closed until every trusted-base promotion predicate is independently satisfied, including explicit external project-owner governance approval.
 
-## Bounded Repair
+The following remain insufficient individually or collectively:
 
-- Consolidated `ARCH-004/ARCH-008`, `ARCH-005/ARCH-009`, and `ARCH-006/ARCH-010` onto canonical IDs `ARCH-004`, `ARCH-005`, and `ARCH-006`.
-- Removed redundant normative Requirement Index entries and updated all Operationalization references.
-- Defined `parent_authority=approved_recovery_source_of_record` as the canonical implementation-eligibility prerequisite.
-- Applied that prerequisite to every recovery-spec-sourced implementation package.
-- Defined `evidence_closed` as package lifecycle evidence that cannot independently promote parent authority.
-- Mirrored the same fail-closed predicate in the parent specification, Operationalization Map, Execution Plan, and NEXT_WORK.
+- merge status;
+- CI success;
+- package lifecycle status;
+- a target-authored evidence-closure record;
+- a target file declaring itself authoritative;
+- this historical review file.
 
-## Exact Intended Changed Paths
+## Current roadmap effect
 
-The base-to-head PR scope remains:
+- KROAD-012 remains the next allowed roadmap item.
+- KROAD-012 through KROAD-018 are not superseded by the unapproved Coverage proposal.
+- `DCOV-EXEC-001` remains `blocked_pending_external_governance_approval`.
+- Coverage state remains `not_measurable_pending_external_promotion`.
+- No proof credit or trusted ingestion is authorized.
+
+## Historical changed-path context
+
+The prior six-path repair scope is retained only as historical evidence:
 
 ```text
 README.md
@@ -52,19 +53,10 @@ planning/NEXT_WORK.md
 planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md
 ```
 
-This bounded repair materially edits only the parent specification and four planning/review files. It adds no workflow, staging artifact, schema, Registry data, Resolver Rule, producer, consumer or runtime code.
+## Required current validation
 
-## Required Validation
-
-- semantic one-to-one Requirement-ID check;
-- every Operationalization reference resolves exactly once;
-- every implementation package `DCOV-WP-002` and later includes `parent_authority=approved_recovery_source_of_record`;
-- merge/evidence-closure-without-authority scenario remains blocked;
-- `npm run validate:roadmap-memory`;
-- `npm run validate:mvk`;
-- exact base-to-head six-path assertion;
-- fresh PR Inspector review on the exact repaired head.
-
-## Mandatory Follow-Up
-
-A fresh PR Inspector review is required on the exact repaired head before technical acceptance or merge.
+- external promotion negative tests must reject merge, CI, target declarations and self-authored closure as authority;
+- `npm run validate:coverage` must derive `not_measurable_pending_external_promotion`;
+- `npm run validate:roadmap-memory` must preserve KROAD-012 as next allowed;
+- history-matrix validation may consume this path only as historical fixture input;
+- fresh PR Inspector review is required on the resulting exact head.
