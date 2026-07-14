@@ -11,6 +11,8 @@
   "coverage_sensitive": false,
   "impact_classification": "not_applicable",
   "changed_paths": [
+    ".github/workflows/validate-mvk.yml",
+    "package.json",
     "planning/NEXT_WORK.md",
     "planning/coverage/impacts/dcov-exec-001.pr48-aigov-roadmap-reconciliation.json"
   ],
