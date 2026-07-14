@@ -27,15 +27,49 @@ function diagnosticValue(value) {
   return String(value);
 }
 
-function main() {
-  const config = readJson(ROOT, MATRIX_CONFIG_PATH);
-  assertMethodSet(config.methods || []);
-
-  const tempRoot = mkdtempSync(
-    join(tmpdir(), 'ev4-kroad-010-history-matrix-'),
+function writeDiagnostic(error, cleanupError = null) {
+  writeFileSync(
+    join(ROOT, 'kroad-010-history-matrix-report.json'),
+    `${JSON.stringify({
+      schema_version: '0.1.0',
+      result: 'DIAGNOSTIC_FAIL',
+      diagnostic_only: true,
+      exact_head: process.env.COVERAGE_HEAD_SHA || null,
+      error: {
+        name: error?.name || 'Error',
+        message: error?.message || String(error),
+        stack: error?.stack || null,
+        code: error?.code || null,
+        status: error?.status ?? null,
+        stdout: diagnosticValue(error?.stdout),
+        stderr: diagnosticValue(error?.stderr),
+      },
+      cleanup_error: cleanupError ? {
+        name: cleanupError?.name || 'Error',
+        message: cleanupError?.message || String(cleanupError),
+        stack: cleanupError?.stack || null,
+        code: cleanupError?.code || null,
+        status: cleanupError?.status ?? null,
+        stdout: diagnosticValue(cleanupError?.stdout),
+        stderr: diagnosticValue(cleanupError?.stderr),
+      } : null,
+    }, null, 2)}\n`,
   );
+}
+
+function main() {
+  let tempRoot;
   let repository;
+  let primaryError;
+  let cleanupError;
+
   try {
+    const config = readJson(ROOT, MATRIX_CONFIG_PATH);
+    assertMethodSet(config.methods || []);
+    tempRoot = mkdtempSync(
+      join(tmpdir(), 'ev4-kroad-010-history-matrix-'),
+    );
+
     const builder = createActivationSource(createBuilder(tempRoot));
     repository = builder.repository;
     const heads = createFinalHistories(builder);
@@ -75,35 +109,30 @@ function main() {
     );
     printSummary(matrixResults, mutationResults);
   } catch (error) {
-    writeFileSync(
-      join(ROOT, 'kroad-010-history-matrix-report.json'),
-      `${JSON.stringify({
-        schema_version: '0.1.0',
-        result: 'DIAGNOSTIC_FAIL',
-        diagnostic_only: true,
-        exact_head: process.env.COVERAGE_HEAD_SHA || null,
-        error: {
-          name: error?.name || 'Error',
-          message: error?.message || String(error),
-          stack: error?.stack || null,
-          code: error?.code || null,
-          status: error?.status ?? null,
-          stdout: diagnosticValue(error?.stdout),
-          stderr: diagnosticValue(error?.stderr),
-        },
-      }, null, 2)}\n`,
-    );
-    console.error(`KROAD-010 diagnostic capture: ${error?.message || error}`);
-    process.exitCode = 0;
+    primaryError = error;
   } finally {
     if (repository && existsSync(repository)) {
       try {
         git(repository, ['worktree', 'prune']);
-      } catch {
-        // Temporary cleanup remains best effort.
+      } catch (error) {
+        cleanupError = error;
       }
     }
-    rmSync(tempRoot, {recursive: true, force: true});
+    if (tempRoot) {
+      try {
+        rmSync(tempRoot, {recursive: true, force: true});
+      } catch (error) {
+        cleanupError ||= error;
+      }
+    }
+  }
+
+  if (primaryError || cleanupError) {
+    writeDiagnostic(primaryError || cleanupError, cleanupError);
+    console.error(
+      `KROAD-010 diagnostic capture: ${(primaryError || cleanupError)?.message || (primaryError || cleanupError)}`,
+    );
+    process.exitCode = 0;
   }
 }
 
