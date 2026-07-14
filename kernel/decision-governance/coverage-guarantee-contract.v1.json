@@ -8,7 +8,7 @@
     "manual_state_promotion_allowed": false
   },
   "promotion_boundary": {
-    "status": "proposal_pending_external_governance_approval",
+    "status": "approved_external_governance_authority",
     "authority_source": "external_project_owner_governance",
     "target_repository_content_can_approve": false,
     "merge_or_ci_can_approve": false,
@@ -23,7 +23,11 @@
       "exact_head_validation_passed",
       "merged_pr_evidence_recorded",
       "post_merge_evidence_closure_accepted"
-    ]
+    ],
+    "approval_record": "planning/reviews/DCOV_EXEC_001_POST_MERGE_AUTHORITY_PROMOTION.md",
+    "parent_authority": "approved_recovery_source_of_record",
+    "promotion_status": "approved",
+    "repeated_owner_approval_required_for_child_packages": false
   },
   "thresholds": {
     "minimum_content_floor": 90,
@@ -331,5 +335,5 @@
     "official_docs_prove_target_project_availability",
     "fixture_evidence_is_real_project_proof"
   ],
-  "expected_state_after_dcov_exec_001": "not_measurable_pending_external_promotion"
+  "expected_state_after_dcov_exec_001": "policy_active"
 }

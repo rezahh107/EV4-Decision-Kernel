@@ -64,7 +64,7 @@ function assertStatusAuthority(nextWork) {
 
 function assertExactlyOneNextTask(nextWork) {
   const section = extractSection(nextWork, 'Next Task');
-  const nextTasks = [...section.matchAll(/^- \[ \] ((?:KROAD-\d{3})|(?:DCOV-EXEC-\d{3}))\s+—\s+.+$/gm)];
+  const nextTasks = [...section.matchAll(/^- \[ \] `?((?:KROAD-\d{3})|(?:DCOV-EXEC-\d{3}))`?\s+—\s+.+$/gm)];
   if (nextTasks.length !== 1) {
     fail(
       'planning/NEXT_WORK.md',
@@ -78,48 +78,48 @@ function assertExternalPromotionBoundary(nextWork, executionPlan) {
   const current = extractSection(nextWork, 'Current PR');
   const next = extractSection(nextWork, 'Next Task');
 
-  if (!/^- \[ \] `?DCOV-EXEC-001`?\s+—\s+Coverage Guarantee proposal and validation foundation$/m.test(current)) {
+  if (!/`DCOV-EXEC-001`/.test(current) || !/`status`:\s+`evidence_closed`/.test(current) || !/`implementation_state`:\s+`merged_and_post_merge_closed`/.test(current)) {
     fail(
       'planning/NEXT_WORK.md',
-      'Current PR is not recorded as the non-executable DCOV-EXEC-001 proposal.',
-      'Record DCOV-EXEC-001 under Current PR as a proposal and validation foundation only.',
+      'DCOV-EXEC-001 is not recorded as evidence_closed after the post-merge authority promotion.',
+      'Record DCOV-EXEC-001 under Current PR as evidence_closed with merged_and_post_merge_closed implementation state.',
     );
   }
-  if (!/`implementation_eligibility`:\s+`blocked_pending_external_governance_approval`/.test(current)) {
+  if (!/Parent authority:\s+`approved_recovery_source_of_record`/.test(nextWork) || !/Promotion status:\s+`approved`/.test(nextWork)) {
     fail(
       'planning/NEXT_WORK.md',
-      'DCOV-EXEC-001 is not fail-closed on missing external governance approval.',
-      'Set implementation_eligibility to blocked_pending_external_governance_approval.',
+      'Parent authority promotion is not recorded as approved.',
+      'Record parent_authority approved_recovery_source_of_record and promotion_status approved.',
     );
   }
-  if (!/^- \[ \] KROAD-012\s+—\s+External Evidence Producer Boundary$/m.test(next)) {
+  if (!/^- \[ \] `?DCOV-EXEC-002`?\s+—\s+Evidence-Bound Element and Resolver Expansion$/m.test(next)) {
     fail(
       'planning/NEXT_WORK.md',
-      'The only next allowed roadmap item must remain KROAD-012.',
-      'Keep only KROAD-012 under Next Task while the Coverage proposal lacks external approval.',
+      'The only next executable Coverage package must be DCOV-EXEC-002.',
+      'Keep only DCOV-EXEC-002 under Next Task after the parent promotion is satisfied.',
     );
   }
-  if (!/`status`:\s+`next_allowed`/.test(next)) {
+  if (!/`status`:\s+`next_allowed`/.test(next) || !/KROAD-012 is preserved as `parallel_or_dependency_aligned`/.test(next)) {
     fail(
       'planning/NEXT_WORK.md',
-      'KROAD-012 is not classified as next_allowed.',
-      'Set KROAD-012 status to next_allowed.',
+      'DCOV-EXEC-002 or KROAD-012 dependency alignment is not recorded correctly.',
+      'Set DCOV-EXEC-002 status to next_allowed and preserve KROAD-012 as parallel_or_dependency_aligned.',
     );
   }
   if (/superseded_by_coverage_execution_program/.test(nextWork)) {
     fail(
       'planning/NEXT_WORK.md',
-      'NEXT_WORK.md still self-supersedes KROAD items through the unapproved Coverage proposal.',
+      'NEXT_WORK.md still self-supersedes KROAD items through the Coverage program.',
       'Remove superseded_by_coverage_execution_program from current roadmap memory.',
     );
   }
-  if (!/\*\*Status:\*\* proposed/.test(executionPlan)
-    || /Coverage Execution Program — Active/.test(executionPlan)
+  if (!/- \*\*Status:\*\* active parent authority/.test(executionPlan)
+    || !/- \*\*Next executable package:\*\* DCOV-EXEC-002/.test(executionPlan)
     || /replaces KROAD-012 through KROAD-018/.test(executionPlan)) {
     fail(
       'planning/KERNEL_EXECUTION_PLAN.md',
-      'The detailed plan still represents the Coverage overlay as active or authoritative.',
-      'Keep the Coverage overlay proposed and non-executable without changing KROAD-012 through KROAD-018.',
+      'The detailed plan does not represent the approved parent authority and preserved KROAD alignment.',
+      'Record approved parent authority, DCOV-EXEC-002 as next executable, and KROAD-012 through KROAD-018 preservation.',
     );
   }
 }

@@ -2,14 +2,16 @@
 
 ## Status
 
-- `status`: `proposed_unapproved_execution_overlay`
+- `status`: `approved_parent_execution_program`
 - `contract`: `kernel/decision-governance/coverage-guarantee-contract.v1.json`
-- `current_work_package`: `none_blocked_pending_external_governance_approval`
-- `only_next_executable_after_merge`: `none`
+- `parent_authority`: `approved_recovery_source_of_record`
+- `promotion_status`: `approved`
+- `current_work_package`: `DCOV-EXEC-001 evidence_closed`
+- `only_next_executable_after_merge`: `DCOV-EXEC-002`
 - `next_work_type`: `content_expansion`
 - `package_count`: `5`
 
-PR #41 merged the recovery context at `487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8`. This map is a proposed package decomposition only. It does not replace KROAD-012 through KROAD-018 and is non-executable until the full external governance promotion gate is independently satisfied.
+PR #41 merged the recovery context at `487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8`. PR #43 merged DCOV-EXEC-001 with final head `2710931b51941295f9ae6a1ed849fc0fbf3a7004`, merge commit `3e4adb453adc547fefaad19670698add67cad79f`, current verified `main` `44db96ac911ce8796c3dd3ed1c07d9fbbdb81333`, and merge timestamp `2026-07-14T13:22:00Z`. The one-time external project-owner approval has been supplied, the parent promotion gate is satisfied, and DCOV-EXEC-002 is the next executable package. Child packages do not require repeated project-owner approval, but each still requires dependency checks, implementation evidence, CI, exact-head validation, review and normal merge gates.
 
 ## Machine-readable dependency map
 
@@ -29,7 +31,7 @@ packages:
       - OB-EXEC-001-VALIDATOR-FIXTURES
       - OB-EXEC-001-CI
       - OB-EXEC-001-ROADMAP
-    state_after: not_measurable_pending_external_promotion
+    state_after: evidence_closed
   - work_package_id: DCOV-EXEC-002
     work_type: content_expansion
     depends_on:
@@ -89,7 +91,7 @@ Non-goals: Resolver-family expansion, runtime platform, external producer implem
 
 ## DCOV-EXEC-002 — Evidence-Bound Element and Resolver Expansion
 
-This package is not executable under the current authority state. KROAD-012 remains next allowed.
+This package is the next executable Recovery-program package. KROAD-012 is preserved and aligned with its producer-boundary obligations rather than deleted or silently superseded.
 
 Required content result:
 
