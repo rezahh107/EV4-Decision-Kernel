@@ -1,0 +1,40 @@
+name: Temporary Coverage Diagnostic
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  coverage-diagnostic:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact PR head with history
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          show-progress: false
+          persist-credentials: false
+
+      - name: Set up Node.js LTS
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: lts/*
+          package-manager-cache: false
+
+      - name: Print bounded Coverage diagnostics
+        shell: bash
+        env:
+          COVERAGE_REPOSITORY: ${{ github.repository }}
+          COVERAGE_PR_NUMBER: ${{ github.event.pull_request.number }}
+          COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          COVERAGE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set +e
+          npm ci >/dev/null 2>&1
+          npm run validate:coverage >/tmp/coverage.log 2>&1
+          status=$?
+          tail -n 80 /tmp/coverage.log
+          exit "$status"
