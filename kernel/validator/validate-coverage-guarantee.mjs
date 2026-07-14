@@ -201,7 +201,7 @@ function promotionDiagnostics(contract, recoverySpec, nextWork, executionPlan) {
   const diagnostics = [];
   const boundary = contract?.promotion_boundary;
   if (!boundary
-    || !['proposal_pending_external_governance_approval', 'approved_external_governance_authority'].includes(boundary.status)
+    || boundary.status !== 'proposal_pending_external_governance_approval'
     || boundary.authority_source !== 'external_project_owner_governance'
     || boundary.target_repository_content_can_approve !== false
     || boundary.merge_or_ci_can_approve !== false
@@ -209,11 +209,7 @@ function promotionDiagnostics(contract, recoverySpec, nextWork, executionPlan) {
     || JSON.stringify(boundary.required_predicates) !== JSON.stringify(REQUIRED_PROMOTION_PREDICATES)) {
     diagnostics.push(diagnostic('COV_EXTERNAL_PROMOTION_BOUNDARY_MISSING', 'Coverage artifacts must remain proposals until every external promotion predicate is verified.', CONTRACT_PATH));
   }
-  if (!['not_measurable_pending_external_promotion', 'policy_active'].includes(contract?.expected_state_after_dcov_exec_001)
-    || (contract?.promotion_boundary?.status === 'approved_external_governance_authority'
-      && (contract?.promotion_boundary?.parent_authority !== 'approved_recovery_source_of_record'
-        || contract?.promotion_boundary?.promotion_status !== 'approved'
-        || contract?.promotion_boundary?.repeated_owner_approval_required_for_child_packages !== false))
+  if (contract?.expected_state_after_dcov_exec_001 !== 'not_measurable_pending_external_promotion'
     || !contract?.state_machine?.eligibility?.policy_active?.requirements?.includes('external_governance_approval_verified')) {
     diagnostics.push(diagnostic('COV_SELF_AUTHORIZED_POLICY_ACTIVATION', 'The target contract may not make its own implementation policy-active.', CONTRACT_PATH));
   }
@@ -228,22 +224,24 @@ function promotionDiagnostics(contract, recoverySpec, nextWork, executionPlan) {
   }
   if (!nextWork.includes('KROAD-012')
     || nextWork.includes('superseded_by_coverage_execution_program')
-    || false) {
-    diagnostics.push(diagnostic('COV_ROADMAP_SELF_PROMOTION_FORBIDDEN', 'Roadmap memory must preserve KROAD-012 alignment and DCOV-EXEC-002 next-task consistency.', NEXT_WORK_PATH));
+    || nextWork.includes('Coverage Guarantee v1 is being activated')) {
+    diagnostics.push(diagnostic('COV_ROADMAP_SELF_PROMOTION_FORBIDDEN', 'KROAD-012 must remain next-allowed while external governance approval is absent.', NEXT_WORK_PATH));
   }
   const proposalOverlay = markdownSection(
   executionPlan,
-  '# Coverage Guarantee Execution Overlay — Active Parent Authority',
+  '# Coverage Guarantee Proposal Overlay — Non-Executable',
 );
 const proposedProgram = markdownSection(
   executionPlan,
-  '## Unified Coverage Execution Program — Parent Approved',
+  '## Proposed Unified Coverage Execution Program — Non-Executable',
 );
-if (!proposalOverlay.includes('parent_authority: approved_recovery_source_of_record')
-  || !proposedProgram.includes('- **Status:** parent approved.')
-  || !proposedProgram.includes('- **Next executable package:** DCOV-EXEC-002.')
-  || proposedProgram.includes('superseded_by_coverage_execution_program')) {
-  diagnostics.push(diagnostic('COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN', 'The Coverage overlay must record approved parent authority while preserving KROAD-012 through KROAD-018 dependency alignment.', EXECUTION_PLAN_PATH));
+if (!proposalOverlay.includes('- **Status:** proposed')
+  || !proposedProgram.includes('- **Status:** proposed.')
+  || proposedProgram.includes('**Status:** active')
+  || proposedProgram.includes('Only next executable')
+  || proposedProgram.includes('superseded_by_coverage_execution_program')
+  || proposedProgram.includes('derived `policy_active`')) {
+  diagnostics.push(diagnostic('COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN', 'Both the Coverage overlay and proposed package section must remain explicitly non-executable and may not supersede KROAD-012 through KROAD-018.', EXECUTION_PLAN_PATH));
 }
   return diagnostics;
 }

@@ -5,13 +5,13 @@
 
 | Field | Value |
 |---|---|
-| `status` | `approved_recovery_source_of_record` |
+| `status` | `proposed_recovery_specification_pending_evidence_validation` |
 | `version` | `1.0.0-rc1` |
 | `purpose` | Recover the broad EV4 decision-governance objective, distinguish it from the small MVK, and define bounded future work. |
 | `repository` | `rezahh107/EV4-Decision-Kernel` |
 | `repository_precheck` | `main` at `ccab57d9f0be0286dc68297404ef040a77e80b36` |
-| `authority` | Parent authority approved by one-time external project-owner promotion; repository evidence remains implementation truth. |
-| `promotion_target` | `approved_recovery_source_of_record` satisfied by post-merge activation evidence. |
+| `authority` | Proposed requirement source only; repository evidence remains implementation truth. |
+| `promotion_target` | `approved_recovery_source_of_record` only after the promotion gate. |
 
 This document consolidates and hardens the supplied recovery draft. It preserves its core product conclusions while separating historical intent, current facts, derived requirements, proposals and unresolved candidates.
 
@@ -64,7 +64,7 @@ The canonical implementation-eligibility predicate for every recovery-spec-sourc
 parent_authority: approved_recovery_source_of_record
 ```
 
-This authority value is recorded by the one-time post-merge promotion closure for PR #43. Package status `merged` or `evidence_closed`, CI success, and repository-placement approval do not independently or collectively imply this authority transition for future programs. DCOV child packages do not require repeated project-owner governance approval, but they remain subject to their declared dependencies, exact-head validation, independent review, CI and normal merge gates.
+This authority value may be recorded only after every promotion-gate condition above is satisfied. Package status `merged` or `evidence_closed`, CI success, and repository-placement approval do not independently or collectively imply this authority transition. An evidence-closure record must explicitly prove the full promotion gate and record the authority change before any implementation package may become eligible.
 
 
 ## 1. Executive Decision

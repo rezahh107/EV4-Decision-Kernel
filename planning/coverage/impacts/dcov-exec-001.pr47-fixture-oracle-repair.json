@@ -1,0 +1,50 @@
+{
+  "impact_id": "coverage-impact.dcov-exec-001.pr47-fixture-oracle-repair",
+  "impact_version": "1.0.0",
+  "sequence_number": 2,
+  "previous_impact_id": "coverage-impact.dcov-exec-001.bootstrap",
+  "repository": "rezahh107/EV4-Decision-Kernel",
+  "pull_request": 47,
+  "base_sha": "44db96ac911ce8796c3dd3ed1c07d9fbbdb81333",
+  "work_package_id": "DCOV-EXEC-001",
+  "work_type": "blocking_defect",
+  "coverage_sensitive": true,
+  "impact_classification": "blocking_defect",
+  "changed_paths": [
+    "kernel/fixtures/coverage-guarantee/adversarial/not-applicable-disposition-wrong-subject.json",
+    "kernel/fixtures/coverage-guarantee/adversarial/not-applicable-question-self-authorized.json",
+    "kernel/validator/validate-coverage-guarantee-legacy.mjs",
+    "planning/coverage/impacts/dcov-exec-001.pr47-fixture-oracle-repair.json"
+  ],
+  "bootstrap_exception": false,
+  "reason": "repair_not_applicable_adversarial_fixture_oracles_after_reverting_unsafe_authority_self_promotion",
+  "coverage_state_before": "not_measurable",
+  "coverage_state_after": "not_measurable",
+  "baseline_before": "coverage-baseline.v1.0.0",
+  "baseline_after": "coverage-baseline.v1.0.0",
+  "completed_obligation_ids": [],
+  "remaining_obligation_ids": [
+    "OB-EXEC-002-RECONCILE-ELEMENTS",
+    "OB-EXEC-002-EXPAND-CATALOG",
+    "OB-EXEC-002-CLOSE-SELECTED-P0-FAMILY",
+    "OB-EXEC-002-LAYOUT-BOUNDED-PROOF",
+    "OB-EXEC-005-VALIDATE-DENOMINATORS",
+    "OB-EXEC-005-CRITICAL-100"
+  ],
+  "closed_family_ids": [],
+  "element_coverage_delta": null,
+  "question_coverage_delta": null,
+  "known_gaps": [
+    "External project-owner governance approval carrier remains absent; Coverage policy remains non-active.",
+    "Element and Question denominators remain unresolved.",
+    "Coverage percentages remain null.",
+    "This repair only restores fixture-oracle integrity and fail-closed pending authority."
+  ],
+  "zero_delta": true,
+  "blocking_defect": {
+    "defect_id": "PRF-003-FIXTURE-ORACLE-INTEGRITY",
+    "reason": "Not-applicable adversarial fixtures must assert stable intended diagnostics without relying on path-specific validator filtering or promotion-state rewrites."
+  },
+  "next_content_expansion_package": "KROAD-012",
+  "exact_head_sha": "derived_at_pr_runtime"
+}

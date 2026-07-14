@@ -10,16 +10,16 @@ Future LLM sessions must read this file before proposing, implementing, or audit
 
 ---
 
-# Coverage Guarantee Execution Overlay — Active Parent Authority
+# Coverage Guarantee Proposal Overlay — Non-Executable
 
-- **Status:** active parent authority after one-time external project-owner approval.
-- **Authority:** `parent_authority: approved_recovery_source_of_record`.
-- **Promotion status:** `approved`.
-- **Closure evidence:** PR #43 final head `2710931b51941295f9ae6a1ed849fc0fbf3a7004`, merge commit `3e4adb453adc547fefaad19670698add67cad79f`, current verified `main` `44db96ac911ce8796c3dd3ed1c07d9fbbdb81333`, merge timestamp `2026-07-14T13:22:00Z`, and `planning/reviews/DCOV_EXEC_001_POST_MERGE_AUTHORITY_PROMOTION.md`.
-- **Roadmap effect:** DCOV-EXEC-001 is `evidence_closed`; DCOV-EXEC-002 is the next executable content-expansion package; KROAD-012 is preserved as `parallel_or_dependency_aligned` with DCOV-EXEC-002 producer-boundary obligations.
-- **Child approval:** repeated project-owner governance approval is not required for DCOV child packages.
-- **Still required:** each child package must satisfy its own dependencies, implementation evidence, exact-head validation, CI, independent review and normal merge gates.
-- **Do not:** implement DCOV-EXEC-002 content, activate percentages while denominators are unresolved, claim readiness, or weaken evidence authority boundaries in the activation step.
+- **Status:** proposed
+- **Authority:** blocked pending an external project-owner governance carrier satisfying every trusted-base promotion predicate.
+- **Scope:** candidate Coverage contract, data, validators and fixtures only.
+- **Do not:** treat merge metadata, CI success, repository placement, PR text or target-authored closure as implementation authority.
+- **Roadmap effect:** none; KROAD-012 through KROAD-018 retain their original status, order, dependencies and acceptance criteria.
+- **Next allowed item:** KROAD-012.
+
+The proposed DCOV package decomposition is retained only as non-authoritative design context. It cannot replace or supersede any KROAD item until the full external promotion gate is independently satisfied.
 
 
 ## Current Architecture Direction
@@ -190,29 +190,29 @@ Use these statuses in this file and in `planning/NEXT_WORK.md`:
 
 ---
 
-## Unified Coverage Execution Program — Parent Approved
+## Proposed Unified Coverage Execution Program — Non-Executable
 
-- **Status:** parent approved.
-- **Authority:** `approved_recovery_source_of_record`.
-- **Current executable package:** `DCOV-EXEC-002`.
-- **Next executable package:** DCOV-EXEC-002.
-- **Package count:** exactly five; DCOV-EXEC-003 through DCOV-EXEC-005 remain dependency-gated.
+- **Status:** proposed.
+- **Authority:** none until every external governance promotion predicate is independently satisfied.
+- **Current executable package:** none.
+- **Next allowed roadmap item:** KROAD-012.
+- **Proposed package count:** exactly five, retained only as non-authoritative design context.
 
-The one-time parent authority promotion activates this decomposition for bounded child execution only. It does not create proof credit, readiness, fabricated percentages, denominator manipulation, evidence-tier promotion, or Merge authority. KROAD-012 through KROAD-018 remain preserved and dependency-aligned rather than deleted.
+This proposed decomposition cannot activate Coverage, supersede KROAD-012 through KROAD-018, authorize implementation, or create proof credit. Merge metadata, CI success, repository placement, PR text, and target-authored closure remain insufficient promotion authority.
 
-### Package mapping
+### Proposed package mapping
 
 | Candidate package | Proposed dependency | Preserved intent |
 |---|---|---|
-| `DCOV-EXEC-001` | evidence_closed | candidate contract, source-bound seed data, validators, fixtures, and post-merge authority promotion evidence |
-| `DCOV-EXEC-002` | next_allowed | producer boundary, Element reconciliation, Catalog expansion, and one bounded P0 Family slice |
+| `DCOV-EXEC-001` | external governance promotion carrier | candidate contract, source-bound seed data, validators, fixtures, and fail-closed proposal state |
+| `DCOV-EXEC-002` | approved promotion plus KROAD-012 producer-boundary evidence | producer boundary, Element reconciliation, Catalog expansion, and one bounded P0 Family slice |
 | `DCOV-EXEC-003` | prior approved package evidence | bounded runtime evidence, additional Resolver chains, provisional re-audit, and source/runtime distinction |
 | `DCOV-EXEC-004` | prior approved package evidence | additional Families, immutable reopen/version lineage, and sequence-aware replay |
 | `DCOV-EXEC-005` | prior approved package evidence | source freshness, validated denominators, derived thresholds, critical 100%, and final assessment |
 
 ### Roadmap relationship
 
-KROAD-012 through KROAD-018 retain their original IDs, order, dependencies, acceptance criteria, and evidence requirements. KROAD-012 is aligned with DCOV-EXEC-002 producer-boundary obligations; DCOV-EXEC-003 through DCOV-EXEC-005 and KROAD-013 through KROAD-018 remain dependency-gated.
+KROAD-012 through KROAD-018 retain their original IDs, status, order, dependencies, acceptance criteria, and evidence requirements. The package names above are historical proposal context only and do not replace the active roadmap.
 
 ### Decision Record compatibility
 

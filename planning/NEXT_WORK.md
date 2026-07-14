@@ -2,24 +2,17 @@
 
 ## Last Updated
 
-Post-merge governance activation for PR #43 is recorded. PR #43 merged into `main` on `2026-07-14T13:22:00Z` with final head `2710931b51941295f9ae6a1ed849fc0fbf3a7004`, merge commit `3e4adb453adc547fefaad19670698add67cad79f`, and current verified `main` `44db96ac911ce8796c3dd3ed1c07d9fbbdb81333`.
+`DCOV-EXEC-001` remains a non-executable proposal on PR #43. The reviewed authority base is `487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8`; live `main` advanced independently after that review and must be reconciled before fresh exact-head validation.
 
 ## Status Authority
 
-This file is the authoritative current-status dashboard. `planning/KERNEL_EXECUTION_PLAN.md` preserves durable scope, dependencies, acceptance criteria, evidence and historical KROAD meaning. Mutable current/next state lives here; chat history, PR prose, CI success and target-authored closure records are not governance approval. Current status source: `planning/NEXT_WORK.md`; any stale detailed-plan status for KROAD-012 through KROAD-018 is non-authoritative unless restated here.
+This file is the authoritative current-status dashboard. `planning/KERNEL_EXECUTION_PLAN.md` preserves durable scope, dependencies, acceptance criteria, evidence and historical KROAD meaning. Mutable current/next state lives here; chat history, PR prose, CI success and target-authored closure records are not governance approval.
 
 ## Current State
 
-- Parent authority: `approved_recovery_source_of_record`.
-- Promotion status: `approved`.
-- One-time external project-owner approval carrier: `supplied`.
-- Promotion evidence record: `planning/reviews/DCOV_EXEC_001_POST_MERGE_AUTHORITY_PROMOTION.md`.
-- `DCOV-EXEC-001` status: `evidence_closed`.
-- `DCOV-EXEC-001` implementation state: `merged_and_post_merge_closed`.
-- `DCOV-EXEC-002` status: `next_allowed`.
-- `DCOV-EXEC-002` work type: `content_expansion`.
-- KROAD-012 status: `parallel_or_dependency_aligned`.
-- Child DCOV packages repeated owner approval required: `false`.
+- Coverage proposal state: `not_measurable_pending_external_promotion`.
+- External project-owner governance approval carrier: `missing`.
+- `DCOV-EXEC-001` implementation eligibility: `blocked_pending_external_governance_approval`.
 - Element Ledger: 15 known in-scope records; 7 confirmed denominator members; denominator `unresolved`.
 - Decision Question Catalog: 29 known in-scope records; 24 confirmed denominator members; denominator `unresolved`.
 - Element coverage percent: `null`.
@@ -30,35 +23,23 @@ This file is the authoritative current-status dashboard. `planning/KERNEL_EXECUT
 
 ## Current PR
 
-- [x] `DCOV-EXEC-001` — Coverage Guarantee proposal and validation foundation
+- [ ] `DCOV-EXEC-001` — Coverage Guarantee proposal and validation foundation
   - `work_type`: `proposal_with_real_seed_data`
   - `branch`: `dcov/coverage-guarantee-activation`
-  - `pull_request`: `43`
-  - `status`: `evidence_closed`
-  - `implementation_state`: `merged_and_post_merge_closed`
-  - `final_head_sha`: `2710931b51941295f9ae6a1ed849fc0fbf3a7004`
-  - `merge_commit_sha`: `3e4adb453adc547fefaad19670698add67cad79f`
-  - `merge_timestamp`: `2026-07-14T13:22:00Z`
+  - `merge_permitted`: `false`
+  - `implementation_eligibility`: `blocked_pending_external_governance_approval`
   - Adds candidate contract, Ledger/Catalog seeds, proposed baseline, open debt, impact classification, validators and fixtures.
-  - The separate project-owner governance approval supplied for this activation satisfies the one-time parent promotion gate.
+  - This PR cannot approve its own recovery source, activate Coverage policy or supersede KROAD-012 through KROAD-018.
+  - Merge metadata, CI success, repository placement and self-authored evidence closure cannot satisfy the missing authority carrier.
+  - Stops at Draft PR pending conflict resolution, fresh exact-head active-issuer validation and fresh independent PR Inspector review.
 
 ## Next Task
 
-- [ ] `DCOV-EXEC-002` — Evidence-Bound Element and Resolver Expansion
+- [ ] KROAD-012 — External Evidence Producer Boundary
   - `status`: `next_allowed`
-  - `work_type`: `content_expansion`
-  - `activation_condition`: `DCOV-EXEC-001 evidence_closed and parent_authority approved_recovery_source_of_record`
-  - Child packages do not require repeated project-owner governance approval.
-  - Each child package still requires its own dependency checks, implementation evidence, CI, exact-head validation, independent review and normal merge gates.
-  - KROAD-012 is preserved as `parallel_or_dependency_aligned` with the producer-boundary obligations of this package; it is not deleted, silently superseded, or completed by this activation.
-
-## Dependency-Gated DCOV Packages
-
-| Item | Status | Dependency |
-|---|---|---|
-| DCOV-EXEC-003 | `dependency_gated` | DCOV-EXEC-002 merged |
-| DCOV-EXEC-004 | `dependency_gated` | DCOV-EXEC-003 merged |
-| DCOV-EXEC-005 | `dependency_gated` | DCOV-EXEC-004 merged |
+  - `activation_condition`: `KROAD-011 complete and no conflicting higher-priority governance repair`
+  - Define the proof limits of external evidence producers without implementing broad producer platforms.
+  - Do not replace this item with a target-authored Coverage execution package unless the complete external governance promotion gate is independently satisfied.
 
 ## Completed
 
@@ -89,27 +70,25 @@ This file is the authoritative current-status dashboard. `planning/KERNEL_EXECUT
 
 ## Deferred Requirement Groups
 
-KROAD-012 through KROAD-018 retain their original scope and dependencies. KROAD-012 is now aligned with DCOV-EXEC-002 producer-boundary obligations; KROAD-013 through KROAD-018 remain dependency-gated and are not completed by the parent authority promotion.
+KROAD-013 through KROAD-018 retain their original scope and dependencies. They are not completed and are not superseded by the unapproved Coverage proposal.
 
 | Item | Status | Dependency |
 |---|---|---|
-| KROAD-012 | `parallel_or_dependency_aligned` | DCOV-EXEC-002 producer-boundary obligations |
-| KROAD-013 | `dependency_gated` | KROAD-012 / DCOV-EXEC-003 |
-| KROAD-014 | `dependency_gated` | KROAD-012, KROAD-013 / DCOV-EXEC-003 |
-| KROAD-015 | `dependency_gated` | KROAD-014 / DCOV-EXEC-004 |
-| KROAD-016 | `dependency_gated` | KROAD-015 / DCOV-EXEC-004 |
-| KROAD-017 | `dependency_gated` | KROAD-016 / DCOV-EXEC-005 |
-| KROAD-018 | `dependency_gated` | KROAD-017 / DCOV-EXEC-005 |
+| KROAD-013 | `not_started` | KROAD-012 |
+| KROAD-014 | `not_started` | KROAD-012 and KROAD-013 |
+| KROAD-015 | `not_started` | KROAD-014 |
+| KROAD-016 | `not_started` | KROAD-015 |
+| KROAD-017 | `not_started` | KROAD-016 |
+| KROAD-018 | `not_started` | KROAD-017 |
 
 ## Merge Gate
 
 ```yaml
 merge_gate:
-  exact_head_ci_green: required_per_child_package
-  independent_pr_inspector_green: required_per_child_package
-  external_project_owner_governance_approval: satisfied_one_time_parent_promotion
-  repeated_owner_approval_required_for_child_packages: false
-  explicit_owner_merge_command: required_when_repository_policy_requires
+  exact_head_ci_green: pending_repaired_head
+  independent_pr_inspector_green: pending_fresh_rereview
+  external_project_owner_governance_approval: missing
+  explicit_owner_merge_command: false
 ```
 
-This file grants no agent Merge authority. DCOV-EXEC-002 is the next executable package after this activation PR merges; it must not begin inside the activation task.
+No Merge, approval or auto-merge is authorized by this file.
