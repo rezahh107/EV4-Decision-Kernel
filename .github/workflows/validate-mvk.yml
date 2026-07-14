@@ -53,6 +53,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      COVERAGE_REPOSITORY: ${{ needs.external-coverage-trust.outputs.verified_repository }}
+      COVERAGE_PR_NUMBER: ${{ needs.external-coverage-trust.outputs.verified_pr_number }}
+      COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}
+      COVERAGE_HEAD_SHA: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
     steps:
       - name: Checkout externally verified exact PR head with history
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -65,7 +70,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "${{ needs.external-coverage-trust.outputs.verified_head_sha }}"
+          test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
 
       - name: Set up Node.js LTS
@@ -77,15 +82,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run preserved syntax and regression validation
-        shell: bash
-        env:
-          COVERAGE_REPOSITORY: ${{ needs.external-coverage-trust.outputs.verified_repository }}
-          COVERAGE_PR_NUMBER: ${{ needs.external-coverage-trust.outputs.verified_pr_number }}
-          COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}
-          COVERAGE_HEAD_SHA: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
+      - name: Check validation syntax
         run: |
-          set -euo pipefail
           node --check kernel/validator/validate-coverage-guarantee.mjs
           node --check kernel/validator/validate-coverage-guarantee-prf010.mjs
           node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
@@ -93,13 +91,28 @@ jobs:
           node --check tools/validate-roadmap-memory-full.mjs
           node --check tools/validate-kroad-010-history-matrix.mjs
           node --check tools/test-kroad-010-history-matrix-fail-closed.mjs
+
+      - name: Check working tree and base-to-head diff
+        shell: bash
+        run: |
+          set -euo pipefail
           git diff --check
           git diff --check "${COVERAGE_BASE_SHA}..${COVERAGE_HEAD_SHA}"
-          npm run validate:roadmap-memory
-          npm run test:kroad-010-history-matrix-fail-closed
-          npm run validate:mvk
-          node tools/validate-kroad-010-prototype-integrity.mjs
-          npm run validate:kroad-010-history-matrix
+
+      - name: Validate roadmap memory and SSOT reconstruction
+        run: npm run validate:roadmap-memory
+
+      - name: Test fail-closed history diagnostics
+        run: npm run test:kroad-010-history-matrix-fail-closed
+
+      - name: Validate MVK regression suite
+        run: npm run validate:mvk
+
+      - name: Verify KROAD-010 prototype integrity
+        run: node tools/validate-kroad-010-prototype-integrity.mjs
+
+      - name: Validate KROAD-010 history matrix
+        run: npm run validate:kroad-010-history-matrix
 
       - name: Upload KROAD-010 history matrix evidence
         if: ${{ always() }}
