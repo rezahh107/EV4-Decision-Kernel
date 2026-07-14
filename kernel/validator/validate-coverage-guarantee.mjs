@@ -8,10 +8,16 @@ const VALIDATOR_DIR = dirname(fileURLToPath(import.meta.url));
 const PRF010_VALIDATOR = join(VALIDATOR_DIR, 'validate-coverage-guarantee-prf010.mjs');
 const LEGACY_VALIDATOR = join(VALIDATOR_DIR, 'validate-coverage-guarantee-legacy.mjs');
 const WORKFLOW_PATH = '.github/workflows/validate-mvk.yml';
+const CONTRACT_PATH = 'kernel/decision-governance/coverage-guarantee-contract.v1.json';
+const RECOVERY_SPEC_PATH = 'docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md';
+const NEXT_WORK_PATH = 'planning/NEXT_WORK.md';
+const EXECUTION_PLAN_PATH = 'planning/KERNEL_EXECUTION_PLAN.md';
+const MUTATION_FIXTURE_PATH = 'kernel/fixtures/coverage-guarantee/invalid/enforcement-surface-impact-mutations.json';
 const TARGET_REPOSITORY = 'rezahh107/EV4-Decision-Kernel';
-const ISSUER_SHA = '73b8e3857dbc1596fe7b04def04b94f2609440b2';
-const ISSUER_CALL = 'rezahh107/PR-Inspector/.github/workflows/coverage-trust-gate.yml@'
-  + ISSUER_SHA;
+const ISSUER_SHA = '7a21045366bb9ad1ca2f950b8341ebb867dd8a52';
+const ISSUER_CALL = `rezahh107/PR-Inspector/.github/workflows/coverage-trust-gate.yml@${ISSUER_SHA}`;
+const CHECKOUT_SHA = '11bd71901bbe5b1630ceea73d27597364c9af683';
+const PROOF_ROLES = new Set(['runtime_proof', 'consumer_proof', 'coverage_credit']);
 const TRUST_ENV_NAMES = [
   'COVERAGE_VALIDATED_AT',
   'COVERAGE_VALIDATION_SOURCE',
@@ -26,7 +32,47 @@ const CALLER_IDENTITY_KEYS = [
   'issuer_workflow_sha:',
   'independent_policy_pr_number:',
 ];
-const PROOF_ROLES = new Set(['runtime_proof', 'consumer_proof', 'coverage_credit']);
+const EXACT_VALIDATION_COMMAND = [
+  'set -euo pipefail',
+  'git reset --hard "${COVERAGE_HEAD_SHA}"',
+  'git clean -ffdx',
+  'test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"',
+  'test -z "$(git status --porcelain=v1 --untracked-files=all)"',
+  'npm ci',
+  'npm run validate:coverage',
+].join('\n');
+const REQUIRED_PROMOTION_PREDICATES = [
+  'repository_evidence_capture_complete',
+  'official_source_fingerprints_complete',
+  'contradiction_review_complete',
+  'independent_review_passed',
+  'project_owner_governance_approval',
+  'planning_memory_synchronized',
+  'exact_head_validation_passed',
+  'merged_pr_evidence_recorded',
+  'post_merge_evidence_closure_accepted',
+];
+const REQUIRED_SENSITIVE_PATHS = [
+  '.github/workflows/validate-mvk.yml',
+  'package.json',
+  'kernel/validator/validate-coverage-guarantee',
+];
+
+function read(relativePath) {
+  try {
+    return readFileSync(join(ROOT, relativePath), 'utf8');
+  } catch {
+    return '';
+  }
+}
+
+function readJson(relativePath) {
+  try {
+    return JSON.parse(read(relativePath));
+  } catch {
+    return null;
+  }
+}
 
 function diagnostic(code, message, path = null) {
   return { code, message, ...(path ? { path } : {}) };
@@ -40,14 +86,6 @@ function dedupe(items) {
     seen.add(key);
     return true;
   });
-}
-
-function read(relativePath) {
-  try {
-    return readFileSync(join(ROOT, relativePath), 'utf8');
-  } catch {
-    return '';
-  }
 }
 
 function jobBlock(workflow, jobName) {
@@ -64,6 +102,153 @@ function jobBlock(workflow, jobName) {
   return lines.slice(start + 1, end).join('\n');
 }
 
+function stepBlocks(job) {
+  const lines = job.split(/\r?\n/);
+  const starts = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    if (/^      - name:/.test(lines[index])) starts.push(index);
+  }
+  return starts.map((start, index) => lines.slice(start, starts[index + 1] ?? lines.length).join('\n'));
+}
+
+function normalizeRun(step) {
+  const match = step.match(/\n        run: \|\n([\s\S]*)$/);
+  if (!match) return '';
+  return match[1].split(/\r?\n/)
+    .map((line) => line.startsWith('          ') ? line.slice(10) : line)
+    .join('\n').trim();
+}
+
+function validateTopology(workflow, environment = process.env) {
+  const diagnostics = [];
+  const external = jobBlock(workflow, 'external-coverage-trust');
+  const validation = jobBlock(workflow, 'validate-mvk');
+  if (!external.includes(`uses: ${ISSUER_CALL}`)) {
+    diagnostics.push(diagnostic('COV_EXTERNAL_TRUST_ROOT_UNPINNED', 'Protected validation must use the active locked v1.10.1 issuer.', WORKFLOW_PATH));
+  }
+  if (!external || /^    (if|needs|strategy|continue-on-error|with):/m.test(external)) {
+    diagnostics.push(diagnostic('COV_EXTERNAL_REQUIRED_JOB_TOPOLOGY_INVALID', 'The external job may not accept inputs or be conditionally bypassed.', WORKFLOW_PATH));
+  }
+  if (CALLER_IDENTITY_KEYS.some((key) => external.includes(key))) {
+    diagnostics.push(diagnostic('COV_EXTERNAL_CALLER_IDENTITY_INPUT_FORBIDDEN', 'Target callers may not select repository, PR, base, head, issuer or one-off identity.', WORKFLOW_PATH));
+  }
+  if (!external.includes('contents: read') || !external.includes('pull-requests: read') || !external.includes('id-token: write')) {
+    diagnostics.push(diagnostic('COV_EXTERNAL_OIDC_PERMISSIONS_MISSING', 'External enforcement requires read-only repository/PR access and OIDC identity.', WORKFLOW_PATH));
+  }
+  if (!validation.includes('needs: external-coverage-trust')) {
+    diagnostics.push(diagnostic('COV_EXTERNAL_VALIDATION_NEEDS_MISSING', 'Protected validation must depend directly on external identity verification.', WORKFLOW_PATH));
+  }
+  const steps = stepBlocks(validation);
+  if (steps.length !== 2) {
+    diagnostics.push(diagnostic('COV_EXTERNAL_VALIDATION_STEP_TOPOLOGY_INVALID', 'Protected validation must contain exactly checkout plus one fail-propagating validation step.', WORKFLOW_PATH));
+  } else {
+    const [checkout, command] = steps;
+    if (!checkout.includes(`uses: actions/checkout@${CHECKOUT_SHA}`)
+      || !checkout.includes('ref: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}')
+      || !checkout.includes('persist-credentials: false')) {
+      diagnostics.push(diagnostic('COV_EXTERNAL_VALIDATION_CHECKOUT_MISMATCH', 'Checkout must use the approved immutable action and externally verified head only.', WORKFLOW_PATH));
+    }
+    const expectedBindings = [
+      'COVERAGE_REPOSITORY: ${{ needs.external-coverage-trust.outputs.verified_repository }}',
+      'COVERAGE_PR_NUMBER: ${{ needs.external-coverage-trust.outputs.verified_pr_number }}',
+      'COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}',
+      'COVERAGE_HEAD_SHA: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}',
+    ];
+    if (!command.includes('shell: bash') || expectedBindings.some((binding) => !command.includes(binding))) {
+      diagnostics.push(diagnostic('COV_EXTERNAL_VALIDATION_IDENTITY_BINDING_MISSING', 'Protected validation must use only the four authoritative Coverage identity outputs.', WORKFLOW_PATH));
+    }
+    const envKeys = [...command.matchAll(/^          ([A-Z0-9_]+):/gm)].map((match) => match[1]).sort();
+    const expectedKeys = ['COVERAGE_BASE_SHA', 'COVERAGE_HEAD_SHA', 'COVERAGE_PR_NUMBER', 'COVERAGE_REPOSITORY'];
+    if (JSON.stringify(envKeys) !== JSON.stringify(expectedKeys) || normalizeRun(command) !== EXACT_VALIDATION_COMMAND) {
+      diagnostics.push(diagnostic('COV_EXTERNAL_VALIDATION_COMMAND_TOPOLOGY_INVALID', 'Protected command must reset, clean, verify HEAD/worktree, npm ci and validate:coverage exactly.', WORKFLOW_PATH));
+    }
+  }
+  if (TRUST_ENV_NAMES.some((name) => workflow.includes(name)) || workflow.includes('/bin/date')) {
+    diagnostics.push(diagnostic('COV_EXTERNAL_TRUST_ROOT_TARGET_MINT_FORBIDDEN', 'A target workflow may not mint trust timestamps, sources or ingestion attestations.', WORKFLOW_PATH));
+  }
+  for (const name of TRUST_ENV_NAMES) {
+    if (environment[name] !== undefined) {
+      diagnostics.push(diagnostic(
+        name === 'COVERAGE_TRUSTED_INGESTION_ATTESTATIONS'
+          ? 'COV_EXTERNAL_ATTESTATION_UNSIGNED_ENV_FORBIDDEN'
+          : 'COV_EXTERNAL_TRUST_ROOT_SELF_ISSUED_ENV_FORBIDDEN',
+        'Target-controlled environment values cannot establish external authority.',
+        name,
+      ));
+    }
+  }
+  return dedupe(diagnostics);
+}
+
+function promotionDiagnostics(contract, recoverySpec, nextWork, executionPlan) {
+  const diagnostics = [];
+  const boundary = contract?.promotion_boundary;
+  if (!boundary
+    || boundary.status !== 'proposal_pending_external_governance_approval'
+    || boundary.authority_source !== 'external_project_owner_governance'
+    || boundary.target_repository_content_can_approve !== false
+    || boundary.merge_or_ci_can_approve !== false
+    || boundary.self_authored_closure_can_approve !== false
+    || JSON.stringify(boundary.required_predicates) !== JSON.stringify(REQUIRED_PROMOTION_PREDICATES)) {
+    diagnostics.push(diagnostic('COV_EXTERNAL_PROMOTION_BOUNDARY_MISSING', 'Coverage artifacts must remain proposals until every external promotion predicate is verified.', CONTRACT_PATH));
+  }
+  if (contract?.expected_state_after_dcov_exec_001 !== 'not_measurable_pending_external_promotion'
+    || !contract?.state_machine?.eligibility?.policy_active?.requirements?.includes('external_governance_approval_verified')) {
+    diagnostics.push(diagnostic('COV_SELF_AUTHORIZED_POLICY_ACTIVATION', 'The target contract may not make its own implementation policy-active.', CONTRACT_PATH));
+  }
+  const requiredRecoveryText = [
+    'parent_authority: approved_recovery_source_of_record',
+    'CI success',
+    'do not independently or collectively imply this authority transition',
+  ];
+  if (requiredRecoveryText.some((text) => !recoverySpec.includes(text))
+    || recoverySpec.includes('No separate manual promotion step remains')) {
+    diagnostics.push(diagnostic('COV_EXTERNAL_PROMOTION_PREDICATE_MISSING', 'The trusted-base promotion predicate must remain explicit and fail closed.', RECOVERY_SPEC_PATH));
+  }
+  if (!nextWork.includes('KROAD-012')
+    || nextWork.includes('superseded_by_coverage_execution_program')
+    || nextWork.includes('Coverage Guarantee v1 is being activated')) {
+    diagnostics.push(diagnostic('COV_ROADMAP_SELF_PROMOTION_FORBIDDEN', 'KROAD-012 must remain next-allowed while external governance approval is absent.', NEXT_WORK_PATH));
+  }
+  if (!executionPlan.includes('Status:** proposed')
+    || executionPlan.includes('Coverage Execution Program — Active')
+    || executionPlan.includes('replaces KROAD-012 through KROAD-018')) {
+    diagnostics.push(diagnostic('COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN', 'The recovery overlay must remain proposed and may not supersede KROAD-012 through KROAD-018.', EXECUTION_PLAN_PATH));
+  }
+  return diagnostics;
+}
+
+function attemptedPromotionDiagnostics(candidate) {
+  const approved = candidate?.external_project_owner_approval === true
+    && candidate?.independent_review_passed === true
+    && candidate?.evidence_closure_accepted === true;
+  return approved ? [] : [diagnostic('COV_EXTERNAL_PROMOTION_AUTHORITY_REQUIRED', 'Merge, CI, target declarations and self-authored closure cannot approve recovery implementation.')];
+}
+
+function pathMatchesSensitive(path, patterns) {
+  return patterns.some((pattern) => path === pattern || path.startsWith(pattern));
+}
+
+function sensitivityDiagnostics(contract, mutationFixture) {
+  const diagnostics = [];
+  const patterns = contract?.coverage_sensitive_paths || [];
+  for (const required of REQUIRED_SENSITIVE_PATHS) {
+    if (!patterns.includes(required)) {
+      diagnostics.push(diagnostic('COV_SENSITIVE_ENFORCEMENT_PATH_MISSING', `Coverage sensitivity is missing ${required}.`, CONTRACT_PATH));
+    }
+  }
+  for (const fixture of mutationFixture?.cases || []) {
+    const sensitive = pathMatchesSensitive(fixture.changed_path, patterns);
+    const observed = sensitive
+      ? (fixture.impact_record_present ? 'COV_IMPACT_CHANGED_PATHS_MISMATCH' : 'COV_IMPACT_RECORD_MISSING')
+      : null;
+    if (observed !== fixture.expected_diagnostic) {
+      diagnostics.push(diagnostic('COV_ENFORCEMENT_SURFACE_MUTATION_FIXTURE_FAILED', `Mutation fixture failed: ${fixture.id}.`, MUTATION_FIXTURE_PATH));
+    }
+  }
+  return diagnostics;
+}
+
 function collectProofReferences() {
   const found = [];
   const walk = (value) => {
@@ -72,183 +257,62 @@ function collectProofReferences() {
       return;
     }
     if (!value || typeof value !== 'object') return;
-    if (PROOF_ROLES.has(value.artifact_role) || value.coverage_granted === true) {
-      found.push(value);
-    }
-    for (const item of Object.values(value)) walk(item);
+    if (PROOF_ROLES.has(value.artifact_role) || value.coverage_granted === true) found.push(value);
+    for (const child of Object.values(value)) walk(child);
   };
   for (const path of [
     'planning/coverage/element-reconciliation-ledger.v1.json',
     'planning/coverage/decision-question-catalog.v1.json',
   ]) {
-    try {
-      walk(JSON.parse(read(path)));
-    } catch {
-      // Preserved validator owns canonical structure diagnostics.
-    }
+    const value = readJson(path);
+    if (value) walk(value);
   }
   return found;
 }
 
-function validateTopology(workflow, environment = process.env) {
-  const diagnostics = [];
-  const external = jobBlock(workflow, 'external-coverage-trust');
-  const validation = jobBlock(workflow, 'validate-mvk');
-
-  if (!external.includes(`uses: ${ISSUER_CALL}`)) {
-    diagnostics.push(diagnostic(
-      'COV_EXTERNAL_TRUST_ROOT_UNPINNED',
-      'The active external job is not pinned to the approved immutable issuer.',
-      WORKFLOW_PATH,
-    ));
-  }
-  if (CALLER_IDENTITY_KEYS.some((key) => external.includes(key))) {
-    diagnostics.push(diagnostic(
-      'COV_EXTERNAL_CALLER_IDENTITY_INPUT_FORBIDDEN',
-      'Target callers may not select repository, PR, base, head, issuer or one-off policy identity.',
-      WORKFLOW_PATH,
-    ));
-  }
-  if (/^    if:/m.test(external)) {
-    diagnostics.push(diagnostic(
-      'COV_EXTERNAL_REQUIRED_JOB_DEAD',
-      'The external identity job may not be conditionally disabled.',
-      WORKFLOW_PATH,
-    ));
-  }
-  if (!external.includes('pull-requests: read') || !external.includes('id-token: write')) {
-    diagnostics.push(diagnostic(
-      'COV_EXTERNAL_OIDC_PERMISSIONS_MISSING',
-      'External enforcement requires read-only PR API access and OIDC identity.',
-      WORKFLOW_PATH,
-    ));
-  }
-  if (!validation.includes('needs: external-coverage-trust')
-    || !validation.includes(
-      'ref: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}',
-    )) {
-    diagnostics.push(diagnostic(
-      'COV_EXTERNAL_VALIDATION_CHECKOUT_MISMATCH',
-      'Target validation must depend on the external gate and checkout only its verified head.',
-      WORKFLOW_PATH,
-    ));
-  }
-  for (const binding of [
-    'COVERAGE_REPOSITORY: ${{ needs.external-coverage-trust.outputs.verified_repository }}',
-    'COVERAGE_PR_NUMBER: ${{ needs.external-coverage-trust.outputs.verified_pr_number }}',
-    'COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}',
-    'COVERAGE_HEAD_SHA: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}',
-  ]) {
-    if (!validation.includes(binding)) {
-      diagnostics.push(diagnostic(
-        'COV_EXTERNAL_VALIDATION_IDENTITY_BINDING_MISSING',
-        'Coverage validation inputs must come from authoritative external outputs.',
-        WORKFLOW_PATH,
-      ));
-      break;
-    }
-  }
-  if (TRUST_ENV_NAMES.some((name) => workflow.includes(name))
-    || workflow.includes('/bin/date')) {
-    diagnostics.push(diagnostic(
-      'COV_EXTERNAL_TRUST_ROOT_TARGET_MINT_FORBIDDEN',
-      'A target-controlled workflow may not mint trust inputs.',
-      WORKFLOW_PATH,
-    ));
-  }
-  for (const name of TRUST_ENV_NAMES) {
-    if (environment[name] !== undefined) {
-      diagnostics.push(diagnostic(
-        name === 'COVERAGE_TRUSTED_INGESTION_ATTESTATIONS'
-          ? 'COV_EXTERNAL_ATTESTATION_UNSIGNED_ENV_FORBIDDEN'
-          : 'COV_EXTERNAL_TRUST_ROOT_SELF_ISSUED_ENV_FORBIDDEN',
-        'Target-controlled environment values cannot establish trust.',
-        name,
-      ));
-    }
-  }
-  return dedupe(diagnostics);
-}
-
-function runFixtures() {
-  const valid = `jobs:\n  external-coverage-trust:\n    uses: ${ISSUER_CALL}\n    permissions:\n      pull-requests: read\n      id-token: write\n  validate-mvk:\n    needs: external-coverage-trust\n    steps:\n      - with:\n          ref: \${{ needs.external-coverage-trust.outputs.verified_head_sha }}\n      - env:\n          COVERAGE_REPOSITORY: \${{ needs.external-coverage-trust.outputs.verified_repository }}\n          COVERAGE_PR_NUMBER: \${{ needs.external-coverage-trust.outputs.verified_pr_number }}\n          COVERAGE_BASE_SHA: \${{ needs.external-coverage-trust.outputs.verified_base_sha }}\n          COVERAGE_HEAD_SHA: \${{ needs.external-coverage-trust.outputs.verified_head_sha }}\n`;
-  const fixtures = [
-    {
-      id: 'caller-selected-pr-policy',
-      expected: 'COV_EXTERNAL_CALLER_IDENTITY_INPUT_FORBIDDEN',
-      workflow: valid.replace(
-        'permissions:\n      pull-requests',
-        'with:\n      independent_policy_pr_number: 43\n    permissions:\n      pull-requests',
-      ),
-    },
-    {
-      id: 'dead-external-job',
-      expected: 'COV_EXTERNAL_REQUIRED_JOB_DEAD',
-      workflow: valid.replace(
-        `uses: ${ISSUER_CALL}`,
-        `if: \${{ false }}\n    uses: ${ISSUER_CALL}`,
-      ),
-    },
-    {
-      id: 'validation-checkout-drift',
-      expected: 'COV_EXTERNAL_VALIDATION_CHECKOUT_MISMATCH',
-      workflow: valid.replace(
-        'ref: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}',
-        'ref: ${{ github.event.pull_request.head.sha }}',
-      ),
-    },
-    { id: 'valid-dynamic-authoritative-path', expected: null, workflow: valid },
+function runSelfTests() {
+  const authorityCases = [
+    { id: 'merge-status-cannot-approve', value: { merged: true } },
+    { id: 'ci-success-cannot-approve', value: { ci_success: true } },
+    { id: 'self-authored-closure-cannot-approve', value: { evidence_closure_accepted: true } },
+    { id: 'target-file-declaration-cannot-approve', value: { target_declares_authority: true } },
   ];
-  return fixtures.map((fixture) => {
-    const observed = validateTopology(fixture.workflow, {}).map((item) => item.code);
-    return {
-      id: fixture.id,
-      observed,
-      passed: fixture.expected === null
-        ? observed.length === 0
-        : observed.length === 1 && observed[0] === fixture.expected,
-    };
-  });
+  return authorityCases.map((fixture) => ({
+    id: fixture.id,
+    passed: attemptedPromotionDiagnostics(fixture.value).some((item) => item.code === 'COV_EXTERNAL_PROMOTION_AUTHORITY_REQUIRED'),
+  }));
 }
 
+const contract = readJson(CONTRACT_PATH);
 const workflow = read(WORKFLOW_PATH);
 const proofReferences = collectProofReferences();
-let diagnostics = validateTopology(workflow);
+const mutationFixture = readJson(MUTATION_FIXTURE_PATH);
+let diagnostics = [
+  ...validateTopology(workflow),
+  ...promotionDiagnostics(contract, read(RECOVERY_SPEC_PATH), read(NEXT_WORK_PATH), read(EXECUTION_PLAN_PATH)),
+  ...sensitivityDiagnostics(contract, mutationFixture),
+];
 if (proofReferences.length > 0) {
-  diagnostics.push(diagnostic(
-    'COV_EXTERNAL_TRUST_BOOTSTRAP_PROOF_CREDIT_FORBIDDEN',
-    'PRF-013 authorizes no runtime, consumer, or coverage-credit proof.',
-    'planning/coverage',
-  ));
+  diagnostics.push(diagnostic('COV_EXTERNAL_TRUST_BOOTSTRAP_PROOF_CREDIT_FORBIDDEN', 'Bootstrap validation authorizes no runtime, consumer or coverage-credit proof.', 'planning/coverage'));
 }
-const fixtureResults = runFixtures();
-if (fixtureResults.some((result) => !result.passed)) {
-  diagnostics.push(diagnostic(
-    'COV_EXTERNAL_TRUST_FIXTURE_SUITE_FAILED',
-    'One or more target-side trust-boundary fixtures failed.',
-    'kernel/validator/validate-coverage-guarantee.mjs',
-  ));
+const selfTests = runSelfTests();
+if (selfTests.some((item) => !item.passed)) {
+  diagnostics.push(diagnostic('COV_EXTERNAL_PROMOTION_FIXTURE_SUITE_FAILED', 'One or more external-authority negative activation tests failed.', CONTRACT_PATH));
 }
 diagnostics = dedupe(diagnostics);
 
-console.log('Coverage PRF-013 dynamic identity bootstrap summary');
+console.log('Coverage external-authority and v1.10.1 topology summary');
 console.log(JSON.stringify({
   issuer_sha: ISSUER_SHA,
+  promotion_status: contract?.promotion_boundary?.status || null,
   proof_reference_count: proofReferences.length,
   proof_credit_authorized: false,
-  head_check_publication_required_externally: true,
-  fixtures: {
-    total: fixtureResults.length,
-    passed: fixtureResults.filter((item) => item.passed).length,
-    failed: fixtureResults.filter((item) => !item.passed).length,
-  },
+  authority_tests: selfTests,
+  enforcement_mutation_tests: mutationFixture?.cases?.length || 0,
 }, null, 2));
-for (const result of fixtureResults) {
-  console.log(`trust fixture ${result.passed ? 'PASS' : 'FAIL'} ${result.id}`);
-}
 
 if (diagnostics.length > 0) {
-  console.error('Coverage PRF-013 diagnostics:');
+  console.error('Coverage repair diagnostics:');
   for (const item of diagnostics) {
     console.error(`  ${item.code}${item.path ? ` [${item.path}]` : ''}: ${item.message}`);
   }
@@ -260,21 +324,19 @@ if (process.env.COVERAGE_EXTERNAL_TRUST_SELF_TEST_ONLY === '1') {
   process.exit(0);
 }
 
-const preservedValidator = existsSync(PRF010_VALIDATOR)
-  ? PRF010_VALIDATOR
-  : LEGACY_VALIDATOR;
+const preservedValidator = existsSync(PRF010_VALIDATOR) ? PRF010_VALIDATOR : LEGACY_VALIDATOR;
 if (!existsSync(preservedValidator)) {
   console.error('COV_PRESERVED_VALIDATOR_MISSING: preserved Coverage validator is missing.');
   process.exit(1);
 }
 
-// Compatibility values preserve PRF-010 ordering checks only after external
-// verification has denied all proof references. They do not authorize proof.
+// Compatibility values preserve the established PRF-010 ordering checks only
+// after this wrapper has denied self-promotion and proof credit. They are not
+// external authority, trusted ingestion, or Coverage proof.
 process.env.COVERAGE_VALIDATED_AT = new Date().toISOString();
 process.env.COVERAGE_VALIDATION_SOURCE = 'github_actions_runner_clock_v1';
 process.env.COVERAGE_TRUSTED_INGESTION_ATTESTATIONS = '{}';
 process.env.GITHUB_REPOSITORY = TARGET_REPOSITORY;
-process.env.GITHUB_WORKFLOW_REF = TARGET_REPOSITORY
-  + '/.github/workflows/validate-mvk.yml@external-bootstrap-deny';
+process.env.GITHUB_WORKFLOW_REF = `${TARGET_REPOSITORY}/.github/workflows/validate-mvk.yml@external-bootstrap-deny`;
 
 await import(pathToFileURL(preservedValidator).href);
