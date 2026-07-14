@@ -74,28 +74,52 @@ function assertExactlyOneNextTask(nextWork) {
   }
 }
 
-function assertUnifiedCoverageNextWork(nextWork) {
+function assertExternalPromotionBoundary(nextWork, executionPlan) {
   const current = extractSection(nextWork, 'Current PR');
   const next = extractSection(nextWork, 'Next Task');
-  if (!/^- \[ \] DCOV-EXEC-001\s+—\s+Coverage Guarantee Foundation and Execution Unblock$/m.test(current)) {
+
+  if (!/^- \[ \] `?DCOV-EXEC-001`?\s+—\s+Coverage Guarantee proposal and validation foundation$/m.test(current)) {
     fail(
       'planning/NEXT_WORK.md',
-      'Current PR is not uniquely recorded as DCOV-EXEC-001.',
-      'Record DCOV-EXEC-001 under Current PR without activating another current package.',
+      'Current PR is not recorded as the non-executable DCOV-EXEC-001 proposal.',
+      'Record DCOV-EXEC-001 under Current PR as a proposal and validation foundation only.',
     );
   }
-  if (!/^- \[ \] DCOV-EXEC-002\s+—\s+Evidence-Bound Element and Resolver Expansion$/m.test(next)) {
+  if (!/`implementation_eligibility`:\s+`blocked_pending_external_governance_approval`/.test(current)) {
     fail(
       'planning/NEXT_WORK.md',
-      'The only next executable package must be DCOV-EXEC-002.',
-      'Keep only DCOV-EXEC-002 under Next Task.',
+      'DCOV-EXEC-001 is not fail-closed on missing external governance approval.',
+      'Set implementation_eligibility to blocked_pending_external_governance_approval.',
     );
   }
-  if (!/`next_work_type`:\s+`content_expansion`/.test(next)) {
+  if (!/^- \[ \] KROAD-012\s+—\s+External Evidence Producer Boundary$/m.test(next)) {
     fail(
       'planning/NEXT_WORK.md',
-      'DCOV-EXEC-002 is not classified as content_expansion.',
-      'Add next_work_type: content_expansion under DCOV-EXEC-002.',
+      'The only next allowed roadmap item must remain KROAD-012.',
+      'Keep only KROAD-012 under Next Task while the Coverage proposal lacks external approval.',
+    );
+  }
+  if (!/`status`:\s+`next_allowed`/.test(next)) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'KROAD-012 is not classified as next_allowed.',
+      'Set KROAD-012 status to next_allowed.',
+    );
+  }
+  if (/superseded_by_coverage_execution_program/.test(nextWork)) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'NEXT_WORK.md still self-supersedes KROAD items through the unapproved Coverage proposal.',
+      'Remove superseded_by_coverage_execution_program from current roadmap memory.',
+    );
+  }
+  if (!/\*\*Status:\*\* proposed/.test(executionPlan)
+    || /Coverage Execution Program — Active/.test(executionPlan)
+    || /replaces KROAD-012 through KROAD-018/.test(executionPlan)) {
+    fail(
+      'planning/KERNEL_EXECUTION_PLAN.md',
+      'The detailed plan still represents the Coverage overlay as active or authoritative.',
+      'Keep the Coverage overlay proposed and non-executable without changing KROAD-012 through KROAD-018.',
     );
   }
 }
@@ -185,7 +209,7 @@ const files = Object.fromEntries(REQUIRED_FILES.map((filePath) => [filePath, rea
 
 assertStatusAuthority(files['planning/NEXT_WORK.md']);
 assertExactlyOneNextTask(files['planning/NEXT_WORK.md']);
-assertUnifiedCoverageNextWork(files['planning/NEXT_WORK.md']);
+assertExternalPromotionBoundary(files['planning/NEXT_WORK.md'], files['planning/KERNEL_EXECUTION_PLAN.md']);
 assertCompletedItemsHaveEvidence(files['planning/NEXT_WORK.md']);
 assertKernelDoesNotOverrideCompletedStatus(files['planning/NEXT_WORK.md'], files['planning/KERNEL_EXECUTION_PLAN.md']);
 assertNoStalePreMergeWording();
