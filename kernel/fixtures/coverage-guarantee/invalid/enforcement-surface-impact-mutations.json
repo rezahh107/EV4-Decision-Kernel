@@ -1,6 +1,14 @@
 {
   "fixture_version": "1.0.0",
-  "fixture_kind": "adversarial_mutation_matrix",
+  "fixture_kind": "valid",
+  "expected_diagnostic_codes": [],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  },
   "purpose": "prove formerly omitted Coverage enforcement paths are coverage-sensitive",
   "cases": [
     {
