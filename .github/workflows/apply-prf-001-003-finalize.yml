@@ -27,8 +27,26 @@ jobs:
           node-version: lts/*
           package-manager-cache: false
 
-      - name: Apply, validate, commit and push final bounded repair
+      - name: Apply and validate final bounded repair
+        id: repair
+        continue-on-error: true
         shell: bash
         run: |
-          set -euo pipefail
-          python tools/apply-prf-001-003-finalize.py
+          set -o pipefail
+          python tools/apply-prf-001-003-finalize.py > repair-finalizer.log 2>&1
+
+      - name: Upload finalizer diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: prf-001-003-finalizer-diagnostics
+          path: repair-finalizer.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Fail closed when finalizer failed
+        if: ${{ steps.repair.outcome != 'success' }}
+        shell: bash
+        run: |
+          cat repair-finalizer.log
+          exit 1
