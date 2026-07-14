@@ -2613,8 +2613,10 @@ function repositoryWiringDiagnostics() {
   const diagnostics = [];
   const packageJson = readJson(PATHS.package);
   const workflow = readText(PATHS.workflow);
-  if (packageJson.scripts?.['validate:coverage'] !== 'node kernel/validator/validate-coverage-guarantee.mjs') {
-    diagnostics.push(diagnostic('COV_PACKAGE_SCRIPT_MISSING', 'package.json must expose npm run validate:coverage.', PATHS.package));
+  const validateCoverageScript = String(packageJson.scripts?.['validate:coverage'] || '');
+  const expectedCoverageScript = 'node kernel/validator/validate-coverage-guarantee-history.mjs && node kernel/validator/validate-coverage-guarantee.mjs';
+  if (validateCoverageScript !== expectedCoverageScript) {
+    diagnostics.push(diagnostic('COV_PACKAGE_SCRIPT_MISSING', 'package.json must expose the exact authoritative history-hydration and Coverage validation chain.', PATHS.package));
   }
   const validateMvkScript = String(packageJson.scripts?.['validate:mvk'] || '');
   if (!validateMvkScript.includes('validate-coverage-guarantee.mjs')
