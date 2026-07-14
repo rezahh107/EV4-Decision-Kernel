@@ -208,13 +208,13 @@ function assertSsotPayload(files) {
 }
 
 function assertExternalPromotionBoundary(nextWork, executionPlan) {
-  const coverage = extractSection(nextWork, 'Blocked Coverage Proposal');
+  const coverage = extractSection(nextWork, 'Current PR');
 
   if (!/^- \[ \] `?DCOV-EXEC-001`?\s+—\s+Coverage Guarantee proposal and validation foundation$/m.test(coverage)) {
     fail(
       'planning/NEXT_WORK.md',
       'The non-executable DCOV-EXEC-001 proposal is not preserved.',
-      'Record DCOV-EXEC-001 under Blocked Coverage Proposal.',
+      'Record DCOV-EXEC-001 under Current PR as the blocked Coverage proposal.',
     );
   }
   if (!/`implementation_eligibility`:\s+`blocked_pending_external_governance_approval`/.test(coverage)) {
