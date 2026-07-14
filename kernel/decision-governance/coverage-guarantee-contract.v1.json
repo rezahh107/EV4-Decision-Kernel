@@ -7,6 +7,24 @@
     "human_readable_view": "docs/decision-governance/COVERAGE_GUARANTEE_CONTRACT.md",
     "manual_state_promotion_allowed": false
   },
+  "promotion_boundary": {
+    "status": "proposal_pending_external_governance_approval",
+    "authority_source": "external_project_owner_governance",
+    "target_repository_content_can_approve": false,
+    "merge_or_ci_can_approve": false,
+    "self_authored_closure_can_approve": false,
+    "required_predicates": [
+      "repository_evidence_capture_complete",
+      "official_source_fingerprints_complete",
+      "contradiction_review_complete",
+      "independent_review_passed",
+      "project_owner_governance_approval",
+      "planning_memory_synchronized",
+      "exact_head_validation_passed",
+      "merged_pr_evidence_recorded",
+      "post_merge_evidence_closure_accepted"
+    ]
+  },
   "thresholds": {
     "minimum_content_floor": 90,
     "owner_acceptance_target": 95,
@@ -21,6 +39,7 @@
     "eligibility": {
       "policy_active": {
         "requirements": [
+          "external_governance_approval_verified",
           "schema_valid_contract",
           "real_non_empty_ledger",
           "real_non_empty_question_catalog",
@@ -177,23 +196,54 @@
     },
     "generic_fixture_or_document_proof_allowed": false,
     "question_link_roles": {
-      "catalog": ["catalog_record"],
-      "matrix": ["matrix"],
-      "resolver_rule": ["resolver_rule"],
-      "deterministic_evaluator": ["deterministic_evaluator"],
-      "valid_fixture": ["valid_fixture"],
-      "invalid_fixture": ["invalid_fixture"],
-      "adversarial_fixture": ["adversarial_fixture"],
-      "l2_audit": ["l2_audit"],
-      "required_runtime_or_consumer_proof": ["runtime_proof", "consumer_proof"],
-      "coverage_credit": ["coverage_credit"]
+      "catalog": [
+        "catalog_record"
+      ],
+      "matrix": [
+        "matrix"
+      ],
+      "resolver_rule": [
+        "resolver_rule"
+      ],
+      "deterministic_evaluator": [
+        "deterministic_evaluator"
+      ],
+      "valid_fixture": [
+        "valid_fixture"
+      ],
+      "invalid_fixture": [
+        "invalid_fixture"
+      ],
+      "adversarial_fixture": [
+        "adversarial_fixture"
+      ],
+      "l2_audit": [
+        "l2_audit"
+      ],
+      "required_runtime_or_consumer_proof": [
+        "runtime_proof",
+        "consumer_proof"
+      ],
+      "coverage_credit": [
+        "coverage_credit"
+      ]
     },
     "element_obligation_roles": {
-      "applicable_decision_questions": ["decision_question"],
-      "applicable_p0_families": ["p0_family"],
-      "required_safety_gates": ["safety_gate"],
-      "required_runtime_checks": ["runtime_check"],
-      "required_consumer_proofs": ["consumer_proof"]
+      "applicable_decision_questions": [
+        "decision_question"
+      ],
+      "applicable_p0_families": [
+        "p0_family"
+      ],
+      "required_safety_gates": [
+        "safety_gate"
+      ],
+      "required_runtime_checks": [
+        "runtime_check"
+      ],
+      "required_consumer_proofs": [
+        "consumer_proof"
+      ]
     }
   },
   "denominator_integrity": {
@@ -258,12 +308,14 @@
     "kernel/schemas/decision-question-catalog.v1.schema.json",
     "kernel/resolver-mvp/",
     "kernel/fixtures/coverage-guarantee/",
-    "kernel/validator/validate-coverage-guarantee.mjs",
     "kernel/validator/validate-l2-decision-correctness.mjs",
     "planning/coverage/",
     "docs/decision-governance/COVERAGE_GUARANTEE_CONTRACT.md",
     "planning/NEXT_WORK.md",
-    "planning/KERNEL_EXECUTION_PLAN.md"
+    "planning/KERNEL_EXECUTION_PLAN.md",
+    ".github/workflows/validate-mvk.yml",
+    "package.json",
+    "kernel/validator/validate-coverage-guarantee"
   ],
   "merge_gate": {
     "exact_head_ci_green": "required",
@@ -279,5 +331,5 @@
     "official_docs_prove_target_project_availability",
     "fixture_evidence_is_real_project_proof"
   ],
-  "expected_state_after_dcov_exec_001": "policy_active"
+  "expected_state_after_dcov_exec_001": "not_measurable_pending_external_promotion"
 }
