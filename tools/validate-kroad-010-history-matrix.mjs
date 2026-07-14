@@ -3,23 +3,6 @@
 import {existsSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {
-  MATRIX_CONFIG_PATH,
-  ROOT,
-  assertMethodSet,
-  git,
-  readJson,
-} from './kroad-010-history/common.mjs';
-import {
-  createActivationSource,
-  createBuilder,
-  createFinalHistories,
-} from './kroad-010-history/build.mjs';
-import {
-  printSummary,
-  runMutationGuards,
-  validateHistories,
-} from './kroad-010-history/validate.mjs';
 
 function diagnosticValue(value) {
   if (value == null) return null;
@@ -27,9 +10,9 @@ function diagnosticValue(value) {
   return String(value);
 }
 
-function writeDiagnostic(error, cleanupError = null) {
+function writeDiagnostic(root, error, cleanupError = null) {
   writeFileSync(
-    join(ROOT, 'kroad-010-history-matrix-report.json'),
+    join(root, 'kroad-010-history-matrix-report.json'),
     `${JSON.stringify({
       schema_version: '0.1.0',
       result: 'DIAGNOSTIC_FAIL',
@@ -57,41 +40,48 @@ function writeDiagnostic(error, cleanupError = null) {
   );
 }
 
-function main() {
+async function main() {
+  const root = process.cwd();
   let tempRoot;
   let repository;
   let primaryError;
   let cleanupError;
+  let git;
 
   try {
-    const config = readJson(ROOT, MATRIX_CONFIG_PATH);
-    assertMethodSet(config.methods || []);
+    const common = await import('./kroad-010-history/common.mjs');
+    const build = await import('./kroad-010-history/build.mjs');
+    const validate = await import('./kroad-010-history/validate.mjs');
+    git = common.git;
+
+    const config = common.readJson(root, common.MATRIX_CONFIG_PATH);
+    common.assertMethodSet(config.methods || []);
     tempRoot = mkdtempSync(
       join(tmpdir(), 'ev4-kroad-010-history-matrix-'),
     );
 
-    const builder = createActivationSource(createBuilder(tempRoot));
+    const builder = build.createActivationSource(build.createBuilder(tempRoot));
     repository = builder.repository;
-    const heads = createFinalHistories(builder);
+    const heads = build.createFinalHistories(builder);
     const roles = {
       incompleteAnchor: builder.incompleteAnchor,
       staleAnchor: builder.staleAnchor,
       bootstrapAnchor: builder.bootstrapAnchor,
     };
-    const matrixResults = validateHistories(
+    const matrixResults = validate.validateHistories(
       repository,
       tempRoot,
       heads,
       roles,
     );
-    const mutationResults = runMutationGuards(
+    const mutationResults = validate.runMutationGuards(
       repository,
       matrixResults,
       roles,
       config,
     );
     writeFileSync(
-      join(ROOT, 'kroad-010-history-matrix-report.json'),
+      join(root, 'kroad-010-history-matrix-report.json'),
       `${JSON.stringify({
         schema_version: '0.1.0',
         result: 'PASS',
@@ -107,11 +97,11 @@ function main() {
         mutation_guards: mutationResults,
       }, null, 2)}\n`,
     );
-    printSummary(matrixResults, mutationResults);
+    validate.printSummary(matrixResults, mutationResults);
   } catch (error) {
     primaryError = error;
   } finally {
-    if (repository && existsSync(repository)) {
+    if (repository && existsSync(repository) && git) {
       try {
         git(repository, ['worktree', 'prune']);
       } catch (error) {
@@ -128,7 +118,7 @@ function main() {
   }
 
   if (primaryError || cleanupError) {
-    writeDiagnostic(primaryError || cleanupError, cleanupError);
+    writeDiagnostic(root, primaryError || cleanupError, cleanupError);
     console.error(
       `KROAD-010 diagnostic capture: ${(primaryError || cleanupError)?.message || (primaryError || cleanupError)}`,
     );
@@ -136,4 +126,4 @@ function main() {
   }
 }
 
-main();
+await main();
