@@ -21,24 +21,6 @@ import {
   validateHistories,
 } from './kroad-010-history/validate.mjs';
 
-function diagnosticValue(value) {
-  if (value == null) return null;
-  if (Buffer.isBuffer(value)) return value.toString('utf8');
-  return String(value);
-}
-
-function diagnosticError(error) {
-  return {
-    name: error?.name || 'Error',
-    message: error?.message || String(error),
-    stack: error?.stack || null,
-    code: error?.code || null,
-    status: error?.status ?? null,
-    stdout: diagnosticValue(error?.stdout),
-    stderr: diagnosticValue(error?.stderr),
-  };
-}
-
 function main() {
   const config = readJson(ROOT, MATRIX_CONFIG_PATH);
   assertMethodSet(config.methods || []);
@@ -86,21 +68,6 @@ function main() {
       }, null, 2)}\n`,
     );
     printSummary(matrixResults, mutationResults);
-  } catch (error) {
-    const diagnostic = diagnosticError(error);
-    writeFileSync(
-      join(ROOT, 'kroad-010-history-matrix-report.json'),
-      `${JSON.stringify({
-        schema_version: '0.1.0',
-        result: 'DIAGNOSTIC_FAIL',
-        diagnostic_only: true,
-        exact_head: process.env.COVERAGE_HEAD_SHA || null,
-        error: diagnostic,
-      }, null, 2)}\n`,
-    );
-    console.error(`KROAD-010 diagnostic capture: ${diagnostic.message}`);
-    // Temporary diagnostic head only. This result is not validation success.
-    process.exitCode = 0;
   } finally {
     if (repository && existsSync(repository)) {
       try {
