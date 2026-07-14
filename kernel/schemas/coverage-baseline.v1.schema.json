@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/coverage-baseline.v1.schema.json",
+  "title": "EV4 Coverage Baseline v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["baseline_id", "baseline_version", "baseline_status", "contract_ref", "element_ledger_version", "question_catalog_version", "element_denominator_state", "question_denominator_state", "element_denominator", "question_denominator", "known_element_scope_count", "known_question_scope_count", "content_hashes", "coverage", "release_checks_connected", "readiness_check_refs", "denominator_change", "previous_baseline_ref", "superseded_by", "effective_main_commit", "effective_on_main_at"],
+  "properties": {
+    "baseline_id": { "type": "string", "pattern": "^coverage-baseline\\.v1\\.[0-9]+\\.[0-9]+$" },
+    "baseline_version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" },
+    "baseline_status": { "enum": ["proposed_on_pr", "effective_on_main"] },
+    "contract_ref": { "const": "kernel/decision-governance/coverage-guarantee-contract.v1.json" },
+    "element_ledger_version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" },
+    "question_catalog_version": { "type": "string", "pattern": "^1\\.[0-9]+\\.[0-9]+$" },
+    "element_denominator_state": { "enum": ["unresolved", "validated"] },
+    "question_denominator_state": { "enum": ["unresolved", "validated"] },
+    "element_denominator": { "type": ["integer", "null"], "minimum": 0 },
+    "question_denominator": { "type": ["integer", "null"], "minimum": 0 },
+    "known_element_scope_count": { "type": "integer", "minimum": 1 },
+    "known_question_scope_count": { "type": "integer", "minimum": 1 },
+    "content_hashes": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/contentHash" } },
+    "coverage": { "$ref": "#/$defs/coverage" },
+    "release_checks_connected": { "type": "boolean" },
+    "readiness_check_refs": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "denominator_change": { "type": ["object", "null"], "required": ["previous_baseline_ref", "new_baseline_ref", "previous_element_denominator", "new_element_denominator", "previous_question_denominator", "new_question_denominator", "added_record_ids", "removed_record_ids", "changed_record_ids", "record_level_reasons", "previous_element_percent", "new_element_percent", "previous_question_percent", "new_question_percent", "supersession_chain"], "additionalProperties": false, "properties": { "previous_baseline_ref": { "type": "string", "minLength": 1 }, "new_baseline_ref": { "type": "string", "minLength": 1 }, "previous_element_denominator": { "type": "integer", "minimum": 0 }, "new_element_denominator": { "type": "integer", "minimum": 0 }, "previous_question_denominator": { "type": "integer", "minimum": 0 }, "new_question_denominator": { "type": "integer", "minimum": 0 }, "added_record_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }, "removed_record_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }, "changed_record_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }, "record_level_reasons": { "type": "array", "items": { "$ref": "#/$defs/denominatorReason" } }, "previous_element_percent": { "type": ["number", "null"] }, "new_element_percent": { "type": ["number", "null"] }, "previous_question_percent": { "type": ["number", "null"] }, "new_question_percent": { "type": ["number", "null"] }, "supersession_chain": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } } } },
+    "previous_baseline_ref": { "type": ["string", "null"] },
+    "superseded_by": { "type": ["string", "null"] },
+    "effective_main_commit": { "type": ["string", "null"], "pattern": "^[0-9a-f]{40}$" },
+    "effective_on_main_at": { "type": ["string", "null"], "format": "date-time" }
+  },
+  "$defs": {
+    "sha40": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "membership": { "enum": ["confirmed", "candidate", "unresolved", "excluded_duplicate", "excluded_superseded", "not_applicable_with_validated_reason", null] },
+    "evidenceCarrier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_id", "subject_record_id", "coverage_subject_id", "artifact_role", "artifact_path", "artifact_version", "content_sha256", "head_binding", "repository_commit", "json_pointer", "symbol"],
+      "properties": {
+        "evidence_id": { "type": "string", "pattern": "^EVC-[A-Z0-9_-]+$" },
+        "subject_record_id": { "type": "string", "minLength": 1 },
+        "coverage_subject_id": { "type": "string", "minLength": 1 },
+        "artifact_role": { "const": "denominator_change" },
+        "artifact_path": { "type": "string", "minLength": 1 },
+        "artifact_version": { "type": "string", "minLength": 1 },
+        "content_sha256": { "$ref": "#/$defs/sha256" },
+        "head_binding": { "enum": ["git_runtime_head", "pinned_commit"] },
+        "repository_commit": { "anyOf": [{ "$ref": "#/$defs/sha40" }, { "type": "null" }] },
+        "json_pointer": { "type": ["string", "null"] },
+        "symbol": { "type": ["string", "null"], "minLength": 1 }
+      }
+    },
+    "denominatorReason": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_id", "change_kind", "previous_membership", "new_membership", "reason_code", "source_evidence", "target_record_id"],
+      "properties": {
+        "record_id": { "type": "string", "minLength": 1 },
+        "change_kind": { "enum": ["added", "removed", "reclassified"] },
+        "previous_membership": { "$ref": "#/$defs/membership" },
+        "new_membership": { "$ref": "#/$defs/membership" },
+        "reason_code": { "enum": ["added_source_evidence", "duplicate", "superseded", "not_applicable", "scope_correction", "source_correction"] },
+        "source_evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/evidenceCarrier" } },
+        "target_record_id": { "type": ["string", "null"], "minLength": 1 }
+      }
+    },
+    "contentHash": { "type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": { "path": { "type": "string", "minLength": 1 }, "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" } } },
+    "coverage": { "type": "object", "additionalProperties": false, "required": ["element_numerator", "element_percent", "question_numerator", "question_percent", "critical_p0_and_safety_numerator", "critical_p0_and_safety_denominator", "critical_p0_and_safety_percent"], "properties": { "element_numerator": { "type": "integer", "minimum": 0 }, "element_percent": { "type": ["number", "null"], "minimum": 0, "maximum": 100 }, "question_numerator": { "type": "integer", "minimum": 0 }, "question_percent": { "type": ["number", "null"], "minimum": 0, "maximum": 100 }, "critical_p0_and_safety_numerator": { "type": "integer", "minimum": 0 }, "critical_p0_and_safety_denominator": { "type": "integer", "minimum": 0 }, "critical_p0_and_safety_percent": { "type": ["number", "null"], "minimum": 0, "maximum": 100 } } }
+  }
+}

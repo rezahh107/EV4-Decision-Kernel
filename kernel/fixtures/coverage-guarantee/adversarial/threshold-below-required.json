@@ -1,0 +1,14 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_THRESHOLD_BELOW_REQUIRED"
+  ],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [],
+    "changed_paths": [],
+    "requested_state": "threshold_enforced",
+    "claims": []
+  }
+}

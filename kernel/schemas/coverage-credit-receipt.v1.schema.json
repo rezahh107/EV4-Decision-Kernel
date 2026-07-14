@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/coverage-credit-receipt.v1.schema.json",
+  "title": "EV4 Validator-Recomputed Coverage Credit Projection v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["credit_id", "credit_version", "receipt_type", "subject", "baseline_id", "derivation", "source_evidence", "claims"],
+  "properties": {
+    "credit_id": { "type": "string", "pattern": "^coverage-credit\\.[a-z0-9._-]+$" },
+    "credit_version": { "const": "1.0.0" },
+    "receipt_type": { "const": "coverage_credit_projection" },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subject_record_id", "coverage_subject_id", "question_id", "decision_family_id", "rule_id"],
+      "properties": {
+        "subject_record_id": { "type": "string", "minLength": 1 },
+        "coverage_subject_id": { "type": "string", "minLength": 1 },
+        "question_id": { "type": "string", "minLength": 1 },
+        "decision_family_id": { "type": "string", "minLength": 1 },
+        "rule_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "baseline_id": { "type": "string", "minLength": 1 },
+    "derivation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule_id", "rule_version", "mode", "required_chain"],
+      "properties": {
+        "rule_id": { "const": "COV-QUESTION-CREDIT-V1" },
+        "rule_version": { "const": "1.0.0" },
+        "mode": { "const": "validator_recomputed" },
+        "required_chain": { "const": ["catalog", "matrix", "resolver_rule", "deterministic_evaluator", "valid_fixture", "invalid_fixture", "adversarial_fixture", "l2_audit", "required_runtime_or_consumer_proof"] }
+      }
+    },
+    "source_evidence": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["link_name", "evidence_id", "subject_record_id", "coverage_subject_id", "content_sha256", "evidence_head_sha"],
+        "properties": {
+          "link_name": { "enum": ["catalog", "matrix", "resolver_rule", "deterministic_evaluator", "valid_fixture", "invalid_fixture", "adversarial_fixture", "l2_audit", "required_runtime_or_consumer_proof"] },
+          "evidence_id": { "type": "string", "pattern": "^EVC-[A-Z0-9_-]+$" },
+          "subject_record_id": { "type": "string", "minLength": 1 },
+          "coverage_subject_id": { "type": "string", "minLength": 1 },
+          "content_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "evidence_head_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+        }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["coverage_granted", "readiness", "release_readiness", "production_readiness"],
+      "properties": {
+        "coverage_granted": { "const": false },
+        "readiness": { "const": false },
+        "release_readiness": { "const": false },
+        "production_readiness": { "const": false }
+      }
+    }
+  }
+}

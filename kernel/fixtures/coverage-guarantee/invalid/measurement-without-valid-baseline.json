@@ -1,0 +1,14 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "invalid",
+  "expected_diagnostic_codes": [
+    "COV_MEASUREMENT_BASELINE_INVALID"
+  ],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [],
+    "changed_paths": [],
+    "requested_state": "measurement_active",
+    "claims": []
+  }
+}

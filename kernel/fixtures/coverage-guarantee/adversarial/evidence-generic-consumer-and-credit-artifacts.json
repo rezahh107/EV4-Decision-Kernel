@@ -1,0 +1,69 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_EVIDENCE_PROOF_ARTIFACT_FORBIDDEN",
+    "COV_EVIDENCE_PROOF_RECEIPT_INVALID",
+    "COV_EVIDENCE_CREDIT_ARTIFACT_FORBIDDEN",
+    "COV_EVIDENCE_CREDIT_RECEIPT_INVALID"
+  ],
+  "expected_derived": {
+    "questionNumerator": 0
+  },
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "set",
+        "artifact": "catalog",
+        "path": "/records/18/coverage_chain/required_runtime_or_consumer_proof",
+        "value": {
+          "status": "complete",
+          "evidence_refs": [
+            {
+              "evidence_id": "EVC-GENERIC-FIXTURE-AS-CONSUMER-PROOF",
+              "subject_record_id": "DQ-IMAGE-01",
+              "coverage_subject_id": "DQ-IMAGE-01#required_runtime_or_consumer_proof",
+              "artifact_role": "consumer_proof",
+              "artifact_path": "kernel/fixtures/valid/downstream_consumer/architect_layout_structure_kernel_consumed_valid.json",
+              "artifact_version": "0.1.0",
+              "content_sha256": "95dd1c20e61f8574ff730abbb202d4b058e7e360249b4b63e919c2430c1634eb",
+              "head_binding": "git_runtime_head",
+              "repository_commit": null,
+              "json_pointer": "",
+              "symbol": null
+            }
+          ],
+          "not_applicable_reason": null
+        }
+      },
+      {
+        "op": "set",
+        "artifact": "catalog",
+        "path": "/records/18/coverage_chain/coverage_credit",
+        "value": {
+          "status": "complete",
+          "evidence_refs": [
+            {
+              "evidence_id": "EVC-CATALOG-RECORD-AS-COVERAGE-CREDIT",
+              "subject_record_id": "DQ-IMAGE-01",
+              "coverage_subject_id": "DQ-IMAGE-01#coverage_credit",
+              "artifact_role": "coverage_credit",
+              "artifact_path": "planning/coverage/decision-question-catalog.v1.json",
+              "artifact_version": "1.0.0",
+              "content_sha256": "f8829db1c6ed5ffcc7685443ed71e9831cd5b75a8386ce85d9fd8c77b5b0a778",
+              "head_binding": "git_runtime_head",
+              "repository_commit": null,
+              "json_pointer": "/records/18",
+              "symbol": null
+            }
+          ],
+          "not_applicable_reason": null
+        }
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

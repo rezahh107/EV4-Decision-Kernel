@@ -1,0 +1,32 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": ["COV_EVIDENCE_SYMBOL_MISSING"],
+  "expected_derived": { "questionNumerator": 0 },
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "set",
+        "artifact": "catalog",
+        "path": "/records/0/coverage_chain/deterministic_evaluator/evidence_refs",
+        "value": [{
+          "evidence_id": "EVC-WRONG-SYMBOL",
+          "subject_record_id": "DQ-DIV_BLOCK-01",
+          "coverage_subject_id": "DQ-DIV_BLOCK-01#deterministic_evaluator",
+          "artifact_role": "deterministic_evaluator",
+          "artifact_path": "kernel/resolver-mvp/resolve-high-risk-p0.mjs",
+          "artifact_version": "sha256:f716af66c65762b688484d72a27c5c5a2d1ea858589b34ae2cf9f8ad0846af62",
+          "content_sha256": "f716af66c65762b688484d72a27c5c5a2d1ea858589b34ae2cf9f8ad0846af62",
+          "head_binding": "pinned_commit",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "json_pointer": null,
+          "symbol": "resolveLayoutStructureMissing"
+        }]
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

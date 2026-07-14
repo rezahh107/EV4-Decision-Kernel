@@ -1,0 +1,106 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_CONSUMER_PROOF_REJECTED",
+    "COV_PROOF_PRODUCER_UNKNOWN",
+    "COV_PROOF_EVIDENCE_NOT_BASE_ANCHORED",
+    "COV_PROOF_LINEAGE_UNRESOLVED"
+  ],
+  "expected_derived": {
+    "elementNumerator": 0,
+    "questionNumerator": 0,
+    "elementDenominator": 7,
+    "questionDenominator": 24,
+    "elementDenominatorState": "unresolved",
+    "questionDenominatorState": "unresolved"
+  },
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "runtime_context": {
+      "headSha": "dc45fe87eda245057010ea35acaf6627614b110d",
+      "headCommittedAt": "2026-07-13T12:19:32+03:30"
+    },
+    "repository_artifacts": {
+      "planning/coverage/proofs/consumer/rejected.json": {
+        "receipt_id": "consumer-proof.fixture.rejected",
+        "receipt_version": "1.0.0",
+        "receipt_type": "consumer_proof",
+        "subject": {
+          "subject_record_id": "DQ-DIV_BLOCK-01",
+          "coverage_subject_id": "DQ-DIV_BLOCK-01#required_runtime_or_consumer_proof",
+          "decision_family_id": "layout_structure",
+          "rule_id": "resolver.rule.layout_structure.mvp.v0",
+          "obligation_id": null,
+          "question_id": "DQ-DIV_BLOCK-01"
+        },
+        "provenance": {
+          "repository": "rezahh107/EV4-Decision-Kernel",
+          "evidence_head_sha": "dc45fe87eda245057010ea35acaf6627614b110d",
+          "producer_id": "unregistered.consumer.fixture",
+          "producer_repository": "example/forged-consumer",
+          "producer_role": "Architect",
+          "verification_mode": "registered_immutable_capture_lineage"
+        },
+        "consumer": {
+          "consumer_id": "architect.fixture.invalid",
+          "owner_role": "Architect"
+        },
+        "contract_result": {
+          "contract_id": "consumer.contract.fixture",
+          "result": "rejected",
+          "observed_at": "2026-07-13T08:30:00Z",
+          "capture_source_id": "PSL-REJECTED-CONSUMER"
+        },
+        "source_lineage": [
+          {
+            "source_id": "PSL-REJECTED-CONSUMER",
+            "source_kind": "authoritative_capture_receipt",
+            "repository": "rezahh107/EV4-Decision-Kernel",
+            "repository_commit": "dc45fe87eda245057010ea35acaf6627614b110d",
+            "artifact_path": "planning/coverage/captures/consumer/nonexistent.json",
+            "artifact_version": "1.0.0",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "json_pointer": ""
+          }
+        ],
+        "limitations": ["Adversarial fixture; explicit rejection is negative evidence."],
+        "claims": {
+          "consumer_acceptance_verified": false,
+          "readiness": false,
+          "release_readiness": false,
+          "production_readiness": false
+        }
+      }
+    },
+    "mutations": [
+      {
+        "op": "set",
+        "artifact": "catalog",
+        "path": "/records/0/coverage_chain/required_runtime_or_consumer_proof",
+        "value": {
+          "status": "complete",
+          "evidence_refs": [
+            {
+              "evidence_id": "EVC-CONSUMER-REJECTED",
+              "subject_record_id": "DQ-DIV_BLOCK-01",
+              "coverage_subject_id": "DQ-DIV_BLOCK-01#required_runtime_or_consumer_proof",
+              "artifact_role": "consumer_proof",
+              "artifact_path": "planning/coverage/proofs/consumer/rejected.json",
+              "artifact_version": "1.0.0",
+              "content_sha256": "8adb4a114c642eb5ce7d2b495404fd8e12e5186e5ba791f1f3f527024ff861d5",
+              "head_binding": "git_runtime_head",
+              "repository_commit": null,
+              "json_pointer": "",
+              "symbol": null
+            }
+          ],
+          "not_applicable_reason": null
+        }
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

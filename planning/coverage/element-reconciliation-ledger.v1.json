@@ -1,0 +1,1479 @@
+{
+  "ledger_id": "element-reconciliation-ledger.v1",
+  "version": "1.0.0",
+  "status": "active_seed",
+  "source_base_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+  "known_scope_count": 15,
+  "confirmed_denominator_count": 7,
+  "denominator_state": "unresolved",
+  "records": [
+    {
+      "record_id": "EL-DIV_BLOCK",
+      "record_type": "atomic",
+      "element_id": "v4.div_block",
+      "display_name": "Div Block",
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_element_registry",
+          "path": "kernel/registries/elements.core.v0.json",
+          "artifact_version": "0.1.0-mvk",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "85c3d36b204b937b964040f049cddbd94fa7c6669e8dc08773a68e4c640c9d09",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "37f5c4ba654f0a4358b5f2cb472257c69352c2ec",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/elements/0"
+        },
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/0"
+        },
+        {
+          "source_type": "official_source_manifest",
+          "path": "kernel/official-sources/elementor-v4-source-manifest.v0.json",
+          "artifact_version": "0.6.0-doc-coverage-repair",
+          "retrieval_identity": "official_sources_verified_at:2026-07-08T00:00:00Z",
+          "content_hash": "fdcc7ce30fe4ee07c80816ebaa7a4ef35d91de39feb33877d1ddb2dca73197c0",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "b17d7cb2c0828c6c4b485cd9ac19f054ad102a6f",
+          "provenance_classification": "verified_current_official_fact",
+          "verification_mode": "local_file",
+          "json_pointer": "/sources"
+        }
+      ],
+      "element_obligations": {
+        "applicable_decision_questions": [
+          {
+            "obligation_id": "OB-DQ-DIV_BLOCK-01",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-DIV_BLOCK-01"
+            ],
+            "not_applicable_reason": null
+          },
+          {
+            "obligation_id": "OB-DQ-DIV_BLOCK-02",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-DIV_BLOCK-02"
+            ],
+            "not_applicable_reason": null
+          },
+          {
+            "obligation_id": "OB-DQ-DIV_BLOCK-03",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-DIV_BLOCK-03"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "applicable_p0_families": [
+          {
+            "obligation_id": "OB-P0-LAYOUT_STRUCTURE",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.layout_structure.v0"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_safety_gates": [
+          {
+            "obligation_id": "OB-SAFETY-STRUCTURAL_WRAPPER_AND_NESTED_LINK_SAFETY",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "kernel/decision-cards/elements.core.v0.json#v4.div_block"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_runtime_checks": [
+          {
+            "obligation_id": "OB-RUNTIME-DIV_BLOCK",
+            "status": "unresolved",
+            "critical": false,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_consumer_proofs": [
+          {
+            "obligation_id": "OB-CONSUMER-DIV_BLOCK",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ]
+      },
+      "resolution_state": "partial",
+      "known_limitations": [
+        "Repository and official-document identity are confirmed; end-to-end runtime and consumer obligations remain open.",
+        "No target-project availability or production readiness is claimed."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "record_id": "EL-FLEXBOX",
+      "record_type": "atomic",
+      "element_id": "v4.flexbox",
+      "display_name": "Flexbox",
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_element_registry",
+          "path": "kernel/registries/elements.core.v0.json",
+          "artifact_version": "0.1.0-mvk",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "85c3d36b204b937b964040f049cddbd94fa7c6669e8dc08773a68e4c640c9d09",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "37f5c4ba654f0a4358b5f2cb472257c69352c2ec",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/elements/1"
+        },
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/1"
+        },
+        {
+          "source_type": "official_source_manifest",
+          "path": "kernel/official-sources/elementor-v4-source-manifest.v0.json",
+          "artifact_version": "0.6.0-doc-coverage-repair",
+          "retrieval_identity": "official_sources_verified_at:2026-07-08T00:00:00Z",
+          "content_hash": "fdcc7ce30fe4ee07c80816ebaa7a4ef35d91de39feb33877d1ddb2dca73197c0",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "b17d7cb2c0828c6c4b485cd9ac19f054ad102a6f",
+          "provenance_classification": "verified_current_official_fact",
+          "verification_mode": "local_file",
+          "json_pointer": "/sources"
+        }
+      ],
+      "element_obligations": {
+        "applicable_decision_questions": [
+          {
+            "obligation_id": "OB-DQ-FLEXBOX-01",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-FLEXBOX-01"
+            ],
+            "not_applicable_reason": null
+          },
+          {
+            "obligation_id": "OB-DQ-FLEXBOX-02",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-FLEXBOX-02"
+            ],
+            "not_applicable_reason": null
+          },
+          {
+            "obligation_id": "OB-DQ-FLEXBOX-03",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-FLEXBOX-03"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "applicable_p0_families": [
+          {
+            "obligation_id": "OB-P0-LAYOUT_STRUCTURE",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.layout_structure.v0"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_safety_gates": [
+          {
+            "obligation_id": "OB-SAFETY-AXIS_AND_NESTED_LINK_SAFETY",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "kernel/decision-cards/elements.core.v0.json#v4.flexbox"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_runtime_checks": [
+          {
+            "obligation_id": "OB-RUNTIME-FLEXBOX",
+            "status": "unresolved",
+            "critical": false,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_consumer_proofs": [
+          {
+            "obligation_id": "OB-CONSUMER-FLEXBOX",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ]
+      },
+      "resolution_state": "partial",
+      "known_limitations": [
+        "Repository and official-document identity are confirmed; end-to-end runtime and consumer obligations remain open.",
+        "No target-project availability or production readiness is claimed."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "record_id": "EL-GRID",
+      "record_type": "layout_mode",
+      "element_id": "v4.grid",
+      "display_name": "Grid",
+      "evidence_state": "pending_official_confirmation",
+      "denominator_membership": "candidate",
+      "source_references": [
+        {
+          "source_type": "kernel_element_registry",
+          "path": "kernel/registries/elements.core.v0.json",
+          "artifact_version": "0.1.0-mvk",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "85c3d36b204b937b964040f049cddbd94fa7c6669e8dc08773a68e4c640c9d09",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "37f5c4ba654f0a4358b5f2cb472257c69352c2ec",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/elements/2"
+        },
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/2"
+        },
+        {
+          "source_type": "official_source_manifest",
+          "path": "kernel/official-sources/elementor-v4-source-manifest.v0.json",
+          "artifact_version": "0.6.0-doc-coverage-repair",
+          "retrieval_identity": "official_sources_verified_at:2026-07-08T00:00:00Z",
+          "content_hash": "fdcc7ce30fe4ee07c80816ebaa7a4ef35d91de39feb33877d1ddb2dca73197c0",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "b17d7cb2c0828c6c4b485cd9ac19f054ad102a6f",
+          "provenance_classification": "verified_current_official_fact",
+          "verification_mode": "local_file",
+          "json_pointer": "/sources"
+        }
+      ],
+      "element_obligations": {
+        "applicable_decision_questions": [
+          {
+            "obligation_id": "OB-DQ-GRID-01",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-GRID-01"
+            ],
+            "not_applicable_reason": null
+          },
+          {
+            "obligation_id": "OB-DQ-GRID-02",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-GRID-02"
+            ],
+            "not_applicable_reason": null
+          },
+          {
+            "obligation_id": "OB-DQ-GRID-03",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-GRID-03"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "applicable_p0_families": [
+          {
+            "obligation_id": "OB-P0-LAYOUT_STRUCTURE",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [
+              "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.layout_structure.v0"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_safety_gates": [
+          {
+            "obligation_id": "OB-SAFETY-GRID_IDENTITY_AND_AVAILABILITY_SAFETY",
+            "status": "pending_official_confirmation",
+            "critical": true,
+            "evidence_refs": [
+              "kernel/decision-cards/elements.core.v0.json#v4.grid"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_runtime_checks": [
+          {
+            "obligation_id": "OB-RUNTIME-GRID",
+            "status": "unresolved",
+            "critical": false,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_consumer_proofs": [
+          {
+            "obligation_id": "OB-CONSUMER-GRID",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ]
+      },
+      "resolution_state": "pending_official_confirmation",
+      "known_limitations": [
+        "Grid is source-bound to Grid Container documentation; a distinct atomic V4 Grid element page remains unconfirmed.",
+        "No target-project, runtime, Builder or consumer proof is claimed."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "record_id": "EL-HEADING",
+      "record_type": "atomic",
+      "element_id": "v4.heading",
+      "display_name": "Heading",
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_element_registry",
+          "path": "kernel/registries/elements.core.v0.json",
+          "artifact_version": "0.1.0-mvk",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "85c3d36b204b937b964040f049cddbd94fa7c6669e8dc08773a68e4c640c9d09",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "37f5c4ba654f0a4358b5f2cb472257c69352c2ec",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/elements/3"
+        },
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/3"
+        },
+        {
+          "source_type": "official_source_manifest",
+          "path": "kernel/official-sources/elementor-v4-source-manifest.v0.json",
+          "artifact_version": "0.6.0-doc-coverage-repair",
+          "retrieval_identity": "official_sources_verified_at:2026-07-08T00:00:00Z",
+          "content_hash": "fdcc7ce30fe4ee07c80816ebaa7a4ef35d91de39feb33877d1ddb2dca73197c0",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "b17d7cb2c0828c6c4b485cd9ac19f054ad102a6f",
+          "provenance_classification": "verified_current_official_fact",
+          "verification_mode": "local_file",
+          "json_pointer": "/sources"
+        }
+      ],
+      "element_obligations": {
+        "applicable_decision_questions": [
+          {
+            "obligation_id": "OB-DQ-HEADING-01",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-HEADING-01"
+            ],
+            "not_applicable_reason": null
+          },
+          {
+            "obligation_id": "OB-DQ-HEADING-02",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-HEADING-02"
+            ],
+            "not_applicable_reason": null
+          },
+          {
+            "obligation_id": "OB-DQ-HEADING-03",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-HEADING-03"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "applicable_p0_families": [
+          {
+            "obligation_id": "OB-P0-TEXT_SEMANTICS",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.text_semantics.v0"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_safety_gates": [
+          {
+            "obligation_id": "OB-SAFETY-DOCUMENT_OUTLINE_SEMANTICS",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "kernel/decision-cards/elements.core.v0.json#v4.heading"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_runtime_checks": [
+          {
+            "obligation_id": "OB-RUNTIME-HEADING",
+            "status": "unresolved",
+            "critical": false,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_consumer_proofs": [
+          {
+            "obligation_id": "OB-CONSUMER-HEADING",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ]
+      },
+      "resolution_state": "partial",
+      "known_limitations": [
+        "Repository and official-document identity are confirmed; end-to-end runtime and consumer obligations remain open.",
+        "No target-project availability or production readiness is claimed."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "record_id": "EL-PARAGRAPH",
+      "record_type": "atomic",
+      "element_id": "v4.paragraph",
+      "display_name": "Paragraph",
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_element_registry",
+          "path": "kernel/registries/elements.core.v0.json",
+          "artifact_version": "0.1.0-mvk",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "85c3d36b204b937b964040f049cddbd94fa7c6669e8dc08773a68e4c640c9d09",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "37f5c4ba654f0a4358b5f2cb472257c69352c2ec",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/elements/4"
+        },
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/4"
+        },
+        {
+          "source_type": "official_source_manifest",
+          "path": "kernel/official-sources/elementor-v4-source-manifest.v0.json",
+          "artifact_version": "0.6.0-doc-coverage-repair",
+          "retrieval_identity": "official_sources_verified_at:2026-07-08T00:00:00Z",
+          "content_hash": "fdcc7ce30fe4ee07c80816ebaa7a4ef35d91de39feb33877d1ddb2dca73197c0",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "b17d7cb2c0828c6c4b485cd9ac19f054ad102a6f",
+          "provenance_classification": "verified_current_official_fact",
+          "verification_mode": "local_file",
+          "json_pointer": "/sources"
+        }
+      ],
+      "element_obligations": {
+        "applicable_decision_questions": [
+          {
+            "obligation_id": "OB-DQ-PARAGRAPH-01",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-PARAGRAPH-01"
+            ],
+            "not_applicable_reason": null
+          },
+          {
+            "obligation_id": "OB-DQ-PARAGRAPH-02",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-PARAGRAPH-02"
+            ],
+            "not_applicable_reason": null
+          },
+          {
+            "obligation_id": "OB-DQ-PARAGRAPH-03",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-PARAGRAPH-03"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "applicable_p0_families": [
+          {
+            "obligation_id": "OB-P0-TEXT_SEMANTICS",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.text_semantics.v0"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_safety_gates": [
+          {
+            "obligation_id": "OB-SAFETY-BODY_TEXT_SEMANTICS",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "kernel/decision-cards/elements.core.v0.json#v4.paragraph"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_runtime_checks": [
+          {
+            "obligation_id": "OB-RUNTIME-PARAGRAPH",
+            "status": "unresolved",
+            "critical": false,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_consumer_proofs": [
+          {
+            "obligation_id": "OB-CONSUMER-PARAGRAPH",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ]
+      },
+      "resolution_state": "partial",
+      "known_limitations": [
+        "Repository and official-document identity are confirmed; end-to-end runtime and consumer obligations remain open.",
+        "No target-project availability or production readiness is claimed."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "record_id": "EL-BUTTON",
+      "record_type": "atomic",
+      "element_id": "v4.button",
+      "display_name": "Button",
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_element_registry",
+          "path": "kernel/registries/elements.core.v0.json",
+          "artifact_version": "0.1.0-mvk",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "85c3d36b204b937b964040f049cddbd94fa7c6669e8dc08773a68e4c640c9d09",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "37f5c4ba654f0a4358b5f2cb472257c69352c2ec",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/elements/5"
+        },
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/5"
+        },
+        {
+          "source_type": "official_source_manifest",
+          "path": "kernel/official-sources/elementor-v4-source-manifest.v0.json",
+          "artifact_version": "0.6.0-doc-coverage-repair",
+          "retrieval_identity": "official_sources_verified_at:2026-07-08T00:00:00Z",
+          "content_hash": "fdcc7ce30fe4ee07c80816ebaa7a4ef35d91de39feb33877d1ddb2dca73197c0",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "b17d7cb2c0828c6c4b485cd9ac19f054ad102a6f",
+          "provenance_classification": "verified_current_official_fact",
+          "verification_mode": "local_file",
+          "json_pointer": "/sources"
+        }
+      ],
+      "element_obligations": {
+        "applicable_decision_questions": [
+          {
+            "obligation_id": "OB-DQ-BUTTON-01",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-BUTTON-01"
+            ],
+            "not_applicable_reason": null
+          },
+          {
+            "obligation_id": "OB-DQ-BUTTON-02",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-BUTTON-02"
+            ],
+            "not_applicable_reason": null
+          },
+          {
+            "obligation_id": "OB-DQ-BUTTON-03",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-BUTTON-03"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "applicable_p0_families": [
+          {
+            "obligation_id": "OB-P0-INTERACTION_LINK_TOPOLOGY",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.interaction_link_topology.v0"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_safety_gates": [
+          {
+            "obligation_id": "OB-SAFETY-NESTED_INTERACTIVE_TOPOLOGY",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "kernel/decision-cards/elements.core.v0.json#v4.button"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_runtime_checks": [
+          {
+            "obligation_id": "OB-RUNTIME-BUTTON",
+            "status": "unresolved",
+            "critical": false,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_consumer_proofs": [
+          {
+            "obligation_id": "OB-CONSUMER-BUTTON",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ]
+      },
+      "resolution_state": "partial",
+      "known_limitations": [
+        "Repository and official-document identity are confirmed; end-to-end runtime and consumer obligations remain open.",
+        "No target-project availability or production readiness is claimed."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "record_id": "EL-IMAGE",
+      "record_type": "atomic",
+      "element_id": "v4.image",
+      "display_name": "Image",
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_element_registry",
+          "path": "kernel/registries/elements.core.v0.json",
+          "artifact_version": "0.1.0-mvk",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "85c3d36b204b937b964040f049cddbd94fa7c6669e8dc08773a68e4c640c9d09",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "37f5c4ba654f0a4358b5f2cb472257c69352c2ec",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/elements/6"
+        },
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/6"
+        },
+        {
+          "source_type": "official_source_manifest",
+          "path": "kernel/official-sources/elementor-v4-source-manifest.v0.json",
+          "artifact_version": "0.6.0-doc-coverage-repair",
+          "retrieval_identity": "official_sources_verified_at:2026-07-08T00:00:00Z",
+          "content_hash": "fdcc7ce30fe4ee07c80816ebaa7a4ef35d91de39feb33877d1ddb2dca73197c0",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "b17d7cb2c0828c6c4b485cd9ac19f054ad102a6f",
+          "provenance_classification": "verified_current_official_fact",
+          "verification_mode": "local_file",
+          "json_pointer": "/sources"
+        }
+      ],
+      "element_obligations": {
+        "applicable_decision_questions": [
+          {
+            "obligation_id": "OB-DQ-IMAGE-01",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-IMAGE-01"
+            ],
+            "not_applicable_reason": null
+          },
+          {
+            "obligation_id": "OB-DQ-IMAGE-02",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-IMAGE-02"
+            ],
+            "not_applicable_reason": null
+          },
+          {
+            "obligation_id": "OB-DQ-IMAGE-03",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-IMAGE-03"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "applicable_p0_families": [
+          {
+            "obligation_id": "OB-P0-MEDIA_CHOICE",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.media_choice.v0"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_safety_gates": [
+          {
+            "obligation_id": "OB-SAFETY-MEANINGFUL_MEDIA_ACCESSIBILITY",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "kernel/decision-cards/elements.core.v0.json#v4.image"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_runtime_checks": [
+          {
+            "obligation_id": "OB-RUNTIME-IMAGE",
+            "status": "unresolved",
+            "critical": false,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_consumer_proofs": [
+          {
+            "obligation_id": "OB-CONSUMER-IMAGE",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ]
+      },
+      "resolution_state": "partial",
+      "known_limitations": [
+        "Repository and official-document identity are confirmed; end-to-end runtime and consumer obligations remain open.",
+        "No target-project availability or production readiness is claimed."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "record_id": "EL-SVG",
+      "record_type": "atomic",
+      "element_id": "v4.svg",
+      "display_name": "SVG",
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_element_registry",
+          "path": "kernel/registries/elements.core.v0.json",
+          "artifact_version": "0.1.0-mvk",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "85c3d36b204b937b964040f049cddbd94fa7c6669e8dc08773a68e4c640c9d09",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "37f5c4ba654f0a4358b5f2cb472257c69352c2ec",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/elements/7"
+        },
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/7"
+        },
+        {
+          "source_type": "official_source_manifest",
+          "path": "kernel/official-sources/elementor-v4-source-manifest.v0.json",
+          "artifact_version": "0.6.0-doc-coverage-repair",
+          "retrieval_identity": "official_sources_verified_at:2026-07-08T00:00:00Z",
+          "content_hash": "fdcc7ce30fe4ee07c80816ebaa7a4ef35d91de39feb33877d1ddb2dca73197c0",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "b17d7cb2c0828c6c4b485cd9ac19f054ad102a6f",
+          "provenance_classification": "verified_current_official_fact",
+          "verification_mode": "local_file",
+          "json_pointer": "/sources"
+        }
+      ],
+      "element_obligations": {
+        "applicable_decision_questions": [
+          {
+            "obligation_id": "OB-DQ-SVG-01",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-SVG-01"
+            ],
+            "not_applicable_reason": null
+          },
+          {
+            "obligation_id": "OB-DQ-SVG-02",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-SVG-02"
+            ],
+            "not_applicable_reason": null
+          },
+          {
+            "obligation_id": "OB-DQ-SVG-03",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "planning/coverage/decision-question-catalog.v1.json#DQ-SVG-03"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "applicable_p0_families": [
+          {
+            "obligation_id": "OB-P0-MEDIA_CHOICE",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.media_choice.v0"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_safety_gates": [
+          {
+            "obligation_id": "OB-SAFETY-ASSET_PROVENANCE_SECURITY_AND_ACCESSIBILITY",
+            "status": "partial",
+            "critical": true,
+            "evidence_refs": [
+              "kernel/decision-cards/elements.core.v0.json#v4.svg"
+            ],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_runtime_checks": [
+          {
+            "obligation_id": "OB-RUNTIME-SVG",
+            "status": "unresolved",
+            "critical": false,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_consumer_proofs": [
+          {
+            "obligation_id": "OB-CONSUMER-SVG",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ]
+      },
+      "resolution_state": "partial",
+      "known_limitations": [
+        "Repository and official-document identity are confirmed; end-to-end runtime and consumer obligations remain open.",
+        "No target-project availability or production readiness is claimed."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "record_id": "EL-TABS",
+      "record_type": "unresolved_candidate",
+      "element_id": "candidate.recovered.tabs",
+      "display_name": "Tabs",
+      "evidence_state": "unresolved",
+      "denominator_membership": "unresolved",
+      "source_references": [
+        {
+          "source_type": "merged_recovery_specification",
+          "path": "docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md",
+          "artifact_version": "1.0.0-rc1",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "79965e2b490d7379707545ccf614b2dca66788c61d207a170660618e7232412f",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "407fff03b6f26279867a3c67d44618bbe2487cde",
+          "provenance_classification": "recovered_from_multiple_sources",
+          "verification_mode": "git_blob_at_commit",
+          "json_pointer": "/10 Atomic Element Reconciliation"
+        }
+      ],
+      "element_obligations": {
+        "applicable_decision_questions": [
+          {
+            "obligation_id": "OB-QUESTION-RECOVERY-TABS",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "applicable_p0_families": [
+          {
+            "obligation_id": "OB-P0-V4_ELEMENT_IDENTITY-TABS",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_safety_gates": [],
+        "required_runtime_checks": [
+          {
+            "obligation_id": "OB-RUNTIME-TABS",
+            "status": "unresolved",
+            "critical": false,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_consumer_proofs": [
+          {
+            "obligation_id": "OB-CONSUMER-TABS",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ]
+      },
+      "resolution_state": "unresolved",
+      "known_limitations": [
+        "Tabs is preserved from the merged recovery specification as project_observed_candidate; it is not a confirmed current Elementor V4 Element.",
+        "Current official identity, source fingerprint, applicability and duplication status remain missing."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "record_id": "EL-DIVIDER",
+      "record_type": "unresolved_candidate",
+      "element_id": "candidate.recovered.divider",
+      "display_name": "Divider",
+      "evidence_state": "unresolved",
+      "denominator_membership": "unresolved",
+      "source_references": [
+        {
+          "source_type": "merged_recovery_specification",
+          "path": "docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md",
+          "artifact_version": "1.0.0-rc1",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "79965e2b490d7379707545ccf614b2dca66788c61d207a170660618e7232412f",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "407fff03b6f26279867a3c67d44618bbe2487cde",
+          "provenance_classification": "recovered_from_multiple_sources",
+          "verification_mode": "git_blob_at_commit",
+          "json_pointer": "/10 Atomic Element Reconciliation"
+        }
+      ],
+      "element_obligations": {
+        "applicable_decision_questions": [
+          {
+            "obligation_id": "OB-QUESTION-RECOVERY-DIVIDER",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "applicable_p0_families": [
+          {
+            "obligation_id": "OB-P0-V4_ELEMENT_IDENTITY-DIVIDER",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_safety_gates": [],
+        "required_runtime_checks": [
+          {
+            "obligation_id": "OB-RUNTIME-DIVIDER",
+            "status": "unresolved",
+            "critical": false,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_consumer_proofs": [
+          {
+            "obligation_id": "OB-CONSUMER-DIVIDER",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ]
+      },
+      "resolution_state": "unresolved",
+      "known_limitations": [
+        "Divider is preserved from the merged recovery specification as project_observed_candidate; it is not a confirmed current Elementor V4 Element.",
+        "Current official identity, source fingerprint, applicability and duplication status remain missing."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "record_id": "EL-FORM_ATOMS",
+      "record_type": "unresolved_candidate",
+      "element_id": "candidate.recovered.form_atoms",
+      "display_name": "Form atoms",
+      "evidence_state": "unresolved",
+      "denominator_membership": "unresolved",
+      "source_references": [
+        {
+          "source_type": "merged_recovery_specification",
+          "path": "docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md",
+          "artifact_version": "1.0.0-rc1",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "79965e2b490d7379707545ccf614b2dca66788c61d207a170660618e7232412f",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "407fff03b6f26279867a3c67d44618bbe2487cde",
+          "provenance_classification": "recovered_from_multiple_sources",
+          "verification_mode": "git_blob_at_commit",
+          "json_pointer": "/10 Atomic Element Reconciliation"
+        }
+      ],
+      "element_obligations": {
+        "applicable_decision_questions": [
+          {
+            "obligation_id": "OB-QUESTION-RECOVERY-FORM_ATOMS",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "applicable_p0_families": [
+          {
+            "obligation_id": "OB-P0-V4_ELEMENT_IDENTITY-FORM_ATOMS",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_safety_gates": [],
+        "required_runtime_checks": [
+          {
+            "obligation_id": "OB-RUNTIME-FORM_ATOMS",
+            "status": "unresolved",
+            "critical": false,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_consumer_proofs": [
+          {
+            "obligation_id": "OB-CONSUMER-FORM_ATOMS",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ]
+      },
+      "resolution_state": "unresolved",
+      "known_limitations": [
+        "Form atoms is preserved from the merged recovery specification as project_observed_candidate; it is not a confirmed current Elementor V4 Element.",
+        "Current official identity, source fingerprint, applicability and duplication status remain missing."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "record_id": "EL-ACCORDION",
+      "record_type": "unresolved_candidate",
+      "element_id": "candidate.recovered.accordion",
+      "display_name": "Accordion",
+      "evidence_state": "unresolved",
+      "denominator_membership": "unresolved",
+      "source_references": [
+        {
+          "source_type": "merged_recovery_specification",
+          "path": "docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md",
+          "artifact_version": "1.0.0-rc1",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "79965e2b490d7379707545ccf614b2dca66788c61d207a170660618e7232412f",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "407fff03b6f26279867a3c67d44618bbe2487cde",
+          "provenance_classification": "recovered_from_multiple_sources",
+          "verification_mode": "git_blob_at_commit",
+          "json_pointer": "/10 Atomic Element Reconciliation"
+        }
+      ],
+      "element_obligations": {
+        "applicable_decision_questions": [
+          {
+            "obligation_id": "OB-QUESTION-RECOVERY-ACCORDION",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "applicable_p0_families": [
+          {
+            "obligation_id": "OB-P0-V4_ELEMENT_IDENTITY-ACCORDION",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_safety_gates": [],
+        "required_runtime_checks": [
+          {
+            "obligation_id": "OB-RUNTIME-ACCORDION",
+            "status": "unresolved",
+            "critical": false,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_consumer_proofs": [
+          {
+            "obligation_id": "OB-CONSUMER-ACCORDION",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ]
+      },
+      "resolution_state": "unresolved",
+      "known_limitations": [
+        "Accordion is preserved from the merged recovery specification as historical_candidate; it is not a confirmed current Elementor V4 Element.",
+        "Current official identity, source fingerprint, applicability and duplication status remain missing."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "record_id": "EL-LOOP_GRID",
+      "record_type": "unresolved_candidate",
+      "element_id": "candidate.recovered.loop_grid",
+      "display_name": "Loop Grid",
+      "evidence_state": "unresolved",
+      "denominator_membership": "unresolved",
+      "source_references": [
+        {
+          "source_type": "merged_recovery_specification",
+          "path": "docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md",
+          "artifact_version": "1.0.0-rc1",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "79965e2b490d7379707545ccf614b2dca66788c61d207a170660618e7232412f",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "407fff03b6f26279867a3c67d44618bbe2487cde",
+          "provenance_classification": "recovered_from_multiple_sources",
+          "verification_mode": "git_blob_at_commit",
+          "json_pointer": "/10 Atomic Element Reconciliation"
+        }
+      ],
+      "element_obligations": {
+        "applicable_decision_questions": [
+          {
+            "obligation_id": "OB-QUESTION-RECOVERY-LOOP_GRID",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "applicable_p0_families": [
+          {
+            "obligation_id": "OB-P0-V4_ELEMENT_IDENTITY-LOOP_GRID",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_safety_gates": [],
+        "required_runtime_checks": [
+          {
+            "obligation_id": "OB-RUNTIME-LOOP_GRID",
+            "status": "unresolved",
+            "critical": false,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_consumer_proofs": [
+          {
+            "obligation_id": "OB-CONSUMER-LOOP_GRID",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ]
+      },
+      "resolution_state": "unresolved",
+      "known_limitations": [
+        "Loop Grid is preserved from the merged recovery specification as historical_candidate; it is not a confirmed current Elementor V4 Element.",
+        "Current official identity, source fingerprint, applicability and duplication status remain missing."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "record_id": "EL-HTML",
+      "record_type": "unresolved_candidate",
+      "element_id": "candidate.recovered.html",
+      "display_name": "HTML",
+      "evidence_state": "unresolved",
+      "denominator_membership": "unresolved",
+      "source_references": [
+        {
+          "source_type": "merged_recovery_specification",
+          "path": "docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md",
+          "artifact_version": "1.0.0-rc1",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "79965e2b490d7379707545ccf614b2dca66788c61d207a170660618e7232412f",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "407fff03b6f26279867a3c67d44618bbe2487cde",
+          "provenance_classification": "recovered_from_multiple_sources",
+          "verification_mode": "git_blob_at_commit",
+          "json_pointer": "/10 Atomic Element Reconciliation"
+        }
+      ],
+      "element_obligations": {
+        "applicable_decision_questions": [
+          {
+            "obligation_id": "OB-QUESTION-RECOVERY-HTML",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "applicable_p0_families": [
+          {
+            "obligation_id": "OB-P0-V4_ELEMENT_IDENTITY-HTML",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_safety_gates": [],
+        "required_runtime_checks": [
+          {
+            "obligation_id": "OB-RUNTIME-HTML",
+            "status": "unresolved",
+            "critical": false,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_consumer_proofs": [
+          {
+            "obligation_id": "OB-CONSUMER-HTML",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ]
+      },
+      "resolution_state": "unresolved",
+      "known_limitations": [
+        "HTML is preserved from the merged recovery specification as historical_candidate; it is not a confirmed current Elementor V4 Element.",
+        "Current official identity, source fingerprint, applicability and duplication status remain missing."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "record_id": "EL-ICON",
+      "record_type": "unresolved_candidate",
+      "element_id": "candidate.recovered.icon",
+      "display_name": "Icon",
+      "evidence_state": "unresolved",
+      "denominator_membership": "unresolved",
+      "source_references": [
+        {
+          "source_type": "merged_recovery_specification",
+          "path": "docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md",
+          "artifact_version": "1.0.0-rc1",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "79965e2b490d7379707545ccf614b2dca66788c61d207a170660618e7232412f",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "407fff03b6f26279867a3c67d44618bbe2487cde",
+          "provenance_classification": "recovered_from_multiple_sources",
+          "verification_mode": "git_blob_at_commit",
+          "json_pointer": "/10 Atomic Element Reconciliation"
+        }
+      ],
+      "element_obligations": {
+        "applicable_decision_questions": [
+          {
+            "obligation_id": "OB-QUESTION-RECOVERY-ICON",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "applicable_p0_families": [
+          {
+            "obligation_id": "OB-P0-V4_ELEMENT_IDENTITY-ICON",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_safety_gates": [],
+        "required_runtime_checks": [
+          {
+            "obligation_id": "OB-RUNTIME-ICON",
+            "status": "unresolved",
+            "critical": false,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ],
+        "required_consumer_proofs": [
+          {
+            "obligation_id": "OB-CONSUMER-ICON",
+            "status": "unresolved",
+            "critical": true,
+            "evidence_refs": [],
+            "not_applicable_reason": null
+          }
+        ]
+      },
+      "resolution_state": "unresolved",
+      "known_limitations": [
+        "Icon is preserved from the merged recovery specification as historical_candidate; it is not a confirmed current Elementor V4 Element.",
+        "Current official identity, source fingerprint, applicability and duplication status remain missing."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    }
+  ]
+}

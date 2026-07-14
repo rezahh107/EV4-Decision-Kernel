@@ -1,0 +1,45 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "valid",
+  "expected_diagnostic_codes": [],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  },
+  "purpose": "prove formerly omitted Coverage enforcement paths are coverage-sensitive",
+  "cases": [
+    {
+      "id": "workflow-without-impact",
+      "changed_path": ".github/workflows/validate-mvk.yml",
+      "impact_record_present": false,
+      "expected_diagnostic": "COV_IMPACT_RECORD_MISSING"
+    },
+    {
+      "id": "package-without-impact",
+      "changed_path": "package.json",
+      "impact_record_present": false,
+      "expected_diagnostic": "COV_IMPACT_RECORD_MISSING"
+    },
+    {
+      "id": "prf010-validator-without-impact",
+      "changed_path": "kernel/validator/validate-coverage-guarantee-prf010.mjs",
+      "impact_record_present": false,
+      "expected_diagnostic": "COV_IMPACT_RECORD_MISSING"
+    },
+    {
+      "id": "legacy-validator-without-impact",
+      "changed_path": "kernel/validator/validate-coverage-guarantee-legacy.mjs",
+      "impact_record_present": false,
+      "expected_diagnostic": "COV_IMPACT_RECORD_MISSING"
+    },
+    {
+      "id": "workflow-impact-path-mismatch",
+      "changed_path": ".github/workflows/validate-mvk.yml",
+      "impact_record_present": true,
+      "expected_diagnostic": "COV_IMPACT_CHANGED_PATHS_MISMATCH"
+    }
+  ]
+}

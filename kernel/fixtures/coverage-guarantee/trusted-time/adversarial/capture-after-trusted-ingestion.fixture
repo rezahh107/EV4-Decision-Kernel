@@ -1,0 +1,41 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_id": "trusted-time.capture-after-trusted-ingestion",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_PROOF_CAPTURE_AFTER_TRUSTED_INGESTION"
+  ],
+  "expected_derived": {
+    "elementNumerator": 0,
+    "questionNumerator": 0,
+    "elementDenominator": 7,
+    "questionDenominator": 24,
+    "elementDenominatorState": "unresolved",
+    "questionDenominatorState": "unresolved",
+    "measurementActive": false,
+    "thresholdEnforced": false
+  },
+  "scenario": {
+    "ci_mode": true,
+    "host_now": "2026-07-13T12:00:30Z",
+    "environment": {
+      "GITHUB_ACTIONS": "true",
+      "GITHUB_REPOSITORY": "rezahh107/EV4-Decision-Kernel",
+      "GITHUB_WORKFLOW_REF": "rezahh107/EV4-Decision-Kernel/.github/workflows/validate-mvk.yml@refs/pull/43/merge",
+      "COVERAGE_VALIDATION_SOURCE": "github_actions_runner_clock_v1",
+      "COVERAGE_TRUSTED_INGESTION_ATTESTATIONS": "{\"ingest.fixture.capture-after\":{\"attestation_id\":\"ingest.fixture.capture-after\",\"source\":\"github_actions_trusted_ingestion_v1\",\"evidence_head_sha\":\"1111111111111111111111111111111111111111\",\"trusted_ingested_at\":\"2026-07-13T11:00:00Z\"}}",
+      "COVERAGE_VALIDATED_AT": "2026-07-13T12:00:00Z"
+    },
+    "capture": {
+      "capture_id": "proof-capture.fixture.capture-after",
+      "exact_head_sha": "1111111111111111111111111111111111111111",
+      "captured_at": "2026-07-13T11:05:00Z",
+      "trusted_ingestion": {
+        "attestation_id": "ingest.fixture.capture-after",
+        "source": "github_actions_trusted_ingestion_v1",
+        "evidence_head_sha": "1111111111111111111111111111111111111111",
+        "trusted_ingested_at": "2026-07-13T11:00:00Z"
+      }
+    }
+  }
+}

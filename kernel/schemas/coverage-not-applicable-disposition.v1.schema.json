@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/coverage-not-applicable-disposition.v1.schema.json",
+  "title": "EV4 Coverage Not-Applicable Disposition v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["disposition_id", "disposition_version", "disposition_type", "subject", "reason", "evidence_head", "source_lineage", "claims"],
+  "properties": {
+    "disposition_id": { "type": "string", "pattern": "^not-applicable\\.[a-z0-9._-]+$" },
+    "disposition_version": { "const": "1.0.0" },
+    "disposition_type": { "const": "not_applicable" },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subject_record_id", "coverage_subject_id", "record_kind", "obligation_id", "question_id", "question_link", "decision_family_id"],
+      "properties": {
+        "subject_record_id": { "type": "string", "minLength": 1 },
+        "coverage_subject_id": { "type": "string", "minLength": 1 },
+        "record_kind": { "enum": ["element", "question"] },
+        "obligation_id": { "type": ["string", "null"], "minLength": 1 },
+        "question_id": { "type": ["string", "null"], "minLength": 1 },
+        "question_link": {
+          "anyOf": [
+            { "enum": ["catalog", "matrix", "resolver_rule", "deterministic_evaluator", "valid_fixture", "invalid_fixture", "adversarial_fixture", "l2_audit", "required_runtime_or_consumer_proof"] },
+            { "type": "null" }
+          ]
+        },
+        "decision_family_id": { "type": ["string", "null"], "minLength": 1 }
+      }
+    },
+    "reason": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason_code", "validator_rule_id", "validator_rule_version", "target_relationship"],
+      "properties": {
+        "reason_code": { "enum": ["source_explicitly_excludes_obligation", "source_explicitly_excludes_question_link"] },
+        "validator_rule_id": { "const": "COV-NOT-APPLICABLE-V1" },
+        "validator_rule_version": { "const": "1.0.0" },
+        "target_relationship": { "const": "exact_coverage_subject" }
+      }
+    },
+    "evidence_head": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "exact_head_sha"],
+      "properties": {
+        "repository": { "const": "rezahh107/EV4-Decision-Kernel" },
+        "exact_head_sha": { "$ref": "#/$defs/sha40" }
+      }
+    },
+    "source_lineage": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/source" }
+    },
+    "claims": { "$ref": "#/$defs/claims" }
+  },
+  "$defs": {
+    "sha40": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "repository", "repository_commit", "artifact_path", "artifact_version", "content_sha256", "json_pointer"],
+      "properties": {
+        "source_id": { "type": "string", "pattern": "^NAS-[A-Z0-9_-]+$" },
+        "repository": { "const": "rezahh107/EV4-Decision-Kernel" },
+        "repository_commit": { "$ref": "#/$defs/sha40" },
+        "artifact_path": { "type": "string", "minLength": 1 },
+        "artifact_version": { "type": "string", "minLength": 1 },
+        "content_sha256": { "$ref": "#/$defs/sha256" },
+        "json_pointer": { "type": "string" }
+      }
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["coverage_accepted", "readiness", "release_readiness", "production_readiness"],
+      "properties": {
+        "coverage_accepted": { "const": false },
+        "readiness": { "const": false },
+        "release_readiness": { "const": false },
+        "production_readiness": { "const": false }
+      }
+    }
+  }
+}

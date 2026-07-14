@@ -1,0 +1,21 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "invalid",
+  "expected_diagnostic_codes": [
+    "COV_ELEMENT_OBLIGATION_INCOMPLETE"
+  ],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "set",
+        "artifact": "ledger",
+        "path": "/records/0/resolution_state",
+        "value": "covered"
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

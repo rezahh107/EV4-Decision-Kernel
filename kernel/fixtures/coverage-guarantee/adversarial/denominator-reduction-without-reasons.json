@@ -1,0 +1,42 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_DENOMINATOR_REDUCTION_UNJUSTIFIED"
+  ],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "set",
+        "artifact": "baseline",
+        "path": "/denominator_change",
+        "value": {
+          "previous_baseline_ref": "coverage-baseline.v0.9.0",
+          "new_baseline_ref": "coverage-baseline.v1.0.0",
+          "previous_element_denominator": 8,
+          "new_element_denominator": 7,
+          "previous_question_denominator": 24,
+          "new_question_denominator": 24,
+          "added_record_ids": [],
+          "removed_record_ids": [
+            "EL-REMOVED-WITHOUT-REASON"
+          ],
+          "changed_record_ids": [],
+          "record_level_reasons": [],
+          "previous_element_percent": null,
+          "new_element_percent": null,
+          "previous_question_percent": null,
+          "new_question_percent": null,
+          "supersession_chain": [
+            "coverage-baseline.v0.9.0",
+            "coverage-baseline.v1.0.0"
+          ]
+        }
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

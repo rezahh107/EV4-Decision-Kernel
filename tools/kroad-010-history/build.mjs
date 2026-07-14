@@ -52,6 +52,45 @@ function bootstrapCopyPaths() {
   ]);
 }
 
+function currentCoverageValidationPaths() {
+  return [
+    '.github/PULL_REQUEST_TEMPLATE.md',
+    '.github/workflows/validate-mvk.yml',
+    'AGENTS.md',
+    'docs/decision-governance/COVERAGE_GUARANTEE_CONTRACT.md',
+    'docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md',
+    'kernel/decision-cards/elements.core.v0.json',
+    'kernel/decision-governance/coverage-evidence-subject-registry.v1.json',
+    'kernel/decision-governance/coverage-guarantee-contract.v1.json',
+    'kernel/decision-governance/coverage-proof-producer-registry.v1.json',
+    'kernel/decision-governance/p0-decision-matrices.v0.json',
+    'kernel/fixtures/coverage-guarantee',
+    'kernel/official-sources/elementor-v4-source-manifest.v0.json',
+    'kernel/registries/elements.core.v0.json',
+    'kernel/schemas/coverage-baseline.v1.schema.json',
+    'kernel/schemas/coverage-consumer-proof-receipt.v1.schema.json',
+    'kernel/schemas/coverage-credit-receipt.v1.schema.json',
+    'kernel/schemas/coverage-denominator-disposition.v1.schema.json',
+    'kernel/schemas/coverage-evidence-subject-registry.v1.schema.json',
+    'kernel/schemas/coverage-guarantee-contract.v1.schema.json',
+    'kernel/schemas/coverage-impact.v1.schema.json',
+    'kernel/schemas/coverage-not-applicable-disposition.v1.schema.json',
+    'kernel/schemas/coverage-proof-capture.v1.schema.json',
+    'kernel/schemas/coverage-proof-producer-registry.v1.schema.json',
+    'kernel/schemas/coverage-runtime-proof-receipt.v1.schema.json',
+    'kernel/schemas/decision-question-catalog.v1.schema.json',
+    'kernel/schemas/element-reconciliation-ledger.v1.schema.json',
+    'kernel/schemas/open-decision-debt.v1.schema.json',
+    'kernel/validator/validate-coverage-guarantee.mjs',
+    'kernel/validator/validate-coverage-guarantee-legacy.mjs',
+    'planning/EV4_DECISION_COVERAGE_OPERATIONALIZATION_MAP.md',
+    'planning/KERNEL_EXECUTION_PLAN.md',
+    'planning/coverage',
+    'planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md',
+    'tools/validate-roadmap-memory.mjs',
+  ];
+}
+
 export function createBuilder(tempRoot) {
   const repository = join(tempRoot, 'builder');
   git(ROOT, ['clone', '--no-hardlinks', ROOT, repository]);
@@ -220,6 +259,7 @@ export function createActivationSource(builder) {
     'tools/kroad-010-history/common.mjs',
     'tools/kroad-010-history/build.mjs',
     'tools/kroad-010-history/validate.mjs',
+    ...currentCoverageValidationPaths(),
   ]) {
     copyPath(ROOT, repository, path);
   }
@@ -227,6 +267,13 @@ export function createActivationSource(builder) {
   for (const path of ORDINARY_PIN_FIXTURES) {
     repinFixture(repository, path, bootstrapAnchor);
   }
+
+  const coverageImpactPath =
+    'planning/coverage/impacts/dcov-exec-001.bootstrap.json';
+  const coverageImpact = readJson(repository, coverageImpactPath);
+  coverageImpact.base_sha = bootstrapAnchor;
+  writeJson(repository, coverageImpactPath, coverageImpact);
+
   repinFixture(
     repository,
     ANCESTOR_MISSING_CONTRACT_FIXTURE,

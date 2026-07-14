@@ -57,7 +57,9 @@ function validateMethod(repository, tempRoot, method, head, roles) {
     );
     assertExactDrift([historyResult.byte_drift_diagnostic]);
 
-    run('npm', ['run', 'validate:mvk'], worktree);
+    // Synthetic KROAD-010 histories validate core MVK behavior. The PR-bound
+    // Coverage Impact gate is executed separately on the real exact PR head.
+    run('npm', ['run', 'validate:mvk:core'], worktree);
     run('npm', ['run', 'validate:roadmap-memory'], worktree);
     assertClean(worktree);
 
@@ -209,6 +211,16 @@ export function runMutationGuards(
       throw new MatrixError(
         'HISTORY_MATRIX_DELEGATED_MUTATION_GUARD_MISSING',
         required,
+      );
+    }
+  }
+
+  const declaredMethods = new Set(config.methods || []);
+  for (const method of REQUIRED_METHODS) {
+    if (!declaredMethods.has(method)) {
+      throw new MatrixError(
+        'HISTORY_MATRIX_CONFIG_METHOD_MISSING',
+        method,
       );
     }
   }

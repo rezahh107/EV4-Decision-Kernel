@@ -1,0 +1,73 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": ["COV_PROGRESS_UNCHANGED_OBLIGATION"],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "base_bundle": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "set",
+        "artifact": "ledger",
+        "path": "/records/0/element_obligations/applicable_p0_families/0/status",
+        "value": "end_to_end_covered"
+      },
+      {
+        "op": "set",
+        "artifact": "ledger",
+        "path": "/records/0/element_obligations/applicable_p0_families/0/evidence_refs",
+        "value": [{
+          "evidence_id": "EVC-PARTIAL-SHARED-P0",
+          "subject_record_id": "EL-DIV_BLOCK",
+          "coverage_subject_id": "OB-P0-LAYOUT_STRUCTURE",
+          "artifact_role": "p0_family",
+          "artifact_path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "content_sha256": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "head_binding": "pinned_commit",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "json_pointer": "/matrices/0",
+          "symbol": null
+        }]
+      },
+      {
+        "op": "replace_artifact",
+        "artifact": "impacts",
+        "value": [{
+          "impact_id": "coverage-impact.dcov-exec-002.partial-shared-obligation",
+          "impact_version": "1.0.0",
+          "sequence_number": 1,
+          "previous_impact_id": null,
+          "repository": "rezahh107/EV4-Decision-Kernel",
+          "pull_request": 43,
+          "base_sha": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "work_package_id": "DCOV-EXEC-002",
+          "work_type": "content_expansion",
+          "coverage_sensitive": true,
+          "impact_classification": "coverage_increase",
+          "changed_paths": ["planning/coverage/element-reconciliation-ledger.v1.json"],
+          "bootstrap_exception": false,
+          "reason": "fixture_partial_shared_obligation",
+          "coverage_state_before": "policy_active",
+          "coverage_state_after": "policy_active",
+          "baseline_before": "coverage-baseline.v1.0.0",
+          "baseline_after": "coverage-baseline.v1.0.0",
+          "completed_obligation_ids": ["OB-P0-LAYOUT_STRUCTURE"],
+          "remaining_obligation_ids": [],
+          "closed_family_ids": [],
+          "element_coverage_delta": null,
+          "question_coverage_delta": null,
+          "known_gaps": ["Other applicable Element occurrences remain incomplete."],
+          "zero_delta": true,
+          "blocking_defect": null,
+          "next_content_expansion_package": "DCOV-EXEC-003",
+          "exact_head_sha": "derived_at_pr_runtime"
+        }]
+      }
+    ],
+    "changed_paths": ["planning/coverage/element-reconciliation-ledger.v1.json"],
+    "current_work_package": "DCOV-EXEC-002",
+    "requested_state": null,
+    "claims": []
+  }
+}

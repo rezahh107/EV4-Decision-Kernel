@@ -1,0 +1,12 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "invalid",
+  "expected_diagnostic_codes": ["COV_FIXTURE_ROOT_POINTER_FORBIDDEN"],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [{ "op": "set", "artifact": "baseline", "path": "/", "value": {} }],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": ["COV_EVIDENCE_ARTIFACT_TYPE_MISMATCH"],
+  "expected_derived": { "elementNumerator": 0 },
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      { "op": "set", "artifact": "ledger", "path": "/records/0/element_obligations/applicable_p0_families/0/status", "value": "end_to_end_covered" },
+      {
+        "op": "set",
+        "artifact": "ledger",
+        "path": "/records/0/element_obligations/applicable_p0_families/0/evidence_refs",
+        "value": [{
+          "evidence_id": "EVC-WRONG-TYPE",
+          "subject_record_id": "EL-DIV_BLOCK",
+          "coverage_subject_id": "OB-P0-LAYOUT_STRUCTURE",
+          "artifact_role": "p0_family",
+          "artifact_path": "kernel/fixtures/valid/resolver_mvp/layout_structure_auto_resolved_flexbox.json",
+          "artifact_version": "0.1.0",
+          "content_sha256": "9259794ed156608a1a219194264ee5d59c0ee2900ca5d0eb395e675e8195af05",
+          "head_binding": "pinned_commit",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "json_pointer": "",
+          "symbol": null
+        }]
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

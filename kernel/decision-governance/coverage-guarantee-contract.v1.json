@@ -1,0 +1,335 @@
+{
+  "contract_id": "coverage-guarantee-contract.v1",
+  "contract_version": "1.0.0",
+  "contract_class": "repository_governance_policy",
+  "authority": {
+    "machine_readable_source": "kernel/decision-governance/coverage-guarantee-contract.v1.json",
+    "human_readable_view": "docs/decision-governance/COVERAGE_GUARANTEE_CONTRACT.md",
+    "manual_state_promotion_allowed": false
+  },
+  "promotion_boundary": {
+    "status": "proposal_pending_external_governance_approval",
+    "authority_source": "external_project_owner_governance",
+    "target_repository_content_can_approve": false,
+    "merge_or_ci_can_approve": false,
+    "self_authored_closure_can_approve": false,
+    "required_predicates": [
+      "repository_evidence_capture_complete",
+      "official_source_fingerprints_complete",
+      "contradiction_review_complete",
+      "independent_review_passed",
+      "project_owner_governance_approval",
+      "planning_memory_synchronized",
+      "exact_head_validation_passed",
+      "merged_pr_evidence_recorded",
+      "post_merge_evidence_closure_accepted"
+    ]
+  },
+  "thresholds": {
+    "minimum_content_floor": 90,
+    "owner_acceptance_target": 95,
+    "critical_p0_and_safety_coverage": 100
+  },
+  "state_machine": {
+    "ordered_states": [
+      "policy_active",
+      "measurement_active",
+      "threshold_enforced"
+    ],
+    "eligibility": {
+      "policy_active": {
+        "requirements": [
+          "external_governance_approval_verified",
+          "schema_valid_contract",
+          "real_non_empty_ledger",
+          "real_non_empty_question_catalog",
+          "baseline_and_debt_records",
+          "deterministic_validator",
+          "negative_and_adversarial_fixtures",
+          "ci_wiring"
+        ]
+      },
+      "measurement_active": {
+        "requirements": [
+          "policy_active",
+          "versioned_source_bound_ledger_and_catalog",
+          "verified_content_hashes",
+          "all_in_scope_denominator_candidates_dispositioned",
+          "validated_denominators_computed_from_records",
+          "valid_coverage_impact_history",
+          "derived_percentages_only"
+        ]
+      },
+      "threshold_enforced": {
+        "requirements": [
+          "measurement_active",
+          "computed_minimum_content_floor",
+          "computed_owner_acceptance_target",
+          "computed_critical_p0_and_safety_coverage",
+          "release_and_readiness_checks_connected",
+          "no_critical_gap_hidden_by_aggregate"
+        ]
+      }
+    }
+  },
+  "coverage_semantics": {
+    "element": {
+      "definition_id": "all_applicable_obligations_end_to_end_or_validated_not_applicable",
+      "covered_statuses": [
+        "end_to_end_covered",
+        "not_applicable_with_validated_reason"
+      ],
+      "non_credit_artifacts": [
+        "decision_card_only",
+        "matrix_only",
+        "resolver_rule_only",
+        "fixture_only",
+        "schema_only",
+        "documentation_only",
+        "ci_pass_only"
+      ]
+    },
+    "question": {
+      "definition_id": "complete_applicable_question_chain",
+      "required_chain": [
+        "catalog",
+        "matrix",
+        "resolver_rule",
+        "deterministic_evaluator",
+        "valid_fixture",
+        "invalid_fixture",
+        "adversarial_fixture",
+        "l2_audit",
+        "required_runtime_or_consumer_proof",
+        "coverage_credit"
+      ],
+      "not_applicable_requirements": [
+        "machine_readable_reason",
+        "supporting_evidence",
+        "validator_acceptance"
+      ]
+    },
+    "critical": {
+      "measured_separately": true,
+      "aggregate_may_hide_gap": false,
+      "threshold_state_requires_percent": 100
+    }
+  },
+  "evidence_binding": {
+    "carrier_kind": "typed_repository_artifact",
+    "semantic_subject_binding_required": true,
+    "required_fields": [
+      "evidence_id",
+      "subject_record_id",
+      "coverage_subject_id",
+      "artifact_role",
+      "artifact_path",
+      "artifact_version",
+      "content_sha256",
+      "head_binding",
+      "repository_commit",
+      "json_pointer",
+      "symbol"
+    ],
+    "head_binding_modes": [
+      "git_runtime_head",
+      "pinned_commit"
+    ],
+    "json_role_resolvers": [
+      "catalog_record",
+      "matrix",
+      "resolver_rule",
+      "valid_fixture",
+      "invalid_fixture",
+      "adversarial_fixture",
+      "l2_audit",
+      "runtime_proof",
+      "consumer_proof",
+      "coverage_credit",
+      "decision_question",
+      "p0_family",
+      "safety_gate",
+      "runtime_check",
+      "not_applicable_evidence"
+    ],
+    "js_symbol_subject_registry": "kernel/decision-governance/coverage-evidence-subject-registry.v1.json",
+    "proof_receipt_schemas": {
+      "runtime_proof": "kernel/schemas/coverage-runtime-proof-receipt.v1.schema.json",
+      "consumer_proof": "kernel/schemas/coverage-consumer-proof-receipt.v1.schema.json",
+      "coverage_credit": "kernel/schemas/coverage-credit-receipt.v1.schema.json"
+    },
+    "not_applicable_disposition": {
+      "schema": "kernel/schemas/coverage-not-applicable-disposition.v1.schema.json",
+      "directory": "planning/coverage/dispositions/not-applicable/",
+      "acceptance": "validator_derived_from_exact_subject_reason_head_and_lineage",
+      "producer_acceptance_flag_allowed": false,
+      "source_must_preexist_validated_base": true
+    },
+    "proof_provenance": {
+      "producer_registry": "kernel/decision-governance/coverage-proof-producer-registry.v1.json",
+      "producer_registry_schema": "kernel/schemas/coverage-proof-producer-registry.v1.schema.json",
+      "capture_schema": "kernel/schemas/coverage-proof-capture.v1.schema.json",
+      "max_age_days": 30,
+      "exact_head_required": true,
+      "all_lineage_hashes_recomputed": true,
+      "capture_time_binding": "exact_receipt_observation_time",
+      "raw_capture_path_binding": "role_specific_dedicated_directory",
+      "producer_and_capture_must_preexist_validated_base": true,
+      "same_pr_producer_or_capture_credit_allowed": false,
+      "runtime_allowed_observation_types": [
+        "dom_structure",
+        "computed_style",
+        "responsive_layout",
+        "interaction_state",
+        "accessibility_tree"
+      ],
+      "runtime_credit_result": "observed_pass",
+      "consumer_credit_result": "accepted"
+    },
+    "coverage_credit_derivation": {
+      "authority": "validator_recomputed",
+      "rule_id": "COV-QUESTION-CREDIT-V1",
+      "rule_version": "1.0.0",
+      "baseline_binding": "current_validated_baseline_id",
+      "source_evidence_binding": "exact_all_preceding_link_ids_hashes_subjects_and_heads",
+      "producer_coverage_granted_allowed": false
+    },
+    "generic_fixture_or_document_proof_allowed": false,
+    "question_link_roles": {
+      "catalog": [
+        "catalog_record"
+      ],
+      "matrix": [
+        "matrix"
+      ],
+      "resolver_rule": [
+        "resolver_rule"
+      ],
+      "deterministic_evaluator": [
+        "deterministic_evaluator"
+      ],
+      "valid_fixture": [
+        "valid_fixture"
+      ],
+      "invalid_fixture": [
+        "invalid_fixture"
+      ],
+      "adversarial_fixture": [
+        "adversarial_fixture"
+      ],
+      "l2_audit": [
+        "l2_audit"
+      ],
+      "required_runtime_or_consumer_proof": [
+        "runtime_proof",
+        "consumer_proof"
+      ],
+      "coverage_credit": [
+        "coverage_credit"
+      ]
+    },
+    "element_obligation_roles": {
+      "applicable_decision_questions": [
+        "decision_question"
+      ],
+      "applicable_p0_families": [
+        "p0_family"
+      ],
+      "required_safety_gates": [
+        "safety_gate"
+      ],
+      "required_runtime_checks": [
+        "runtime_check"
+      ],
+      "required_consumer_proofs": [
+        "consumer_proof"
+      ]
+    }
+  },
+  "denominator_integrity": {
+    "known_scope_includes": [
+      "confirmed",
+      "candidate",
+      "unresolved"
+    ],
+    "coverage_percent_requires_validated_denominator": true,
+    "reduction_requires_record_level_reasons": true,
+    "base_head_diff_required": true,
+    "all_changed_ids_require_record_level_reasons": true,
+    "excluded_memberships_require_valid_targets": true,
+    "reason_evidence_must_match_affected_record_source_or_disposition": true,
+    "disposition_schema": "kernel/schemas/coverage-denominator-disposition.v1.schema.json",
+    "invalid_change_effective_coverage": "preserve_verified_base_metrics"
+  },
+  "coverage_impact_binding": {
+    "one_new_record_per_coverage_sensitive_pr": true,
+    "repository_pr_base_and_work_package_required": true,
+    "exact_head_binding": "derived_from_git_and_ci_event",
+    "changed_paths_must_equal_verified_sensitive_diff": true,
+    "historical_records_cannot_satisfy_current_pr": true,
+    "history_ordering": {
+      "sequence_field": "sequence_number",
+      "predecessor_field": "previous_impact_id",
+      "sequence_starts_at": 1,
+      "gaps_allowed": false,
+      "forks_allowed": false,
+      "filename_order_controls_execution": false,
+      "filename_sequence_disagreement_allowed": false
+    }
+  },
+  "material_progress": {
+    "measurement_active_options": {
+      "option_1": {
+        "coverage_delta_gte_percentage_points": 5
+      },
+      "option_2": {
+        "formula": "max(2, ceil(0.05 * current_denominator))"
+      },
+      "option_3": {
+        "complete_p0_family_across_all_applicable_elements": true,
+        "measurable_numerator_increase_required": true
+      }
+    },
+    "policy_active_rule": "complete_materially_bounded_obligations_and_close_one_real_family_slice",
+    "limited_exception": "machine_readable_reason_plus_closed_family_plus_numerator_or_completed_obligation_growth",
+    "zero_delta_rule": "blocking_defect_only_with_next_content_expansion_package",
+    "three_consecutive_zero_delta_fail": true,
+    "derived_from_verified_base_head": true
+  },
+  "coverage_sensitive_paths": [
+    "kernel/decision-governance/coverage-guarantee-contract.v1.json",
+    "kernel/decision-governance/coverage-evidence-subject-registry.v1.json",
+    "kernel/decision-governance/coverage-proof-producer-registry.v1.json",
+    "kernel/decision-governance/p0-decision-matrices.v0.json",
+    "kernel/decision-governance/resolver-rule-registry.v0.json",
+    "kernel/decision-governance/resolver-rules/",
+    "kernel/schemas/coverage-",
+    "kernel/schemas/element-reconciliation-ledger.v1.schema.json",
+    "kernel/schemas/decision-question-catalog.v1.schema.json",
+    "kernel/resolver-mvp/",
+    "kernel/fixtures/coverage-guarantee/",
+    "kernel/validator/validate-l2-decision-correctness.mjs",
+    "planning/coverage/",
+    "docs/decision-governance/COVERAGE_GUARANTEE_CONTRACT.md",
+    "planning/NEXT_WORK.md",
+    "planning/KERNEL_EXECUTION_PLAN.md",
+    ".github/workflows/validate-mvk.yml",
+    "package.json",
+    "kernel/validator/validate-coverage-guarantee"
+  ],
+  "merge_gate": {
+    "exact_head_ci_green": "required",
+    "independent_pr_inspector_green": "required",
+    "explicit_owner_merge_command": "required"
+  },
+  "forbidden_claims": [
+    "unsupported_coverage_percentage",
+    "unsupported_readiness",
+    "unsupported_release_readiness",
+    "unsupported_runtime_proof",
+    "unsupported_production_readiness",
+    "official_docs_prove_target_project_availability",
+    "fixture_evidence_is_real_project_proof"
+  ],
+  "expected_state_after_dcov_exec_001": "not_measurable_pending_external_promotion"
+}

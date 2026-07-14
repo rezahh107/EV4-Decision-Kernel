@@ -1,0 +1,57 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_NOT_APPLICABLE_PRODUCER_ASSERTION_FORBIDDEN",
+    "COV_EVIDENCE_ARTIFACT_TYPE_MISMATCH",
+    "COV_NOT_APPLICABLE_ARTIFACT_FORBIDDEN",
+    "COV_NOT_APPLICABLE_DISPOSITION_INVALID",
+    "COV_NOT_APPLICABLE_REASON_INVALID"
+  ],
+  "expected_derived": {
+    "elementNumerator": 0,
+    "questionNumerator": 0,
+    "elementDenominator": 7,
+    "questionDenominator": 24,
+    "elementDenominatorState": "unresolved",
+    "questionDenominatorState": "unresolved"
+  },
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "set",
+        "artifact": "ledger",
+        "path": "/records/0/element_obligations/required_runtime_checks/0",
+        "value": {
+          "obligation_id": "OB-RUNTIME-DIV_BLOCK",
+          "status": "not_applicable_with_validated_reason",
+          "critical": false,
+          "evidence_refs": [],
+          "not_applicable_reason": {
+            "reason_code": "source_explicitly_excludes_obligation",
+            "validator_accepted": true,
+            "evidence_refs": [
+              {
+                "evidence_id": "EVC-NA-ELEMENT-UNRELATED-CONTRACT",
+                "subject_record_id": "EL-DIV_BLOCK",
+                "coverage_subject_id": "OB-RUNTIME-DIV_BLOCK",
+                "artifact_role": "not_applicable_evidence",
+                "artifact_path": "kernel/decision-governance/coverage-guarantee-contract.v1.json",
+                "artifact_version": "1.0.0",
+            "content_sha256": "ef07abb9d02c45d80b68d7d21218d9474534d570f9a620165f5ddc23bdc2c987",
+                "head_binding": "git_runtime_head",
+                "repository_commit": null,
+                "json_pointer": "",
+                "symbol": null
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

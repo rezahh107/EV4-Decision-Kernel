@@ -1,0 +1,19 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": ["COV_EVIDENCE_CARRIER_INVALID"],
+  "expected_derived": { "questionNumerator": 0 },
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      { "op": "set", "artifact": "catalog", "path": "/records/0/coverage_chain/required_runtime_or_consumer_proof/status", "value": "complete" },
+      { "op": "set", "artifact": "catalog", "path": "/records/0/coverage_chain/required_runtime_or_consumer_proof/evidence_refs", "value": ["invented-runtime-proof"] },
+      { "op": "set", "artifact": "catalog", "path": "/records/0/coverage_chain/coverage_credit/status", "value": "complete" },
+      { "op": "set", "artifact": "catalog", "path": "/records/0/coverage_chain/coverage_credit/evidence_refs", "value": ["invented-credit-proof"] },
+      { "op": "set", "artifact": "catalog", "path": "/records/0/resolution_state", "value": "covered" }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_CREDIT_PRODUCER_ASSERTION_FORBIDDEN",
+    "COV_EVIDENCE_CREDIT_RECEIPT_INVALID"
+  ],
+  "expected_derived": {
+    "elementNumerator": 0,
+    "questionNumerator": 0,
+    "elementDenominator": 7,
+    "questionDenominator": 24,
+    "elementDenominatorState": "unresolved",
+    "questionDenominatorState": "unresolved"
+  },
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "runtime_context": {
+      "headSha": "dc45fe87eda245057010ea35acaf6627614b110d",
+      "headCommittedAt": "2026-07-13T12:19:32+03:30"
+    },
+    "repository_artifacts": {
+      "planning/coverage/credits/producer-assertion.json": {
+        "credit_id": "coverage-credit.dq-div-block-01.v1",
+        "credit_version": "1.0.0",
+        "receipt_type": "coverage_credit_projection",
+        "subject": {
+          "subject_record_id": "DQ-DIV_BLOCK-01",
+          "coverage_subject_id": "DQ-DIV_BLOCK-01#coverage_credit",
+          "question_id": "DQ-DIV_BLOCK-01",
+          "decision_family_id": "layout_structure",
+          "rule_id": "resolver.rule.layout_structure.mvp.v0"
+        },
+        "baseline_id": "coverage-baseline.v1.0.0",
+        "derivation": {
+          "rule_id": "COV-QUESTION-CREDIT-V1",
+          "rule_version": "1.0.0",
+          "mode": "validator_recomputed",
+          "required_chain": ["catalog", "matrix", "resolver_rule", "deterministic_evaluator", "valid_fixture", "invalid_fixture", "adversarial_fixture", "l2_audit", "required_runtime_or_consumer_proof"],
+          "coverage_granted": true
+        },
+        "source_evidence": [
+          {
+            "link_name": "catalog",
+            "evidence_id": "EVC-CREDIT-PRODUCER-SOURCE",
+            "subject_record_id": "DQ-DIV_BLOCK-01",
+            "coverage_subject_id": "DQ-DIV_BLOCK-01#catalog",
+            "content_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "evidence_head_sha": "dc45fe87eda245057010ea35acaf6627614b110d"
+          }
+        ],
+        "claims": {
+          "coverage_granted": true,
+          "readiness": false,
+          "release_readiness": false,
+          "production_readiness": false
+        }
+      }
+    },
+    "mutations": [
+      {
+        "op": "set",
+        "artifact": "catalog",
+        "path": "/records/0/coverage_chain/coverage_credit",
+        "value": {
+          "status": "complete",
+          "evidence_refs": [
+            {
+              "evidence_id": "EVC-CREDIT-PRODUCER-ASSERTION",
+              "subject_record_id": "DQ-DIV_BLOCK-01",
+              "coverage_subject_id": "DQ-DIV_BLOCK-01#coverage_credit",
+              "artifact_role": "coverage_credit",
+              "artifact_path": "planning/coverage/credits/producer-assertion.json",
+              "artifact_version": "1.0.0",
+              "content_sha256": "02f283cedf7458f5690e2e757455049e31308650033627d5cc10bdaf752ebf0d",
+              "head_binding": "git_runtime_head",
+              "repository_commit": null,
+              "json_pointer": "",
+              "symbol": null
+            }
+          ],
+          "not_applicable_reason": null
+        }
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

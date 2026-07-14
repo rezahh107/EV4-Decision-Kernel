@@ -1,0 +1,29 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_REQUIRED_PROOF_MISSING"
+  ],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "set",
+        "artifact": "catalog",
+        "path": "/records/0/coverage_chain/coverage_credit/status",
+        "value": "complete"
+      },
+      {
+        "op": "set",
+        "artifact": "catalog",
+        "path": "/records/0/coverage_chain/coverage_credit/evidence_refs",
+        "value": [
+          "fixture.claim"
+        ]
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

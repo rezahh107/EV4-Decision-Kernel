@@ -1,0 +1,148 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_IMPACT_FILENAME_SEQUENCE_MISMATCH",
+    "COV_THREE_CONSECUTIVE_ZERO_DELTA"
+  ],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "replace_artifact",
+        "artifact": "impacts",
+        "value": [
+          {
+            "impact_id": "coverage-impact.fixture.zero-1",
+            "impact_version": "1.0.0",
+            "sequence_number": 1,
+            "previous_impact_id": null,
+            "repository": "rezahh107/EV4-Decision-Kernel",
+            "pull_request": 43,
+            "base_sha": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+            "work_package_id": "DCOV-EXEC-Z1",
+            "work_type": "blocking_defect",
+            "coverage_sensitive": true,
+            "impact_classification": "blocking_defect",
+            "changed_paths": [
+              "planning/coverage/decision-question-catalog.v1.json"
+            ],
+            "bootstrap_exception": false,
+            "reason": "fixture_blocking_defect",
+            "coverage_state_before": "policy_active",
+            "coverage_state_after": "policy_active",
+            "baseline_before": "coverage-baseline.v1.0.0",
+            "baseline_after": "coverage-baseline.v1.0.0",
+            "completed_obligation_ids": [],
+            "remaining_obligation_ids": [
+              "OB-NEXT"
+            ],
+            "closed_family_ids": [],
+            "element_coverage_delta": 0,
+            "question_coverage_delta": 0,
+            "known_gaps": [
+              "Fixture-only zero-delta history."
+            ],
+            "zero_delta": true,
+            "blocking_defect": {
+              "defect_id": "DEFECT-ZERO-1",
+              "reason": "Fixture blocking defect."
+            },
+            "next_content_expansion_package": "DCOV-EXEC-002",
+            "exact_head_sha": "derived_at_pr_runtime"
+          },
+          {
+            "impact_id": "coverage-impact.fixture.zero-2",
+            "impact_version": "1.0.0",
+            "sequence_number": 2,
+            "previous_impact_id": "coverage-impact.fixture.zero-1",
+            "repository": "rezahh107/EV4-Decision-Kernel",
+            "pull_request": 43,
+            "base_sha": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+            "work_package_id": "DCOV-EXEC-Z2",
+            "work_type": "blocking_defect",
+            "coverage_sensitive": true,
+            "impact_classification": "blocking_defect",
+            "changed_paths": [
+              "planning/coverage/decision-question-catalog.v1.json"
+            ],
+            "bootstrap_exception": false,
+            "reason": "fixture_blocking_defect",
+            "coverage_state_before": "policy_active",
+            "coverage_state_after": "policy_active",
+            "baseline_before": "coverage-baseline.v1.0.0",
+            "baseline_after": "coverage-baseline.v1.0.0",
+            "completed_obligation_ids": [],
+            "remaining_obligation_ids": [
+              "OB-NEXT"
+            ],
+            "closed_family_ids": [],
+            "element_coverage_delta": 0,
+            "question_coverage_delta": 0,
+            "known_gaps": [
+              "Fixture-only zero-delta history."
+            ],
+            "zero_delta": true,
+            "blocking_defect": {
+              "defect_id": "DEFECT-ZERO-2",
+              "reason": "Fixture blocking defect."
+            },
+            "next_content_expansion_package": "DCOV-EXEC-002",
+            "exact_head_sha": "derived_at_pr_runtime"
+          },
+          {
+            "impact_id": "coverage-impact.fixture.zero-3",
+            "impact_version": "1.0.0",
+            "sequence_number": 3,
+            "previous_impact_id": "coverage-impact.fixture.zero-2",
+            "repository": "rezahh107/EV4-Decision-Kernel",
+            "pull_request": 43,
+            "base_sha": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+            "work_package_id": "DCOV-EXEC-Z3",
+            "work_type": "blocking_defect",
+            "coverage_sensitive": true,
+            "impact_classification": "blocking_defect",
+            "changed_paths": [
+              "planning/coverage/decision-question-catalog.v1.json"
+            ],
+            "bootstrap_exception": false,
+            "reason": "fixture_blocking_defect",
+            "coverage_state_before": "policy_active",
+            "coverage_state_after": "policy_active",
+            "baseline_before": "coverage-baseline.v1.0.0",
+            "baseline_after": "coverage-baseline.v1.0.0",
+            "completed_obligation_ids": [],
+            "remaining_obligation_ids": [
+              "OB-NEXT"
+            ],
+            "closed_family_ids": [],
+            "element_coverage_delta": 0,
+            "question_coverage_delta": 0,
+            "known_gaps": [
+              "Fixture-only zero-delta history."
+            ],
+            "zero_delta": true,
+            "blocking_defect": {
+              "defect_id": "DEFECT-ZERO-3",
+              "reason": "Fixture blocking defect."
+            },
+            "next_content_expansion_package": "DCOV-EXEC-002",
+            "exact_head_sha": "derived_at_pr_runtime"
+          }
+        ]
+      },
+      {
+        "op": "replace_artifact",
+        "artifact": "impactSourcePaths",
+        "value": {
+          "coverage-impact.fixture.zero-1": "planning/coverage/impacts/z-zero-one.json",
+          "coverage-impact.fixture.zero-2": "planning/coverage/impacts/a-zero-two.json",
+          "coverage-impact.fixture.zero-3": "planning/coverage/impacts/m-zero-three.json"
+        }
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

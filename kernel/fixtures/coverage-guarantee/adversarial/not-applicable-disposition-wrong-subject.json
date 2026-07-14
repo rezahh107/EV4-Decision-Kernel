@@ -1,0 +1,102 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_NOT_APPLICABLE_DISPOSITION_SUBJECT_MISMATCH",
+    "COV_NOT_APPLICABLE_LINEAGE_SUBJECT_MISMATCH",
+    "COV_NOT_APPLICABLE_SOURCE_NOT_BASE_ANCHORED",
+    "COV_NOT_APPLICABLE_REASON_INVALID"
+  ],
+  "expected_derived": {
+    "elementNumerator": 0,
+    "questionNumerator": 0,
+    "elementDenominator": 7,
+    "questionDenominator": 24,
+    "elementDenominatorState": "unresolved",
+    "questionDenominatorState": "unresolved"
+  },
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "runtime_context": {
+      "headSha": "dc45fe87eda245057010ea35acaf6627614b110d",
+      "headCommittedAt": "2026-07-13T12:19:32+03:30"
+    },
+    "repository_artifacts": {
+      "planning/coverage/dispositions/not-applicable/wrong-subject.json": {
+        "disposition_id": "not-applicable.fixture.wrong-subject",
+        "disposition_version": "1.0.0",
+        "disposition_type": "not_applicable",
+        "subject": {
+          "subject_record_id": "EL-FLEXBOX",
+          "coverage_subject_id": "OB-RUNTIME-FLEXBOX",
+          "record_kind": "element",
+          "obligation_id": "OB-RUNTIME-FLEXBOX",
+          "question_id": null,
+          "question_link": null,
+          "decision_family_id": null
+        },
+        "reason": {
+          "reason_code": "source_explicitly_excludes_obligation",
+          "validator_rule_id": "COV-NOT-APPLICABLE-V1",
+          "validator_rule_version": "1.0.0",
+          "target_relationship": "exact_coverage_subject"
+        },
+        "evidence_head": {
+          "repository": "rezahh107/EV4-Decision-Kernel",
+          "exact_head_sha": "dc45fe87eda245057010ea35acaf6627614b110d"
+        },
+        "source_lineage": [
+          {
+            "source_id": "NAS-WRONG-SUBJECT-CONTRACT",
+            "repository": "rezahh107/EV4-Decision-Kernel",
+            "repository_commit": "dc45fe87eda245057010ea35acaf6627614b110d",
+            "artifact_path": "kernel/decision-governance/coverage-guarantee-contract.v1.json",
+            "artifact_version": "1.0.0",
+            "content_sha256": "3d6a8cd40cc1291d92256615b39460c5660049ee9482979b83fef577f16a63bf",
+            "json_pointer": ""
+          }
+        ],
+        "claims": {
+          "coverage_accepted": false,
+          "readiness": false,
+          "release_readiness": false,
+          "production_readiness": false
+        }
+      }
+    },
+    "mutations": [
+      {
+        "op": "set",
+        "artifact": "ledger",
+        "path": "/records/0/element_obligations/required_runtime_checks/0",
+        "value": {
+          "obligation_id": "OB-RUNTIME-DIV_BLOCK",
+          "status": "not_applicable_with_validated_reason",
+          "critical": false,
+          "evidence_refs": [],
+          "not_applicable_reason": {
+            "reason_code": "source_explicitly_excludes_obligation",
+            "evidence_refs": [
+              {
+                "evidence_id": "EVC-NA-DISPOSITION-WRONG-SUBJECT",
+                "subject_record_id": "EL-DIV_BLOCK",
+                "coverage_subject_id": "OB-RUNTIME-DIV_BLOCK",
+                "artifact_role": "not_applicable_evidence",
+                "artifact_path": "planning/coverage/dispositions/not-applicable/wrong-subject.json",
+                "artifact_version": "1.0.0",
+                "content_sha256": "bd742c5fad50233b69b52f9a6ce272caf5aef2469398da8377f054364d9cad08",
+                "head_binding": "git_runtime_head",
+                "repository_commit": null,
+                "json_pointer": "",
+                "symbol": null
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}

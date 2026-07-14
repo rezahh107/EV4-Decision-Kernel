@@ -1,0 +1,44 @@
+{
+  "baseline_id": "coverage-baseline.v1.0.0",
+  "baseline_version": "1.0.0",
+  "baseline_status": "proposed_on_pr",
+  "contract_ref": "kernel/decision-governance/coverage-guarantee-contract.v1.json",
+  "element_ledger_version": "1.0.0",
+  "question_catalog_version": "1.0.0",
+  "element_denominator_state": "unresolved",
+  "question_denominator_state": "unresolved",
+  "element_denominator": 7,
+  "question_denominator": 24,
+  "known_element_scope_count": 15,
+  "known_question_scope_count": 29,
+  "content_hashes": [
+    {
+      "path": "kernel/decision-governance/coverage-guarantee-contract.v1.json",
+      "sha256": "d6504685671ce2b8a0ef7c3fd5e5af3074a6e93c12319a59afa0566e922ec048"
+    },
+    {
+      "path": "planning/coverage/element-reconciliation-ledger.v1.json",
+      "sha256": "f391baa09f3c7de95469cce33f9cf497cf408a137667a7c59ab88b31b12a199c"
+    },
+    {
+      "path": "planning/coverage/decision-question-catalog.v1.json",
+      "sha256": "f8829db1c6ed5ffcc7685443ed71e9831cd5b75a8386ce85d9fd8c77b5b0a778"
+    }
+  ],
+  "coverage": {
+    "element_numerator": 0,
+    "element_percent": null,
+    "question_numerator": 0,
+    "question_percent": null,
+    "critical_p0_and_safety_numerator": 0,
+    "critical_p0_and_safety_denominator": 37,
+    "critical_p0_and_safety_percent": null
+  },
+  "release_checks_connected": false,
+  "readiness_check_refs": [],
+  "denominator_change": null,
+  "previous_baseline_ref": null,
+  "superseded_by": null,
+  "effective_main_commit": null,
+  "effective_on_main_at": null
+}

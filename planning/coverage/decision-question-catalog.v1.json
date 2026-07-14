@@ -1,0 +1,3060 @@
+{
+  "catalog_id": "decision-question-catalog.v1",
+  "version": "1.0.0",
+  "status": "active_seed",
+  "source_base_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+  "known_scope_count": 29,
+  "confirmed_denominator_count": 24,
+  "denominator_state": "unresolved",
+  "records": [
+    {
+      "question_id": "DQ-DIV_BLOCK-01",
+      "record_type": "explicit_decision_question",
+      "question_text": "Is this structure or layout?",
+      "decision_family_id": "layout_structure",
+      "trigger_context": "Div Block decision-card context",
+      "candidate_options": [
+        "div_block",
+        "flexbox",
+        "grid"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/0/decision_questions/0"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/0"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.div_block"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.layout_structure.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/resolver-rules/layout-structure.v0.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/resolver-mvp/resolve-high-risk-p0.mjs#resolveLayoutStructure"
+          ],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/valid/resolver_mvp/layout_structure_auto_resolved_flexbox.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/invalid/resolver_mvp/invalid_missing_evidence_refs.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/adversarial/resolver_mvp/adversarial_grid_without_availability.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/validator/validate-l2-decision-correctness.mjs"
+          ],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "The existing Resolver/fixture/L2 chain is fixture-scoped; required real runtime or consumer proof is incomplete.",
+        "No full Question coverage credit is granted."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-DIV_BLOCK-02",
+      "record_type": "explicit_decision_question",
+      "question_text": "Does the wrapper need semantic tag evidence?",
+      "decision_family_id": "layout_structure",
+      "trigger_context": "Div Block decision-card context",
+      "candidate_options": [
+        "div_block",
+        "flexbox",
+        "grid"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/0/decision_questions/1"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/0"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.div_block"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.layout_structure.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/resolver-rules/layout-structure.v0.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/resolver-mvp/resolve-high-risk-p0.mjs#resolveLayoutStructure"
+          ],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/valid/resolver_mvp/layout_structure_auto_resolved_flexbox.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/invalid/resolver_mvp/invalid_missing_evidence_refs.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/adversarial/resolver_mvp/adversarial_grid_without_availability.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/validator/validate-l2-decision-correctness.mjs"
+          ],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "The existing Resolver/fixture/L2 chain is fixture-scoped; required real runtime or consumer proof is incomplete.",
+        "No full Question coverage credit is granted."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-DIV_BLOCK-03",
+      "record_type": "explicit_decision_question",
+      "question_text": "Could Flexbox or Grid express the layout more honestly?",
+      "decision_family_id": "layout_structure",
+      "trigger_context": "Div Block decision-card context",
+      "candidate_options": [
+        "div_block",
+        "flexbox",
+        "grid"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/0/decision_questions/2"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/0"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.div_block"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.layout_structure.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/resolver-rules/layout-structure.v0.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/resolver-mvp/resolve-high-risk-p0.mjs#resolveLayoutStructure"
+          ],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/valid/resolver_mvp/layout_structure_auto_resolved_flexbox.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/invalid/resolver_mvp/invalid_missing_evidence_refs.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/adversarial/resolver_mvp/adversarial_grid_without_availability.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/validator/validate-l2-decision-correctness.mjs"
+          ],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "The existing Resolver/fixture/L2 chain is fixture-scoped; required real runtime or consumer proof is incomplete.",
+        "No full Question coverage credit is granted."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-FLEXBOX-01",
+      "record_type": "explicit_decision_question",
+      "question_text": "Is the layout primarily one-dimensional?",
+      "decision_family_id": "layout_structure",
+      "trigger_context": "Flexbox decision-card context",
+      "candidate_options": [
+        "div_block",
+        "flexbox",
+        "grid"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/1/decision_questions/0"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/0"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.flexbox"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.layout_structure.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/resolver-rules/layout-structure.v0.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/resolver-mvp/resolve-high-risk-p0.mjs#resolveLayoutStructure"
+          ],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/valid/resolver_mvp/layout_structure_auto_resolved_flexbox.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/invalid/resolver_mvp/invalid_missing_evidence_refs.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/adversarial/resolver_mvp/adversarial_grid_without_availability.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/validator/validate-l2-decision-correctness.mjs"
+          ],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "The existing Resolver/fixture/L2 chain is fixture-scoped; required real runtime or consumer proof is incomplete.",
+        "No full Question coverage credit is granted."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-FLEXBOX-02",
+      "record_type": "explicit_decision_question",
+      "question_text": "Which axis owns the decision?",
+      "decision_family_id": "layout_structure",
+      "trigger_context": "Flexbox decision-card context",
+      "candidate_options": [
+        "div_block",
+        "flexbox",
+        "grid"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/1/decision_questions/1"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/0"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.flexbox"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.layout_structure.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/resolver-rules/layout-structure.v0.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/resolver-mvp/resolve-high-risk-p0.mjs#resolveLayoutStructure"
+          ],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/valid/resolver_mvp/layout_structure_auto_resolved_flexbox.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/invalid/resolver_mvp/invalid_missing_evidence_refs.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/adversarial/resolver_mvp/adversarial_grid_without_availability.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/validator/validate-l2-decision-correctness.mjs"
+          ],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "The existing Resolver/fixture/L2 chain is fixture-scoped; required real runtime or consumer proof is incomplete.",
+        "No full Question coverage credit is granted."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-FLEXBOX-03",
+      "record_type": "explicit_decision_question",
+      "question_text": "What evidence proves Builder can emit the locked controls?",
+      "decision_family_id": "layout_structure",
+      "trigger_context": "Flexbox decision-card context",
+      "candidate_options": [
+        "div_block",
+        "flexbox",
+        "grid"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/1/decision_questions/2"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/0"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.flexbox"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.layout_structure.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/resolver-rules/layout-structure.v0.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/resolver-mvp/resolve-high-risk-p0.mjs#resolveLayoutStructure"
+          ],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/valid/resolver_mvp/layout_structure_auto_resolved_flexbox.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/invalid/resolver_mvp/invalid_missing_evidence_refs.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/adversarial/resolver_mvp/adversarial_grid_without_availability.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/validator/validate-l2-decision-correctness.mjs"
+          ],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "The existing Resolver/fixture/L2 chain is fixture-scoped; required real runtime or consumer proof is incomplete.",
+        "No full Question coverage credit is granted."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-GRID-01",
+      "record_type": "explicit_decision_question",
+      "question_text": "Is there real two-dimensional placement?",
+      "decision_family_id": "layout_structure",
+      "trigger_context": "Grid decision-card context",
+      "candidate_options": [
+        "div_block",
+        "flexbox",
+        "grid"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/2/decision_questions/0"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/0"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.grid"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.layout_structure.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/resolver-rules/layout-structure.v0.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/resolver-mvp/resolve-high-risk-p0.mjs#resolveLayoutStructure"
+          ],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/valid/resolver_mvp/layout_structure_auto_resolved_flexbox.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/invalid/resolver_mvp/invalid_missing_evidence_refs.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/adversarial/resolver_mvp/adversarial_grid_without_availability.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/validator/validate-l2-decision-correctness.mjs"
+          ],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "The existing Resolver/fixture/L2 chain is fixture-scoped; required real runtime or consumer proof is incomplete.",
+        "No full Question coverage credit is granted."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-GRID-02",
+      "record_type": "explicit_decision_question",
+      "question_text": "Is the source only Grid container evidence?",
+      "decision_family_id": "layout_structure",
+      "trigger_context": "Grid decision-card context",
+      "candidate_options": [
+        "div_block",
+        "flexbox",
+        "grid"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/2/decision_questions/1"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/0"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.grid"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.layout_structure.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/resolver-rules/layout-structure.v0.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/resolver-mvp/resolve-high-risk-p0.mjs#resolveLayoutStructure"
+          ],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/valid/resolver_mvp/layout_structure_auto_resolved_flexbox.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/invalid/resolver_mvp/invalid_missing_evidence_refs.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/adversarial/resolver_mvp/adversarial_grid_without_availability.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/validator/validate-l2-decision-correctness.mjs"
+          ],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "The existing Resolver/fixture/L2 chain is fixture-scoped; required real runtime or consumer proof is incomplete.",
+        "No full Question coverage credit is granted."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-GRID-03",
+      "record_type": "explicit_decision_question",
+      "question_text": "What remains unproven for the target project?",
+      "decision_family_id": "layout_structure",
+      "trigger_context": "Grid decision-card context",
+      "candidate_options": [
+        "div_block",
+        "flexbox",
+        "grid"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/2/decision_questions/2"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/0"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.grid"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.layout_structure.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/resolver-rules/layout-structure.v0.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/resolver-mvp/resolve-high-risk-p0.mjs#resolveLayoutStructure"
+          ],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/valid/resolver_mvp/layout_structure_auto_resolved_flexbox.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/invalid/resolver_mvp/invalid_missing_evidence_refs.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/fixtures/adversarial/resolver_mvp/adversarial_grid_without_availability.json"
+          ],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/validator/validate-l2-decision-correctness.mjs"
+          ],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "The existing Resolver/fixture/L2 chain is fixture-scoped; required real runtime or consumer proof is incomplete.",
+        "No full Question coverage credit is granted."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-HEADING-01",
+      "record_type": "explicit_decision_question",
+      "question_text": "Is this semantic heading content?",
+      "decision_family_id": "text_semantics",
+      "trigger_context": "Heading decision-card context",
+      "candidate_options": [
+        "heading",
+        "paragraph"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/3/decision_questions/0"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/2"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.heading"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.text_semantics.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "A P0 Matrix exists, but no active Resolver/evaluator/fixture-triplet/L2/proof chain exists for this Family.",
+        "Matrix presence is not Resolver coverage."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-HEADING-02",
+      "record_type": "explicit_decision_question",
+      "question_text": "What heading level is intended?",
+      "decision_family_id": "text_semantics",
+      "trigger_context": "Heading decision-card context",
+      "candidate_options": [
+        "heading",
+        "paragraph"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/3/decision_questions/1"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/2"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.heading"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.text_semantics.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "A P0 Matrix exists, but no active Resolver/evaluator/fixture-triplet/L2/proof chain exists for this Family.",
+        "Matrix presence is not Resolver coverage."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-HEADING-03",
+      "record_type": "explicit_decision_question",
+      "question_text": "Must the text remain editable?",
+      "decision_family_id": "text_semantics",
+      "trigger_context": "Heading decision-card context",
+      "candidate_options": [
+        "heading",
+        "paragraph"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/3/decision_questions/2"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/2"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.heading"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.text_semantics.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "A P0 Matrix exists, but no active Resolver/evaluator/fixture-triplet/L2/proof chain exists for this Family.",
+        "Matrix presence is not Resolver coverage."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-PARAGRAPH-01",
+      "record_type": "explicit_decision_question",
+      "question_text": "Is this body text?",
+      "decision_family_id": "text_semantics",
+      "trigger_context": "Paragraph decision-card context",
+      "candidate_options": [
+        "heading",
+        "paragraph"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/4/decision_questions/0"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/2"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.paragraph"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.text_semantics.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "A P0 Matrix exists, but no active Resolver/evaluator/fixture-triplet/L2/proof chain exists for this Family.",
+        "Matrix presence is not Resolver coverage."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-PARAGRAPH-02",
+      "record_type": "explicit_decision_question",
+      "question_text": "Should it be searchable and editable?",
+      "decision_family_id": "text_semantics",
+      "trigger_context": "Paragraph decision-card context",
+      "candidate_options": [
+        "heading",
+        "paragraph"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/4/decision_questions/1"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/2"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.paragraph"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.text_semantics.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "A P0 Matrix exists, but no active Resolver/evaluator/fixture-triplet/L2/proof chain exists for this Family.",
+        "Matrix presence is not Resolver coverage."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-PARAGRAPH-03",
+      "record_type": "explicit_decision_question",
+      "question_text": "Is visual styling being confused with semantics?",
+      "decision_family_id": "text_semantics",
+      "trigger_context": "Paragraph decision-card context",
+      "candidate_options": [
+        "heading",
+        "paragraph"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/4/decision_questions/2"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/2"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.paragraph"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.text_semantics.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "A P0 Matrix exists, but no active Resolver/evaluator/fixture-triplet/L2/proof chain exists for this Family.",
+        "Matrix presence is not Resolver coverage."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-BUTTON-01",
+      "record_type": "explicit_decision_question",
+      "question_text": "Is the element itself interactive?",
+      "decision_family_id": "interaction_link_topology",
+      "trigger_context": "Button decision-card context",
+      "candidate_options": [
+        "button",
+        "link",
+        "clickable_container"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/5/decision_questions/0"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/3"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.button"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.interaction_link_topology.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "A P0 Matrix exists, but no active Resolver/evaluator/fixture-triplet/L2/proof chain exists for this Family.",
+        "Matrix presence is not Resolver coverage."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-BUTTON-02",
+      "record_type": "explicit_decision_question",
+      "question_text": "Is there a clickable ancestor or descendant?",
+      "decision_family_id": "interaction_link_topology",
+      "trigger_context": "Button decision-card context",
+      "candidate_options": [
+        "button",
+        "link",
+        "clickable_container"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/5/decision_questions/1"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/3"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.button"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.interaction_link_topology.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "A P0 Matrix exists, but no active Resolver/evaluator/fixture-triplet/L2/proof chain exists for this Family.",
+        "Matrix presence is not Resolver coverage."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-BUTTON-03",
+      "record_type": "explicit_decision_question",
+      "question_text": "Is the action URL or behavior proven?",
+      "decision_family_id": "interaction_link_topology",
+      "trigger_context": "Button decision-card context",
+      "candidate_options": [
+        "button",
+        "link",
+        "clickable_container"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/5/decision_questions/2"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/3"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.button"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.interaction_link_topology.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "A P0 Matrix exists, but no active Resolver/evaluator/fixture-triplet/L2/proof chain exists for this Family.",
+        "Matrix presence is not Resolver coverage."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-IMAGE-01",
+      "record_type": "explicit_decision_question",
+      "question_text": "Is this raster media or vector artwork?",
+      "decision_family_id": "media_choice",
+      "trigger_context": "Image decision-card context",
+      "candidate_options": [
+        "image",
+        "svg",
+        "background_image"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/6/decision_questions/0"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/1"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.image"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.media_choice.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "A P0 Matrix exists, but no active Resolver/evaluator/fixture-triplet/L2/proof chain exists for this Family.",
+        "Matrix presence is not Resolver coverage."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-IMAGE-02",
+      "record_type": "explicit_decision_question",
+      "question_text": "Is it meaningful or decorative?",
+      "decision_family_id": "media_choice",
+      "trigger_context": "Image decision-card context",
+      "candidate_options": [
+        "image",
+        "svg",
+        "background_image"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/6/decision_questions/1"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/1"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.image"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.media_choice.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "A P0 Matrix exists, but no active Resolver/evaluator/fixture-triplet/L2/proof chain exists for this Family.",
+        "Matrix presence is not Resolver coverage."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-IMAGE-03",
+      "record_type": "explicit_decision_question",
+      "question_text": "Does link behavior create topology risk?",
+      "decision_family_id": "media_choice",
+      "trigger_context": "Image decision-card context",
+      "candidate_options": [
+        "image",
+        "svg",
+        "background_image"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/6/decision_questions/2"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/1"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.image"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.media_choice.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "A P0 Matrix exists, but no active Resolver/evaluator/fixture-triplet/L2/proof chain exists for this Family.",
+        "Matrix presence is not Resolver coverage."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-SVG-01",
+      "record_type": "explicit_decision_question",
+      "question_text": "Is the asset vector or raster?",
+      "decision_family_id": "media_choice",
+      "trigger_context": "SVG decision-card context",
+      "candidate_options": [
+        "image",
+        "svg",
+        "background_image"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/7/decision_questions/0"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/1"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.svg"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.media_choice.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "A P0 Matrix exists, but no active Resolver/evaluator/fixture-triplet/L2/proof chain exists for this Family.",
+        "Matrix presence is not Resolver coverage."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-SVG-02",
+      "record_type": "explicit_decision_question",
+      "question_text": "Is it decorative or meaningful?",
+      "decision_family_id": "media_choice",
+      "trigger_context": "SVG decision-card context",
+      "candidate_options": [
+        "image",
+        "svg",
+        "background_image"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/7/decision_questions/1"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/1"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.svg"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.media_choice.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "A P0 Matrix exists, but no active Resolver/evaluator/fixture-triplet/L2/proof chain exists for this Family.",
+        "Matrix presence is not Resolver coverage."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-SVG-03",
+      "record_type": "explicit_decision_question",
+      "question_text": "What proves source/provenance and responsive scaling?",
+      "decision_family_id": "media_choice",
+      "trigger_context": "SVG decision-card context",
+      "candidate_options": [
+        "image",
+        "svg",
+        "background_image"
+      ],
+      "evidence_state": "confirmed",
+      "denominator_membership": "confirmed",
+      "source_references": [
+        {
+          "source_type": "kernel_decision_card_registry",
+          "path": "kernel/decision-cards/elements.core.v0.json",
+          "artifact_version": "0.6.1-doc-coverage-root-repair",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "61f4fb2e620ac1f295a27c6f05172ba3436f3b58b5ef30d6c3b54e519f668b0a",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "d62a8a1fa1a23ca6d091d468092ead8635d3f979",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/cards/7/decision_questions/2"
+        },
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/1"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-cards/elements.core.v0.json#v4.svg"
+          ],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.media_choice.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "partial",
+      "known_limitations": [
+        "A P0 Matrix exists, but no active Resolver/evaluator/fixture-triplet/L2/proof chain exists for this Family.",
+        "Matrix presence is not Resolver coverage."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-POSITIONING_SAFETY-GAP",
+      "record_type": "matrix_family_question_gap",
+      "question_text": null,
+      "decision_family_id": "positioning_safety",
+      "trigger_context": null,
+      "candidate_options": [
+        "normal_flow",
+        "relative",
+        "absolute"
+      ],
+      "evidence_state": "unresolved",
+      "denominator_membership": "unresolved",
+      "source_references": [
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/4"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "unresolved",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.positioning_safety.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "unresolved",
+      "known_limitations": [
+        "The repository has a real P0 Matrix for this Family but no explicit source-bound Decision Question wording and trigger-context record.",
+        "This gap record preserves the denominator candidate without inventing a Question."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-STYLING_MECHANISM-GAP",
+      "record_type": "matrix_family_question_gap",
+      "question_text": null,
+      "decision_family_id": "styling_mechanism",
+      "trigger_context": null,
+      "candidate_options": [
+        "native_control",
+        "custom_css"
+      ],
+      "evidence_state": "unresolved",
+      "denominator_membership": "unresolved",
+      "source_references": [
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/5"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "unresolved",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.styling_mechanism.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "unresolved",
+      "known_limitations": [
+        "The repository has a real P0 Matrix for this Family but no explicit source-bound Decision Question wording and trigger-context record.",
+        "This gap record preserves the denominator candidate without inventing a Question."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-CLASS_SCOPE-GAP",
+      "record_type": "matrix_family_question_gap",
+      "question_text": null,
+      "decision_family_id": "class_scope",
+      "trigger_context": null,
+      "candidate_options": [
+        "local_class",
+        "global_class",
+        "local_property"
+      ],
+      "evidence_state": "unresolved",
+      "denominator_membership": "unresolved",
+      "source_references": [
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/6"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "unresolved",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.class_scope.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "unresolved",
+      "known_limitations": [
+        "The repository has a real P0 Matrix for this Family but no explicit source-bound Decision Question wording and trigger-context record.",
+        "This gap record preserves the denominator candidate without inventing a Question."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-VALUE_BINDING-GAP",
+      "record_type": "matrix_family_question_gap",
+      "question_text": null,
+      "decision_family_id": "value_binding",
+      "trigger_context": null,
+      "candidate_options": [
+        "variable",
+        "literal",
+        "dynamic_data"
+      ],
+      "evidence_state": "unresolved",
+      "denominator_membership": "unresolved",
+      "source_references": [
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/7"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "unresolved",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.value_binding.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "unresolved",
+      "known_limitations": [
+        "The repository has a real P0 Matrix for this Family but no explicit source-bound Decision Question wording and trigger-context record.",
+        "This gap record preserves the denominator candidate without inventing a Question."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    },
+    {
+      "question_id": "DQ-UNIT_DECISION-GAP",
+      "record_type": "matrix_family_question_gap",
+      "question_text": null,
+      "decision_family_id": "unit_decision",
+      "trigger_context": null,
+      "candidate_options": [
+        "px",
+        "rem",
+        "percent",
+        "auto",
+        "variable"
+      ],
+      "evidence_state": "unresolved",
+      "denominator_membership": "unresolved",
+      "source_references": [
+        {
+          "source_type": "p0_decision_matrix_registry",
+          "path": "kernel/decision-governance/p0-decision-matrices.v0.json",
+          "artifact_version": "0.4.0",
+          "retrieval_identity": "repository_commit:487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "content_hash": "e5f0d357fe5b5aadf8f9c0075d079263d3de85bcc877c83fe1f7563b8ebe2cc7",
+          "repository_commit": "487ffd8fb3b4d64ddf0cd44c4d8d87eb7ab6b5a8",
+          "repository_blob_sha": "4b2b6e9ec8d5629c6fc16d149ab3a8c29ba71b7b",
+          "provenance_classification": "existing_repository_contract",
+          "verification_mode": "local_file",
+          "json_pointer": "/matrices/8"
+        }
+      ],
+      "coverage_chain": {
+        "catalog": {
+          "status": "unresolved",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "matrix": {
+          "status": "complete",
+          "evidence_refs": [
+            "kernel/decision-governance/p0-decision-matrices.v0.json#p0.matrix.unit_decision.v0"
+          ],
+          "not_applicable_reason": null
+        },
+        "resolver_rule": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "deterministic_evaluator": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "valid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "invalid_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "adversarial_fixture": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "l2_audit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "required_runtime_or_consumer_proof": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        },
+        "coverage_credit": {
+          "status": "incomplete",
+          "evidence_refs": [],
+          "not_applicable_reason": null
+        }
+      },
+      "critical": true,
+      "resolution_state": "unresolved",
+      "known_limitations": [
+        "The repository has a real P0 Matrix for this Family but no explicit source-bound Decision Question wording and trigger-context record.",
+        "This gap record preserves the denominator candidate without inventing a Question."
+      ],
+      "duplicate_of": null,
+      "superseded_by": null
+    }
+  ]
+}

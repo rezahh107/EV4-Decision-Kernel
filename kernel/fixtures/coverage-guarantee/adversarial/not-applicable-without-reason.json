@@ -1,0 +1,27 @@
+{
+  "fixture_version": "1.0.0",
+  "fixture_kind": "adversarial",
+  "expected_diagnostic_codes": [
+    "COV_NOT_APPLICABLE_REASON_INVALID"
+  ],
+  "scenario": {
+    "base": "canonical_coverage_bundle",
+    "mutations": [
+      {
+        "op": "set",
+        "artifact": "ledger",
+        "path": "/records/0/element_obligations/required_safety_gates/0/status",
+        "value": "not_applicable_with_validated_reason"
+      },
+      {
+        "op": "set",
+        "artifact": "ledger",
+        "path": "/records/0/element_obligations/required_safety_gates/0/not_applicable_reason",
+        "value": null
+      }
+    ],
+    "changed_paths": [],
+    "requested_state": null,
+    "claims": []
+  }
+}
