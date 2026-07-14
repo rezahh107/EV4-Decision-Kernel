@@ -85,12 +85,9 @@ jobs:
           if removal_marker not in text:
               raise SystemExit('baseline insertion marker not found')
           text = text.replace(removal_marker, baseline + removal_marker)
-          text = text.replace(
-              '    "planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md",\\n',
-              '',
-          )
           path.write_text(text, encoding='utf-8')
           PY
+          sed -i '\|planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md|d' tools/apply-prf-001-003-finalize.py
 
       - name: Apply and validate final bounded repair
         id: repair
