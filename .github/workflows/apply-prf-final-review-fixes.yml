@@ -42,12 +42,14 @@ jobs:
             python - <<'PY'
           from pathlib import Path
           import re
+          from textwrap import dedent
 
           root = Path('.')
 
           plan_path = root / 'planning/KERNEL_EXECUTION_PLAN.md'
           plan = plan_path.read_text(encoding='utf-8')
-          proposed_program = '''## Proposed Unified Coverage Execution Program — Non-Executable
+          proposed_program = dedent('''
+          ## Proposed Unified Coverage Execution Program — Non-Executable
 
           - **Status:** proposed.
           - **Authority:** none until every external governance promotion predicate is independently satisfied.
@@ -74,10 +76,10 @@ jobs:
           ### Decision Record compatibility
 
           Decision Record v2 remains the base. Any future extension or version change requires proven semantic need and compatible consumer evidence; this proposal creates no v3 contract by default.
-          '''
+          ''').strip()
           plan, count = re.subn(
               r'## Unified Coverage Execution Program[\s\S]*?(?=\n# Roadmap Items)',
-              proposed_program.rstrip(),
+              proposed_program,
               plan,
               count=1,
           )
@@ -228,7 +230,7 @@ jobs:
           }'''
           legacy, legacy_plan_count = re.subn(
               r"  if \(!plan\.includes\('\*\*Status:\*\* proposed'\)[\s\S]*?COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN'[\s\S]*?\n  \}",
-              legacy_plan_replacement,
+              lambda _: legacy_plan_replacement,
               legacy,
               count=1,
           )
