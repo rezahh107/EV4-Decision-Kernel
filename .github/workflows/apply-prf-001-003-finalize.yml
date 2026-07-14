@@ -27,7 +27,7 @@ jobs:
           node-version: lts/*
           package-manager-cache: false
 
-      - name: Harden finalizer against heading drift
+      - name: Harden finalizer against validated drift
         shell: bash
         run: |
           python - <<'PY'
@@ -53,8 +53,39 @@ jobs:
           plan = re.sub(r"\\n- \\*\\*Unified execution mapping:\\*\\*[^\\n]*", "", plan)
           '''
           if old not in text:
-              raise SystemExit('finalizer target block not found')
-          path.write_text(text.replace(old, new), encoding='utf-8')
+              raise SystemExit('finalizer heading block not found')
+          text = text.replace(old, new)
+
+          marker = '''legacy = legacy.replace(
+              "const policyActive = mainDiagnostics.length === 0 && fixturesPassed;",'''
+          bootstrap = '''legacy, bootstrap_count = re.subn(
+              r"impact\\.reason === 'introduces_the_coverage_measurement_system'\\s*&& impact\\.coverage_state_before === 'not_measurable'\\s*&& impact\\.coverage_state_after === 'policy_active'",
+              "impact.reason === 'introduces_proposed_coverage_measurement_system_pending_external_promotion'\\n        && impact.coverage_state_before === 'not_measurable'\\n        && impact.coverage_state_after === 'not_measurable'",
+              legacy,
+              count=1,
+          )
+          if bootstrap_count != 1:
+              raise SystemExit("bootstrap proposal condition replacement failed")
+          '''
+          if marker not in text:
+              raise SystemExit('legacy policy marker not found')
+          text = text.replace(marker, bootstrap + marker)
+
+          removal_marker = '''# Remove temporary execution carriers before computing the committed diff.'''
+          baseline = '''baseline_path = "planning/coverage/coverage-baseline.v1.json"
+          baseline = load(baseline_path)
+          contract_text = read("kernel/decision-governance/coverage-guarantee-contract.v1.json")
+          contract_hash = __import__("hashlib").sha256(contract_text.encode("utf-8")).hexdigest()
+          for item in baseline["content_hashes"]:
+              if item["path"] == "kernel/decision-governance/coverage-guarantee-contract.v1.json":
+                  item["sha256"] = contract_hash
+          dump(baseline_path, baseline)
+
+          '''
+          if removal_marker not in text:
+              raise SystemExit('baseline insertion marker not found')
+          text = text.replace(removal_marker, baseline + removal_marker)
+          path.write_text(text, encoding='utf-8')
           PY
 
       - name: Apply and validate final bounded repair
