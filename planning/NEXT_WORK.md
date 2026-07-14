@@ -28,7 +28,7 @@ The AIGOV adoption sequence is a higher-priority governance repair. It does not 
 - Only active Resolver-backed Family: `layout_structure`; its real runtime/consumer proof remains incomplete.
 - No coverage credit, trusted ingestion, readiness, release-readiness, runtime-completeness or production-readiness claim is active.
 
-## Blocked Coverage Proposal
+## Current PR
 
 - [ ] `DCOV-EXEC-001` — Coverage Guarantee proposal and validation foundation
   - `work_type`: `proposal_with_real_seed_data`
