@@ -85,9 +85,19 @@ jobs:
           if removal_marker not in text:
               raise SystemExit('baseline insertion marker not found')
           text = text.replace(removal_marker, baseline + removal_marker)
+
+          old_review_loop = '''for path in (
+              "planning/reviews/DCOV-EXEC-001_COVERAGE_GUARANTEE_ACTIVATION.md",
+              "planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md",
+          ):'''
+          new_review_loop = '''for path in (
+              "planning/reviews/DCOV-EXEC-001_COVERAGE_GUARANTEE_ACTIVATION.md",
+          ):'''
+          if old_review_loop not in text:
+              raise SystemExit('historical review preservation block not found')
+          text = text.replace(old_review_loop, new_review_loop)
           path.write_text(text, encoding='utf-8')
           PY
-          sed -i '\|planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md|d' tools/apply-prf-001-003-finalize.py
 
       - name: Apply and validate final bounded repair
         id: repair
@@ -95,14 +105,14 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          python tools/apply-prf-001-003-finalize.py > repair-finalizer.log 2>&1
+          python tools/apply-prf-001-003-finalize.py > /tmp/repair-finalizer.log 2>&1
 
       - name: Upload finalizer diagnostics
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: prf-001-003-finalizer-diagnostics
-          path: repair-finalizer.log
+          path: /tmp/repair-finalizer.log
           if-no-files-found: error
           retention-days: 7
 
@@ -110,5 +120,5 @@ jobs:
         if: ${{ steps.repair.outcome != 'success' }}
         shell: bash
         run: |
-          cat repair-finalizer.log
+          cat /tmp/repair-finalizer.log
           exit 1
