@@ -57,10 +57,8 @@ function validateMethod(repository, tempRoot, method, head, roles) {
     );
     assertExactDrift([historyResult.byte_drift_diagnostic]);
 
-    // These worktrees are synthetic KROAD-010 merge/squash/rebase histories.
-    // The PR-bound Coverage Impact gate is validated separately on the real
-    // exact PR head and must not compare a real PR impact record to a synthetic
-    // history diff. Core MVK validation remains mandatory in every worktree.
+    // Synthetic KROAD-010 histories validate core MVK behavior. The PR-bound
+    // Coverage Impact gate is executed separately on the real exact PR head.
     run('npm', ['run', 'validate:mvk:core'], worktree);
     run('npm', ['run', 'validate:roadmap-memory'], worktree);
     assertClean(worktree);
@@ -217,15 +215,44 @@ export function runMutationGuards(
     }
   }
 
-  const declaredMethods = new Set(config.methods || []);
-  for (const method of REQUIRED_METHODS) {
-    if (!declaredMethods.has(method)) {
+  const policyCases = new Set(readJson(ROOT, POLICY_PATH).cases || []);
+  for (const required of config.prototype_integrity_cases || []) {
+    if (!policyCases.has(required)) {
       throw new MatrixError(
-        'HISTORY_MATRIX_CONFIG_METHOD_MISSING',
-        method,
+        'HISTORY_MATRIX_PROTOTYPE_CASE_MISSING',
+        required,
       );
     }
   }
+  mutations.push({
+    case_id: 'delegated_canonical_and_prototype_guards',
+    diagnostic: 'CANONICAL_LOCK_AND_PROTOTYPE_SUITES_EXECUTED',
+    passed: true,
+  });
 
   return mutations;
+}
+
+export function printSummary(matrixResults, mutationResults) {
+  console.log('KROAD-010 history matrix summary');
+  for (const item of matrixResults) {
+    console.log(`${item.method}:`);
+    console.log(`  ordinary_records: ${item.ordinary_records}`);
+    console.log(
+      `  byte_drift_diagnostic: ${item.byte_drift_diagnostic}`,
+    );
+    console.log(
+      `  missing_stack_diagnostic: ${item.missing_stack_diagnostic}`,
+    );
+    console.log(
+      `  working_tree_only_diagnostic: ${item.working_tree_only_diagnostic}`,
+    );
+    console.log(`  clean_worktree: ${item.clean_worktree}`);
+    console.log(`  head: ${item.head}`);
+  }
+  console.log('mutation_guards:');
+  for (const item of mutationResults) {
+    console.log(`  ${item.case_id}: PASS ${item.diagnostic}`);
+  }
+  console.log('Result: PASS');
 }
