@@ -27,15 +27,19 @@ jobs:
           node-version: lts/*
           package-manager-cache: false
 
-      - name: Apply bounded source repair
+      - name: Apply and validate bounded source repair
+        id: repair
+        continue-on-error: true
         shell: bash
         env:
           COVERAGE_REPOSITORY: ${{ github.repository }}
           COVERAGE_PR_NUMBER: ${{ github.event.pull_request.number }}
           COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          set -euo pipefail
-          python - <<'PY'
+          set -o pipefail
+          {
+            set -euo pipefail
+            python - <<'PY'
           from pathlib import Path
           import re
 
@@ -77,19 +81,23 @@ jobs:
               plan,
               count=1,
           )
+          print(f'plan_section_replacements={count}')
           if count != 1:
               raise SystemExit('active Coverage program section replacement failed')
           plan_path.write_text(plan, encoding='utf-8')
 
           wrapper_path = root / 'kernel/validator/validate-coverage-guarantee.mjs'
           wrapper = wrapper_path.read_text(encoding='utf-8')
-          wrapper = wrapper.replace(
-              "import { existsSync, readFileSync } from 'node:fs';",
-              "import { execFileSync } from 'node:child_process';\nimport { existsSync, readFileSync } from 'node:fs';",
-              1,
-          )
-          helper_marker = '''function stepBlocks(job) {'''
-          section_helper = '''function markdownSection(text, heading) {
+          if "import { execFileSync } from 'node:child_process';" not in wrapper:
+              wrapper = wrapper.replace(
+                  "import { existsSync, readFileSync } from 'node:fs';",
+                  "import { execFileSync } from 'node:child_process';\nimport { existsSync, readFileSync } from 'node:fs';",
+                  1,
+              )
+
+          if 'function markdownSection(text, heading)' not in wrapper:
+              marker = 'function stepBlocks(job) {'
+              helper = '''function markdownSection(text, heading) {
             const lines = text.split(/\\r?\\n/);
             const start = lines.findIndex((line) => line === heading);
             if (start < 0) return '';
@@ -106,17 +114,11 @@ jobs:
           }
 
           '''
-          if section_helper.strip() not in wrapper:
-              if helper_marker not in wrapper:
+              if marker not in wrapper:
                   raise SystemExit('wrapper section-helper marker missing')
-              wrapper = wrapper.replace(helper_marker, section_helper + helper_marker, 1)
+              wrapper = wrapper.replace(marker, helper + marker, 1)
 
-          old_plan_check = '''  if (!executionPlan.includes('Status:** proposed')
-            || executionPlan.includes('Coverage Execution Program — Active')
-            || executionPlan.includes('replaces KROAD-012 through KROAD-018')) {
-            diagnostics.push(diagnostic('COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN', 'The recovery overlay must remain proposed and may not supersede KROAD-012 through KROAD-018.', EXECUTION_PLAN_PATH));
-          }'''
-          new_plan_check = '''  const proposalOverlay = markdownSection(
+          promotion_replacement = '''  const proposalOverlay = markdownSection(
             executionPlan,
             '# Coverage Guarantee Proposal Overlay — Non-Executable',
           );
@@ -132,30 +134,17 @@ jobs:
             || proposedProgram.includes('derived `policy_active`')) {
             diagnostics.push(diagnostic('COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN', 'Both the Coverage overlay and proposed package section must remain explicitly non-executable and may not supersede KROAD-012 through KROAD-018.', EXECUTION_PLAN_PATH));
           }'''
-          if old_plan_check not in wrapper:
-              raise SystemExit('wrapper promotion check marker missing')
-          wrapper = wrapper.replace(old_plan_check, new_plan_check, 1)
+          wrapper, promotion_count = re.subn(
+              r"  if \(!executionPlan\.includes\('Status:\*\* proposed'\)[\s\S]*?COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN'[\s\S]*?\n  \}",
+              promotion_replacement,
+              wrapper,
+              count=1,
+          )
+          print(f'wrapper_promotion_replacements={promotion_count}')
+          if promotion_count != 1:
+              raise SystemExit('wrapper promotion check replacement failed')
 
-          old_sensitivity = '''function sensitivityDiagnostics(contract, mutationFixture) {
-            const diagnostics = [];
-            const patterns = contract?.coverage_sensitive_paths || [];
-            for (const required of REQUIRED_SENSITIVE_PATHS) {
-              if (!patterns.includes(required)) {
-                diagnostics.push(diagnostic('COV_SENSITIVE_ENFORCEMENT_PATH_MISSING', `Coverage sensitivity is missing ${required}.`, CONTRACT_PATH));
-              }
-            }
-            for (const fixture of mutationFixture?.cases || []) {
-              const sensitive = pathMatchesSensitive(fixture.changed_path, patterns);
-              const observed = sensitive
-                ? (fixture.impact_record_present ? 'COV_IMPACT_CHANGED_PATHS_MISMATCH' : 'COV_IMPACT_RECORD_MISSING')
-                : null;
-              if (observed !== fixture.expected_diagnostic) {
-                diagnostics.push(diagnostic('COV_ENFORCEMENT_SURFACE_MUTATION_FIXTURE_FAILED', `Mutation fixture failed: ${fixture.id}.`, MUTATION_FIXTURE_PATH));
-              }
-            }
-            return diagnostics;
-          }'''
-          new_sensitivity = '''function sensitivityDiagnostics(contract, mutationFixture) {
+          sensitivity_replacement = '''function sensitivityDiagnostics(contract, mutationFixture) {
             const diagnostics = [];
             const patterns = contract?.coverage_sensitive_paths || [];
             for (const required of REQUIRED_SENSITIVE_PATHS) {
@@ -213,19 +202,20 @@ jobs:
             }
             return diagnostics;
           }'''
-          if old_sensitivity not in wrapper:
-              raise SystemExit('wrapper sensitivity block marker missing')
-          wrapper = wrapper.replace(old_sensitivity, new_sensitivity, 1)
+          wrapper, sensitivity_count = re.subn(
+              r'function sensitivityDiagnostics\(contract, mutationFixture\) \{[\s\S]*?\n\}\n\nfunction collectProofReferences',
+              sensitivity_replacement + '\n\nfunction collectProofReferences',
+              wrapper,
+              count=1,
+          )
+          print(f'wrapper_sensitivity_replacements={sensitivity_count}')
+          if sensitivity_count != 1:
+              raise SystemExit('wrapper sensitivity replacement failed')
           wrapper_path.write_text(wrapper, encoding='utf-8')
 
           legacy_path = root / 'kernel/validator/validate-coverage-guarantee-legacy.mjs'
           legacy = legacy_path.read_text(encoding='utf-8')
-          old_legacy_plan = '''  if (!plan.includes('**Status:** proposed')
-            || plan.includes('Coverage Execution Program — Active')
-            || plan.includes('replaces KROAD-012 through KROAD-018')) {
-            diagnostics.push(diagnostic('COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN', 'The Coverage recovery overlay must remain proposed and non-executable.', 'planning/KERNEL_EXECUTION_PLAN.md'));
-          }'''
-          new_legacy_plan = '''  const proposedProgramMatch = plan.match(
+          legacy_plan_replacement = '''  const proposedProgramMatch = plan.match(
             /## Proposed Unified Coverage Execution Program — Non-Executable[\\s\\S]*?(?=\\n## |\\n# Roadmap Items)/,
           );
           const proposedProgram = proposedProgramMatch?.[0] || '';
@@ -236,12 +226,19 @@ jobs:
             || proposedProgram.includes('derived `policy_active`')) {
             diagnostics.push(diagnostic('COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN', 'The Coverage recovery overlay and proposed package section must remain explicitly non-executable.', 'planning/KERNEL_EXECUTION_PLAN.md'));
           }'''
-          if old_legacy_plan not in legacy:
-              raise SystemExit('legacy promotion check marker missing')
-          legacy = legacy.replace(old_legacy_plan, new_legacy_plan, 1)
+          legacy, legacy_plan_count = re.subn(
+              r"  if \(!plan\.includes\('\*\*Status:\*\* proposed'\)[\s\S]*?COV_EXECUTION_PLAN_SELF_PROMOTION_FORBIDDEN'[\s\S]*?\n  \}",
+              legacy_plan_replacement,
+              legacy,
+              count=1,
+          )
+          print(f'legacy_promotion_replacements={legacy_plan_count}')
+          if legacy_plan_count != 1:
+              raise SystemExit('legacy promotion check replacement failed')
 
-          self_test_marker = '''const schemaSetup = buildSchemaValidators();'''
-          impact_self_test = '''if (process.env.COVERAGE_IMPACT_MUTATION_CASE) {
+          if 'COVERAGE_IMPACT_MUTATION_CASE' not in legacy:
+              marker = 'const schemaSetup = buildSchemaValidators();'
+              self_test = '''if (process.env.COVERAGE_IMPACT_MUTATION_CASE) {
             try {
               const payload = JSON.parse(process.env.COVERAGE_IMPACT_MUTATION_CASE);
               const observed = impactRequirementDiagnostics(
@@ -261,34 +258,49 @@ jobs:
           }
 
           '''
-          if impact_self_test.strip() not in legacy:
-              if self_test_marker not in legacy:
+              if marker not in legacy:
                   raise SystemExit('legacy self-test insertion marker missing')
-              legacy = legacy.replace(self_test_marker, impact_self_test + self_test_marker, 1)
+              legacy = legacy.replace(marker, self_test + marker, 1)
           legacy_path.write_text(legacy, encoding='utf-8')
 
-          workflow_path = root / '.github/workflows/apply-prf-final-review-fixes.yml'
-          workflow_path.unlink()
+          (root / '.github/workflows/apply-prf-final-review-fixes.yml').unlink()
           PY
 
-          git diff --check
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git commit -m 'fix(coverage): close final review gaps'
+            git diff --check
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add -A
+            git commit -m 'fix(coverage): close final review gaps'
 
-          export COVERAGE_HEAD_SHA="$(git rev-parse HEAD)"
-          test "$(git merge-base HEAD origin/main)" = "${COVERAGE_BASE_SHA}"
-          node --check kernel/validator/validate-coverage-guarantee.mjs
-          node --check kernel/validator/validate-coverage-guarantee-prf010.mjs
-          node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
-          git diff --check
-          npm ci
-          npm run validate:coverage
-          npm run validate:mvk
-          npm run validate:roadmap-memory
-          node tools/validate-kroad-010-prototype-integrity.mjs
-          npm run validate:kroad-010-history-matrix
-          git diff --check "${COVERAGE_BASE_SHA}..${COVERAGE_HEAD_SHA}"
-          test -z "$(git status --porcelain=v1 --untracked-files=all)"
-          git push origin HEAD:dcov/coverage-guarantee-activation
+            export COVERAGE_HEAD_SHA="$(git rev-parse HEAD)"
+            test "$(git merge-base HEAD origin/main)" = "${COVERAGE_BASE_SHA}"
+            node --check kernel/validator/validate-coverage-guarantee.mjs
+            node --check kernel/validator/validate-coverage-guarantee-prf010.mjs
+            node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
+            git diff --check
+            npm ci
+            npm run validate:coverage
+            npm run validate:mvk
+            npm run validate:roadmap-memory
+            node tools/validate-kroad-010-prototype-integrity.mjs
+            npm run validate:kroad-010-history-matrix
+            git diff --check "${COVERAGE_BASE_SHA}..${COVERAGE_HEAD_SHA}"
+            test -z "$(git status --porcelain=v1 --untracked-files=all)"
+            git push origin HEAD:dcov/coverage-guarantee-activation
+          } 2>&1 | tee /tmp/final-review-repair.log
+
+      - name: Upload repair diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: final-review-repair-diagnostics
+          path: /tmp/final-review-repair.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Fail closed when repair failed
+        if: ${{ steps.repair.outcome != 'success' }}
+        shell: bash
+        run: |
+          cat /tmp/final-review-repair.log
+          exit 1
