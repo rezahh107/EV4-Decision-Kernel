@@ -58,6 +58,13 @@ jobs:
 
           marker = '''legacy = legacy.replace(
               "const policyActive = mainDiagnostics.length === 0 && fixturesPassed;",'''
+          wiring_patch = '''legacy = legacy.replace(
+              "if (!String(packageJson.scripts?.['validate:mvk'] || '').includes('validate-coverage-guarantee.mjs')) {",
+              "const validateMvkScript = String(packageJson.scripts?.['validate:mvk'] || '');\\n"
+              "  if (!validateMvkScript.includes('validate-coverage-guarantee.mjs')\\n"
+              "    && !validateMvkScript.includes('npm run validate:coverage')) {",
+          )
+          '''
           bootstrap = '''legacy, bootstrap_count = re.subn(
               r"impact\\.reason === 'introduces_the_coverage_measurement_system'\\s*&& impact\\.coverage_state_before === 'not_measurable'\\s*&& impact\\.coverage_state_after === 'policy_active'",
               "impact.reason === 'introduces_proposed_coverage_measurement_system_pending_external_promotion'\\n        && impact.coverage_state_before === 'not_measurable'\\n        && impact.coverage_state_after === 'not_measurable'",
@@ -69,7 +76,7 @@ jobs:
           '''
           if marker not in text:
               raise SystemExit('legacy policy marker not found')
-          text = text.replace(marker, bootstrap + marker)
+          text = text.replace(marker, wiring_patch + bootstrap + marker)
 
           removal_marker = '''# Remove temporary execution carriers before computing the committed diff.'''
           baseline = '''baseline_path = "planning/coverage/coverage-baseline.v1.json"
