@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
-const SOURCE = 'docs/governance/BEHAVIORAL_RULE_COVERAGE.md';
+const DEFAULT_SOURCE = 'docs/governance/BEHAVIORAL_RULE_COVERAGE.md';
 const OUT_JSON = 'artifacts/behavioral-coverage-report.json';
 const OUT_MD = 'artifacts/behavioral-coverage-report.md';
 
@@ -74,13 +74,15 @@ function optionsFrom(args) {
     console.log('Usage: node tools/audit-behavioral-coverage.mjs [--mode advisory|strict] [--rule-prefix PREFIX] [--no-write]');
     process.exit(0);
   }
-  const options = { mode: 'advisory', rulePrefix: null, noWrite: false };
+  const options = { mode: 'advisory', rulePrefix: null, noWrite: false, source: DEFAULT_SOURCE };
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     if (arg === '--mode') options.mode = args[++index];
     else if (arg.startsWith('--mode=')) options.mode = arg.slice(7);
     else if (arg === '--rule-prefix') options.rulePrefix = args[++index];
     else if (arg.startsWith('--rule-prefix=')) options.rulePrefix = arg.slice(14);
+    else if (arg === '--source') options.source = args[++index];
+    else if (arg.startsWith('--source=')) options.source = arg.slice(9);
     else if (arg === '--no-write') options.noWrite = true;
     else throw new Error(`Invalid argument: ${arg}`);
   }
@@ -210,6 +212,11 @@ function overclaimRisks(rows) {
       description: 'cross_turn Critical rule treated as satisfied by single-artifact ci_enforced',
       rows: pick(rows, (r) => r.risk === 'Critical' && r.session_scope === 'cross_turn' && r.status === 'ci_enforced', (r) => ({ rule_id: r.rule_id, status: r.status, session_scope: r.session_scope, source_line: r.source_line })),
     },
+    {
+      risk_id: 'pr_inspector_minimum_sequence_capability_overclaimed',
+      description: 'PR Inspector minimum-security sequence enforcement claimed without the external required-check capability boundary',
+      rows: pick(rows, (r) => r.rule_id.startsWith('AIGOV-') && r.status === 'sequence_ci_enforced', (r) => ({ rule_id: r.rule_id, status: r.status, downstream_contract: r.downstream_contract, source_line: r.source_line })),
+    },
   ];
 }
 
@@ -302,7 +309,7 @@ async function main() {
   const structuralErrors = [];
 
   try {
-    rows = parseMatrix(await readFile(SOURCE, 'utf8'));
+    rows = parseMatrix(await readFile(options.source, 'utf8'));
     if (options.rulePrefix) rows = rows.filter((row) => row.rule_id.startsWith(options.rulePrefix));
     if (options.rulePrefix && rows.length === 0) throw new Error(`No rules matched prefix: ${options.rulePrefix}`);
     findings = analyze(rows);
@@ -313,13 +320,14 @@ async function main() {
   const enumErrorCount = findings.enum_errors.length;
   const thresholdViolationCount = findings.threshold_violations.length;
   const advisoryFailed = structuralErrors.length > 0 || enumErrorCount > 0;
-  const strictFailed = advisoryFailed || thresholdViolationCount > 0;
+  const capabilityOverclaimCount = findings.overclaim_risk_checks.find((item) => item.risk_id === 'pr_inspector_minimum_sequence_capability_overclaimed')?.rows.length || 0;
+  const strictFailed = advisoryFailed || thresholdViolationCount > 0 || capabilityOverclaimCount > 0;
   const failed = options.mode === 'strict' ? strictFailed : advisoryFailed;
 
   const report = {
     report_version: 2,
     model: 'Behavioral Rule Coverage v0.4.1',
-    source: SOURCE,
+    source: options.source,
     mode: options.mode,
     rule_prefix: options.rulePrefix,
     outcome: failed ? 'fail' : 'pass',

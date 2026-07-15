@@ -43,8 +43,8 @@ function main() {
   if (!validateCiSchema(ciIdentity)) throw new Error(`AIGOV_CI_IDENTITY_SCHEMA_INVALID:${JSON.stringify(validateCiSchema.errors)}`);
   const ciDiagnostics = validateCiIdentity(ciIdentity, context);
   if (ciDiagnostics.length) throw new Error(`AIGOV_CI_IDENTITY_INVALID:${JSON.stringify(ciDiagnostics)}`);
-  if (Date.parse(evidence.generated_at) > Date.parse(ciIdentity.completed_at)) throw new Error('AIGOV_CI_COMPLETION_PRECEDES_LOCAL_EVIDENCE');
-  const occurredAt = evidence.generated_at;
+  if (!ciIdentity.run?.created_at || Date.parse(ciIdentity.run.created_at) > Date.parse(ciIdentity.completed_at)) throw new Error('AIGOV_CI_TIME_IDENTITY_INVALID');
+  const occurredAt = ciIdentity.run.created_at;
   const evidenceRows = [
     ['start_preflight', sha256(`${scope.repository}:${args.head}`), `git:${args.head}`, occurredAt, 'local_deterministic'],
     ['scope_committed', sha256(JSON.stringify(scope)), SCOPE_PATH, occurredAt, 'local_deterministic'],

@@ -58,6 +58,7 @@ jobs:
       COVERAGE_PR_NUMBER: ${{ needs.external-coverage-trust.outputs.verified_pr_number }}
       COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}
       COVERAGE_HEAD_SHA: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
+      PR_INSPECTOR_ROOT: ${{ github.workspace }}/_external/pr-inspector
     steps:
       - name: Checkout externally verified exact PR head with history
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -72,6 +73,22 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Checkout pinned PR Inspector
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: rezahh107/PR-Inspector
+          ref: 7a21045366bb9ad1ca2f950b8341ebb867dd8a52
+          path: _external/pr-inspector
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+
+      - name: Install pinned PR Inspector runtime dependencies
+        run: python -m pip install --disable-pip-version-check --no-input jsonschema==4.26.0 PyYAML==6.0.3
 
       - name: Set up Node.js LTS
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -90,11 +107,18 @@ jobs:
           node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
           node --check tools/generate-aigov-scope-disclosure.mjs
           node --check tools/materialize-aigov-lifecycle.mjs
+          node --check tools/materialize-pr-inspector-rereview-sequence.mjs
+          node --check tools/finalize-aigov-post-ci-evidence.mjs
+          node --check tools/index-aigov-post-ci-artifact.mjs
+          node --check tools/assemble-aigov-post-ci-payload.mjs
+          node --check tools/assemble-aigov-validation-evidence.mjs
+          node --check tools/wait-for-aigov-source-ci.mjs
           node --check tools/run-aigov-validation-suite.mjs
           node --check tools/test-aigov-forbidden-operations.mjs
           node --check tools/test-aigov-owner-evidence.mjs
           node --check tools/test-aigov-provenance.mjs
           node --check tools/test-aigov-sequence.mjs
+          node --check tools/test-aigov-sequence-producer.mjs
           node --check tools/verify-aigov-exact-main.mjs
           node --check tools/validate-roadmap-memory.mjs
           node --check tools/validate-roadmap-memory-full.mjs

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/aigov-sequence-producer-identity.v1.schema.json",
+  "title": "EV4 Designated PR Inspector Sequence Producer Identity v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "identity_digest", "repository", "repository_id", "pr_number",
+    "exact_head_sha", "scope_revision", "protocol_version", "inspector_commit_sha",
+    "check_context", "app_id", "workflow", "run", "job", "artifact",
+    "validator_command", "required_check_configuration", "repository_settings_enforced",
+    "completed_at", "observed_at", "evidence_source"
+  ],
+  "properties": {
+    "schema_version": {"const": "aigov-sequence-producer-identity.v1"},
+    "identity_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "repository": {"const": "rezahh107/EV4-Decision-Kernel"},
+    "repository_id": {"const": 1292378784},
+    "pr_number": {"const": 49},
+    "exact_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "scope_revision": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "protocol_version": {"const": "v1.10.1"},
+    "inspector_commit_sha": {"const": "7a21045366bb9ad1ca2f950b8341ebb867dd8a52"},
+    "check_context": {"const": "Validate rereview sequence enforcement"},
+    "app_id": {"const": 15368},
+    "workflow": {
+      "type": "object", "additionalProperties": false,
+      "required": ["workflow_id", "name", "path", "commit_sha", "git_blob_sha", "file_sha256"],
+      "properties": {
+        "workflow_id": {"type": "integer", "minimum": 1},
+        "name": {"const": "Validate rereview sequence enforcement"},
+        "path": {"const": ".github/workflows/validate-rereview-sequence.yml"},
+        "commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "git_blob_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "file_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "run": {
+      "type": "object", "additionalProperties": false,
+      "required": ["run_id", "run_attempt", "event", "html_url", "api_url", "conclusion"],
+      "properties": {
+        "run_id": {"type": "integer", "minimum": 1},
+        "run_attempt": {"type": "integer", "minimum": 1},
+        "event": {"const": "pull_request"},
+        "html_url": {"type": "string", "format": "uri"},
+        "api_url": {"type": "string", "format": "uri"},
+        "conclusion": {"const": "success"}
+      }
+    },
+    "job": {
+      "type": "object", "additionalProperties": false,
+      "required": ["job_id", "name", "check_run_url", "html_url", "conclusion"],
+      "properties": {
+        "job_id": {"type": "integer", "minimum": 1},
+        "name": {"const": "Validate rereview sequence enforcement"},
+        "check_run_url": {"type": "string", "format": "uri"},
+        "html_url": {"type": "string", "format": "uri"},
+        "conclusion": {"const": "success"}
+      }
+    },
+    "artifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact_id", "name", "api_url", "digest"],
+      "properties": {
+        "artifact_id": {"type": "integer", "minimum": 1},
+        "name": {"const": "aigov-rereview-sequence-producer"},
+        "api_url": {"type": "string", "format": "uri"},
+        "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    },
+    "validator_command": {"type": "string", "pattern": "scripts/validate_rereview_sequence\\.py"},
+    "required_check_configuration": {"const": "not_verified_external_administrative_action"},
+    "repository_settings_enforced": {"const": "not_claimed"},
+    "completed_at": {"type": "string", "format": "date-time"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "evidence_source": {"const": "fresh_github_rest_api_and_immutable_workflow_bytes"}
+  }
+}

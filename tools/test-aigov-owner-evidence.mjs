@@ -9,13 +9,14 @@ const schemas = {
   reviewPackage: JSON.parse(readFileSync('kernel/vendor/pr-inspector/v1.10.1/review-package.schema.json', 'utf8')),
   decisionProjection: JSON.parse(readFileSync('kernel/vendor/pr-inspector/v1.10.1/decision-projection.schema.json', 'utf8')),
   ciIdentity: JSON.parse(readFileSync('kernel/schemas/aigov-ci-identity.v1.schema.json', 'utf8')),
+  sequenceProducerIdentity: JSON.parse(readFileSync('kernel/schemas/aigov-sequence-producer-identity.v1.schema.json', 'utf8')),
 };
 const cases = [];
 
 function check(name, mutate, expected) {
   const fixture = validEvidenceFixture();
   mutate(fixture);
-  const result = verifyEvidenceBundle(fixture.bundle, fixture.scope, schemas);
+  const result = verifyEvidenceBundle(fixture.bundle, fixture.scope, schemas, { liveOfficialBoundary: false });
   cases.push({ name, expected, pass: result.diagnostics.join('\n').includes(expected), diagnostics: result.diagnostics });
 }
 

@@ -20,6 +20,10 @@ The AIGOV adoption sequence is a higher-priority governance repair. It does not 
 - AIGOV-ADOPT-000: `merged_pending_batch_a_reconciliation`.
 - AIGOV-ADOPT-001 through AIGOV-ADOPT-007: `in_batch_a_implementation`.
 - PR #49 bounded repair substate: `implemented_pending_rereview`; this is not technical acceptance, Merge readiness or completion.
+- PR #49 technical acceptance: `pending`.
+- PR #49 sequence enforcement: `pending_verified_capability`.
+- PR #49 repository-hosted enforcement: `unverified`.
+- PR #49 owner Merge permitted: `false`.
 - AIGOV-ADOPT-008: `blocked_pending_batch_a_exact_main`.
 - Product implementation while adoption is open: `blocked_by_higher_priority_governance_repair`.
 - Coverage proposal state: `not_measurable_pending_external_promotion`.

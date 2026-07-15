@@ -1,0 +1,157 @@
+name: Finalize AIGOV post-CI evidence
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  finalize-aigov-evidence:
+    name: Finalize AIGOV post-CI evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact completed source head
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Assert source-run and exact-head identity
+        shell: bash
+        env:
+          SOURCE_REPOSITORY_ID: ${{ github.event.repository.id }}
+          SOURCE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "${SOURCE_REPOSITORY_ID}" = "1292378784"
+          test "$(git rev-parse HEAD)" = "${SOURCE_HEAD_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Checkout pinned PR Inspector
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: rezahh107/PR-Inspector
+          ref: 7a21045366bb9ad1ca2f950b8341ebb867dd8a52
+          path: _external/pr-inspector
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+
+      - name: Install pinned PR Inspector runtime dependencies
+        run: python -m pip install --disable-pip-version-check --no-input jsonschema==4.26.0 PyYAML==6.0.3
+
+      - name: Set up Node.js LTS
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: lts/*
+          package-manager-cache: false
+
+      - name: Install target dependencies without scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Execute exact-head validation and command logs
+        env:
+          PR_INSPECTOR_ROOT: ${{ github.workspace }}/_external/pr-inspector
+          SOURCE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: npm run aigov:validation-suite -- --head "${SOURCE_HEAD_SHA}"
+
+      - name: Materialize exact scope disclosure
+        env:
+          SOURCE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          mkdir -p artifacts/aigov-post-ci
+          npm run aigov:scope-disclosure -- \
+            --base 5ff5d7b20db11af36ab787eb8ac2d1127ea74644 \
+            --head "${SOURCE_HEAD_SHA}" \
+            --output artifacts/aigov-post-ci/aigov-batch-a-scope-disclosure.json
+
+      - name: Assemble validation logs for immutable upload
+        run: node tools/assemble-aigov-validation-evidence.mjs
+
+      - name: Upload exact-head validation logs
+        id: validation-evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-validation-evidence-${{ github.event.pull_request.head.sha }}
+          path: artifacts/aigov-validation-evidence
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Wait for authoritative source workflows
+        env:
+          SOURCE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node tools/wait-for-aigov-source-ci.mjs --head "${SOURCE_HEAD_SHA}"
+
+      - name: Capture authoritative Validate MVK CI identity
+        env:
+          SOURCE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: >-
+          npm run aigov:capture-ci-evidence --
+          --head "${SOURCE_HEAD_SHA}"
+          --evidence-manifest artifacts/aigov-batch-a-executed-evidence.json
+          --output artifacts/aigov-post-ci/aigov-batch-a-finalized-evidence.json
+          --ci-output artifacts/aigov-post-ci/aigov-batch-a-ci-identity.json
+          --validation-artifact-id "${{ steps.validation-evidence.outputs.artifact-id }}"
+          --validation-artifact-digest "${{ steps.validation-evidence.outputs.artifact-digest }}"
+          --validation-artifact-name "aigov-validation-evidence-${SOURCE_HEAD_SHA}"
+          --finalizer-run-id "${{ github.run_id }}"
+          --artifact-identity-output artifacts/aigov-post-ci/aigov-validation-artifact-identity.json
+
+      - name: Materialize lifecycle through exact_head_validated
+        env:
+          SOURCE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: >-
+          npm run aigov:lifecycle-ledger --
+          --head "${SOURCE_HEAD_SHA}"
+          --evidence-manifest artifacts/aigov-batch-a-executed-evidence.json
+          --scope-disclosure artifacts/aigov-post-ci/aigov-batch-a-scope-disclosure.json
+          --ci-identity artifacts/aigov-post-ci/aigov-batch-a-ci-identity.json
+          --output artifacts/aigov-post-ci/aigov-batch-a-lifecycle-ledger.json
+
+      - name: Bind designated sequence and finalizer run identities
+        env:
+          SOURCE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          FINALIZER_RUN_ID: ${{ github.run_id }}
+        run: >-
+          node tools/finalize-aigov-post-ci-evidence.mjs
+          --head "${SOURCE_HEAD_SHA}"
+          --finalizer-run-id "${FINALIZER_RUN_ID}"
+
+      - name: Assemble immutable post-CI payload
+        run: node tools/assemble-aigov-post-ci-payload.mjs
+
+      - name: Upload finalized post-CI payload
+        id: payload
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-post-ci-evidence-${{ github.event.pull_request.head.sha }}
+          path: artifacts/aigov-post-ci-payload
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Index assigned payload artifact identity and every file hash
+        env:
+          PAYLOAD_ARTIFACT_ID: ${{ steps.payload.outputs.artifact-id }}
+          PAYLOAD_ARTIFACT_DIGEST: ${{ steps.payload.outputs.artifact-digest }}
+          PAYLOAD_ARTIFACT_NAME: aigov-post-ci-evidence-${{ github.event.pull_request.head.sha }}
+        run: >-
+          node tools/index-aigov-post-ci-artifact.mjs
+          --artifact-id "${PAYLOAD_ARTIFACT_ID}"
+          --artifact-digest "${PAYLOAD_ARTIFACT_DIGEST}"
+          --artifact-name "${PAYLOAD_ARTIFACT_NAME}"
+
+      - name: Upload detached post-CI artifact index
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-post-ci-index-${{ github.event.pull_request.head.sha }}
+          path: artifacts/aigov-post-ci-artifact-index.json
+          if-no-files-found: error
+          retention-days: 14

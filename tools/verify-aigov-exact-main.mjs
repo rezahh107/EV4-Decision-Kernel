@@ -17,10 +17,11 @@ import {
   validateLifecycleLedger,
 } from './lib/aigov-lifecycle.mjs';
 import { fetchExactHeadCiIdentity, validateCiIdentity } from './lib/aigov-ci-evidence.mjs';
+import { fetchSequenceProducerIdentity, validateSequenceProducerIdentity } from './lib/aigov-sequence-producer.mjs';
 import {
   FIXED_ARTIFACTS,
   PROMPT_ARTIFACT,
-  verifyReviewDirectory,
+  verifyOfficialReviewDirectory,
 } from './lib/pr-inspector-v1101.mjs';
 
 const ROOT = process.cwd();
@@ -152,24 +153,38 @@ function artifactMap(artifacts) {
   return new Map(artifacts.map((item) => [path.basename(item.path), item]));
 }
 
-export function verifyEvidenceBundle(bundle, scope, schemas) {
+export function verifyEvidenceBundle(bundle, scope, schemas, { liveOfficialBoundary = true } = {}) {
   const diagnostics = [];
   const receiptSchemaDiagnostics = schemaErrors(schemas.reviewReceipt, bundle.receipt, 'external-review-receipt');
   diagnostics.push(...receiptSchemaDiagnostics);
   if (receiptSchemaDiagnostics.length) return { diagnostics, reviewDigest: null, ciDigest: null, mergeDigest: null, exactMainDigest: null, directoryHashes: null };
 
-  const { receipt, targetRepository, pullRequest, mainCommit, inspectorRepository, inspectorCommit, inspectorMainCommit, inspectorAncestry, receiptSource, trustPolicySource, trustPolicy, currentVersion, protocolManifest, ciIdentity } = bundle;
+  const { receipt, targetRepository, pullRequest, mainCommit, inspectorRepository, inspectorCommit, inspectorMainCommit, inspectorAncestry, receiptSource, trustPolicySource, trustPolicy, currentVersion, protocolManifest, ciIdentity, sequenceProducerIdentity } = bundle;
   const artifacts = artifactMap(bundle.artifacts || []);
-  const directory = verifyReviewDirectory({
+  const directory = verifyOfficialReviewDirectory({
     artifacts: bundle.artifacts,
-    schemas,
-    schemaErrors,
-    context: { repository: TARGET_REPOSITORY, prNumber: PR_NUMBER, baseSha: BASE_SHA, headSha: receipt.target.head_sha, inspectorRepository: INSPECTOR_REPOSITORY, inspectorCommitSha: inspectorCommit.sha },
-    ciIdentity,
+    context: { repository: TARGET_REPOSITORY, prNumber: PR_NUMBER, headSha: receipt.target.head_sha },
+    live: liveOfficialBoundary,
   });
   diagnostics.push(...directory.diagnostics.map((item) => `AIGOV_REVIEW_DIRECTORY_INVALID:${item}`));
+  if (directory.status === 'pass') {
+    const profile = directory.projection?.security_profile;
+    if (directory.projection?.technical_status !== 'GREEN_TECHNICALLY_READY'
+      || directory.projection?.next_action?.kind !== 'merge_now'
+      || profile?.sequence_ci_enforced !== true) {
+      diagnostics.push('AIGOV_REVIEW_SECURITY_CAPABILITY_MISSING');
+    }
+    if (receipt.review.technical_status !== directory.projection?.technical_status) {
+      diagnostics.push('AIGOV_REVIEW_STATUS_PROJECTION_MISMATCH');
+    }
+    if (liveOfficialBoundary && directory.liveSummary?.sequence_capability_verified !== true) {
+      diagnostics.push('AIGOV_REVIEW_SEQUENCE_CAPABILITY_UNVERIFIED');
+    }
+  }
   diagnostics.push(...schemaErrors(schemas.ciIdentity, ciIdentity, 'authoritative-exact-head-ci'));
   diagnostics.push(...validateCiIdentity(ciIdentity, { repository: TARGET_REPOSITORY, repositoryId: TARGET_REPOSITORY_ID, prNumber: PR_NUMBER, headSha: receipt.target.head_sha }));
+  diagnostics.push(...schemaErrors(schemas.sequenceProducerIdentity, sequenceProducerIdentity, 'authoritative-sequence-producer'));
+  diagnostics.push(...validateSequenceProducerIdentity(sequenceProducerIdentity, { repository: TARGET_REPOSITORY, repositoryId: TARGET_REPOSITORY_ID, prNumber: PR_NUMBER, headSha: receipt.target.head_sha, scopeRevision: scope.scope_revision }));
 
   if (targetRepository.id !== TARGET_REPOSITORY_ID || targetRepository.full_name !== TARGET_REPOSITORY || targetRepository.default_branch !== 'main') diagnostics.push('AIGOV_REPOSITORY_IDENTITY_UNVERIFIED');
   if (pullRequest.number !== PR_NUMBER || pullRequest.base?.repo?.id !== TARGET_REPOSITORY_ID || pullRequest.base?.repo?.full_name !== TARGET_REPOSITORY) diagnostics.push('AIGOV_PR_IDENTITY_UNVERIFIED');
@@ -187,6 +202,7 @@ export function verifyEvidenceBundle(bundle, scope, schemas) {
   if (receipt.review.findings.some((finding) => finding.blocking)) diagnostics.push('AIGOV_REVIEW_HAS_BLOCKING_FINDINGS');
   if (Date.parse(receipt.review.reviewed_at) > Date.parse(pullRequest.merged_at)) diagnostics.push('AIGOV_REVIEW_AFTER_MERGE');
   if (!ciIdentity?.completed_at || Date.parse(receipt.review.reviewed_at) <= Date.parse(ciIdentity.completed_at)) diagnostics.push('AIGOV_REVIEW_PRECEDES_EXACT_HEAD_CI');
+  if (!sequenceProducerIdentity?.completed_at || Date.parse(receipt.review.reviewed_at) <= Date.parse(sequenceProducerIdentity.completed_at)) diagnostics.push('AIGOV_REVIEW_PRECEDES_DESIGNATED_SEQUENCE_CI');
 
   if (inspectorRepository.id !== INSPECTOR_REPOSITORY_ID || inspectorRepository.full_name !== INSPECTOR_REPOSITORY || inspectorRepository.default_branch !== 'main' || inspectorRepository.id === targetRepository.id) diagnostics.push('AIGOV_INSPECTOR_REPOSITORY_UNVERIFIED');
   if (inspectorCommit.sha !== receipt.provenance.inspector_commit_sha || inspectorCommit.sha !== receiptSource.ref) diagnostics.push('AIGOV_INSPECTOR_COMMIT_UNVERIFIED');
@@ -217,6 +233,7 @@ export function verifyEvidenceBundle(bundle, scope, schemas) {
     || receipt.review.decision_projection_sha256 !== directory.hashes?.decision_projection_sha256
     || receipt.review.artifact_manifest_sha256 !== directory.hashes?.artifact_manifest_sha256) diagnostics.push('AIGOV_REVIEW_DIRECTORY_HASH_BINDING_MISMATCH');
   if (receipt.review.ci_identity_digest !== ciIdentity?.identity_digest) diagnostics.push('AIGOV_REVIEW_CI_IDENTITY_MISMATCH');
+  if (receipt.review.sequence_producer_identity_digest !== sequenceProducerIdentity?.identity_digest) diagnostics.push('AIGOV_REVIEW_SEQUENCE_PRODUCER_IDENTITY_MISMATCH');
   const expectedReviewer = `PR-Inspector@${PROTOCOL_VERSION}:${inspectorCommit.sha}`;
   if (receipt.review.reviewer_identity !== expectedReviewer || receipt.review.reviewer_identity === receipt.review.implementer_identity) diagnostics.push('AIGOV_REVIEWER_PROVENANCE_UNVERIFIED');
 
@@ -260,13 +277,14 @@ async function loadBundle(args, scope) {
   ]);
   const receiptSource = await githubContent(INSPECTOR_REPOSITORY, args.reviewPath, args.reviewCommit);
   const receipt = receiptSource.json;
-  const [currentVersion, protocolManifestSource, trustPolicySource, reviewPackageSchemaSource, decisionProjectionSchemaSource, ciResult] = await Promise.all([
+  const [currentVersion, protocolManifestSource, trustPolicySource, reviewPackageSchemaSource, decisionProjectionSchemaSource, ciResult, sequenceResult] = await Promise.all([
     githubContent(INSPECTOR_REPOSITORY, 'CURRENT_VERSION', args.reviewCommit),
     githubContent(INSPECTOR_REPOSITORY, 'protocol-manifest.yaml', args.reviewCommit),
     githubContent(INSPECTOR_REPOSITORY, TRUST_POLICY_PATH, args.reviewCommit),
     githubContent(INSPECTOR_REPOSITORY, REVIEW_SCHEMA_REMOTE_PATH, args.reviewCommit),
     githubContent(INSPECTOR_REPOSITORY, PROJECTION_SCHEMA_REMOTE_PATH, args.reviewCommit),
     fetchExactHeadCiIdentity({ githubJson, repository: TARGET_REPOSITORY, repositoryId: TARGET_REPOSITORY_ID, prNumber: PR_NUMBER, headSha: pullRequestResult.value.head?.sha }),
+    fetchSequenceProducerIdentity({ githubJson, repository: TARGET_REPOSITORY, repositoryId: TARGET_REPOSITORY_ID, prNumber: PR_NUMBER, headSha: pullRequestResult.value.head?.sha, scopeRevision: scope.scope_revision }),
   ]);
   const receiptDirectory = path.posix.dirname(args.reviewPath);
   const listing = await githubJson(`/repos/${INSPECTOR_REPOSITORY}/contents/${encodedPath(receiptDirectory)}?ref=${encodeURIComponent(args.reviewCommit)}`);
@@ -292,6 +310,7 @@ async function loadBundle(args, scope) {
       trustPolicy: trustPolicySource.json,
       artifacts,
       ciIdentity: ciResult.identity,
+      sequenceProducerIdentity: sequenceResult.identity,
       localHead,
       currentMainSha: mainCommitResult.value.sha,
       reviewedHeadSha: pullRequestResult.value.head?.sha,
@@ -303,6 +322,7 @@ async function loadBundle(args, scope) {
       reviewPackage: reviewPackageSchemaSource.json,
       decisionProjection: decisionProjectionSchemaSource.json,
       ciIdentity: localJson(CI_SCHEMA_PATH),
+      sequenceProducerIdentity: localJson('kernel/schemas/aigov-sequence-producer-identity.v1.schema.json'),
     },
     observationTimes: [targetRepositoryResult, pullRequestResult, mainCommitResult, inspectorRepositoryResult, inspectorCommitResult]
       .map((item) => item.observedAt),
@@ -405,6 +425,7 @@ async function main() {
     { name: 'inspector-commit-api-payload', reference: loaded.bundle.inspectorCommit.url, sha256: canonicalSha256(loaded.bundle.inspectorCommit) },
     { name: 'external-review-receipt', reference: loaded.bundle.receiptSource.apiUrl, sha256: loaded.bundle.receiptSource.sha256 },
     { name: 'exact-head-ci-identity', reference: loaded.bundle.ciIdentity.run.html_url, sha256: loaded.bundle.ciIdentity.identity_digest },
+    { name: 'designated-sequence-producer-identity', reference: loaded.bundle.sequenceProducerIdentity.run.html_url, sha256: loaded.bundle.sequenceProducerIdentity.identity_digest },
     ...loaded.bundle.ciIdentity.jobs.map((item) => ({ name: `exact-head-ci-job-${item.job_id}`, reference: item.check_run_url, sha256: canonicalSha256(item) })),
     ...loaded.bundle.ciIdentity.artifacts.map((item) => ({ name: `exact-head-ci-artifact-${item.artifact_id}-${item.name}`, reference: item.api_url, sha256: item.digest.replace(/^sha256:/, '') })),
     ...loaded.bundle.artifacts.map((item) => ({ name: path.basename(item.path), reference: item.apiUrl, sha256: item.sha256 })),
@@ -428,6 +449,7 @@ async function main() {
     protocol_version: PROTOCOL_VERSION,
     reviewer_identity: loaded?.bundle.receipt?.review?.reviewer_identity || 'unverified',
     ci_identity_digest: evidence.ciDigest || '0'.repeat(64),
+    sequence_producer_identity_digest: loaded?.bundle.sequenceProducerIdentity?.identity_digest || '0'.repeat(64),
     review_directory_hashes: evidence.directoryHashes || {
       canonical_review_package_sha256: '0'.repeat(64), review_package_file_sha256: '0'.repeat(64), decision_projection_sha256: '0'.repeat(64), artifact_manifest_sha256: '0'.repeat(64), artifact_byte_hashes: {},
     },

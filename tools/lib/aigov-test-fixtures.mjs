@@ -1,14 +1,18 @@
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { ciIdentityDigest, GITHUB_ACTIONS_PRODUCER } from './aigov-ci-evidence.mjs';
 import { canonicalSha256, sha256 } from './aigov-lifecycle.mjs';
-import { buildCanonicalArtifacts, canonicalPackageSha256 } from './pr-inspector-v1101.mjs';
+import { canonicalPackageSha256, FIXED_ARTIFACTS, INSPECTOR_COMMIT, PROMPT_ARTIFACT } from './pr-inspector-v1101.mjs';
+import { sequenceProducerDigest } from './aigov-sequence-producer.mjs';
 
 const TARGET = 'rezahh107/EV4-Decision-Kernel';
 const INSPECTOR = 'rezahh107/PR-Inspector';
 const BASE = '5ff5d7b20db11af36ab787eb8ac2d1127ea74644';
 const HEAD = 'a'.repeat(40);
 const MAIN = 'b'.repeat(40);
-const COMMIT = 'c'.repeat(40);
+const COMMIT = INSPECTOR_COMMIT;
 const SCOPE = `sha256:${'d'.repeat(64)}`;
 
 function artifact(name, directory, raw, blobCharacter) {
@@ -23,6 +27,30 @@ function artifact(name, directory, raw, blobCharacter) {
     json: name.endsWith('.json') ? JSON.parse(bytes.toString('utf8')) : null,
     apiUrl: `https://api.github.com/repos/${INSPECTOR}/contents/${directory}/${name}?ref=${COMMIT}`,
   };
+}
+
+function officialArtifacts(reviewPackage, packageRaw) {
+  const inspectorRoot = process.env.PR_INSPECTOR_ROOT || '/tmp/pr-inspector-7a210453';
+  const output = mkdtempSync(path.join(os.tmpdir(), 'aigov-official-fixture-'));
+  try {
+    writeFileSync(path.join(output, 'review-package.json'), packageRaw);
+    const program = [
+      'import json,sys',
+      `sys.path.insert(0, ${JSON.stringify(inspectorRoot)})`,
+      'from pathlib import Path',
+      'from pr_inspector.derived_outputs import write_review_artifacts',
+      'p=Path(sys.argv[1])',
+      'raw=(p/"review-package.json").read_bytes()',
+      'write_review_artifacts(json.loads(raw.decode("utf-8")),p,review_package_bytes=raw)',
+    ].join(';');
+    execFileSync('python3', ['-c', program, output], { stdio: ['ignore', 'pipe', 'pipe'] });
+    const projection = JSON.parse(readFileSync(path.join(output, 'DECISION_PROJECTION.json'), 'utf8'));
+    const names = [...FIXED_ARTIFACTS.filter((name) => name !== 'review-package.json')];
+    if (projection.next_action.prompt_required) names.push(PROMPT_ARTIFACT);
+    return Object.fromEntries(names.map((name) => [name, readFileSync(path.join(output, name))]));
+  } finally {
+    rmSync(output, { recursive: true, force: true });
+  }
 }
 
 export function validCiIdentityFixture() {
@@ -71,6 +99,22 @@ export function validCiIdentityFixture() {
   return identity;
 }
 
+export function validSequenceProducerIdentityFixture() {
+  const identity = {
+    schema_version: 'aigov-sequence-producer-identity.v1', identity_digest: '', repository: TARGET, repository_id: 1292378784, pr_number: 49,
+    exact_head_sha: HEAD, scope_revision: SCOPE, protocol_version: 'v1.10.1', inspector_commit_sha: COMMIT,
+    check_context: 'Validate rereview sequence enforcement', app_id: 15368,
+    workflow: { workflow_id: 1002, name: 'Validate rereview sequence enforcement', path: '.github/workflows/validate-rereview-sequence.yml', commit_sha: HEAD, git_blob_sha: '8'.repeat(40), file_sha256: '9'.repeat(64) },
+    run: { run_id: 2002, run_attempt: 1, event: 'pull_request', html_url: `https://github.com/${TARGET}/actions/runs/2002`, api_url: `https://api.github.com/repos/${TARGET}/actions/runs/2002`, conclusion: 'success' },
+    job: { job_id: 3004, name: 'Validate rereview sequence enforcement', check_run_url: `https://api.github.com/repos/${TARGET}/check-runs/3004`, html_url: `https://github.com/${TARGET}/actions/runs/2002/job/3004`, conclusion: 'success' },
+    artifact: { artifact_id: 4002, name: 'aigov-rereview-sequence-producer', api_url: `https://api.github.com/repos/${TARGET}/actions/artifacts/4002`, digest: `sha256:${'7'.repeat(64)}` },
+    validator_command: 'python _external/pr-inspector/scripts/validate_rereview_sequence.py artifacts/pr-inspector-rereview-sequence.pending.json',
+    required_check_configuration: 'not_verified_external_administrative_action', repository_settings_enforced: 'not_claimed', completed_at: '2026-07-15T09:35:00.000Z', observed_at: '2026-07-15T09:36:00.000Z', evidence_source: 'fresh_github_rest_api_and_immutable_workflow_bytes',
+  };
+  identity.identity_digest = sequenceProducerDigest(identity);
+  return identity;
+}
+
 export function refreshReceipt(bundle) {
   const projection = structuredClone(bundle.receipt);
   delete projection.receipt_id;
@@ -93,10 +137,11 @@ export function validEvidenceFixture() {
     review_started: '2026-07-15T09:40:00Z',
     review_completed: '2026-07-15T10:00:00Z',
   });
+  reviewPackage.decision.technical_status = 'YELLOW_CHANGES_OR_VERIFICATION_REQUIRED';
   for (const item of reviewPackage.evidence_records) item.reviewed_head_sha = HEAD;
   const packageRaw = Buffer.from(`${JSON.stringify(reviewPackage, null, 2)}\n`);
   const ciIdentity = validCiIdentityFixture();
-  const canonicalArtifacts = buildCanonicalArtifacts(reviewPackage, packageRaw, ciIdentity).artifacts;
+  const canonicalArtifacts = officialArtifacts(reviewPackage, packageRaw);
   const artifacts = [
     artifact('review-package.json', directory, packageRaw, '1'),
     ...Object.entries(canonicalArtifacts).map(([name, text], index) => artifact(name, directory, text, String(index + 2))),
@@ -104,6 +149,7 @@ export function validEvidenceFixture() {
   const byName = new Map(artifacts.map((item) => [item.path.split('/').at(-1), item]));
   const trustPolicy = { commit_evidence_source: 'github_rest_api_https', inspector_repository: INSPECTOR, inspector_repository_id: 1288323264, protocol_version: 'v1.10.1' };
   const trustPolicyRaw = Buffer.from(`${JSON.stringify(trustPolicy, null, 2)}\n`);
+  const sequenceProducerIdentity = validSequenceProducerIdentityFixture();
   const receipt = {
     schema_version: 'aigov-review-receipt.v2',
     receipt_id: '',
@@ -120,6 +166,7 @@ export function validEvidenceFixture() {
       decision_projection_sha256: byName.get('DECISION_PROJECTION.json').sha256,
       artifact_manifest_sha256: byName.get('artifact-manifest.json').sha256,
       ci_identity_digest: ciIdentity.identity_digest,
+      sequence_producer_identity_digest: sequenceProducerIdentity.identity_digest,
       findings: [],
     },
     provenance: {
@@ -146,6 +193,7 @@ export function validEvidenceFixture() {
     trustPolicy,
     artifacts,
     ciIdentity,
+    sequenceProducerIdentity,
     localHead: MAIN,
     currentMainSha: MAIN,
     reviewedHeadSha: HEAD,

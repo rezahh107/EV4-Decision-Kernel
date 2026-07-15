@@ -31,6 +31,8 @@ const checks = (head) => [
   ['aigov-forged-provenance', 'npm', ['run', 'test:aigov-provenance']],
   ['aigov-review-directory', 'npm', ['run', 'test:aigov-review-directory']],
   ['aigov-ci-identity', 'npm', ['run', 'test:aigov-ci-identity']],
+  ['aigov-sequence-producer', 'npm', ['run', 'test:aigov-sequence-producer']],
+  ['aigov-behavioral-sequence-overclaim', 'npm', ['run', 'test:aigov-behavioral-sequence-overclaim']],
   ['aigov-owner-evidence', 'npm', ['run', 'test:aigov-owner-evidence']],
   ['aigov-forbidden-operations', 'npm', ['run', 'test:aigov-forbidden-operations']],
   ['behavioral-aigov', 'npm', ['run', 'validate:behavioral-coverage:aigov:strict']],

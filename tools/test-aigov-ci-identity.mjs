@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { verifyCiPayloads } from './lib/aigov-ci-evidence.mjs';
+import { validateFinalizedEvidenceArtifactFiles, verifyCiPayloads } from './lib/aigov-ci-evidence.mjs';
 
 const repository = 'rezahh107/EV4-Decision-Kernel';
 const repositoryId = 1292378784;
@@ -37,6 +37,15 @@ run('missing run identity', ({ workflowRun }) => { delete workflowRun.workflow_i
 run('missing job identity', ({ jobs }) => { jobs.pop(); }, 'AIGOV_CI_JOB_IDENTITY_MISSING');
 run('missing artifact identity', ({ artifacts }) => { artifacts[0].digest = null; }, 'AIGOV_CI_ARTIFACT_IDENTITY_MISSING');
 run('artifact from another run', ({ artifacts }) => { artifacts[0].workflow_run.id = 9999; }, 'AIGOV_CI_ARTIFACT_RUN_MISMATCH');
+
+{
+  const evidence = {
+    manifest_state: 'executed_exact_head_ci_verified',
+    evidence_items: [{ evidence_id: 'command-log', status: 'passed', evidence_source: 'github_actions', github_actions: { artifact_id: 4001, filename: 'aigov-command-logs/command-log.log', hash_scope: 'final_file_bytes' } }],
+  };
+  const diagnostics = validateFinalizedEvidenceArtifactFiles(evidence, new Map([[4001, new Set()]]));
+  cases.push({ name: 'finalized evidence claimed but absent from referenced artifact', expected: 'AIGOV_FINALIZED_EVIDENCE_FILE_ABSENT:command-log', pass: diagnostics.includes('AIGOV_FINALIZED_EVIDENCE_FILE_ABSENT:command-log'), diagnostics });
+}
 
 const report = { suite: 'aigov-exact-head-ci-identity', status: cases.every((item) => item.pass) ? 'pass' : 'fail', cases };
 console.log(JSON.stringify(report, null, 2));

@@ -280,6 +280,12 @@ function reachableScriptDiagnostics(workflow, source, readRepositoryFile) {
   const diagnostics = [];
   const visitedFiles = new Set();
   const visitedScripts = new Set();
+  const pinnedInspectorCheckout = Object.values(workflow?.jobs || {}).some((job) => (job?.steps || []).some((step) =>
+    /^actions\/checkout@[0-9a-fA-F]{40}$/.test(step?.uses || '')
+    && step?.with?.repository === 'rezahh107/PR-Inspector'
+    && step?.with?.ref === '7a21045366bb9ad1ca2f950b8341ebb867dd8a52'
+    && step?.with?.path === '_external/pr-inspector'
+    && step?.with?.['persist-credentials'] === false));
   let packageScripts = null;
   try { packageScripts = JSON.parse(readRepositoryFile('package.json') || '{}').scripts || {}; } catch { diagnostics.push(diagnostic('AIGOV_LOCAL_SCRIPT_UNRESOLVED', 'package.json could not be parsed for workflow script reachability.', source)); }
 
@@ -314,6 +320,7 @@ function reachableScriptDiagnostics(workflow, source, readRepositoryFile) {
 
   const scanFile = (relative, parentSource) => {
     const normalized = path.posix.normalize(relative.replace(/^\.\//, ''));
+    if (normalized === '_external/pr-inspector/scripts/validate_rereview_sequence.py' && pinnedInspectorCheckout) return;
     if (normalized.startsWith('../') || path.posix.isAbsolute(normalized)) { diagnostics.push(diagnostic('AIGOV_LOCAL_SCRIPT_UNRESOLVED', `Local script escapes repository: ${relative}.`, parentSource)); return; }
     if (visitedFiles.has(normalized)) return;
     visitedFiles.add(normalized);
@@ -491,6 +498,8 @@ export function evidenceManifestDiagnostics(evidence, policy, scope, { expectedH
     if (evidence.manifest_state === 'executed_exact_head_ci_verified') {
       const ciItem = evidence.evidence_items.find((item) => item.evidence_id === 'exact-head-ci-identity');
       if (!ciItem || ciItem.status !== 'passed' || ciItem.evidence_source !== 'github_actions' || !ciItem.github_actions) diagnostics.push(diagnostic('AIGOV_EXACT_HEAD_CI_UNVERIFIED', 'Finalized evidence must bind the authoritative exact-head CI identity.', EVIDENCE_PATH));
+      const sequenceItem = evidence.evidence_items.find((item) => item.evidence_id === 'designated-sequence-producer-identity');
+      if (!sequenceItem || sequenceItem.status !== 'passed' || sequenceItem.evidence_source !== 'github_actions' || !sequenceItem.github_actions?.artifact_id) diagnostics.push(diagnostic('AIGOV_SEQUENCE_PRODUCER_UNVERIFIED', 'Finalized evidence must bind the designated sequence run, job, check and producer artifact identity.', EVIDENCE_PATH));
       if (executedItems.some((item) => item.evidence_source !== 'github_actions' || !item.github_actions)) diagnostics.push(diagnostic('AIGOV_GITHUB_ACTIONS_IDENTITY_MISSING', 'Finalized executed checks must reference their workflow run, job, check run and artifact file.', EVIDENCE_PATH));
     }
   }

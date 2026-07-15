@@ -153,6 +153,8 @@ Any head or `scope_revision` mutation invalidates earlier CI and review evidence
 
 Exact-main evidence must derive repository, PR, author, Merge actor and current-main identity from fresh GitHub payloads. Independent review is accepted only from schema-valid, hash-verified artifacts at an immutable external PR Inspector commit. The runtime `aigov-lifecycle-ledger.v1` and executed exact-head evidence manifest are generated artifacts; caller-authored strings, booleans, local receipt files and target-repository lookalikes cannot unlock lifecycle events.
 
+For PR Inspector `v1.10.1`, ordinary exact-head CI and a package boolean cannot prove the personal minimum-security profile. Only the official opaque `VerifiedSequenceEnforcement` capability, derived from the exact `Validate rereview sequence enforcement` context, App ID, immutable producer workflow and authoritative required-check settings evidence, may support Green. Until then the honest state is Yellow and repository-hosted enforcement remains unverified.
+
 ---
 
 ## 5. Documentation Standards

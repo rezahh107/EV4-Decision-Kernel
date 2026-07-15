@@ -115,6 +115,19 @@ export function validateCiIdentity(identity, context) {
   return diagnostics;
 }
 
+export function validateFinalizedEvidenceArtifactFiles(evidence, artifactFilesById) {
+  const diagnostics = [];
+  if (evidence?.manifest_state !== 'executed_exact_head_ci_verified') diagnostics.push('AIGOV_FINALIZED_EVIDENCE_STATE_INVALID');
+  for (const item of evidence?.evidence_items || []) {
+    if (item.status !== 'passed' || item.evidence_source !== 'github_actions' || item.github_actions?.hash_scope !== 'final_file_bytes') continue;
+    const artifactId = item.github_actions.artifact_id;
+    const filename = item.github_actions.filename;
+    const files = artifactFilesById?.get(artifactId);
+    if (!files?.has(filename)) diagnostics.push(`AIGOV_FINALIZED_EVIDENCE_FILE_ABSENT:${item.evidence_id}`);
+  }
+  return diagnostics;
+}
+
 export async function fetchExactHeadCiIdentity({ githubJson, repository, repositoryId, prNumber, headSha }) {
   const runsResult = await githubJson(`/repos/${repository}/actions/runs?head_sha=${headSha}&event=pull_request&status=completed&per_page=100`);
   const candidates = (runsResult.value?.workflow_runs || []).filter((run) => run.name === REQUIRED_WORKFLOW.name && run.path === REQUIRED_WORKFLOW.path && run.head_sha === headSha && run.conclusion === 'success');

@@ -34,7 +34,7 @@
     "review": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["technical_status", "reviewed_at", "reviewer_identity", "implementer_identity", "review_package_sha256", "review_package_file_sha256", "decision_projection_sha256", "artifact_manifest_sha256", "ci_identity_digest", "findings"],
+      "required": ["technical_status", "reviewed_at", "reviewer_identity", "implementer_identity", "review_package_sha256", "review_package_file_sha256", "decision_projection_sha256", "artifact_manifest_sha256", "ci_identity_digest", "sequence_producer_identity_digest", "findings"],
       "properties": {
         "technical_status": {"const": "GREEN_TECHNICALLY_READY"},
         "reviewed_at": {"type": "string", "format": "date-time"},
@@ -45,6 +45,7 @@
         "decision_projection_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "artifact_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "ci_identity_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "sequence_producer_identity_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "findings": {
           "type": "array",
           "items": {
