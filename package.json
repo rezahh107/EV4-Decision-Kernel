@@ -16,15 +16,33 @@
     "validate:kroad-010-history-matrix": "node tools/validate-kroad-010-history-matrix.mjs",
     "test:kroad-010-history-matrix-fail-closed": "node tools/test-kroad-010-history-matrix-fail-closed.mjs",
     "validate:coverage": "node kernel/validator/validate-coverage-guarantee-history.mjs && node kernel/validator/validate-coverage-guarantee.mjs",
+    "validate:aigov": "node kernel/validator/validate-aigov-governance.mjs",
+    "test:aigov-fixtures": "node kernel/validator/validate-aigov-governance.mjs --fixtures-only",
+    "test:aigov-sequence": "node tools/test-aigov-sequence.mjs",
+    "test:aigov-provenance": "node tools/test-aigov-provenance.mjs",
+    "test:aigov-review-directory": "node tools/test-aigov-provenance.mjs",
+    "test:aigov-owner-evidence": "node tools/test-aigov-owner-evidence.mjs",
+    "test:aigov-ci-identity": "node tools/test-aigov-ci-identity.mjs",
+    "test:aigov-sequence-producer": "node tools/test-aigov-sequence-producer.mjs",
+    "test:aigov-behavioral-sequence-overclaim": "node tools/test-aigov-behavioral-sequence-overclaim.mjs",
+    "test:aigov-forbidden-operations": "node tools/test-aigov-forbidden-operations.mjs",
+    "aigov:scope-disclosure": "node tools/generate-aigov-scope-disclosure.mjs",
+    "aigov:validation-suite": "node tools/run-aigov-validation-suite.mjs",
+    "aigov:lifecycle-ledger": "node tools/materialize-aigov-lifecycle.mjs",
+    "aigov:capture-ci-evidence": "node tools/capture-aigov-ci-evidence.mjs",
+    "verify:aigov-main": "node tools/verify-aigov-exact-main.mjs",
     "validate:mvk:core": "node kernel/validator/validate-mvk.mjs && node kernel/validator/validate-decision-record-v2.mjs && node kernel/validator/validate-source-cards.mjs && node kernel/validator/validate-consumption-boundaries.mjs && node kernel/validator/validate-evidence-workspace.mjs && node kernel/validator/validate-elementor-doc-coverage.mjs && node kernel/validator/validate-decision-governance-foundation.mjs && node kernel/validator/validate-resolver-contract.mjs && node kernel/resolver-mvp/resolve-high-risk-p0.mjs && node kernel/validator/validate-resolver-fixture-triplets.mjs && node kernel/validator/validate-l2-decision-correctness.mjs && node kernel/validator/validate-kroad-009-vertical-slice.mjs && node kernel/validator/validate-downstream-consumer-contract.mjs && node kernel/validator/validate-downstream-consumer-canonical-lock.mjs && node kernel/validator/validate-downstream-consumer-lineage.mjs",
-    "validate:mvk": "node kernel/validator/validate-mvk.mjs && node kernel/validator/validate-decision-record-v2.mjs && node kernel/validator/validate-source-cards.mjs && node kernel/validator/validate-consumption-boundaries.mjs && node kernel/validator/validate-evidence-workspace.mjs && node kernel/validator/validate-elementor-doc-coverage.mjs && node kernel/validator/validate-decision-governance-foundation.mjs && node kernel/validator/validate-resolver-contract.mjs && node kernel/resolver-mvp/resolve-high-risk-p0.mjs && node kernel/validator/validate-resolver-fixture-triplets.mjs && node kernel/validator/validate-l2-decision-correctness.mjs && node kernel/validator/validate-kroad-009-vertical-slice.mjs && node kernel/validator/validate-downstream-consumer-contract.mjs && node kernel/validator/validate-downstream-consumer-canonical-lock.mjs && node kernel/validator/validate-downstream-consumer-lineage.mjs && npm run validate:coverage",
+    "validate:mvk": "node kernel/validator/validate-mvk.mjs && node kernel/validator/validate-decision-record-v2.mjs && node kernel/validator/validate-source-cards.mjs && node kernel/validator/validate-consumption-boundaries.mjs && node kernel/validator/validate-evidence-workspace.mjs && node kernel/validator/validate-elementor-doc-coverage.mjs && node kernel/validator/validate-decision-governance-foundation.mjs && node kernel/validator/validate-resolver-contract.mjs && node kernel/resolver-mvp/resolve-high-risk-p0.mjs && node kernel/validator/validate-resolver-fixture-triplets.mjs && node kernel/validator/validate-l2-decision-correctness.mjs && node kernel/validator/validate-kroad-009-vertical-slice.mjs && node kernel/validator/validate-downstream-consumer-contract.mjs && node kernel/validator/validate-downstream-consumer-canonical-lock.mjs && node kernel/validator/validate-downstream-consumer-lineage.mjs && npm run validate:aigov && npm run test:aigov-sequence && npm run test:aigov-provenance && npm run test:aigov-ci-identity && npm run test:aigov-sequence-producer && npm run test:aigov-owner-evidence && npm run test:aigov-forbidden-operations && npm run validate:behavioral-coverage:aigov && npm run validate:coverage",
     "validate:roadmap-memory": "node tools/validate-roadmap-memory.mjs",
     "validate:behavioral-coverage:advisory": "node tools/audit-behavioral-coverage.mjs --mode advisory",
-    "validate:behavioral-coverage:strict": "node tools/audit-behavioral-coverage.mjs --mode strict"
+    "validate:behavioral-coverage:strict": "node tools/audit-behavioral-coverage.mjs --mode strict",
+    "validate:behavioral-coverage:aigov": "node tools/audit-behavioral-coverage.mjs --mode advisory --rule-prefix AIGOV- --no-write",
+    "validate:behavioral-coverage:aigov:strict": "node tools/audit-behavioral-coverage.mjs --mode strict --rule-prefix AIGOV- --no-write"
   },
   "dependencies": {
     "ajv": "8.17.1",
-    "ajv-formats": "3.0.1"
+    "ajv-formats": "3.0.1",
+    "yaml": "2.9.0"
   },
   "description": "Kernel-local MVK and staged KROAD-010 downstream consumer contract with canonical wiring, lineage validation, and deterministic Git-history compatibility testing."
 }

@@ -1,0 +1,18 @@
+{
+  "fixture_id": "aigov.adversarial.self-review",
+  "expected_valid": false,
+  "expected_diagnostics": ["AIGOV_REVIEW_NOT_INDEPENDENT"],
+  "case": {
+    "preflight_present": true, "head_identity_matches": true, "scope_disclosure_matches": true,
+    "deferred_ids": ["KROAD-012", "KROAD-013", "KROAD-014", "KROAD-015", "KROAD-016", "KROAD-017", "KROAD-018"],
+    "evidence_manifest_complete": true, "required_change_class": "L3", "declared_change_class": "L3",
+    "verification_budget_required": 10, "verification_budget_executed": 10,
+    "reporting_budget_required": 4, "reporting_budget_reported": 4, "material_failures_omitted": false,
+    "security_changes": [], "coverage_status": "not_measurable_pending_external_promotion",
+    "kroad_ids": ["KROAD-012", "KROAD-013", "KROAD-014", "KROAD-015", "KROAD-016", "KROAD-017", "KROAD-018"],
+    "human_technical_proof": false, "coach_text_as_evidence": false,
+    "review_receipt": {"head_matches": true, "scope_revision_matches": true, "reviewer_identity": "same-agent", "implementer_identity": "same-agent", "verdict": "GREEN_MERGE_RECOMMENDED"},
+    "events": ["start_preflight", "scope_committed", "scope_disclosed", "implementation_complete", "exact_head_validated", "independent_review_green"],
+    "completion": {"state": "pending_exact_main_verification", "exact_main_verified": false}
+  }
+}

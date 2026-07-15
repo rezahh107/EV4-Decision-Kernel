@@ -101,18 +101,18 @@ function assertAigovAdoptionBoundary(nextWork, adoptionDecision, adoptionAudit, 
   const next = extractSection(nextWork, 'Next Task');
   const nextProduct = extractSection(nextWork, 'Next Product Task');
 
-  if (!/^- \[ \] AIGOV-ADOPT-000\s+—\s+Authority and status reconciliation$/m.test(next)) {
+  if (!/^- \[ \] AIGOV-ADOPT-001\s+—\s+AIGOV Enforcement Activation \(`BATCH_A`\)$/m.test(next)) {
     fail(
       'planning/NEXT_WORK.md',
-      'The current governance task is not AIGOV-ADOPT-000.',
-      'Keep AIGOV-ADOPT-000 as the single current task until it is merged and post-merge verified.',
+      'The current governance task is not the V2 Batch A enforcement activation.',
+      'Keep AIGOV-ADOPT-001 as the single current task carrier for Batch A until owner Merge and exact-main verification.',
     );
   }
-  if (!/`status`:\s+`in_progress`/.test(next)) {
+  if (!/`status`:\s+`in_batch_a_implementation`/.test(next)) {
     fail(
       'planning/NEXT_WORK.md',
-      'AIGOV-ADOPT-000 is not classified as in_progress.',
-      'Set the current governance increment status to in_progress.',
+      'Batch A is not classified as in_batch_a_implementation.',
+      'Set the current governance task status to in_batch_a_implementation before exact-main verification.',
     );
   }
   if (!/^- \[ \] KROAD-012\s+—\s+External Evidence Producer Boundary$/m.test(nextProduct)) {
@@ -129,18 +129,19 @@ function assertAigovAdoptionBoundary(nextWork, adoptionDecision, adoptionAudit, 
       'Set KROAD-012 to next_product_task_blocked_by_governance_adoption.',
     );
   }
-  if (!/plan_id:\s+GOV-ADOPTION-EV4-DECISION-KERNEL-D0E4652-V1/.test(adoptionDecision)) {
+  if (!/plan_id:\s+GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2/.test(adoptionDecision)) {
     fail(
       'planning/decisions/AIGOV_ADOPTION_DECISION.md',
       'The approved frozen-plan identity is missing or changed.',
       'Restore the exact approved plan ID.',
     );
   }
-  if (!/current_increment:\s+AIGOV-ADOPT-000/.test(adoptionDecision)) {
+  if (!/current_increment_set:\s+AIGOV-ADOPT-000_through_AIGOV-ADOPT-007/.test(adoptionDecision)
+    || !/active_batch:\s+BATCH_A/.test(adoptionDecision)) {
     fail(
       'planning/decisions/AIGOV_ADOPTION_DECISION.md',
-      'The adoption decision does not bind the current increment.',
-      'Record AIGOV-ADOPT-000 as the current increment.',
+      'The adoption decision does not bind the active V2 Batch A increment set.',
+      'Record BATCH_A and AIGOV-ADOPT-000 through AIGOV-ADOPT-007 as the active bounded increment set.',
     );
   }
   if (!/repository_adoption_status:\s+blocked_open_enforcement_gaps/.test(adoptionAudit)) {

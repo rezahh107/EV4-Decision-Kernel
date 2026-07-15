@@ -51,6 +51,14 @@ planning/EV4_DECISION_COVERAGE_OPERATIONALIZATION_MAP.md
 
 They distinguish the long-term product objective from the deliberately small MVK vertical slice. Their authority remains `proposed_recovery_specification_pending_evidence_validation`; they activate no new decision family, Registry, Resolver Rule, producer integration, metric or readiness claim.
 
+## AIGOV Enforcement Activation
+
+`BATCH_A` of `GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2` adds the repository-local AIGOV policy, scope/evidence/review schemas, deterministic fixtures, exact scope disclosure and sequence validation. Its exact audited base is `5ff5d7b20db11af36ab787eb8ac2d1127ea74644`.
+
+PR #49 provenance hardening derives Merge/current-main facts from fresh GitHub REST payloads, accepts review evidence only from an immutable hash-verified PR Inspector bundle, materializes a schema-backed exact-head lifecycle ledger, and validates an executed evidence manifest against the L3 budget. These carriers remain pending fresh exact-head CI and independent re-review; they do not establish adoption, Merge readiness, Coverage promotion or repository-settings enforcement.
+
+The implementation is intentionally pre-closure: independent review is external, Merge is owner-only and exact-main verification is required after Merge. The PR does not activate Coverage, implement `KROAD-012` through `KROAD-018`, promote historical `KROAD-012R`, or establish repository adoption.
+
 ## Role Boundary
 
 ```text
@@ -80,6 +88,10 @@ Downstream enforcement requires inspected downstream rejection evidence.
 ```bash
 npm ci --ignore-scripts --no-audit --no-fund
 npm run validate:mvk
+npm run validate:aigov
+npm run test:aigov-fixtures
+npm run test:aigov-sequence
+npm run validate:behavioral-coverage:aigov
 node tools/audit-behavioral-coverage.mjs --mode advisory
 node tools/audit-behavioral-coverage.mjs --mode strict
 ```

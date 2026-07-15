@@ -33,6 +33,8 @@ const CALLER_IDENTITY_KEYS = [
   'issuer_workflow_sha:',
   'independent_policy_pr_number:',
 ];
+// The pinned external PR-Inspector trust gate validates this complete ephemeral
+// checkout sequence byte-for-byte before accepting the Coverage command carrier.
 const EXACT_VALIDATION_COMMAND = [
   'set -euo pipefail',
   'git reset --hard "${COVERAGE_HEAD_SHA}"',

@@ -1,0 +1,89 @@
+name: Validate rereview sequence enforcement
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-rereview-sequence:
+    name: Validate rereview sequence enforcement
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact pull-request head
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Assert exact clean pull-request head
+        shell: bash
+        env:
+          EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${EXPECTED_HEAD_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Checkout pinned PR Inspector
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: rezahh107/PR-Inspector
+          ref: 7a21045366bb9ad1ca2f950b8341ebb867dd8a52
+          path: _external/pr-inspector
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+
+      - name: Install pinned PR Inspector runtime dependencies
+        run: python -m pip install --disable-pip-version-check --no-input jsonschema==4.26.0 PyYAML==6.0.3
+
+      - name: Set up Node.js LTS
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: lts/*
+          package-manager-cache: false
+
+      - name: Install target dependencies without scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Materialize exact-bound pending rereview sequence
+        env:
+          EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          WORKFLOW_SHA: ${{ github.event.pull_request.head.sha }}
+          SOURCE_RUN_ID: ${{ github.run_id }}
+          SOURCE_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: >-
+          node tools/materialize-pr-inspector-rereview-sequence.mjs
+          --head "${EXPECTED_HEAD_SHA}"
+          --workflow-sha "${WORKFLOW_SHA}"
+          --run-id "${SOURCE_RUN_ID}"
+          --run-attempt "${SOURCE_RUN_ATTEMPT}"
+
+      - name: Execute official pinned rereview sequence validator
+        env:
+          PYTHONPATH: ${{ github.workspace }}/_external/pr-inspector
+        run: python _external/pr-inspector/scripts/validate_rereview_sequence.py artifacts/pr-inspector-rereview-sequence.pending.json
+
+      - name: Run designated producer adversarial suite
+        env:
+          PR_INSPECTOR_ROOT: ${{ github.workspace }}/_external/pr-inspector
+        run: npm run test:aigov-sequence-producer
+
+      - name: Upload sequence producer execution evidence
+        if: ${{ success() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-rereview-sequence-producer
+          path: |
+            artifacts/pr-inspector-rereview-sequence.pending.json
+            artifacts/aigov-sequence-producer-execution.json
+          if-no-files-found: error
+          retention-days: 14

@@ -60,8 +60,9 @@ function assertHistoryMatrixCompatibility() {
     || !/authoritative current-status dashboard/i.test(nextWork)) {
     fail('NEXT_WORK.md must remain the authoritative current-status dashboard.');
   }
-  if (!/^- \[ \] AIGOV-ADOPT-000\s+—\s+Authority and status reconciliation$/m.test(next)) {
-    fail('AIGOV-ADOPT-000 must remain the single current governance task.');
+  if (!/^- \[ \] AIGOV-ADOPT-001\s+—\s+AIGOV Enforcement Activation \(`BATCH_A`\)$/m.test(next)
+    || !/`status`:\s+`in_batch_a_implementation`/.test(next)) {
+    fail('The V2 Batch A enforcement carrier must remain the single current governance task.');
   }
   if (!/^- \[ \] KROAD-012\s+—\s+External Evidence Producer Boundary$/m.test(nextProduct)
     || !/`status`:\s+`next_product_task_blocked_by_governance_adoption`/.test(nextProduct)) {

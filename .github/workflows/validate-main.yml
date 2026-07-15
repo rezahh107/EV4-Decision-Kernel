@@ -12,6 +12,8 @@ jobs:
   validate-main:
     name: Validate Main
     runs-on: ubuntu-latest
+    env:
+      PR_INSPECTOR_ROOT: ${{ github.workspace }}/_external/pr-inspector
     steps:
       - name: Checkout exact main head with full history
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -19,6 +21,29 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.sha }}
           persist-credentials: false
+
+      - name: Verify exact clean main checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Checkout pinned PR Inspector
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: rezahh107/PR-Inspector
+          ref: 7a21045366bb9ad1ca2f950b8341ebb867dd8a52
+          path: _external/pr-inspector
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+
+      - name: Install pinned PR Inspector runtime dependencies
+        run: python -m pip install --disable-pip-version-check --no-input jsonschema==4.26.0 PyYAML==6.0.3
 
       - name: Set up Node.js LTS
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -31,12 +56,28 @@ jobs:
 
       - name: Validate KROAD-010 source syntax and JSON
         run: |
+          node --check kernel/validator/validate-aigov-governance.mjs
           node --check kernel/validator/validate-downstream-consumer-contract.mjs
           node --check kernel/validator/validate-downstream-consumer-canonical-lock.mjs
           node --check kernel/validator/validate-downstream-consumer-lineage.mjs
           node --check tools/validate-kroad-010-primary-baseline.mjs
           node --check tools/validate-kroad-010-prototype-integrity.mjs
           node --check tools/validate-kroad-010-history-matrix.mjs
+          node --check tools/generate-aigov-scope-disclosure.mjs
+          node --check tools/materialize-aigov-lifecycle.mjs
+          node --check tools/materialize-pr-inspector-rereview-sequence.mjs
+          node --check tools/finalize-aigov-post-ci-evidence.mjs
+          node --check tools/index-aigov-post-ci-artifact.mjs
+          node --check tools/assemble-aigov-post-ci-payload.mjs
+          node --check tools/assemble-aigov-validation-evidence.mjs
+          node --check tools/wait-for-aigov-source-ci.mjs
+          node --check tools/run-aigov-validation-suite.mjs
+          node --check tools/test-aigov-forbidden-operations.mjs
+          node --check tools/test-aigov-owner-evidence.mjs
+          node --check tools/test-aigov-provenance.mjs
+          node --check tools/test-aigov-sequence.mjs
+          node --check tools/test-aigov-sequence-producer.mjs
+          node --check tools/verify-aigov-exact-main.mjs
           node --check tools/kroad-010-history/common.mjs
           node --check tools/kroad-010-history/build.mjs
           node --check tools/kroad-010-history/validate.mjs
@@ -63,12 +104,24 @@ jobs:
           [[ "${COVERAGE_HEAD_SHA}" =~ ^[0-9a-f]{40}$ ]]
           test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
           git merge-base --is-ancestor "${COVERAGE_BASE_SHA}" "${COVERAGE_HEAD_SHA}"
-          test -z "$(git status --porcelain=v1 --untracked-files=all)"
           npm run validate:mvk
 
       - name: Validate roadmap memory consistency
         if: ${{ always() }}
         run: npm run validate:roadmap-memory
+
+      - name: Validate exact-main Batch A scope projection
+        shell: bash
+        env:
+          AIGOV_BASE_SHA: ${{ github.event.before }}
+          AIGOV_MAIN_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "${AIGOV_BASE_SHA}" = "5ff5d7b20db11af36ab787eb8ac2d1127ea74644"
+          test "$(git rev-parse HEAD)" = "${AIGOV_MAIN_SHA}"
+          npm run aigov:scope-disclosure -- \
+            --base "${AIGOV_BASE_SHA}" \
+            --head "${AIGOV_MAIN_SHA}"
 
       - name: Verify KROAD-010 prototype integrity
         if: ${{ always() }}
@@ -79,11 +132,32 @@ jobs:
         if: ${{ always() }}
         run: npm run validate:kroad-010-history-matrix
 
+      - name: Materialize Batch A exact-main scope projection
+        shell: bash
+        env:
+          AIGOV_BASE_SHA: ${{ github.event.before }}
+          AIGOV_MAIN_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          npm run aigov:scope-disclosure -- \
+            --base "${AIGOV_BASE_SHA}" \
+            --head "${AIGOV_MAIN_SHA}" \
+            --output "aigov-batch-a-main-scope-${AIGOV_MAIN_SHA}.json"
+
       - name: Upload KROAD-010 history matrix evidence
         if: ${{ always() && steps.history-matrix.outcome == 'success' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: kroad-010-history-matrix-main
           path: kroad-010-history-matrix-report.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload Batch A exact-main scope projection
+        if: ${{ success() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-batch-a-main-scope-${{ github.sha }}
+          path: aigov-batch-a-main-scope-${{ github.sha }}.json
           if-no-files-found: error
           retention-days: 14

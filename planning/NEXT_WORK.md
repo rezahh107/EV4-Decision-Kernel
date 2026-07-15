@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-The owner approved frozen plan `GOV-ADOPTION-EV4-DECISION-KERNEL-D0E4652-V1` against exact audited `main` commit `d0e465276f395c11518162f4a1ff8ceec8c03f40`. The repository remains `blocked_open_enforcement_gaps`; approval authorizes serial implementation but does not itself establish adoption, technical Green or Merge readiness.
+The owner approved frozen plan `GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2` against exact audited `main` commit `5ff5d7b20db11af36ab787eb8ac2d1127ea74644`. `BATCH_A` packages `AIGOV-ADOPT-000` reconciliation and `AIGOV-ADOPT-001` through `AIGOV-ADOPT-007` enforcement work into one active implementation. The repository remains `blocked_open_enforcement_gaps`; implementation on a PR head is not adoption, Merge readiness or exact-main completion.
 
 ## Status Authority
 
@@ -14,8 +14,17 @@ The AIGOV adoption sequence is a higher-priority governance repair. It does not 
 
 - Repository adoption status: `blocked_open_enforcement_gaps`.
 - Active standard: `AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT@1.1.0`.
-- Frozen adoption plan: `GOV-ADOPTION-EV4-DECISION-KERNEL-D0E4652-V1`.
-- Current governance increment: `AIGOV-ADOPT-000`.
+- Frozen adoption plan: `GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2`.
+- Active batch: `BATCH_A`.
+- Current governance increment set: `AIGOV-ADOPT-000` through `AIGOV-ADOPT-007`.
+- AIGOV-ADOPT-000: `merged_pending_batch_a_reconciliation`.
+- AIGOV-ADOPT-001 through AIGOV-ADOPT-007: `in_batch_a_implementation`.
+- PR #49 bounded repair substate: `implemented_pending_rereview`; this is not technical acceptance, Merge readiness or completion.
+- PR #49 technical acceptance: `pending`.
+- PR #49 sequence enforcement: `pending_verified_capability`.
+- PR #49 repository-hosted enforcement: `unverified`.
+- PR #49 owner Merge permitted: `false`.
+- AIGOV-ADOPT-008: `blocked_pending_batch_a_exact_main`.
 - Product implementation while adoption is open: `blocked_by_higher_priority_governance_repair`.
 - Coverage proposal state: `not_measurable_pending_external_promotion`.
 - External project-owner governance approval carrier for Coverage: `missing`.
@@ -39,13 +48,16 @@ The AIGOV adoption sequence is a higher-priority governance repair. It does not 
 
 ## Next Task
 
-- [ ] AIGOV-ADOPT-000 — Authority and status reconciliation
-  - `status`: `in_progress`
+- [ ] AIGOV-ADOPT-001 — AIGOV Enforcement Activation (`BATCH_A`)
+  - `status`: `in_batch_a_implementation`
   - `change_class`: `L3`
-  - `branch`: `agent/aigov-adopt-000-authority`
-  - `plan_id`: `GOV-ADOPTION-EV4-DECISION-KERNEL-D0E4652-V1`
-  - Record the exact SSOT identity, owner-approved frozen plan, audit evidence and current roadmap priority.
-  - Do not claim repository adoption, implement later AIGOV increments, implement product capabilities, or perform Merge.
+  - `branch`: `governance/aigov-v2-batch-a-enforcement`
+  - `plan_id`: `GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2`
+  - `repair_substate`: `implemented_pending_rereview`
+  - `covers`: `AIGOV-ADOPT-000` reconciliation and `AIGOV-ADOPT-001` through `AIGOV-ADOPT-007`
+  - Reconcile the merged `AIGOV-ADOPT-000` authority carrier and activate the bounded machine policy, schemas, fixtures, exact-head sequence checks and independent-review compatibility profile.
+  - Do not claim `AIGOV-ADOPT-008`, exact-main adoption closure, product implementation, Coverage promotion or Merge authority.
+  - Fresh exact-head CI and a new immutable PR Inspector review are required because the prior review became stale when the repair changed the head and scope revision.
 
 ## Next Product Task
 
@@ -59,15 +71,15 @@ The AIGOV adoption sequence is a higher-priority governance repair. It does not 
 
 | Increment | Current status | Dependency |
 |---|---|---|
-| AIGOV-ADOPT-000 | `in_progress` | owner-approved frozen plan |
-| AIGOV-ADOPT-001 | `not_started` | AIGOV-ADOPT-000 merged and post-merge verified |
-| AIGOV-ADOPT-002 | `not_started` | AIGOV-ADOPT-001 merged and post-merge verified |
-| AIGOV-ADOPT-003 | `not_started` | AIGOV-ADOPT-002 merged and post-merge verified |
-| AIGOV-ADOPT-004 | `not_started` | AIGOV-ADOPT-003 merged and post-merge verified |
-| AIGOV-ADOPT-005 | `not_started` | AIGOV-ADOPT-004 merged and post-merge verified |
-| AIGOV-ADOPT-006 | `not_started` | AIGOV-ADOPT-005 merged and post-merge verified |
-| AIGOV-ADOPT-007 | `not_started` | AIGOV-ADOPT-006 merged and post-merge verified |
-| AIGOV-ADOPT-008 | `not_started` | AIGOV-ADOPT-007 merged and post-merge verified |
+| AIGOV-ADOPT-000 | `merged_pending_batch_a_reconciliation` | PR #48 merged at audited Batch A base |
+| AIGOV-ADOPT-001 | `in_batch_a_implementation` | owner-approved V2 Batch A |
+| AIGOV-ADOPT-002 | `in_batch_a_implementation` | same atomic Batch A scope |
+| AIGOV-ADOPT-003 | `in_batch_a_implementation` | same atomic Batch A scope |
+| AIGOV-ADOPT-004 | `in_batch_a_implementation` | same atomic Batch A scope |
+| AIGOV-ADOPT-005 | `in_batch_a_implementation` | same atomic Batch A scope |
+| AIGOV-ADOPT-006 | `in_batch_a_implementation` | same atomic Batch A scope |
+| AIGOV-ADOPT-007 | `in_batch_a_implementation` | same atomic Batch A scope |
+| AIGOV-ADOPT-008 | `blocked_pending_batch_a_exact_main` | owner Merge of Batch A and Green exact-main receipt |
 
 ## Completed
 
@@ -114,7 +126,7 @@ KROAD-013 through KROAD-018 retain their original scope and dependencies. They a
 ```yaml
 merge_gate:
   exact_head_ci_green: required
-  independent_pr_inspector_green: required_for_AIGOV_ADOPT_000
+  independent_pr_inspector_green: required_for_final_BATCH_A_head
   external_project_owner_governance_approval_for_coverage: missing
   explicit_owner_merge_command: false
 ```

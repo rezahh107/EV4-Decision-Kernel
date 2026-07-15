@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/aigov-lifecycle-ledger.v1.schema.json",
+  "title": "EV4 AIGOV Lifecycle Ledger v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "ledger_id", "plan_id", "batch_id", "repository", "repository_id", "pr_number", "base_sha", "head_sha", "scope_revision", "events"],
+  "properties": {
+    "schema_version": {"const": "aigov-lifecycle-ledger.v1"},
+    "ledger_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "plan_id": {"const": "GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2"},
+    "batch_id": {"const": "BATCH_A"},
+    "repository": {"const": "rezahh107/EV4-Decision-Kernel"},
+    "repository_id": {"const": 1292378784},
+    "pr_number": {"const": 49},
+    "base_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "scope_revision": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["event_id", "event_type", "predecessor_event_id", "occurred_at", "repository", "repository_id", "pr_number", "head_sha", "scope_revision", "evidence"],
+        "properties": {
+          "event_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "event_type": {"enum": ["start_preflight", "scope_committed", "scope_disclosed", "implementation_complete", "exact_head_validated", "independent_review_green", "owner_merge", "exact_main_verified"]},
+          "predecessor_event_id": {"type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$"},
+          "occurred_at": {"type": "string", "format": "date-time"},
+          "repository": {"const": "rezahh107/EV4-Decision-Kernel"},
+          "repository_id": {"const": 1292378784},
+          "pr_number": {"const": 49},
+          "head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+          "scope_revision": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "evidence": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "sha256", "reference"],
+            "properties": {
+              "kind": {"enum": ["local_deterministic", "authoritative_exact_head_ci", "external_review", "authoritative_owner_merge", "authoritative_exact_main"]},
+              "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+              "reference": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      }
+    }
+  }
+}

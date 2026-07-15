@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/aigov-evidence-manifest.v1.schema.json",
+  "title": "EV4 AIGOV Evidence Manifest v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "manifest_id",
+    "manifest_state",
+    "plan_id",
+    "batch_id",
+    "repository",
+    "repository_id",
+    "pr_number",
+    "base_sha",
+    "head_sha",
+    "scope_revision",
+    "change_class",
+    "generated_at",
+    "evidence_items",
+    "verification_budget",
+    "reporting_budget",
+    "completion_receipt"
+  ],
+  "properties": {
+    "schema_version": {"const": "aigov-evidence-manifest.v2"},
+    "manifest_id": {"type": "string", "minLength": 1},
+    "manifest_state": {"enum": ["template_pending_execution", "executed_exact_head", "executed_exact_head_ci_verified"]},
+    "plan_id": {"const": "GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2"},
+    "batch_id": {"const": "BATCH_A"},
+    "repository": {"const": "rezahh107/EV4-Decision-Kernel"},
+    "repository_id": {"const": 1292378784},
+    "pr_number": {"const": 49},
+    "base_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "head_sha": {"type": "string", "pattern": "^(derived_at_runtime|[0-9a-f]{40})$"},
+    "scope_revision": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "change_class": {"enum": ["L0", "L1", "L2", "L3", "L4"]},
+    "generated_at": {"type": ["string", "null"], "format": "date-time"},
+    "evidence_items": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["evidence_id", "kind", "command_or_ref", "status", "sha256", "head_sha", "scope_revision", "evidence_source", "authoritative_reference"],
+        "properties": {
+          "evidence_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]+$"},
+          "kind": {"enum": ["validation", "scope_disclosure", "exact_head_ci", "independent_review", "owner_merge", "exact_main_receipt", "limitation"]},
+          "command_or_ref": {"type": "string", "minLength": 1},
+          "status": {"enum": ["pending", "passed", "failed", "insufficient_evidence"]},
+          "sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+          "head_sha": {"type": "string", "pattern": "^(derived_at_runtime|[0-9a-f]{40})$"},
+          "scope_revision": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "evidence_source": {"enum": ["local_execution", "github_actions", "github_rest_api_https", "external_inspector", "pending_external_gate"]},
+          "authoritative_reference": {"type": ["string", "null"], "minLength": 1},
+          "github_actions": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "required": ["workflow_id", "run_id", "job_id", "check_run_url", "artifact_id", "artifact_name", "filename", "hash_scope"],
+            "properties": {
+              "workflow_id": {"type": "integer", "minimum": 1},
+              "run_id": {"type": "integer", "minimum": 1},
+              "job_id": {"type": "integer", "minimum": 1},
+              "check_run_url": {"type": "string", "format": "uri"},
+              "artifact_id": {"type": ["integer", "null"], "minimum": 1},
+              "artifact_name": {"type": ["string", "null"], "minLength": 1},
+              "filename": {"type": ["string", "null"], "minLength": 1},
+              "hash_scope": {"enum": ["final_file_bytes", "canonical_json_identity"]}
+            }
+          }
+        }
+      }
+    },
+    "verification_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_checks", "executed_checks"],
+      "properties": {
+        "required_checks": {"type": "integer", "minimum": 1},
+        "executed_checks": {"type": "integer", "minimum": 0}
+      }
+    },
+    "reporting_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_sections", "reported_sections", "known_limitations"],
+      "properties": {
+        "required_sections": {"type": "integer", "minimum": 1},
+        "reported_sections": {"type": "integer", "minimum": 0},
+        "known_limitations": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "completion_receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "default_branch", "default_branch_sha", "merge_actor", "exact_main_verified"],
+      "properties": {
+        "state": {"enum": ["pending_exact_main_verification", "verified", "failed"]},
+        "default_branch": {"const": "main"},
+        "default_branch_sha": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"},
+        "merge_actor": {"type": ["string", "null"]},
+        "exact_main_verified": {"type": "boolean"}
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "impact_id": "coverage-impact.dcov-exec-001.pr49-aigov-v2-batch-a",
+  "impact_version": "1.0.0",
+  "sequence_number": 4,
+  "previous_impact_id": "coverage-impact.dcov-exec-001.pr48-aigov-roadmap-reconciliation",
+  "repository": "rezahh107/EV4-Decision-Kernel",
+  "pull_request": 49,
+  "base_sha": "5ff5d7b20db11af36ab787eb8ac2d1127ea74644",
+  "work_package_id": "DCOV-EXEC-001",
+  "work_type": "blocking_defect",
+  "coverage_sensitive": false,
+  "impact_classification": "not_applicable",
+  "changed_paths": [
+    ".github/workflows/validate-mvk.yml",
+    "kernel/validator/validate-coverage-guarantee.mjs",
+    "package.json",
+    "planning/NEXT_WORK.md",
+    "planning/coverage/impacts/dcov-exec-001.pr49-aigov-v2-batch-a.json"
+  ],
+  "bootstrap_exception": false,
+  "reason": "activates_repository_local_aigov_enforcement_without_changing_coverage_contract_data_metrics_proof_or_promotion_state",
+  "coverage_state_before": "not_measurable",
+  "coverage_state_after": "not_measurable",
+  "baseline_before": "coverage-baseline.v1.0.0",
+  "baseline_after": "coverage-baseline.v1.0.0",
+  "completed_obligation_ids": [],
+  "remaining_obligation_ids": [
+    "OB-EXEC-002-RECONCILE-ELEMENTS",
+    "OB-EXEC-002-EXPAND-CATALOG",
+    "OB-EXEC-002-CLOSE-SELECTED-P0-FAMILY",
+    "OB-EXEC-002-LAYOUT-BOUNDED-PROOF",
+    "OB-EXEC-005-VALIDATE-DENOMINATORS",
+    "OB-EXEC-005-CRITICAL-100"
+  ],
+  "closed_family_ids": [],
+  "element_coverage_delta": null,
+  "question_coverage_delta": null,
+  "known_gaps": [
+    "External project-owner Coverage governance approval remains absent and target-authored content cannot supply it.",
+    "Element and Question denominators remain unresolved and every Coverage percentage remains null.",
+    "Batch A adds governance enforcement only; it creates no Coverage proof credit, runtime evidence or consumer integration.",
+    "KROAD-012 through KROAD-018 remain preserved and blocked until the complete governance adoption sequence closes on exact main.",
+    "KROAD-012R remains historical_non_authoritative."
+  ],
+  "zero_delta": true,
+  "blocking_defect": {
+    "defect_id": "AIGOV-V2-BATCH-A-OPEN-ENFORCEMENT-GAPS",
+    "reason": "The audited main lacks the complete AIGOV machine enforcement required before product roadmap work may resume."
+  },
+  "next_content_expansion_package": "KROAD-012",
+  "exact_head_sha": "derived_at_pr_runtime"
+}
