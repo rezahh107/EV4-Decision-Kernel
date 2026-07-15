@@ -1,68 +1,49 @@
 {
-  "schema_version": "aigov-evidence-manifest.v1",
+  "schema_version": "aigov-evidence-manifest.v2",
   "manifest_id": "aigov-evidence.gov-adoption-ev4-decision-kernel-5ff5d7b-v2.batch-a",
+  "manifest_state": "template_pending_execution",
   "plan_id": "GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2",
   "batch_id": "BATCH_A",
   "repository": "rezahh107/EV4-Decision-Kernel",
+  "repository_id": 1292378784,
+  "pr_number": 49,
   "base_sha": "5ff5d7b20db11af36ab787eb8ac2d1127ea74644",
   "head_sha": "derived_at_runtime",
-  "scope_revision": "sha256:6e6260c1a35fdc982f7a37bd8913d00a84fbe6cb056964ed87f56fa35367113c",
+  "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9",
   "change_class": "L3",
+  "generated_at": null,
   "evidence_items": [
-    {
-      "evidence_id": "batch-a-local-validation",
-      "kind": "validation",
-      "command_or_ref": "PR body validation ledger bound to the final exact head",
-      "status": "pending",
-      "sha256": null
-    },
-    {
-      "evidence_id": "batch-a-scope-disclosure",
-      "kind": "scope_disclosure",
-      "command_or_ref": "npm run aigov:scope-disclosure -- --base 5ff5d7b20db11af36ab787eb8ac2d1127ea74644 --head <exact-head>",
-      "status": "pending",
-      "sha256": null
-    },
-    {
-      "evidence_id": "batch-a-independent-review",
-      "kind": "independent_review",
-      "command_or_ref": "external receipt required after final exact-head CI",
-      "status": "pending",
-      "sha256": null
-    },
-    {
-      "evidence_id": "batch-a-owner-merge",
-      "kind": "owner_merge",
-      "command_or_ref": "owner-only GitHub merge metadata",
-      "status": "pending",
-      "sha256": null
-    },
-    {
-      "evidence_id": "batch-a-exact-main",
-      "kind": "exact_main_receipt",
-      "command_or_ref": "aigov-batch-a-exact-main-<sha>.json",
-      "status": "pending",
-      "sha256": null
-    }
+    {"evidence_id": "git-diff-check", "kind": "validation", "command_or_ref": "git diff --check <base>..<exact-head>", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "syntax-validator", "kind": "validation", "command_or_ref": "node --check kernel/validator/validate-aigov-governance.mjs", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "syntax-exact-main", "kind": "validation", "command_or_ref": "node --check tools/verify-aigov-exact-main.mjs", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "exact-scope-disclosure", "kind": "scope_disclosure", "command_or_ref": "npm run aigov:scope-disclosure -- --base <base> --head <exact-head>", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "aigov-validator", "kind": "validation", "command_or_ref": "npm run validate:aigov", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "aigov-fixtures", "kind": "validation", "command_or_ref": "npm run test:aigov-fixtures", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "aigov-sequence-replay", "kind": "validation", "command_or_ref": "npm run test:aigov-sequence", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "aigov-forged-provenance", "kind": "validation", "command_or_ref": "npm run test:aigov-provenance", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "aigov-owner-evidence", "kind": "validation", "command_or_ref": "npm run test:aigov-owner-evidence", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "aigov-forbidden-operations", "kind": "validation", "command_or_ref": "npm run test:aigov-forbidden-operations", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "behavioral-aigov", "kind": "validation", "command_or_ref": "npm run validate:behavioral-coverage:aigov:strict", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "roadmap-memory", "kind": "validation", "command_or_ref": "npm run validate:roadmap-memory", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "coverage-regression", "kind": "validation", "command_or_ref": "npm run validate:coverage", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "mvk-regression", "kind": "validation", "command_or_ref": "npm run validate:mvk", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "kroad010-history-fail-closed", "kind": "validation", "command_or_ref": "npm run test:kroad-010-history-matrix-fail-closed", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "kroad010-prototype", "kind": "validation", "command_or_ref": "node tools/validate-kroad-010-prototype-integrity.mjs", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "kroad010-history", "kind": "validation", "command_or_ref": "npm run validate:kroad-010-history-matrix", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "local_execution", "authoritative_reference": null},
+    {"evidence_id": "batch-a-independent-review", "kind": "independent_review", "command_or_ref": "immutable PR-Inspector receipt required after final exact-head CI", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "pending_external_gate", "authoritative_reference": null},
+    {"evidence_id": "batch-a-owner-merge", "kind": "owner_merge", "command_or_ref": "fresh GitHub PR payload merged_by evidence", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "pending_external_gate", "authoritative_reference": null},
+    {"evidence_id": "batch-a-exact-main", "kind": "exact_main_receipt", "command_or_ref": "aigov-batch-a-exact-main-<sha>.json", "status": "pending", "sha256": null, "head_sha": "derived_at_runtime", "scope_revision": "sha256:7d2e93143f34c527a6d982f24ad5ec80e8e4c037988d1a9b3944e379d9de98f9", "evidence_source": "pending_external_gate", "authoritative_reference": null}
   ],
-  "verification_budget": {
-    "required_checks": 10,
-    "executed_checks": 0
-  },
+  "verification_budget": {"required_checks": 10, "executed_checks": 0},
   "reporting_budget": {
     "required_sections": 4,
     "reported_sections": 4,
     "known_limitations": [
-      "Independent review is an external input and is not generated by the implementation agent.",
-      "Batch A cannot claim completion until owner Merge and exact-main verification.",
+      "Committed evidence is a pending template; the exact-head executed manifest is generated and validated as a CI artifact.",
+      "Independent review must be fetched from an immutable PR-Inspector commit and is not generated by the implementation agent.",
+      "Batch A cannot claim completion until authoritative owner Merge and exact-main verification.",
       "Coverage remains not_measurable_pending_external_promotion."
     ]
   },
-  "completion_receipt": {
-    "state": "pending_exact_main_verification",
-    "default_branch": "main",
-    "default_branch_sha": null,
-    "merge_actor": null,
-    "exact_main_verified": false
-  }
+  "completion_receipt": {"state": "pending_exact_main_verification", "default_branch": "main", "default_branch_sha": null, "merge_actor": null, "exact_main_verified": false}
 }

@@ -72,7 +72,20 @@
       "broad_dependency_upgrade",
       "destructive_deletion",
       "auto_merge"
-    ]
+    ],
+    "enforcement_carriers": [
+      {"forbidden_change": "secret_change", "classification": "implemented_detector", "carrier": "workflow_secret_expression_detector"},
+      {"forbidden_change": "permission_change", "classification": "implemented_detector", "carrier": "workflow_permission_semantic_diff"},
+      {"forbidden_change": "ruleset_change", "classification": "implemented_detector_and_external_evidence", "carrier": "repository_settings_mutation_detector"},
+      {"forbidden_change": "branch_protection_change", "classification": "implemented_detector_and_external_evidence", "carrier": "repository_settings_mutation_detector"},
+      {"forbidden_change": "force_push", "classification": "implemented_detector", "carrier": "force_push_command_detector"},
+      {"forbidden_change": "history_rewrite", "classification": "implemented_detector", "carrier": "history_rewrite_command_detector"},
+      {"forbidden_change": "external_repository_write", "classification": "implemented_detector", "carrier": "external_repository_write_detector"},
+      {"forbidden_change": "broad_dependency_upgrade", "classification": "implemented_detector", "carrier": "canonical_dependency_diff_detector"},
+      {"forbidden_change": "destructive_deletion", "classification": "implemented_detector", "carrier": "destructive_deletion_detector"},
+      {"forbidden_change": "auto_merge", "classification": "implemented_detector", "carrier": "merge_and_auto_merge_command_detector"}
+    ],
+    "repository_settings_enforcement": "external_evidence_required_not_proven"
   },
   "scope_contract": {
     "required_sets": ["committed", "excluded", "deferred_not_deleted", "dependencies", "completion_evidence"],

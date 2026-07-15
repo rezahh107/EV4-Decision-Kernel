@@ -3,8 +3,11 @@ import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
+import { parseDocument } from 'yaml';
+import { canonical, validateLifecycleLedger } from '../../tools/lib/aigov-lifecycle.mjs';
 
 const ROOT = process.cwd();
 const POLICY_PATH = 'kernel/decision-governance/aigov-repository-policy.v1.json';
@@ -14,58 +17,50 @@ const SCOPE_SCHEMA_PATH = 'kernel/schemas/aigov-scope-manifest.v1.schema.json';
 const EVIDENCE_SCHEMA_PATH = 'kernel/schemas/aigov-evidence-manifest.v1.schema.json';
 const EVIDENCE_PATH = 'planning/governance/evidence/aigov-v2-batch-a.evidence.json';
 const REVIEW_SCHEMA_PATH = 'kernel/schemas/aigov-review-receipt.v1.schema.json';
+const LEDGER_SCHEMA_PATH = 'kernel/schemas/aigov-lifecycle-ledger.v1.schema.json';
 const FIXTURE_ROOT = 'kernel/fixtures/aigov';
 const PLAN_ID = 'GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2';
 const BASE_SHA = '5ff5d7b20db11af36ab787eb8ac2d1127ea74644';
+const REPOSITORY = 'rezahh107/EV4-Decision-Kernel';
+const REPOSITORY_ID = 1292378784;
+const PR_NUMBER = 49;
 const EXPECTED_RULES = [
-  'AIGOV-START-001',
-  'AIGOV-SCOPE-001',
-  'AIGOV-SCOPE-DISCLOSURE-001',
-  'AIGOV-PROGRESS-001',
-  'AIGOV-EVIDENCE-001',
-  'AIGOV-INDEPENDENCE-001',
-  'AIGOV-STALE-001',
-  'AIGOV-MERGE-001',
-  'AIGOV-CHANGE-CLASS-001',
-  'AIGOV-EVIDENCE-PROPORTIONALITY-001',
-  'AIGOV-REPORTING-001',
-  'AIGOV-SECURITY-PROFILE-001',
-  'AIGOV-HUMAN-001',
-  'AIGOV-COACH-001',
+  'AIGOV-START-001', 'AIGOV-SCOPE-001', 'AIGOV-SCOPE-DISCLOSURE-001',
+  'AIGOV-PROGRESS-001', 'AIGOV-EVIDENCE-001', 'AIGOV-INDEPENDENCE-001',
+  'AIGOV-STALE-001', 'AIGOV-MERGE-001', 'AIGOV-CHANGE-CLASS-001',
+  'AIGOV-EVIDENCE-PROPORTIONALITY-001', 'AIGOV-REPORTING-001',
+  'AIGOV-SECURITY-PROFILE-001', 'AIGOV-HUMAN-001', 'AIGOV-COACH-001',
 ];
 const REQUIRED_KROADS = ['KROAD-012', 'KROAD-013', 'KROAD-014', 'KROAD-015', 'KROAD-016', 'KROAD-017', 'KROAD-018'];
-const FORBIDDEN_SECURITY_CHANGES = new Set([
-  'secret_change', 'permission_change', 'ruleset_change', 'branch_protection_change',
-  'force_push', 'history_rewrite', 'external_repository_write', 'broad_dependency_upgrade',
-  'destructive_deletion', 'auto_merge',
-]);
 const CLASS_RANK = new Map(['L0', 'L1', 'L2', 'L3', 'L4'].map((value, index) => [value, index]));
+const SECURITY_CARRIERS = {
+  secret_change: ['implemented_detector', 'workflow_secret_expression_detector'],
+  permission_change: ['implemented_detector', 'workflow_permission_semantic_diff'],
+  ruleset_change: ['implemented_detector_and_external_evidence', 'repository_settings_mutation_detector'],
+  branch_protection_change: ['implemented_detector_and_external_evidence', 'repository_settings_mutation_detector'],
+  force_push: ['implemented_detector', 'force_push_command_detector'],
+  history_rewrite: ['implemented_detector', 'history_rewrite_command_detector'],
+  external_repository_write: ['implemented_detector', 'external_repository_write_detector'],
+  broad_dependency_upgrade: ['implemented_detector', 'canonical_dependency_diff_detector'],
+  destructive_deletion: ['implemented_detector', 'destructive_deletion_detector'],
+  auto_merge: ['implemented_detector', 'merge_and_auto_merge_command_detector'],
+};
 
-const readJson = (relativePath) => JSON.parse(readFileSync(path.join(ROOT, relativePath), 'utf8'));
+const filePath = (value) => path.isAbsolute(value) ? value : path.join(ROOT, value);
+const readJson = (relativePath) => JSON.parse(readFileSync(filePath(relativePath), 'utf8'));
 const diagnostic = (code, message, source = 'repository') => ({ rule_id: code.split('_').slice(0, 2).join('-'), code, message, source });
 const uniqueSorted = (values) => [...new Set(values)].sort();
-
-function canonical(value) {
-  if (Array.isArray(value)) return value.map(canonical);
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])]));
-  }
-  return value;
-}
+const canonicalJson = (value) => JSON.stringify(canonical(value));
 
 export function scopeRevision(scope) {
   const projection = structuredClone(scope);
   delete projection.scope_revision;
-  return `sha256:${crypto.createHash('sha256').update(JSON.stringify(canonical(projection))).digest('hex')}`;
+  return `sha256:${crypto.createHash('sha256').update(canonicalJson(projection)).digest('hex')}`;
 }
 
 function schemaDiagnostics(validator, value, label) {
   if (validator(value)) return [];
-  return (validator.errors || []).map((error) => diagnostic(
-    'AIGOV_SCHEMA_INVALID',
-    `${label}${error.instancePath || '/'} ${error.message}`,
-    label,
-  ));
+  return (validator.errors || []).map((error) => diagnostic('AIGOV_SCHEMA_INVALID', `${label}${error.instancePath || '/'} ${error.message}`, label));
 }
 
 export function validateBehaviorCase(testCase, policy) {
@@ -74,54 +69,27 @@ export function validateBehaviorCase(testCase, policy) {
   if (!item.preflight_present) diagnostics.push(diagnostic('AIGOV_START_PREFLIGHT_MISSING', 'Repository/session preflight is required.', testCase.fixture_id));
   if (!item.head_identity_matches) diagnostics.push(diagnostic('AIGOV_HEAD_MISMATCH', 'Validated checkout does not match the expected exact head.', testCase.fixture_id));
   if (!item.scope_disclosure_matches) diagnostics.push(diagnostic('AIGOV_SCOPE_DISCLOSURE_MISMATCH', 'Computed scope disclosure does not match declared scope.', testCase.fixture_id));
-
   const missingDeferred = REQUIRED_KROADS.filter((id) => !(item.deferred_ids || []).includes(id));
   if (missingDeferred.length) diagnostics.push(diagnostic('AIGOV_DEFERRED_ITEM_DELETED', `Deferred items disappeared: ${missingDeferred.join(', ')}.`, testCase.fixture_id));
   if (!item.evidence_manifest_complete) diagnostics.push(diagnostic('AIGOV_EVIDENCE_INCOMPLETE', 'Evidence manifest is missing or incomplete.', testCase.fixture_id));
-  if (item.completion?.state === 'completed' && item.completion?.exact_main_verified !== true) {
-    diagnostics.push(diagnostic('AIGOV_PREMAIN_COMPLETION_FORBIDDEN', 'Completion cannot be asserted before exact-main verification.', testCase.fixture_id));
-  }
-
+  if (item.completion?.state === 'completed' && item.completion?.exact_main_verified !== true) diagnostics.push(diagnostic('AIGOV_PREMAIN_COMPLETION_FORBIDDEN', 'Completion cannot be asserted before exact-main verification.', testCase.fixture_id));
   const review = item.review_receipt;
   if (review) {
     if (review.reviewer_identity === review.implementer_identity) diagnostics.push(diagnostic('AIGOV_REVIEW_NOT_INDEPENDENT', 'Reviewer and implementer identities must differ.', testCase.fixture_id));
     if (!review.head_matches) diagnostics.push(diagnostic('AIGOV_REVIEW_STALE_HEAD', 'Review receipt is bound to a stale head.', testCase.fixture_id));
     if (!review.scope_revision_matches) diagnostics.push(diagnostic('AIGOV_REVIEW_STALE_SCOPE', 'Review receipt is bound to a stale scope revision.', testCase.fixture_id));
   }
-
-  if ((CLASS_RANK.get(item.declared_change_class) ?? -1) < (CLASS_RANK.get(item.required_change_class) ?? 99)) {
-    diagnostics.push(diagnostic('AIGOV_CHANGE_CLASS_UNDERSPECIFIED', 'Declared change class is below the deterministic minimum.', testCase.fixture_id));
-  }
-  if ((item.verification_budget_executed ?? 0) < (item.verification_budget_required ?? 1)) {
-    diagnostics.push(diagnostic('AIGOV_VERIFICATION_BUDGET_INSUFFICIENT', 'Executed verification budget is below the required budget.', testCase.fixture_id));
-  }
-  if ((item.reporting_budget_reported ?? 0) < (item.reporting_budget_required ?? 1) || item.material_failures_omitted) {
-    diagnostics.push(diagnostic('AIGOV_REPORTING_OMISSION', 'Reporting budget or material-failure disclosure is incomplete.', testCase.fixture_id));
-  }
-  if ((item.security_changes || []).some((value) => FORBIDDEN_SECURITY_CHANGES.has(value))) {
-    diagnostics.push(diagnostic('AIGOV_SECURITY_PROFILE_VIOLATION', 'Forbidden security or authority mutation requested.', testCase.fixture_id));
-  }
+  if ((CLASS_RANK.get(item.declared_change_class) ?? -1) < (CLASS_RANK.get(item.required_change_class) ?? 99)) diagnostics.push(diagnostic('AIGOV_CHANGE_CLASS_UNDERSPECIFIED', 'Declared change class is below the deterministic minimum.', testCase.fixture_id));
+  if ((item.verification_budget_executed ?? 0) < (item.verification_budget_required ?? 1)) diagnostics.push(diagnostic('AIGOV_VERIFICATION_BUDGET_INSUFFICIENT', 'Executed verification budget is below the required budget.', testCase.fixture_id));
+  if ((item.reporting_budget_reported ?? 0) < (item.reporting_budget_required ?? 1) || item.material_failures_omitted) diagnostics.push(diagnostic('AIGOV_REPORTING_OMISSION', 'Reporting budget or material-failure disclosure is incomplete.', testCase.fixture_id));
+  if ((item.security_changes || []).some((value) => Object.hasOwn(SECURITY_CARRIERS, value))) diagnostics.push(diagnostic('AIGOV_SECURITY_PROFILE_VIOLATION', 'Forbidden security or authority mutation requested.', testCase.fixture_id));
   if (item.human_technical_proof) diagnostics.push(diagnostic('AIGOV_HUMAN_TECHNICAL_PROOF_FORBIDDEN', 'Human approval cannot substitute for technical evidence.', testCase.fixture_id));
   if (item.coach_text_as_evidence) diagnostics.push(diagnostic('AIGOV_COACH_EVIDENCE_CONFUSION', 'Coaching text cannot be completion evidence.', testCase.fixture_id));
   if (item.coverage_status !== 'not_measurable_pending_external_promotion') diagnostics.push(diagnostic('AIGOV_COVERAGE_SELF_PROMOTION', 'Target-authored Coverage promotion is forbidden.', testCase.fixture_id));
   if (REQUIRED_KROADS.some((id) => !(item.kroad_ids || []).includes(id))) diagnostics.push(diagnostic('AIGOV_KROAD_PRESERVATION_FAILED', 'KROAD-012 through KROAD-018 must remain preserved.', testCase.fixture_id));
-
   const expectedOrder = policy.sequence.ordered_events;
   const events = item.events || [];
-  let sequenceInvalid = false;
-  for (const [eventIndex, event] of events.entries()) {
-    const orderIndex = expectedOrder.indexOf(event);
-    if (orderIndex < 0) {
-      sequenceInvalid = true;
-      break;
-    }
-    const priorEvents = expectedOrder.slice(0, orderIndex);
-    if (priorEvents.some((required) => !events.slice(0, eventIndex).includes(required))) {
-      sequenceInvalid = true;
-      break;
-    }
-  }
-  if (sequenceInvalid) diagnostics.push(diagnostic('AIGOV_SEQUENCE_INVALID', 'Cross-turn governance event order is invalid or skips a predecessor.', testCase.fixture_id));
+  if (events.some((event, index) => event !== expectedOrder[index])) diagnostics.push(diagnostic('AIGOV_SEQUENCE_INVALID', 'Cross-turn governance event order is invalid or skips a predecessor.', testCase.fixture_id));
   return diagnostics;
 }
 
@@ -144,7 +112,7 @@ function validateFixtures(policy, selectedCase = null) {
     const expected = uniqueSorted(fixture.expected_diagnostics || []);
     const expectedValid = fixture.expected_valid === true;
     const actualValid = observed.length === 0;
-    const matches = expectedValid === actualValid && JSON.stringify(observed) === JSON.stringify(expected);
+    const matches = expectedValid === actualValid && canonicalJson(observed) === canonicalJson(expected);
     results.push({ fixture: fixturePath, expected_valid: expectedValid, actual_valid: actualValid, expected_diagnostics: expected, observed_diagnostics: observed, matches });
     if (!matches) diagnostics.push(diagnostic('AIGOV_FIXTURE_EXPECTATION_MISMATCH', `${fixturePath}: expected ${JSON.stringify(expected)}, observed ${JSON.stringify(observed)}.`, fixturePath));
   }
@@ -160,37 +128,146 @@ function git(args, options = {}) {
   }
 }
 
-function workflowSecurityDiagnostics(policy) {
+function parseWorkflow(text, source) {
+  const document = parseDocument(text, { prettyErrors: false, strict: true, uniqueKeys: true });
+  if (document.errors.length) throw new Error(`${source}: ${document.errors.map((error) => error.message).join('; ')}`);
+  return document.toJS({ mapAsMap: false });
+}
+
+function collectWorkflowValues(value, result = { uses: [], runs: [], scalarEntries: [] }, pathParts = []) {
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => collectWorkflowValues(item, result, [...pathParts, index]));
+  } else if (value && typeof value === 'object') {
+    for (const [key, child] of Object.entries(value)) {
+      if (key === 'uses' && typeof child === 'string') result.uses.push(child);
+      if (key === 'run' && typeof child === 'string') result.runs.push(child);
+      if (typeof child === 'string') result.scalarEntries.push({ path: [...pathParts, key].join('.'), key, value: child });
+      collectWorkflowValues(child, result, [...pathParts, key]);
+    }
+  }
+  return result;
+}
+
+const permissionRank = (value) => ({ none: 0, read: 1, write: 2 }[value] ?? (value === 'read-all' ? 1 : value === 'write-all' ? 2 : -1));
+function normalizePermissions(value) {
+  if (value == null || value === {}) return {};
+  if (typeof value === 'string') return { '*': permissionRank(value) };
+  if (typeof value !== 'object' || Array.isArray(value)) return { invalid: 99 };
+  return Object.fromEntries(Object.entries(value).map(([key, permission]) => [key, permissionRank(permission)]));
+}
+
+export function permissionExpansions(baseValue, currentValue) {
+  const base = normalizePermissions(baseValue);
+  const current = normalizePermissions(currentValue);
+  const keys = new Set([...Object.keys(base), ...Object.keys(current)]);
+  return [...keys].filter((key) => {
+    const baseRank = base[key] ?? base['*'] ?? 0;
+    const currentRank = current[key] ?? current['*'] ?? 0;
+    return currentRank > baseRank;
+  }).sort();
+}
+
+function workflowPermissions(workflow) {
+  const result = [{ location: 'workflow', value: workflow?.permissions }];
+  for (const [jobName, job] of Object.entries(workflow?.jobs || {})) result.push({ location: `jobs.${jobName}`, value: job?.permissions });
+  return result;
+}
+
+export function classifyDependencyChange(basePackage, currentPackage) {
+  const sections = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies'];
+  const changed = [];
+  const added = [];
+  const removed = [];
+  for (const section of sections) {
+    const base = basePackage?.[section] || {};
+    const current = currentPackage?.[section] || {};
+    for (const name of new Set([...Object.keys(base), ...Object.keys(current)])) {
+      if (!(name in base)) added.push(`${section}:${name}@${current[name]}`);
+      else if (!(name in current)) removed.push(`${section}:${name}@${base[name]}`);
+      else if (canonicalJson(base[name]) !== canonicalJson(current[name])) changed.push(`${section}:${name}:${base[name]}->${current[name]}`);
+    }
+  }
+  return {
+    identical: canonicalJson(Object.fromEntries(sections.map((key) => [key, basePackage?.[key] || {}]))) === canonicalJson(Object.fromEntries(sections.map((key) => [key, currentPackage?.[key] || {}]))),
+    broad: changed.length > 0 || removed.length > 0 || added.length > 1,
+    added: added.sort(),
+    changed: changed.sort(),
+    removed: removed.sort(),
+  };
+}
+
+export function analyzeWorkflowYaml(currentText, { source = 'workflow.yml', baseText = null } = {}) {
   const diagnostics = [];
+  let current;
+  try {
+    current = parseWorkflow(currentText, source);
+  } catch (error) {
+    return [diagnostic('AIGOV_WORKFLOW_YAML_INVALID', error.message, source)];
+  }
+  const values = collectWorkflowValues(current);
+  for (const target of values.uses) {
+    if (!target.startsWith('./') && !target.startsWith('docker://') && !/@[0-9a-fA-F]{40}$/.test(target)) diagnostics.push(diagnostic('AIGOV_ACTION_NOT_IMMUTABLY_PINNED', `Workflow action is not pinned by a 40-character SHA: ${target}.`, source));
+  }
+  const commands = values.runs.join('\n');
+  if (/\bgh\s+pr\s+merge\b|\bgh\s+api\b[^\n]*(?:\/merges|\/auto-merge)|enablePullRequestAutoMerge|\bgit\s+merge(?!-)\b/i.test(commands)) diagnostics.push(diagnostic('AIGOV_MERGE_COMMAND_FORBIDDEN', 'Workflow contains a merge or auto-merge command.', source));
+  if (/\bgit\s+push\b[^\n]*(?:--force(?:-with-lease)?|-f\b)/i.test(commands)) diagnostics.push(diagnostic('AIGOV_FORCE_PUSH_FORBIDDEN', 'Workflow contains a force-push command.', source));
+  if (/\bgit\s+(?:rebase|filter-branch|filter-repo)\b|\bgit\s+commit\b[^\n]*--amend|\bgit\s+update-ref\b|\bgit\s+reflog\s+expire\b/i.test(commands)) diagnostics.push(diagnostic('AIGOV_HISTORY_REWRITE_FORBIDDEN', 'Workflow contains a history-rewrite command.', source));
+  if (/(?:\bgh\s+api\b|\bcurl\b)[^\n]*(?:--method\s+(?:POST|PUT|PATCH|DELETE)|-X\s*(?:POST|PUT|PATCH|DELETE))[^\n]*(?:\/rulesets|\/branches\/[^\s]+\/protection|\/actions\/permissions)/i.test(commands)) diagnostics.push(diagnostic('AIGOV_REPOSITORY_SETTINGS_MUTATION_FORBIDDEN', 'Workflow contains a repository-settings or branch-protection mutation.', source));
+  if (/\bgit\s+push\b|\bgh\s+(?:pr|repo|release)\s+(?:create|edit|close|merge|delete)\b|\bgh\s+api\b[^\n]*(?:--method\s+(?:POST|PUT|PATCH|DELETE)|-X\s*(?:POST|PUT|PATCH|DELETE))/i.test(commands)) diagnostics.push(diagnostic('AIGOV_EXTERNAL_REPOSITORY_WRITE_FORBIDDEN', 'Workflow contains a repository write command; external target identity cannot be proven safe.', source));
+  if (/\brm\s+-[^\n]*r[^\n]*f|\bgit\s+rm\b|\bfind\b[^\n]*-delete\b|\bgh\s+api\b[^\n]*(?:--method\s+DELETE|-X\s*DELETE)/i.test(commands)) diagnostics.push(diagnostic('AIGOV_DESTRUCTIVE_DELETION_FORBIDDEN', 'Workflow contains a destructive deletion command.', source));
+  if (/\b(?:npm|pnpm|yarn)\s+(?:update|upgrade|up)\b|\bnpm\s+audit\s+fix\b[^\n]*--force|\bnpx\s+npm-check-updates\b[^\n]*-u\b/i.test(commands)) diagnostics.push(diagnostic('AIGOV_BROAD_DEPENDENCY_UPGRADE_FORBIDDEN', 'Workflow contains a broad dependency-upgrade command.', source));
+  for (const entry of values.scalarEntries) {
+    if (/\$\{\{\s*secrets\.[A-Za-z_][A-Za-z0-9_]*\s*\}\}|\$\{\{\s*github\.token\s*\}\}/i.test(entry.value)) diagnostics.push(diagnostic('AIGOV_SECRET_ACCESS_FORBIDDEN', `Workflow accesses a credential at ${entry.path}.`, source));
+  }
+
+  if (baseText != null) {
+    let base;
+    try {
+      base = parseWorkflow(baseText, `${source}@base`);
+    } catch (error) {
+      diagnostics.push(diagnostic('AIGOV_WORKFLOW_BASE_YAML_INVALID', error.message, source));
+      return diagnostics;
+    }
+    const basePermissions = new Map(workflowPermissions(base).map((item) => [item.location, item.value]));
+    for (const currentPermission of workflowPermissions(current)) {
+      const expansions = permissionExpansions(basePermissions.get(currentPermission.location), currentPermission.value);
+      if (expansions.length) diagnostics.push(diagnostic('AIGOV_WORKFLOW_PERMISSION_EXPANSION', `Permission expansion at ${currentPermission.location}: ${expansions.join(', ')}.`, source));
+    }
+  }
+  return diagnostics;
+}
+
+function securityCarrierDiagnostics(policy) {
+  const diagnostics = [];
+  const declared = new Map((policy.security_profile.enforcement_carriers || []).map((item) => [item.forbidden_change, item]));
+  for (const forbiddenChange of policy.security_profile.forbidden_changes) {
+    const expected = SECURITY_CARRIERS[forbiddenChange];
+    const carrier = declared.get(forbiddenChange);
+    if (!expected || !carrier) diagnostics.push(diagnostic('AIGOV_SECURITY_CARRIER_MISSING', `${forbiddenChange} has no implemented or explicitly external enforcement carrier.`, POLICY_PATH));
+    else if (carrier.classification !== expected[0] || carrier.carrier !== expected[1]) diagnostics.push(diagnostic('AIGOV_SECURITY_CARRIER_MISMATCH', `${forbiddenChange} is not aligned with its deterministic enforcement carrier.`, POLICY_PATH));
+    if (carrier?.classification === 'unsupported_not_enforced') diagnostics.push(diagnostic('AIGOV_SECURITY_CARRIER_UNSUPPORTED', `${forbiddenChange} is honestly unsupported and therefore cannot pass repository validation.`, POLICY_PATH));
+  }
+  for (const forbiddenChange of declared.keys()) if (!policy.security_profile.forbidden_changes.includes(forbiddenChange)) diagnostics.push(diagnostic('AIGOV_SECURITY_CARRIER_ORPHANED', `${forbiddenChange} has a carrier but is absent from forbidden_changes.`, POLICY_PATH));
+  if (policy.security_profile.repository_settings_enforcement !== 'external_evidence_required_not_proven') diagnostics.push(diagnostic('AIGOV_REPOSITORY_SETTINGS_OVERCLAIM', 'Repository settings enforcement cannot be claimed without fresh authoritative settings evidence.', POLICY_PATH));
+  return diagnostics;
+}
+
+function workflowSecurityDiagnostics(policy) {
+  const diagnostics = [...securityCarrierDiagnostics(policy)];
   const workflowDir = path.join(ROOT, '.github/workflows');
   for (const name of readdirSync(workflowDir).filter((entry) => /\.ya?ml$/.test(entry)).sort()) {
     const relativePath = `.github/workflows/${name}`;
-    const text = readFileSync(path.join(ROOT, relativePath), 'utf8');
-    for (const match of text.matchAll(/^\s*uses:\s*([^\s#]+)(?:\s*#.*)?$/gm)) {
-      const target = match[1];
-      if (target.startsWith('./') || target.startsWith('docker://')) continue;
-      if (!/@[0-9a-fA-F]{40}$/.test(target)) diagnostics.push(diagnostic('AIGOV_ACTION_NOT_IMMUTABLY_PINNED', `Workflow action is not pinned by a 40-character SHA: ${target}.`, relativePath));
-    }
+    const currentText = readFileSync(path.join(ROOT, relativePath), 'utf8');
+    const baseText = git(['show', `${BASE_SHA}:${relativePath}`]) || null;
+    diagnostics.push(...analyzeWorkflowYaml(currentText, { source: relativePath, baseText }));
   }
-
-  const workflowDiff = git(['diff', '--unified=0', BASE_SHA, '--', '.github/workflows']);
-  for (const line of workflowDiff.split('\n').filter((value) => /^\+(?!\+\+)/.test(value))) {
-    if (/^\+\s*permissions:|^\+\s+(contents|pull-requests|id-token|actions|checks|statuses):\s*(write|read-all|write-all)/.test(line)) {
-      diagnostics.push(diagnostic('AIGOV_WORKFLOW_PERMISSION_EXPANSION', `Workflow permission mutation is forbidden: ${line.slice(1).trim()}.`, '.github/workflows'));
-    }
-    if (/secrets\.|\bsecret\b/i.test(line)) diagnostics.push(diagnostic('AIGOV_SECRET_CHANGE_FORBIDDEN', 'Workflow secret mutation is forbidden.', '.github/workflows'));
+  const basePackageRaw = git(['show', `${BASE_SHA}:package.json`]);
+  if (basePackageRaw) {
+    const dependencyChange = classifyDependencyChange(JSON.parse(basePackageRaw), readJson('package.json'));
+    if (dependencyChange.broad) diagnostics.push(diagnostic('AIGOV_BROAD_DEPENDENCY_UPGRADE_FORBIDDEN', `Broad dependency mutation detected: ${JSON.stringify(dependencyChange)}.`, 'package.json'));
   }
-
-  const basePackage = git(['show', `${BASE_SHA}:package.json`]);
-  if (basePackage) {
-    const baseDependencies = JSON.stringify(JSON.parse(basePackage).dependencies || {});
-    const currentDependencies = JSON.stringify(readJson('package.json').dependencies || {});
-    if (baseDependencies !== currentDependencies) diagnostics.push(diagnostic('AIGOV_BROAD_DEPENDENCY_UPGRADE_FORBIDDEN', 'Batch A must not change dependency versions.', 'package.json'));
-  }
-  if (git(['diff', '--name-only', '--diff-filter=D', BASE_SHA]).split('\n').filter(Boolean).length) diagnostics.push(diagnostic('AIGOV_DESTRUCTIVE_DELETION_FORBIDDEN', 'Batch A must not delete repository files.', 'git_diff'));
-  for (const value of policy.security_profile.forbidden_changes) {
-    if (!FORBIDDEN_SECURITY_CHANGES.has(value) && !['branch_protection_change'].includes(value)) continue;
-  }
+  const deleted = git(['diff', '--name-only', '--diff-filter=D', BASE_SHA]).split('\n').filter(Boolean);
+  if (deleted.length) diagnostics.push(diagnostic('AIGOV_DESTRUCTIVE_DELETION_FORBIDDEN', `Batch A must not delete repository files: ${deleted.join(', ')}.`, 'git_diff'));
   return diagnostics;
 }
 
@@ -201,29 +278,58 @@ function repositoryStateDiagnostics(policy, scope) {
   const audit = readFileSync(path.join(ROOT, 'planning/reviews/AIGOV_ADOPTION_AUDIT.md'), 'utf8');
   const kroadReview = readFileSync(path.join(ROOT, 'planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md'), 'utf8');
   if (!nextWork.includes('Repository adoption status: `blocked_open_enforcement_gaps`')) diagnostics.push(diagnostic('AIGOV_PREMAIN_COMPLETION_FORBIDDEN', 'Repository adoption must remain blocked before Batch A exact-main verification.', 'planning/NEXT_WORK.md'));
-  for (const token of [
-    'Active batch: `BATCH_A`',
-    'AIGOV-ADOPT-000: `merged_pending_batch_a_reconciliation`',
-    'AIGOV-ADOPT-001 through AIGOV-ADOPT-007: `in_batch_a_implementation`',
-    'AIGOV-ADOPT-008: `blocked_pending_batch_a_exact_main`',
-    'Coverage proposal state: `not_measurable_pending_external_promotion`',
-  ]) if (!nextWork.includes(token)) diagnostics.push(diagnostic('AIGOV_PROGRESS_STATE_MISMATCH', `Required Batch A status is missing: ${token}.`, 'planning/NEXT_WORK.md'));
+  for (const token of ['Active batch: `BATCH_A`', 'AIGOV-ADOPT-000: `merged_pending_batch_a_reconciliation`', 'AIGOV-ADOPT-001 through AIGOV-ADOPT-007: `in_batch_a_implementation`', 'AIGOV-ADOPT-008: `blocked_pending_batch_a_exact_main`', 'Coverage proposal state: `not_measurable_pending_external_promotion`']) if (!nextWork.includes(token)) diagnostics.push(diagnostic('AIGOV_PROGRESS_STATE_MISMATCH', `Required Batch A status is missing: ${token}.`, 'planning/NEXT_WORK.md'));
   for (const id of REQUIRED_KROADS) if (!nextWork.includes(id)) diagnostics.push(diagnostic('AIGOV_KROAD_PRESERVATION_FAILED', `${id} is absent from current roadmap memory.`, 'planning/NEXT_WORK.md'));
   if (!kroadReview.includes('historical_non_authoritative')) diagnostics.push(diagnostic('AIGOV_KROAD_012R_AUTHORITY_VIOLATION', 'KROAD-012R must remain historical_non_authoritative.', 'planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md'));
   if (!decision.includes(`plan_id: ${PLAN_ID}`) || !audit.includes(`plan_id: ${PLAN_ID}`)) diagnostics.push(diagnostic('AIGOV_PLAN_IDENTITY_MISMATCH', 'Decision and audit must bind the frozen V2 plan.', 'planning'));
   if (scope.scope_revision !== scopeRevision(scope)) diagnostics.push(diagnostic('AIGOV_SCOPE_REVISION_MISMATCH', `scope_revision must equal ${scopeRevision(scope)}.`, SCOPE_PATH));
   const policyRules = uniqueSorted(policy.rules.map((item) => item.rule_id));
-  if (JSON.stringify(policyRules) !== JSON.stringify(uniqueSorted(EXPECTED_RULES))) diagnostics.push(diagnostic('AIGOV_POLICY_RULE_SET_INCOMPLETE', 'Policy must contain exactly the fourteen required AIGOV rules.', POLICY_PATH));
-  if (JSON.stringify(policy.roadmap_preservation.original_kroad_ids) !== JSON.stringify(REQUIRED_KROADS)) diagnostics.push(diagnostic('AIGOV_KROAD_PRESERVATION_FAILED', 'Policy KROAD preservation set is not exact.', POLICY_PATH));
+  if (canonicalJson(policyRules) !== canonicalJson(uniqueSorted(EXPECTED_RULES))) diagnostics.push(diagnostic('AIGOV_POLICY_RULE_SET_INCOMPLETE', 'Policy must contain exactly the fourteen required AIGOV rules.', POLICY_PATH));
+  if (canonicalJson(policy.roadmap_preservation.original_kroad_ids) !== canonicalJson(REQUIRED_KROADS)) diagnostics.push(diagnostic('AIGOV_KROAD_PRESERVATION_FAILED', 'Policy KROAD preservation set is not exact.', POLICY_PATH));
+  return diagnostics;
+}
+
+export function evidenceManifestDiagnostics(evidence, policy, scope, { expectedHead = null, requireExecutedBudget = false } = {}) {
+  const diagnostics = [];
+  const classPolicy = policy.change_classes.find((item) => item.id === evidence.change_class);
+  const minimumVerification = classPolicy?.minimum_verification_budget ?? Number.POSITIVE_INFINITY;
+  const minimumReporting = classPolicy?.minimum_reporting_budget ?? Number.POSITIVE_INFINITY;
+  const itemIds = evidence.evidence_items.map((item) => item.evidence_id);
+  if (new Set(itemIds).size !== itemIds.length) diagnostics.push(diagnostic('AIGOV_EVIDENCE_DUPLICATE_ID', 'Evidence item IDs must be unique.', EVIDENCE_PATH));
+  if (evidence.scope_revision !== scope.scope_revision || evidence.evidence_items.some((item) => item.scope_revision !== scope.scope_revision)) diagnostics.push(diagnostic('AIGOV_EVIDENCE_SCOPE_MISMATCH', 'Every evidence item must bind the exact scope revision.', EVIDENCE_PATH));
+  if (evidence.repository !== REPOSITORY || evidence.repository_id !== REPOSITORY_ID || evidence.pr_number !== PR_NUMBER || evidence.base_sha !== BASE_SHA) diagnostics.push(diagnostic('AIGOV_EVIDENCE_IDENTITY_MISMATCH', 'Evidence manifest repository, PR or base identity is not exact.', EVIDENCE_PATH));
+  if (evidence.verification_budget.required_checks < minimumVerification) diagnostics.push(diagnostic('AIGOV_VERIFICATION_BUDGET_INSUFFICIENT', `Change class ${evidence.change_class} requires at least ${minimumVerification} checks.`, EVIDENCE_PATH));
+  if (evidence.reporting_budget.required_sections < minimumReporting || evidence.reporting_budget.reported_sections < minimumReporting) diagnostics.push(diagnostic('AIGOV_REPORTING_OMISSION', `Change class ${evidence.change_class} requires at least ${minimumReporting} reporting sections.`, EVIDENCE_PATH));
+  const executedItems = evidence.evidence_items.filter((item) => ['validation', 'scope_disclosure'].includes(item.kind) && ['passed', 'failed'].includes(item.status));
+  if (evidence.verification_budget.executed_checks !== executedItems.length) diagnostics.push(diagnostic('AIGOV_EVIDENCE_BUDGET_COUNT_MISMATCH', 'executed_checks must equal executed validation and scope evidence items.', EVIDENCE_PATH));
+  for (const item of evidence.evidence_items) {
+    if (item.head_sha !== evidence.head_sha) diagnostics.push(diagnostic('AIGOV_EVIDENCE_HEAD_MISMATCH', `${item.evidence_id} is not bound to the manifest head.`, EVIDENCE_PATH));
+    if (item.status === 'passed' && (!item.sha256 || !item.authoritative_reference)) diagnostics.push(diagnostic('AIGOV_PASSED_EVIDENCE_UNHASHED', `${item.evidence_id} passed without a hash and stable reference.`, EVIDENCE_PATH));
+  }
+  const externalKinds = ['independent_review', 'owner_merge', 'exact_main_receipt'];
+  if (evidence.evidence_items.some((item) => externalKinds.includes(item.kind) && item.status !== 'pending')) diagnostics.push(diagnostic('AIGOV_EXTERNAL_GATE_PREMATURE', 'Independent review, owner Merge and exact-main items must remain pending on the PR head.', EVIDENCE_PATH));
+  if (evidence.completion_receipt.exact_main_verified || evidence.completion_receipt.state !== 'pending_exact_main_verification') diagnostics.push(diagnostic('AIGOV_PREMAIN_COMPLETION_FORBIDDEN', 'Batch A evidence must remain pending exact-main verification on the PR head.', EVIDENCE_PATH));
+  if (evidence.manifest_state === 'template_pending_execution') {
+    if (evidence.head_sha !== 'derived_at_runtime' || evidence.generated_at !== null || evidence.verification_budget.executed_checks !== 0 || executedItems.length) diagnostics.push(diagnostic('AIGOV_EVIDENCE_TEMPLATE_INVALID', 'Committed evidence template must remain unexecuted and runtime-bound.', EVIDENCE_PATH));
+    if (evidence.evidence_items.filter((item) => ['validation', 'scope_disclosure'].includes(item.kind)).length < minimumVerification) diagnostics.push(diagnostic('AIGOV_EVIDENCE_ITEM_BUDGET_INCOMPLETE', 'Evidence template does not define enough stable verification items.', EVIDENCE_PATH));
+    if (requireExecutedBudget) diagnostics.push(diagnostic('AIGOV_EXECUTED_EVIDENCE_REQUIRED', 'An executed exact-head evidence manifest is required.', EVIDENCE_PATH));
+  } else if (evidence.manifest_state === 'executed_exact_head') {
+    if (!/^[0-9a-f]{40}$/.test(evidence.head_sha) || evidence.head_sha !== expectedHead || !evidence.generated_at) diagnostics.push(diagnostic('AIGOV_EVIDENCE_HEAD_MISMATCH', 'Executed evidence must bind the exact expected head.', EVIDENCE_PATH));
+    if (evidence.verification_budget.executed_checks < minimumVerification || executedItems.some((item) => item.status !== 'passed')) diagnostics.push(diagnostic('AIGOV_VERIFICATION_BUDGET_INSUFFICIENT', 'Executed exact-head evidence is below budget or contains a failed check.', EVIDENCE_PATH));
+  }
   return diagnostics;
 }
 
 function parseArgs(argv) {
-  const result = { fixturesOnly: false, selectedCase: null, reviewReceipt: null };
+  const result = { fixturesOnly: false, selectedCase: null, reviewReceipt: null, expectedHead: null, evidenceManifest: EVIDENCE_PATH, requireExecutedBudget: false, lifecycleLedger: null };
   for (let index = 0; index < argv.length; index += 1) {
     if (argv[index] === '--fixtures-only') result.fixturesOnly = true;
     else if (argv[index] === '--case') result.selectedCase = argv[++index];
     else if (argv[index] === '--review-receipt') result.reviewReceipt = argv[++index];
+    else if (argv[index] === '--expected-head') result.expectedHead = argv[++index];
+    else if (argv[index] === '--evidence-manifest') result.evidenceManifest = argv[++index];
+    else if (argv[index] === '--require-executed-budget') result.requireExecutedBudget = true;
+    else if (argv[index] === '--lifecycle-ledger') result.lifecycleLedger = argv[++index];
     else throw new Error(`Unknown argument: ${argv[index]}`);
   }
   return result;
@@ -233,44 +339,65 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   const policy = readJson(POLICY_PATH);
   const scope = readJson(SCOPE_PATH);
-  const evidence = readJson(EVIDENCE_PATH);
+  const evidence = readJson(args.evidenceManifest);
   const ajv = new Ajv2020({ allErrors: true, strict: false });
   addFormats(ajv);
   const policyValidator = ajv.compile(readJson(POLICY_SCHEMA_PATH));
   const scopeValidator = ajv.compile(readJson(SCOPE_SCHEMA_PATH));
   const evidenceValidator = ajv.compile(readJson(EVIDENCE_SCHEMA_PATH));
   const reviewValidator = ajv.compile(readJson(REVIEW_SCHEMA_PATH));
+  const ledgerValidator = ajv.compile(readJson(LEDGER_SCHEMA_PATH));
   const diagnostics = [
     ...schemaDiagnostics(policyValidator, policy, POLICY_PATH),
     ...schemaDiagnostics(scopeValidator, scope, SCOPE_PATH),
-    ...schemaDiagnostics(evidenceValidator, evidence, EVIDENCE_PATH),
+    ...schemaDiagnostics(evidenceValidator, evidence, args.evidenceManifest),
   ];
   const fixtureResult = validateFixtures(policy, args.selectedCase);
   diagnostics.push(...fixtureResult.diagnostics);
-  if (evidence.scope_revision !== scope.scope_revision) diagnostics.push(diagnostic('AIGOV_EVIDENCE_SCOPE_MISMATCH', 'Evidence manifest and scope manifest revisions must match.', EVIDENCE_PATH));
-  if (evidence.completion_receipt.exact_main_verified || evidence.completion_receipt.state !== 'pending_exact_main_verification') diagnostics.push(diagnostic('AIGOV_PREMAIN_COMPLETION_FORBIDDEN', 'Batch A evidence must remain pending exact-main verification on the PR head.', EVIDENCE_PATH));
+  diagnostics.push(...evidenceManifestDiagnostics(evidence, policy, scope, { expectedHead: args.expectedHead, requireExecutedBudget: args.requireExecutedBudget }));
   if (!args.fixturesOnly) diagnostics.push(...repositoryStateDiagnostics(policy, scope), ...workflowSecurityDiagnostics(policy));
+
   if (args.reviewReceipt) {
-    if (!existsSync(path.join(ROOT, args.reviewReceipt))) diagnostics.push(diagnostic('AIGOV_REVIEW_RECEIPT_MISSING', 'External review receipt was not found.', args.reviewReceipt));
+    if (!existsSync(filePath(args.reviewReceipt))) diagnostics.push(diagnostic('AIGOV_REVIEW_RECEIPT_MISSING', 'External review receipt was not found.', args.reviewReceipt));
     else {
       const receipt = readJson(args.reviewReceipt);
-      diagnostics.push(...schemaDiagnostics(reviewValidator, receipt, args.reviewReceipt));
-      if (receipt.reviewer?.identity === receipt.implementer?.identity) diagnostics.push(diagnostic('AIGOV_REVIEW_NOT_INDEPENDENT', 'Reviewer and implementer identities must differ.', args.reviewReceipt));
-      if (receipt.scope_revision !== scope.scope_revision) diagnostics.push(diagnostic('AIGOV_REVIEW_STALE_SCOPE', 'Review receipt scope revision is stale.', args.reviewReceipt));
-      const head = git(['rev-parse', 'HEAD']);
-      if (receipt.head_sha !== head) diagnostics.push(diagnostic('AIGOV_REVIEW_STALE_HEAD', 'Review receipt head is stale.', args.reviewReceipt));
+      const reviewSchemaDiagnostics = schemaDiagnostics(reviewValidator, receipt, args.reviewReceipt);
+      diagnostics.push(...reviewSchemaDiagnostics);
+      if (!reviewSchemaDiagnostics.length) {
+        if (receipt.target.scope_revision !== scope.scope_revision) diagnostics.push(diagnostic('AIGOV_REVIEW_STALE_SCOPE', 'Review receipt scope revision is stale.', args.reviewReceipt));
+        if (!args.expectedHead || receipt.target.head_sha !== args.expectedHead) diagnostics.push(diagnostic('AIGOV_REVIEW_STALE_HEAD', 'Review receipt head is not the authoritative expected PR head.', args.reviewReceipt));
+        if (receipt.provenance.evidence_source !== 'github_rest_api_https' || receipt.provenance.inspector_repository !== 'rezahh107/PR-Inspector' || receipt.provenance.inspector_repository_id !== 1288323264) diagnostics.push(diagnostic('AIGOV_REVIEW_PROVENANCE_UNVERIFIED', 'Review receipt is not bound to the trusted external inspector source.', args.reviewReceipt));
+      }
     }
   }
+
+  if (args.lifecycleLedger) {
+    if (!existsSync(filePath(args.lifecycleLedger))) diagnostics.push(diagnostic('AIGOV_LIFECYCLE_LEDGER_MISSING', 'Lifecycle ledger was not found.', args.lifecycleLedger));
+    else {
+      const ledger = readJson(args.lifecycleLedger);
+      const ledgerSchemaDiagnostics = schemaDiagnostics(ledgerValidator, ledger, args.lifecycleLedger);
+      diagnostics.push(...ledgerSchemaDiagnostics);
+      if (!ledgerSchemaDiagnostics.length) diagnostics.push(...validateLifecycleLedger(ledger, {
+        repository: REPOSITORY,
+        repositoryId: REPOSITORY_ID,
+        prNumber: PR_NUMBER,
+        baseSha: BASE_SHA,
+        headSha: args.expectedHead,
+        scopeRevision: scope.scope_revision,
+      }).map((item) => diagnostic(item.code, item.message, args.lifecycleLedger)));
+    }
+  }
+
   const report = {
     validator: 'validate-aigov-governance',
     plan_id: PLAN_ID,
     batch_id: 'BATCH_A',
-    tested_head: git(['status', '--porcelain=v1', '--untracked-files=all'])
-      ? `worktree_uncommitted_from_${git(['rev-parse', 'HEAD']) || 'unknown'}`
-      : (git(['rev-parse', 'HEAD']) || 'unknown'),
+    tested_head: git(['status', '--porcelain=v1', '--untracked-files=all']) ? `worktree_uncommitted_from_${git(['rev-parse', 'HEAD']) || 'unknown'}` : (git(['rev-parse', 'HEAD']) || 'unknown'),
     scope_revision: scope.scope_revision,
     fixture_count: fixtureResult.results.length,
     fixture_results: fixtureResult.results,
+    evidence_manifest: args.evidenceManifest,
+    evidence_manifest_state: evidence.manifest_state,
     status: diagnostics.length ? 'fail' : 'pass',
     diagnostic_count: diagnostics.length,
     diagnostics,
@@ -279,4 +406,5 @@ function main() {
   if (diagnostics.length) process.exitCode = 1;
 }
 
-main();
+const isMain = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+if (isMain) main();

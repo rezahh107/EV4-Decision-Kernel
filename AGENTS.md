@@ -151,6 +151,8 @@ exact base -> declared scope -> exact-head validation -> independent external re
 
 Any head or `scope_revision` mutation invalidates earlier CI and review evidence. The implementation agent cannot act as the independent reviewer. `BATCH_A` cannot claim `AIGOV-ADOPT-008`, repository adoption, Coverage promotion, product implementation or exact-main completion. `planning/NEXT_WORK.md` remains the only mutable current-status authority.
 
+Exact-main evidence must derive repository, PR, author, Merge actor and current-main identity from fresh GitHub payloads. Independent review is accepted only from schema-valid, hash-verified artifacts at an immutable external PR Inspector commit. The runtime `aigov-lifecycle-ledger.v1` and executed exact-head evidence manifest are generated artifacts; caller-authored strings, booleans, local receipt files and target-repository lookalikes cannot unlock lifecycle events.
+
 ---
 
 ## 5. Documentation Standards

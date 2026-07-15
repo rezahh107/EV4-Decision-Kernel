@@ -39,6 +39,11 @@ jobs:
           node --check tools/validate-kroad-010-prototype-integrity.mjs
           node --check tools/validate-kroad-010-history-matrix.mjs
           node --check tools/generate-aigov-scope-disclosure.mjs
+          node --check tools/materialize-aigov-lifecycle.mjs
+          node --check tools/run-aigov-validation-suite.mjs
+          node --check tools/test-aigov-forbidden-operations.mjs
+          node --check tools/test-aigov-owner-evidence.mjs
+          node --check tools/test-aigov-provenance.mjs
           node --check tools/test-aigov-sequence.mjs
           node --check tools/verify-aigov-exact-main.mjs
           node --check tools/kroad-010-history/common.mjs

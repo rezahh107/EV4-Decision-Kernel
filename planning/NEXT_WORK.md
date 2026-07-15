@@ -19,6 +19,7 @@ The AIGOV adoption sequence is a higher-priority governance repair. It does not 
 - Current governance increment set: `AIGOV-ADOPT-000` through `AIGOV-ADOPT-007`.
 - AIGOV-ADOPT-000: `merged_pending_batch_a_reconciliation`.
 - AIGOV-ADOPT-001 through AIGOV-ADOPT-007: `in_batch_a_implementation`.
+- PR #49 bounded repair substate: `implemented_pending_rereview`; this is not technical acceptance, Merge readiness or completion.
 - AIGOV-ADOPT-008: `blocked_pending_batch_a_exact_main`.
 - Product implementation while adoption is open: `blocked_by_higher_priority_governance_repair`.
 - Coverage proposal state: `not_measurable_pending_external_promotion`.
@@ -48,9 +49,11 @@ The AIGOV adoption sequence is a higher-priority governance repair. It does not 
   - `change_class`: `L3`
   - `branch`: `governance/aigov-v2-batch-a-enforcement`
   - `plan_id`: `GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2`
+  - `repair_substate`: `implemented_pending_rereview`
   - `covers`: `AIGOV-ADOPT-000` reconciliation and `AIGOV-ADOPT-001` through `AIGOV-ADOPT-007`
   - Reconcile the merged `AIGOV-ADOPT-000` authority carrier and activate the bounded machine policy, schemas, fixtures, exact-head sequence checks and independent-review compatibility profile.
   - Do not claim `AIGOV-ADOPT-008`, exact-main adoption closure, product implementation, Coverage promotion or Merge authority.
+  - Fresh exact-head CI and a new immutable PR Inspector review are required because the prior review became stale when the repair changed the head and scope revision.
 
 ## Next Product Task
 

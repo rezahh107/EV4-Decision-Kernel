@@ -73,6 +73,8 @@ The existing repository already provides useful foundations that must be reused 
 
 The V2 Batch A scope adds machine-readable carriers for all fourteen listed rules, fixture-exact diagnostics, deterministic scope disclosure, exact-head/stale-review sequencing, verification/reporting budgets and an external-review receipt contract. Those carriers remain `in_batch_a_implementation` until exact-head CI observes the final head. They remain insufficient for repository adoption until independent review, owner Merge and exact-main verification occur in order.
 
+The PR #49 bounded repair replaces caller-authored provenance and fixture-only sequence assumptions with fresh GitHub payload derivation, immutable PR Inspector artifact verification, a schema-backed lifecycle ledger and an exact-head executed evidence manifest. This repair remains `implemented_pending_rereview`; it does not change the repository adoption status.
+
 `AIGOV-ADOPT-008`, the recovery execution program, product capabilities and Coverage promotion are excluded from Batch A.
 
 ## Evidence Limits
@@ -82,6 +84,8 @@ The V2 Batch A scope adds machine-readable carriers for all fourteen listed rule
 - Repository-hosted branch protection or ruleset enforcement was not independently verified.
 - A separate independent technical verdict was not produced by this audit.
 - CI success, PR text, merge metadata or this audit cannot independently establish adoption.
+- Repository-hosted ruleset or branch-protection enforcement remains `external_evidence_required_not_proven`.
+- No immutable external Green receipt exists for the repaired exact head and scope revision.
 
 ## Approved Repair Sequence
 

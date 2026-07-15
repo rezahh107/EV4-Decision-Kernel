@@ -80,7 +80,7 @@ jobs:
           package-manager-cache: false
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Check validation syntax
         run: |
@@ -89,6 +89,11 @@ jobs:
           node --check kernel/validator/validate-coverage-guarantee-prf010.mjs
           node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
           node --check tools/generate-aigov-scope-disclosure.mjs
+          node --check tools/materialize-aigov-lifecycle.mjs
+          node --check tools/run-aigov-validation-suite.mjs
+          node --check tools/test-aigov-forbidden-operations.mjs
+          node --check tools/test-aigov-owner-evidence.mjs
+          node --check tools/test-aigov-provenance.mjs
           node --check tools/test-aigov-sequence.mjs
           node --check tools/verify-aigov-exact-main.mjs
           node --check tools/validate-roadmap-memory.mjs
@@ -128,6 +133,17 @@ jobs:
       - name: Validate KROAD-010 history matrix
         run: npm run validate:kroad-010-history-matrix
 
+      - name: Materialize and validate exact-head AIGOV evidence budget
+        run: npm run aigov:validation-suite -- --head "${COVERAGE_HEAD_SHA}"
+
+      - name: Materialize exact-head AIGOV lifecycle ledger
+        run: |
+          npm run aigov:lifecycle-ledger -- \
+            --head "${COVERAGE_HEAD_SHA}" \
+            --evidence-manifest artifacts/aigov-batch-a-executed-evidence.json \
+            --scope-disclosure artifacts/aigov-batch-a-scope-disclosure.json \
+            --output artifacts/aigov-batch-a-lifecycle-ledger.json
+
       - name: Materialize exact-head AIGOV scope evidence
         shell: bash
         run: |
@@ -151,6 +167,10 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: aigov-batch-a-scope-disclosure
-          path: aigov-batch-a-scope-disclosure.json
+          path: |
+            aigov-batch-a-scope-disclosure.json
+            artifacts/aigov-batch-a-scope-disclosure.json
+            artifacts/aigov-batch-a-executed-evidence.json
+            artifacts/aigov-batch-a-lifecycle-ledger.json
           if-no-files-found: error
           retention-days: 14
