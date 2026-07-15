@@ -38,6 +38,8 @@ jobs:
           COVERAGE_HEAD_SHA: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
         run: |
           set -euo pipefail
+          git reset --hard "${COVERAGE_HEAD_SHA}"
+          git clean -ffdx
           test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
           npm ci

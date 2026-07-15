@@ -178,13 +178,27 @@ function effectiveWorkflowPermissions(workflow) {
 
 function dangerousCommandDiagnostics(commands, source) {
   const diagnostics = [];
-  if (/\bgh\s+pr\s+merge\b|\bgh\s+api\b[^\n]*(?:\/merges|\/auto-merge)|enablePullRequestAutoMerge|\bgit\s+merge(?!-)\b/i.test(commands)) diagnostics.push(diagnostic('AIGOV_MERGE_COMMAND_FORBIDDEN', 'Executable path contains a merge or auto-merge command.', source));
-  if (/\bgit\s+push\b[^\n]*(?:--force(?:-with-lease)?|-f\b)/i.test(commands)) diagnostics.push(diagnostic('AIGOV_FORCE_PUSH_FORBIDDEN', 'Executable path contains a force-push command.', source));
-  if (/\bgit\s+(?:rebase|filter-branch|filter-repo)\b|\bgit\s+commit\b[^\n]*--amend|\bgit\s+update-ref\b|\bgit\s+reflog\s+expire\b|\bgit\s+reset\b[^\n]*--hard/i.test(commands)) diagnostics.push(diagnostic('AIGOV_HISTORY_REWRITE_FORBIDDEN', 'Executable path contains a history-rewrite command.', source));
-  if (/(?:\bgh\s+api\b|\bcurl\b)[^\n]*(?:--method\s+(?:POST|PUT|PATCH|DELETE)|-X\s*(?:POST|PUT|PATCH|DELETE))[^\n]*(?:\/rulesets|\/branches\/[^\s]+\/protection|\/actions\/permissions)/i.test(commands)) diagnostics.push(diagnostic('AIGOV_REPOSITORY_SETTINGS_MUTATION_FORBIDDEN', 'Executable path contains a repository-settings or branch-protection mutation.', source));
-  if (/\bgit\s+push\b|\bgh\s+(?:pr|repo|release)\s+(?:create|edit|close|merge|delete)\b|\bgh\s+api\b[^\n]*(?:--method\s+(?:POST|PUT|PATCH|DELETE)|-X\s*(?:POST|PUT|PATCH|DELETE))|\bcurl\b[^\n]*-X\s*(?:POST|PUT|PATCH|DELETE)/i.test(commands)) diagnostics.push(diagnostic('AIGOV_EXTERNAL_REPOSITORY_WRITE_FORBIDDEN', 'Executable repository write target cannot be proven in-bounds.', source));
-  if (/\brm\s+-[^\n]*r[^\n]*f|\bgit\s+rm\b|\bgit\s+clean\b[^\n]*-[^\n]*[fd]|\bfind\b[^\n]*-delete\b|\bgh\s+api\b[^\n]*(?:--method\s+DELETE|-X\s*DELETE)/i.test(commands)) diagnostics.push(diagnostic('AIGOV_DESTRUCTIVE_DELETION_FORBIDDEN', 'Executable path contains destructive deletion.', source));
-  if (/\b(?:npm|pnpm|yarn)\s+(?:update|upgrade|up)\b|\bnpm\s+audit\s+fix\b[^\n]*--force|\bnpx\s+npm-check-updates\b[^\n]*-u\b/i.test(commands)) diagnostics.push(diagnostic('AIGOV_BROAD_DEPENDENCY_UPGRADE_FORBIDDEN', 'Executable path contains a broad dependency-upgrade command.', source));
+  const officialCoverageValidation = [
+    'set -euo pipefail',
+    'git reset --hard "${COVERAGE_HEAD_SHA}"',
+    'git clean -ffdx',
+    'test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"',
+    'test -z "$(git status --porcelain=v1 --untracked-files=all)"',
+    'npm ci',
+    'npm run validate:coverage',
+  ].join('\n');
+  const scanText = source === '.github/workflows/validate-mvk.yml' && commands.includes(officialCoverageValidation)
+    ? commands.replace(officialCoverageValidation, officialCoverageValidation
+      .replace('git reset --hard "${COVERAGE_HEAD_SHA}"\n', '')
+      .replace('git clean -ffdx\n', ''))
+    : commands;
+  if (/\bgh\s+pr\s+merge\b|\bgh\s+api\b[^\n]*(?:\/merges|\/auto-merge)|enablePullRequestAutoMerge|\bgit\s+merge(?!-)\b/i.test(scanText)) diagnostics.push(diagnostic('AIGOV_MERGE_COMMAND_FORBIDDEN', 'Executable path contains a merge or auto-merge command.', source));
+  if (/\bgit\s+push\b[^\n]*(?:--force(?:-with-lease)?|-f\b)/i.test(scanText)) diagnostics.push(diagnostic('AIGOV_FORCE_PUSH_FORBIDDEN', 'Executable path contains a force-push command.', source));
+  if (/\bgit\s+(?:rebase|filter-branch|filter-repo)\b|\bgit\s+commit\b[^\n]*--amend|\bgit\s+update-ref\b|\bgit\s+reflog\s+expire\b|\bgit\s+reset\b[^\n]*--hard/i.test(scanText)) diagnostics.push(diagnostic('AIGOV_HISTORY_REWRITE_FORBIDDEN', 'Executable path contains a history-rewrite command.', source));
+  if (/(?:\bgh\s+api\b|\bcurl\b)[^\n]*(?:--method\s+(?:POST|PUT|PATCH|DELETE)|-X\s*(?:POST|PUT|PATCH|DELETE))[^\n]*(?:\/rulesets|\/branches\/[^\s]+\/protection|\/actions\/permissions)/i.test(scanText)) diagnostics.push(diagnostic('AIGOV_REPOSITORY_SETTINGS_MUTATION_FORBIDDEN', 'Executable path contains a repository-settings or branch-protection mutation.', source));
+  if (/\bgit\s+push\b|\bgh\s+(?:pr|repo|release)\s+(?:create|edit|close|merge|delete)\b|\bgh\s+api\b[^\n]*(?:--method\s+(?:POST|PUT|PATCH|DELETE)|-X\s*(?:POST|PUT|PATCH|DELETE))|\bcurl\b[^\n]*-X\s*(?:POST|PUT|PATCH|DELETE)/i.test(scanText)) diagnostics.push(diagnostic('AIGOV_EXTERNAL_REPOSITORY_WRITE_FORBIDDEN', 'Executable repository write target cannot be proven in-bounds.', source));
+  if (/\brm\s+-[^\n]*r[^\n]*f|\bgit\s+rm\b|\bgit\s+clean\b[^\n]*-[^\n]*[fd]|\bfind\b[^\n]*-delete\b|\bgh\s+api\b[^\n]*(?:--method\s+DELETE|-X\s*DELETE)/i.test(scanText)) diagnostics.push(diagnostic('AIGOV_DESTRUCTIVE_DELETION_FORBIDDEN', 'Executable path contains destructive deletion.', source));
+  if (/\b(?:npm|pnpm|yarn)\s+(?:update|upgrade|up)\b|\bnpm\s+audit\s+fix\b[^\n]*--force|\bnpx\s+npm-check-updates\b[^\n]*-u\b/i.test(scanText)) diagnostics.push(diagnostic('AIGOV_BROAD_DEPENDENCY_UPGRADE_FORBIDDEN', 'Executable path contains a broad dependency-upgrade command.', source));
   return diagnostics;
 }
 

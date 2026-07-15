@@ -22,6 +22,26 @@ expectCode('destructive deletion', workflow('rm -rf ./important'), 'AIGOV_DESTRU
 expectCode('broad dependency command', workflow('npm update'), 'AIGOV_BROAD_DEPENDENCY_UPGRADE_FORBIDDEN');
 expectCode('mutable action reference', base.replace(`actions/checkout@${pin}`, 'actions/checkout@main'), 'AIGOV_ACTION_NOT_IMMUTABLY_PINNED', { baseText: base });
 
+const officialCoverageValidation = [
+  'set -euo pipefail',
+  'git reset --hard "${COVERAGE_HEAD_SHA}"',
+  'git clean -ffdx',
+  'test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"',
+  'test -z "$(git status --porcelain=v1 --untracked-files=all)"',
+  'npm ci',
+  'npm run validate:coverage',
+].join('\n');
+const officialCoverageDiagnostics = analyzeWorkflowYaml(workflow(officialCoverageValidation), {
+  source: '.github/workflows/validate-mvk.yml',
+  baseText: workflow(officialCoverageValidation),
+});
+cases.push({
+  name: 'official ephemeral Coverage checkout cleanup',
+  expected: 'no history-rewrite or destructive-deletion diagnostic',
+  pass: !officialCoverageDiagnostics.some((item) => ['AIGOV_HISTORY_REWRITE_FORBIDDEN', 'AIGOV_DESTRUCTIVE_DELETION_FORBIDDEN'].includes(item.code)),
+  diagnostics: officialCoverageDiagnostics.map((item) => item.code),
+});
+
 const localScriptWorkflow = (scriptPath, permissions = 'read') => workflow(`node ${scriptPath}`, 'invoke local script', permissions);
 expectCode('local script GitHub API PATCH', localScriptWorkflow('scripts/settings.mjs'), 'AIGOV_REPOSITORY_SETTINGS_MUTATION_FORBIDDEN', {
   files: { 'package.json': '{"scripts":{}}', 'scripts/settings.mjs': "await fetch('https://api.github.com/repos/rezahh107/EV4-Decision-Kernel/branches/main/protection', { method: 'PATCH' });\n" },
