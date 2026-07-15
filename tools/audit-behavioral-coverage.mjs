@@ -69,17 +69,24 @@ const HIGH_PREFERRED = [
   'downstream_contract_enforced',
 ];
 
-function modeFrom(args) {
+function optionsFrom(args) {
   if (args.includes('--help') || args.includes('-h')) {
-    console.log('Usage: node tools/audit-behavioral-coverage.mjs [--mode advisory|strict]');
+    console.log('Usage: node tools/audit-behavioral-coverage.mjs [--mode advisory|strict] [--rule-prefix PREFIX] [--no-write]');
     process.exit(0);
   }
-  let mode = 'advisory';
-  if (args.length === 1 && args[0].startsWith('--mode=')) mode = args[0].slice(7);
-  else if (args.length === 2 && args[0] === '--mode') mode = args[1];
-  else if (args.length !== 0) throw new Error('Invalid arguments.');
-  if (!['advisory', 'strict'].includes(mode)) throw new Error(`Invalid mode: ${mode}`);
-  return mode;
+  const options = { mode: 'advisory', rulePrefix: null, noWrite: false };
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--mode') options.mode = args[++index];
+    else if (arg.startsWith('--mode=')) options.mode = arg.slice(7);
+    else if (arg === '--rule-prefix') options.rulePrefix = args[++index];
+    else if (arg.startsWith('--rule-prefix=')) options.rulePrefix = arg.slice(14);
+    else if (arg === '--no-write') options.noWrite = true;
+    else throw new Error(`Invalid argument: ${arg}`);
+  }
+  if (!['advisory', 'strict'].includes(options.mode)) throw new Error(`Invalid mode: ${options.mode}`);
+  if (options.rulePrefix === '') throw new Error('Rule prefix must not be empty.');
+  return options;
 }
 
 function cells(line, lineNo) {
@@ -281,9 +288,9 @@ function markdown(report) {
 }
 
 async function main() {
-  let mode;
+  let options;
   try {
-    mode = modeFrom(process.argv.slice(2));
+    options = optionsFrom(process.argv.slice(2));
   } catch (error) {
     console.error(error.message);
     process.exitCode = 2;
@@ -296,6 +303,8 @@ async function main() {
 
   try {
     rows = parseMatrix(await readFile(SOURCE, 'utf8'));
+    if (options.rulePrefix) rows = rows.filter((row) => row.rule_id.startsWith(options.rulePrefix));
+    if (options.rulePrefix && rows.length === 0) throw new Error(`No rules matched prefix: ${options.rulePrefix}`);
     findings = analyze(rows);
   } catch (error) {
     structuralErrors.push(error.code === 'ENOENT' ? `Source document not found: ${SOURCE}` : error.message);
@@ -305,19 +314,20 @@ async function main() {
   const thresholdViolationCount = findings.threshold_violations.length;
   const advisoryFailed = structuralErrors.length > 0 || enumErrorCount > 0;
   const strictFailed = advisoryFailed || thresholdViolationCount > 0;
-  const failed = mode === 'strict' ? strictFailed : advisoryFailed;
+  const failed = options.mode === 'strict' ? strictFailed : advisoryFailed;
 
   const report = {
     report_version: 2,
     model: 'Behavioral Rule Coverage v0.4.1',
     source: SOURCE,
-    mode,
+    mode: options.mode,
+    rule_prefix: options.rulePrefix,
     outcome: failed ? 'fail' : 'pass',
     parse_status: structuralErrors.length ? 'malformed' : 'parsed',
     enforcement_scope: {
       matrix_integrity: 'system_level_enforcement',
       enum_validation: 'system_level_enforcement',
-      threshold_reporting: mode === 'strict' ? 'strict_threshold_gate' : 'advisory_observation_only',
+      threshold_reporting: options.mode === 'strict' ? 'strict_threshold_gate' : 'advisory_observation_only',
       behavioral_rules: 'coverage_observation_only',
     },
     advisory_failure_policy: [
@@ -344,15 +354,17 @@ async function main() {
     rules: sorted(rows.map((row) => ({ ...row }))),
   };
 
-  await mkdir('artifacts', { recursive: true });
-  await Promise.all([
-    writeFile(OUT_JSON, `${JSON.stringify(report, null, 2)}\n`, 'utf8'),
-    writeFile(OUT_MD, markdown(report), 'utf8'),
-  ]);
+  if (!options.noWrite) {
+    await mkdir('artifacts', { recursive: true });
+    await Promise.all([
+      writeFile(OUT_JSON, `${JSON.stringify(report, null, 2)}\n`, 'utf8'),
+      writeFile(OUT_MD, markdown(report), 'utf8'),
+    ]);
+  }
 
-  console.log(`Behavioral Coverage Audit: model=v0.4.1 mode=${mode} outcome=${report.outcome} parse=${report.parse_status}`);
+  console.log(`Behavioral Coverage Audit: model=v0.4.1 mode=${options.mode} outcome=${report.outcome} parse=${report.parse_status}`);
   console.log(`rules=${rows.length} enum_errors=${enumErrorCount} threshold_violations=${thresholdViolationCount} open_gaps=${report.summary.open_enforcement_gaps}`);
-  console.log(`reports: ${OUT_JSON}, ${OUT_MD}`);
+  console.log(options.noWrite ? 'reports: disabled (--no-write)' : `reports: ${OUT_JSON}, ${OUT_MD}`);
 
   for (const error of structuralErrors) console.error(`ERROR: ${error}`);
   for (const x of findings.enum_errors) console.error(`ERROR: ${x.rule_id} has invalid ${x.field} ${x.value}.`);

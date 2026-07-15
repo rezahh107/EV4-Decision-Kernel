@@ -1,0 +1,17 @@
+{
+  "fixture_id": "aigov.adversarial.coverage-self-promotion",
+  "expected_valid": false,
+  "expected_diagnostics": ["AIGOV_COVERAGE_SELF_PROMOTION", "AIGOV_KROAD_PRESERVATION_FAILED"],
+  "case": {
+    "preflight_present": true, "head_identity_matches": true, "scope_disclosure_matches": true,
+    "deferred_ids": ["KROAD-012", "KROAD-013", "KROAD-014", "KROAD-015", "KROAD-016", "KROAD-017", "KROAD-018"],
+    "evidence_manifest_complete": true, "required_change_class": "L3", "declared_change_class": "L3",
+    "verification_budget_required": 10, "verification_budget_executed": 10,
+    "reporting_budget_required": 4, "reporting_budget_reported": 4, "material_failures_omitted": false,
+    "security_changes": [], "coverage_status": "policy_active",
+    "kroad_ids": ["KROAD-012", "KROAD-013", "KROAD-014", "KROAD-015", "KROAD-016", "KROAD-017"],
+    "human_technical_proof": false, "coach_text_as_evidence": false, "review_receipt": null,
+    "events": ["start_preflight", "scope_committed", "scope_disclosed", "implementation_complete"],
+    "completion": {"state": "pending_exact_main_verification", "exact_main_verified": false}
+  }
+}

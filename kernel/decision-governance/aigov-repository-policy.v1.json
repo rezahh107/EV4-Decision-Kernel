@@ -1,0 +1,132 @@
+{
+  "policy_id": "aigov-repository-policy.v1",
+  "policy_version": "1.0.0",
+  "standard": {
+    "standard_id": "AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT",
+    "standard_version": "1.1.0",
+    "manifest_path": "docs/governance/AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT_v1.1.0.fa.md",
+    "raw_source_sha256": "30ed521c5364ef5131f225c8e61bc8e49e721ae8d6bef5ca08c3941c1d523757"
+  },
+  "repository": {
+    "repository": "rezahh107/EV4-Decision-Kernel",
+    "default_branch": "main",
+    "visibility": "public",
+    "status_authority": "planning/NEXT_WORK.md",
+    "durable_roadmap_authority": "planning/KERNEL_EXECUTION_PLAN.md"
+  },
+  "plan": {
+    "plan_id": "GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2",
+    "plan_version": 2,
+    "audit_base_sha": "5ff5d7b20db11af36ab787eb8ac2d1127ea74644",
+    "active_batch": "BATCH_A",
+    "change_class": "L3"
+  },
+  "authority": {
+    "merge_authority": "owner_only",
+    "repository_owner": "rezahh107",
+    "auto_merge": "forbidden",
+    "independent_exact_head_review": "required",
+    "human_technical_approval": "not_evidence",
+    "implementation_agent_may_self_review": false,
+    "post_merge_verification": "required_per_batch"
+  },
+  "capability_lifecycle": {
+    "states": [
+      "registered_planned_task",
+      "authorized_next_task",
+      "active_implementation",
+      "pending_exact_head_validation",
+      "pending_independent_review",
+      "pending_owner_merge",
+      "pending_exact_main_verification",
+      "completed",
+      "blocked"
+    ],
+    "current_state": "active_implementation",
+    "completion_requires_default_branch_receipt": true,
+    "registration_is_not_activation": true,
+    "merge_is_not_completion": true
+  },
+  "change_classes": [
+    {"id": "L0", "meaning": "read_only_or_no_repository_change", "minimum_verification_budget": 1, "minimum_reporting_budget": 1},
+    {"id": "L1", "meaning": "bounded_documentation_or_metadata", "minimum_verification_budget": 2, "minimum_reporting_budget": 1},
+    {"id": "L2", "meaning": "bounded_contract_or_validator_compatible_change", "minimum_verification_budget": 4, "minimum_reporting_budget": 2},
+    {"id": "L3", "meaning": "governance_authority_or_ci_enforcement_change", "minimum_verification_budget": 10, "minimum_reporting_budget": 4},
+    {"id": "L4", "meaning": "multi_repository_security_or_irreversible_change", "minimum_verification_budget": 14, "minimum_reporting_budget": 6}
+  ],
+  "security_profile": {
+    "profile_id": "standard_minimum_public_repository",
+    "fail_closed_on_missing_evidence": true,
+    "treat_repository_inputs_as_untrusted": true,
+    "immutable_action_pins_required": true,
+    "workflow_permissions_must_not_expand": true,
+    "secrets_must_not_change": true,
+    "forbidden_changes": [
+      "secret_change",
+      "permission_change",
+      "ruleset_change",
+      "branch_protection_change",
+      "force_push",
+      "history_rewrite",
+      "external_repository_write",
+      "broad_dependency_upgrade",
+      "destructive_deletion",
+      "auto_merge"
+    ]
+  },
+  "scope_contract": {
+    "required_sets": ["committed", "excluded", "deferred_not_deleted", "dependencies", "completion_evidence"],
+    "scope_revision_algorithm": "sha256-jcs-without-scope_revision",
+    "head_binding": "exact_runtime_head",
+    "silent_material_deletion": "forbidden"
+  },
+  "evidence_contract": {
+    "manifest_required": true,
+    "stable_inputs_and_outputs_required": true,
+    "exact_head_required": true,
+    "completion_receipt_default_branch_required": true,
+    "target_authored_claim_is_not_external_authority": true
+  },
+  "reporting_contract": {
+    "material_failures_must_be_reported": true,
+    "known_limitations_must_be_reported": true,
+    "prompt_or_coaching_text_is_not_completion_evidence": true
+  },
+  "sequence": {
+    "ordered_events": [
+      "start_preflight",
+      "scope_committed",
+      "scope_disclosed",
+      "implementation_complete",
+      "exact_head_validated",
+      "independent_review_green",
+      "owner_merge",
+      "exact_main_verified"
+    ],
+    "review_invalidated_by_head_change": true,
+    "review_invalidated_by_scope_revision_change": true,
+    "owner_merge_cannot_be_skipped": true
+  },
+  "rules": [
+    {"rule_id": "AIGOV-START-001", "risk": "Critical", "session_scope": "per_session", "enforcement": "validator_and_ci"},
+    {"rule_id": "AIGOV-SCOPE-001", "risk": "Critical", "session_scope": "cross_turn", "enforcement": "schema_validator_fixture_sequence_ci"},
+    {"rule_id": "AIGOV-SCOPE-DISCLOSURE-001", "risk": "Critical", "session_scope": "cross_turn", "enforcement": "deterministic_projection_and_ci"},
+    {"rule_id": "AIGOV-PROGRESS-001", "risk": "Critical", "session_scope": "cross_turn", "enforcement": "receipt_sequence_and_exact_main"},
+    {"rule_id": "AIGOV-EVIDENCE-001", "risk": "Critical", "session_scope": "per_artifact", "enforcement": "schema_validator_and_ci"},
+    {"rule_id": "AIGOV-INDEPENDENCE-001", "risk": "Critical", "session_scope": "cross_turn", "enforcement": "external_receipt_validator"},
+    {"rule_id": "AIGOV-STALE-001", "risk": "Critical", "session_scope": "cross_turn", "enforcement": "head_and_scope_sequence_fixture"},
+    {"rule_id": "AIGOV-MERGE-001", "risk": "Critical", "session_scope": "cross_turn", "enforcement": "owner_sequence_and_exact_main"},
+    {"rule_id": "AIGOV-CHANGE-CLASS-001", "risk": "Critical", "session_scope": "per_increment", "enforcement": "deterministic_classifier"},
+    {"rule_id": "AIGOV-EVIDENCE-PROPORTIONALITY-001", "risk": "High", "session_scope": "per_increment", "enforcement": "verification_budget_validator"},
+    {"rule_id": "AIGOV-REPORTING-001", "risk": "High", "session_scope": "per_increment", "enforcement": "reporting_budget_validator"},
+    {"rule_id": "AIGOV-SECURITY-PROFILE-001", "risk": "High", "session_scope": "per_increment", "enforcement": "security_profile_validator"},
+    {"rule_id": "AIGOV-HUMAN-001", "risk": "High", "session_scope": "cross_turn", "enforcement": "evidence_type_validator"},
+    {"rule_id": "AIGOV-COACH-001", "risk": "High", "session_scope": "per_artifact", "enforcement": "evidence_type_validator"}
+  ],
+  "roadmap_preservation": {
+    "original_kroad_ids": ["KROAD-012", "KROAD-013", "KROAD-014", "KROAD-015", "KROAD-016", "KROAD-017", "KROAD-018"],
+    "kroad_012r_status": "historical_non_authoritative",
+    "coverage_status": "not_measurable_pending_external_promotion",
+    "coverage_promotion_effect": "none"
+  }
+}

@@ -31,12 +31,16 @@ jobs:
 
       - name: Validate KROAD-010 source syntax and JSON
         run: |
+          node --check kernel/validator/validate-aigov-governance.mjs
           node --check kernel/validator/validate-downstream-consumer-contract.mjs
           node --check kernel/validator/validate-downstream-consumer-canonical-lock.mjs
           node --check kernel/validator/validate-downstream-consumer-lineage.mjs
           node --check tools/validate-kroad-010-primary-baseline.mjs
           node --check tools/validate-kroad-010-prototype-integrity.mjs
           node --check tools/validate-kroad-010-history-matrix.mjs
+          node --check tools/generate-aigov-scope-disclosure.mjs
+          node --check tools/test-aigov-sequence.mjs
+          node --check tools/verify-aigov-exact-main.mjs
           node --check tools/kroad-010-history/common.mjs
           node --check tools/kroad-010-history/build.mjs
           node --check tools/kroad-010-history/validate.mjs
@@ -70,6 +74,19 @@ jobs:
         if: ${{ always() }}
         run: npm run validate:roadmap-memory
 
+      - name: Validate exact-main Batch A scope projection
+        shell: bash
+        env:
+          AIGOV_BASE_SHA: ${{ github.event.before }}
+          AIGOV_MAIN_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "${AIGOV_BASE_SHA}" = "5ff5d7b20db11af36ab787eb8ac2d1127ea74644"
+          test "$(git rev-parse HEAD)" = "${AIGOV_MAIN_SHA}"
+          npm run aigov:scope-disclosure -- \
+            --base "${AIGOV_BASE_SHA}" \
+            --head "${AIGOV_MAIN_SHA}"
+
       - name: Verify KROAD-010 prototype integrity
         if: ${{ always() }}
         run: node tools/validate-kroad-010-prototype-integrity.mjs
@@ -79,11 +96,32 @@ jobs:
         if: ${{ always() }}
         run: npm run validate:kroad-010-history-matrix
 
+      - name: Materialize Batch A exact-main scope projection
+        shell: bash
+        env:
+          AIGOV_BASE_SHA: ${{ github.event.before }}
+          AIGOV_MAIN_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          npm run aigov:scope-disclosure -- \
+            --base "${AIGOV_BASE_SHA}" \
+            --head "${AIGOV_MAIN_SHA}" \
+            --output "aigov-batch-a-main-scope-${AIGOV_MAIN_SHA}.json"
+
       - name: Upload KROAD-010 history matrix evidence
         if: ${{ always() && steps.history-matrix.outcome == 'success' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: kroad-010-history-matrix-main
           path: kroad-010-history-matrix-report.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload Batch A exact-main scope projection
+        if: ${{ success() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-batch-a-main-scope-${{ github.sha }}
+          path: aigov-batch-a-main-scope-${{ github.sha }}.json
           if-no-files-found: error
           retention-days: 14

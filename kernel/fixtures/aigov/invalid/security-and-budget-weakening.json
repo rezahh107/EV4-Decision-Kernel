@@ -1,0 +1,34 @@
+{
+  "fixture_id": "aigov.invalid.security-and-budget-weakening",
+  "expected_valid": false,
+  "expected_diagnostics": [
+    "AIGOV_CHANGE_CLASS_UNDERSPECIFIED",
+    "AIGOV_VERIFICATION_BUDGET_INSUFFICIENT",
+    "AIGOV_REPORTING_OMISSION",
+    "AIGOV_SECURITY_PROFILE_VIOLATION",
+    "AIGOV_HUMAN_TECHNICAL_PROOF_FORBIDDEN",
+    "AIGOV_COACH_EVIDENCE_CONFUSION"
+  ],
+  "case": {
+    "preflight_present": true,
+    "head_identity_matches": true,
+    "scope_disclosure_matches": true,
+    "deferred_ids": ["KROAD-012", "KROAD-013", "KROAD-014", "KROAD-015", "KROAD-016", "KROAD-017", "KROAD-018"],
+    "evidence_manifest_complete": true,
+    "required_change_class": "L3",
+    "declared_change_class": "L1",
+    "verification_budget_required": 10,
+    "verification_budget_executed": 2,
+    "reporting_budget_required": 4,
+    "reporting_budget_reported": 1,
+    "material_failures_omitted": true,
+    "security_changes": ["secret_change", "permission_change", "external_repository_write"],
+    "coverage_status": "not_measurable_pending_external_promotion",
+    "kroad_ids": ["KROAD-012", "KROAD-013", "KROAD-014", "KROAD-015", "KROAD-016", "KROAD-017", "KROAD-018"],
+    "human_technical_proof": true,
+    "coach_text_as_evidence": true,
+    "review_receipt": null,
+    "events": ["start_preflight", "scope_committed", "scope_disclosed", "implementation_complete", "exact_head_validated"],
+    "completion": {"state": "pending_exact_main_verification", "exact_main_verified": false}
+  }
+}

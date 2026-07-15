@@ -1,0 +1,27 @@
+{
+  "fixture_id": "aigov.valid.routine-l1-l2",
+  "expected_valid": true,
+  "expected_diagnostics": [],
+  "case": {
+    "preflight_present": true,
+    "head_identity_matches": true,
+    "scope_disclosure_matches": true,
+    "deferred_ids": ["KROAD-012", "KROAD-013", "KROAD-014", "KROAD-015", "KROAD-016", "KROAD-017", "KROAD-018"],
+    "evidence_manifest_complete": true,
+    "required_change_class": "L2",
+    "declared_change_class": "L2",
+    "verification_budget_required": 4,
+    "verification_budget_executed": 4,
+    "reporting_budget_required": 2,
+    "reporting_budget_reported": 2,
+    "material_failures_omitted": false,
+    "security_changes": [],
+    "coverage_status": "not_measurable_pending_external_promotion",
+    "kroad_ids": ["KROAD-012", "KROAD-013", "KROAD-014", "KROAD-015", "KROAD-016", "KROAD-017", "KROAD-018"],
+    "human_technical_proof": false,
+    "coach_text_as_evidence": false,
+    "review_receipt": null,
+    "events": ["start_preflight", "scope_committed", "scope_disclosed", "implementation_complete", "exact_head_validated"],
+    "completion": {"state": "pending_exact_main_verification", "exact_main_verified": false}
+  }
+}

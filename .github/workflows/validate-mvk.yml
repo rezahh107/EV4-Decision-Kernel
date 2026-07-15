@@ -84,9 +84,13 @@ jobs:
 
       - name: Check validation syntax
         run: |
+          node --check kernel/validator/validate-aigov-governance.mjs
           node --check kernel/validator/validate-coverage-guarantee.mjs
           node --check kernel/validator/validate-coverage-guarantee-prf010.mjs
           node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
+          node --check tools/generate-aigov-scope-disclosure.mjs
+          node --check tools/test-aigov-sequence.mjs
+          node --check tools/verify-aigov-exact-main.mjs
           node --check tools/validate-roadmap-memory.mjs
           node --check tools/validate-roadmap-memory-full.mjs
           node --check tools/validate-kroad-010-history-matrix.mjs
@@ -98,6 +102,16 @@ jobs:
           set -euo pipefail
           git diff --check
           git diff --check "${COVERAGE_BASE_SHA}..${COVERAGE_HEAD_SHA}"
+
+      - name: Disclose and validate exact-head AIGOV scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${COVERAGE_BASE_SHA}" = "5ff5d7b20db11af36ab787eb8ac2d1127ea74644"
+          test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
+          npm run aigov:scope-disclosure -- \
+            --base "${COVERAGE_BASE_SHA}" \
+            --head "${COVERAGE_HEAD_SHA}"
 
       - name: Validate roadmap memory and SSOT reconstruction
         run: npm run validate:roadmap-memory
@@ -114,6 +128,15 @@ jobs:
       - name: Validate KROAD-010 history matrix
         run: npm run validate:kroad-010-history-matrix
 
+      - name: Materialize exact-head AIGOV scope evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run aigov:scope-disclosure -- \
+            --base "${COVERAGE_BASE_SHA}" \
+            --head "${COVERAGE_HEAD_SHA}" \
+            --output aigov-batch-a-scope-disclosure.json
+
       - name: Upload KROAD-010 history matrix evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -121,4 +144,13 @@ jobs:
           name: kroad-010-history-matrix
           path: kroad-010-history-matrix-report.json
           if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload exact-head AIGOV scope evidence
+        if: ${{ success() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-batch-a-scope-disclosure
+          path: aigov-batch-a-scope-disclosure.json
+          if-no-files-found: error
           retention-days: 14
