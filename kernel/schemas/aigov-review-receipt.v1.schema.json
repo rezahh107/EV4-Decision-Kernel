@@ -34,13 +34,17 @@
     "review": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["technical_status", "reviewed_at", "reviewer_identity", "implementer_identity", "review_package_sha256", "findings"],
+      "required": ["technical_status", "reviewed_at", "reviewer_identity", "implementer_identity", "review_package_sha256", "review_package_file_sha256", "decision_projection_sha256", "artifact_manifest_sha256", "ci_identity_digest", "findings"],
       "properties": {
         "technical_status": {"const": "GREEN_TECHNICALLY_READY"},
         "reviewed_at": {"type": "string", "format": "date-time"},
         "reviewer_identity": {"type": "string", "minLength": 1},
         "implementer_identity": {"type": "string", "minLength": 1},
         "review_package_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "review_package_file_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "decision_projection_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "artifact_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "ci_identity_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "findings": {
           "type": "array",
           "items": {
@@ -87,14 +91,15 @@
         "observed_at": {"type": "string", "format": "date-time"},
         "immutable_artifacts": {
           "type": "array",
-          "minItems": 3,
+          "minItems": 6,
+          "maxItems": 7,
           "uniqueItems": true,
           "items": {
             "type": "object",
             "additionalProperties": false,
             "required": ["name", "path", "sha256", "git_blob_sha"],
             "properties": {
-              "name": {"enum": ["review-package.json", "DECISION_PROJECTION.json", "artifact-manifest.json"]},
+              "name": {"enum": ["review-package.json", "DECISION_PROJECTION.json", "OWNER_DECISION_CARD.fa.md", "TECHNICAL_HANDOFF.en.md", "OWNER_RESULT.fa.txt", "NEXT_ACTION_PROMPT.en.md", "artifact-manifest.json"]},
               "path": {"type": "string", "minLength": 1},
               "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
               "git_blob_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}

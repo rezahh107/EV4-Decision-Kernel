@@ -15,8 +15,9 @@ const context = {
   scopeRevision: `sha256:${'b'.repeat(64)}`,
 };
 const evidenceDigests = EVENT_ORDER.map((_, index) => (index + 1).toString(16).repeat(64).slice(0, 64));
-const kinds = ['local_deterministic', 'local_deterministic', 'local_deterministic', 'local_deterministic', 'local_deterministic', 'external_review', 'authoritative_owner_merge', 'authoritative_exact_main'];
+const kinds = ['local_deterministic', 'local_deterministic', 'local_deterministic', 'local_deterministic', 'authoritative_exact_head_ci', 'external_review', 'authoritative_owner_merge', 'authoritative_exact_main'];
 const verified = {
+  ciDigests: new Set([evidenceDigests[4]]),
   reviewDigests: new Set([evidenceDigests[5]]),
   mergeDigests: new Set([evidenceDigests[6]]),
   exactMainDigests: new Set([evidenceDigests[7]]),
@@ -30,7 +31,7 @@ function history(types = EVENT_ORDER, overrides = {}) {
     const event = buildEvent({
       eventType,
       predecessorEventId,
-      occurredAt: `2026-07-15T10:0${index}:00Z`,
+      occurredAt: overrides.times?.[index] || `2026-07-15T10:0${index}:00Z`,
       context: eventContext,
       evidence: { kind: overrides.kinds?.[index] || kinds[index], sha256: overrides.digests?.[index] || evidenceDigests[index], reference: `evidence:${index}` },
     });
@@ -52,7 +53,7 @@ function run(name, ledger, expected, evidence = verified) {
 }
 
 run('complete valid history', history(), null);
-run('valid exact-head prefix', history(EVENT_ORDER.slice(0, 5)), null, {});
+run('valid exact-head prefix', history(EVENT_ORDER.slice(0, 5)), null, { ciDigests: verified.ciDigests });
 
 const duplicate = history();
 duplicate.events[2].event_id = duplicate.events[1].event_id;
@@ -62,6 +63,12 @@ run('duplicate lifecycle event', duplicate, 'AIGOV_LIFECYCLE_DUPLICATE_EVENT');
 const replayDigests = [...evidenceDigests];
 replayDigests[5] = replayDigests[4];
 run('replayed receipt digest', history(EVENT_ORDER, { digests: replayDigests }), 'AIGOV_LIFECYCLE_EVIDENCE_REPLAY', { ...verified, reviewDigests: new Set([replayDigests[5]]) });
+
+const replayCiDigests = [...evidenceDigests];
+replayCiDigests[4] = replayCiDigests[3];
+run('replayed CI identity', history(EVENT_ORDER, { digests: replayCiDigests }), 'AIGOV_LIFECYCLE_EVIDENCE_REPLAY', { ...verified, ciDigests: new Set([replayCiDigests[4]]) });
+
+run('review issued before CI completion', history(EVENT_ORDER, { times: { 4: '2026-07-15T10:06:00Z', 5: '2026-07-15T10:05:00Z' } }), 'AIGOV_LIFECYCLE_TIME_ORDER_INVALID');
 
 const missingPredecessor = history();
 missingPredecessor.events[3].predecessor_event_id = null;

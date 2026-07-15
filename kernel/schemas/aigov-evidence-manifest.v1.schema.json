@@ -26,7 +26,7 @@
   "properties": {
     "schema_version": {"const": "aigov-evidence-manifest.v2"},
     "manifest_id": {"type": "string", "minLength": 1},
-    "manifest_state": {"enum": ["template_pending_execution", "executed_exact_head"]},
+    "manifest_state": {"enum": ["template_pending_execution", "executed_exact_head", "executed_exact_head_ci_verified"]},
     "plan_id": {"const": "GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2"},
     "batch_id": {"const": "BATCH_A"},
     "repository": {"const": "rezahh107/EV4-Decision-Kernel"},
@@ -46,14 +46,29 @@
         "required": ["evidence_id", "kind", "command_or_ref", "status", "sha256", "head_sha", "scope_revision", "evidence_source", "authoritative_reference"],
         "properties": {
           "evidence_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]+$"},
-          "kind": {"enum": ["validation", "scope_disclosure", "independent_review", "owner_merge", "exact_main_receipt", "limitation"]},
+          "kind": {"enum": ["validation", "scope_disclosure", "exact_head_ci", "independent_review", "owner_merge", "exact_main_receipt", "limitation"]},
           "command_or_ref": {"type": "string", "minLength": 1},
           "status": {"enum": ["pending", "passed", "failed", "insufficient_evidence"]},
           "sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
           "head_sha": {"type": "string", "pattern": "^(derived_at_runtime|[0-9a-f]{40})$"},
           "scope_revision": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
           "evidence_source": {"enum": ["local_execution", "github_actions", "github_rest_api_https", "external_inspector", "pending_external_gate"]},
-          "authoritative_reference": {"type": ["string", "null"], "minLength": 1}
+          "authoritative_reference": {"type": ["string", "null"], "minLength": 1},
+          "github_actions": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "required": ["workflow_id", "run_id", "job_id", "check_run_url", "artifact_id", "artifact_name", "filename", "hash_scope"],
+            "properties": {
+              "workflow_id": {"type": "integer", "minimum": 1},
+              "run_id": {"type": "integer", "minimum": 1},
+              "job_id": {"type": "integer", "minimum": 1},
+              "check_run_url": {"type": "string", "format": "uri"},
+              "artifact_id": {"type": ["integer", "null"], "minimum": 1},
+              "artifact_name": {"type": ["string", "null"], "minLength": 1},
+              "filename": {"type": ["string", "null"], "minLength": 1},
+              "hash_scope": {"enum": ["final_file_bytes", "canonical_json_identity"]}
+            }
+          }
         }
       }
     },

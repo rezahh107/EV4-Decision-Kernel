@@ -35,8 +35,6 @@ const CALLER_IDENTITY_KEYS = [
 ];
 const EXACT_VALIDATION_COMMAND = [
   'set -euo pipefail',
-  'git reset --hard "${COVERAGE_HEAD_SHA}"',
-  'git clean -ffdx',
   'test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"',
   'test -z "$(git status --porcelain=v1 --untracked-files=all)"',
   'npm ci',
@@ -177,7 +175,7 @@ function validateTopology(workflow, environment = process.env) {
     const envKeys = [...command.matchAll(/^          ([A-Z0-9_]+):/gm)].map((match) => match[1]).sort();
     const expectedKeys = ['COVERAGE_BASE_SHA', 'COVERAGE_HEAD_SHA', 'COVERAGE_PR_NUMBER', 'COVERAGE_REPOSITORY'];
     if (JSON.stringify(envKeys) !== JSON.stringify(expectedKeys) || normalizeRun(command) !== EXACT_VALIDATION_COMMAND) {
-      diagnostics.push(diagnostic('COV_EXTERNAL_VALIDATION_COMMAND_TOPOLOGY_INVALID', 'Protected command must reset, clean, verify HEAD/worktree, npm ci and validate:coverage exactly.', WORKFLOW_PATH));
+      diagnostics.push(diagnostic('COV_EXTERNAL_VALIDATION_COMMAND_TOPOLOGY_INVALID', 'Protected command must verify the externally checked-out HEAD and clean worktree, then run npm ci and validate:coverage exactly.', WORKFLOW_PATH));
     }
   }
   if (TRUST_ENV_NAMES.some((name) => workflow.includes(name)) || workflow.includes('/bin/date')) {

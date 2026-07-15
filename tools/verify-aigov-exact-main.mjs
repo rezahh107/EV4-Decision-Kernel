@@ -16,6 +16,12 @@ import {
   sha256,
   validateLifecycleLedger,
 } from './lib/aigov-lifecycle.mjs';
+import { fetchExactHeadCiIdentity, validateCiIdentity } from './lib/aigov-ci-evidence.mjs';
+import {
+  FIXED_ARTIFACTS,
+  PROMPT_ARTIFACT,
+  verifyReviewDirectory,
+} from './lib/pr-inspector-v1101.mjs';
 
 const ROOT = process.cwd();
 const TARGET_REPOSITORY = 'rezahh107/EV4-Decision-Kernel';
@@ -31,9 +37,11 @@ const SCOPE_PATH = 'planning/governance/scopes/aigov-v2-batch-a.scope.json';
 const REVIEW_SCHEMA_PATH = 'kernel/schemas/aigov-review-receipt.v1.schema.json';
 const EXACT_MAIN_SCHEMA_PATH = 'kernel/schemas/aigov-exact-main-receipt.v1.schema.json';
 const LEDGER_SCHEMA_PATH = 'kernel/schemas/aigov-lifecycle-ledger.v1.schema.json';
+const CI_SCHEMA_PATH = 'kernel/schemas/aigov-ci-identity.v1.schema.json';
 const TRUST_POLICY_PATH = `protocols/${PROTOCOL_VERSION}/trust/INSPECTOR_TRUST_POLICY.json`;
 const REVIEW_SCHEMA_REMOTE_PATH = `protocols/${PROTOCOL_VERSION}/schemas/review-package.schema.json`;
-const REQUIRED_ARTIFACTS = ['DECISION_PROJECTION.json', 'artifact-manifest.json', 'review-package.json'];
+const PROJECTION_SCHEMA_REMOTE_PATH = `protocols/${PROTOCOL_VERSION}/schemas/decision-projection.schema.json`;
+const REQUIRED_ARTIFACTS = [...FIXED_ARTIFACTS].sort();
 const API_ORIGIN = 'https://api.github.com';
 
 const ajv = new Ajv2020({ allErrors: true, strict: false });
@@ -148,13 +156,20 @@ export function verifyEvidenceBundle(bundle, scope, schemas) {
   const diagnostics = [];
   const receiptSchemaDiagnostics = schemaErrors(schemas.reviewReceipt, bundle.receipt, 'external-review-receipt');
   diagnostics.push(...receiptSchemaDiagnostics);
-  if (receiptSchemaDiagnostics.length) return { diagnostics, reviewDigest: null, mergeDigest: null, exactMainDigest: null };
+  if (receiptSchemaDiagnostics.length) return { diagnostics, reviewDigest: null, ciDigest: null, mergeDigest: null, exactMainDigest: null, directoryHashes: null };
 
-  const { receipt, targetRepository, pullRequest, mainCommit, inspectorRepository, inspectorCommit, receiptSource, trustPolicySource, trustPolicy, currentVersion, protocolManifest } = bundle;
+  const { receipt, targetRepository, pullRequest, mainCommit, inspectorRepository, inspectorCommit, inspectorMainCommit, inspectorAncestry, receiptSource, trustPolicySource, trustPolicy, currentVersion, protocolManifest, ciIdentity } = bundle;
   const artifacts = artifactMap(bundle.artifacts || []);
-  const reviewPackage = artifacts.get('review-package.json')?.json;
-  const reviewPackageSchemaDiagnostics = schemaErrors(schemas.reviewPackage, reviewPackage, 'PR-Inspector/review-package.json');
-  diagnostics.push(...reviewPackageSchemaDiagnostics);
+  const directory = verifyReviewDirectory({
+    artifacts: bundle.artifacts,
+    schemas,
+    schemaErrors,
+    context: { repository: TARGET_REPOSITORY, prNumber: PR_NUMBER, baseSha: BASE_SHA, headSha: receipt.target.head_sha, inspectorRepository: INSPECTOR_REPOSITORY, inspectorCommitSha: inspectorCommit.sha },
+    ciIdentity,
+  });
+  diagnostics.push(...directory.diagnostics.map((item) => `AIGOV_REVIEW_DIRECTORY_INVALID:${item}`));
+  diagnostics.push(...schemaErrors(schemas.ciIdentity, ciIdentity, 'authoritative-exact-head-ci'));
+  diagnostics.push(...validateCiIdentity(ciIdentity, { repository: TARGET_REPOSITORY, repositoryId: TARGET_REPOSITORY_ID, prNumber: PR_NUMBER, headSha: receipt.target.head_sha }));
 
   if (targetRepository.id !== TARGET_REPOSITORY_ID || targetRepository.full_name !== TARGET_REPOSITORY || targetRepository.default_branch !== 'main') diagnostics.push('AIGOV_REPOSITORY_IDENTITY_UNVERIFIED');
   if (pullRequest.number !== PR_NUMBER || pullRequest.base?.repo?.id !== TARGET_REPOSITORY_ID || pullRequest.base?.repo?.full_name !== TARGET_REPOSITORY) diagnostics.push('AIGOV_PR_IDENTITY_UNVERIFIED');
@@ -171,40 +186,42 @@ export function verifyEvidenceBundle(bundle, scope, schemas) {
   if (receipt.receipt_id !== receiptId(receipt)) diagnostics.push('AIGOV_REVIEW_RECEIPT_HASH_MISMATCH');
   if (receipt.review.findings.some((finding) => finding.blocking)) diagnostics.push('AIGOV_REVIEW_HAS_BLOCKING_FINDINGS');
   if (Date.parse(receipt.review.reviewed_at) > Date.parse(pullRequest.merged_at)) diagnostics.push('AIGOV_REVIEW_AFTER_MERGE');
+  if (!ciIdentity?.completed_at || Date.parse(receipt.review.reviewed_at) <= Date.parse(ciIdentity.completed_at)) diagnostics.push('AIGOV_REVIEW_PRECEDES_EXACT_HEAD_CI');
 
-  if (inspectorRepository.id !== INSPECTOR_REPOSITORY_ID || inspectorRepository.full_name !== INSPECTOR_REPOSITORY || inspectorRepository.id === targetRepository.id) diagnostics.push('AIGOV_INSPECTOR_REPOSITORY_UNVERIFIED');
+  if (inspectorRepository.id !== INSPECTOR_REPOSITORY_ID || inspectorRepository.full_name !== INSPECTOR_REPOSITORY || inspectorRepository.default_branch !== 'main' || inspectorRepository.id === targetRepository.id) diagnostics.push('AIGOV_INSPECTOR_REPOSITORY_UNVERIFIED');
   if (inspectorCommit.sha !== receipt.provenance.inspector_commit_sha || inspectorCommit.sha !== receiptSource.ref) diagnostics.push('AIGOV_INSPECTOR_COMMIT_UNVERIFIED');
+  if (!['ahead', 'identical'].includes(inspectorAncestry?.status) || inspectorAncestry?.base_commit?.sha !== inspectorCommit.sha || inspectorAncestry?.merge_base_commit?.sha !== inspectorCommit.sha || inspectorAncestry?.head_commit?.sha !== inspectorMainCommit?.sha) diagnostics.push('AIGOV_INSPECTOR_COMMIT_NOT_ON_CURRENT_MAIN');
   if (inspectorCommit.url !== receipt.provenance.inspector_commit_api_url || inspectorCommit.html_url !== receipt.provenance.inspector_commit_html_url) diagnostics.push('AIGOV_INSPECTOR_COMMIT_URL_MISMATCH');
   if (receiptSource.repository !== INSPECTOR_REPOSITORY || receiptSource.repository === TARGET_REPOSITORY || receiptSource.path !== receipt.provenance.receipt_path) diagnostics.push('AIGOV_LOCAL_OR_TARGET_AUTHORED_RECEIPT');
   if (receiptSource.sha256 !== sha256(receiptSource.raw)) diagnostics.push('AIGOV_REVIEW_SOURCE_HASH_MISMATCH');
 
   if (currentVersion.raw.toString('utf8').trim() !== PROTOCOL_VERSION || protocolManifest.active_version !== PROTOCOL_VERSION || receipt.provenance.protocol_version !== PROTOCOL_VERSION) diagnostics.push('AIGOV_INSPECTOR_PROTOCOL_MISMATCH');
+  if (JSON.stringify([...(protocolManifest.required_artifacts || [])].sort()) !== JSON.stringify(REQUIRED_ARTIFACTS)
+    || protocolManifest.conditional_artifacts?.[PROMPT_ARTIFACT]?.required_when !== 'prompt_required == true'
+    || protocolManifest.conditional_artifacts?.[PROMPT_ARTIFACT]?.forbidden_when !== 'prompt_required == false') diagnostics.push('AIGOV_INSPECTOR_ARTIFACT_PROTOCOL_MISMATCH');
   if (trustPolicySource.sha256 !== receipt.provenance.trust_policy_sha256 || trustPolicySource.sha256 !== sha256(trustPolicySource.raw)) diagnostics.push('AIGOV_TRUST_POLICY_HASH_MISMATCH');
   if (trustPolicy.inspector_repository !== INSPECTOR_REPOSITORY || trustPolicy.inspector_repository_id !== INSPECTOR_REPOSITORY_ID || trustPolicy.protocol_version !== PROTOCOL_VERSION || trustPolicy.commit_evidence_source !== 'github_rest_api_https') diagnostics.push('AIGOV_INSPECTOR_TRUST_POLICY_MISMATCH');
 
+  const expectedArtifacts = directory.projection?.next_action?.prompt_required ? [...REQUIRED_ARTIFACTS, PROMPT_ARTIFACT].sort() : REQUIRED_ARTIFACTS;
   const declaredNames = receipt.provenance.immutable_artifacts.map((item) => item.name).sort();
-  if (JSON.stringify(declaredNames) !== JSON.stringify(REQUIRED_ARTIFACTS)) diagnostics.push('AIGOV_REVIEW_ARTIFACT_SET_INCOMPLETE');
+  if (JSON.stringify(declaredNames) !== JSON.stringify(expectedArtifacts)) diagnostics.push('AIGOV_REVIEW_ARTIFACT_SET_INCOMPLETE');
+  if (JSON.stringify([...artifacts.keys()].sort()) !== JSON.stringify(expectedArtifacts)) diagnostics.push('AIGOV_REVIEW_DIRECTORY_ARTIFACT_SET_MISMATCH');
   const receiptDirectory = path.posix.dirname(receiptSource.path);
   for (const declared of receipt.provenance.immutable_artifacts) {
     const observed = artifacts.get(declared.name);
     if (!observed || path.posix.dirname(observed.path) !== receiptDirectory) diagnostics.push(`AIGOV_REVIEW_ARTIFACT_SOURCE_MISMATCH:${declared.name}`);
     else if (observed.sha256 !== declared.sha256 || observed.blobSha !== declared.git_blob_sha || observed.sha256 !== sha256(observed.raw)) diagnostics.push(`AIGOV_REVIEW_ARTIFACT_HASH_MISMATCH:${declared.name}`);
   }
-  if (receipt.review.review_package_sha256 !== artifacts.get('review-package.json')?.sha256) diagnostics.push('AIGOV_REVIEW_PACKAGE_HASH_MISMATCH');
-  if (reviewPackage?.protocol_version !== PROTOCOL_VERSION
-    || reviewPackage?.review_identity?.inspector_repository !== INSPECTOR_REPOSITORY
-    || reviewPackage?.review_identity?.inspector_commit_sha !== inspectorCommit.sha
-    || reviewPackage?.review_identity?.target_repository !== TARGET_REPOSITORY
-    || reviewPackage?.review_identity?.pr_number !== PR_NUMBER
-    || reviewPackage?.review_identity?.base_sha !== BASE_SHA
-    || reviewPackage?.review_identity?.reviewed_head_sha !== receipt.target.head_sha
-    || reviewPackage?.review_identity?.review_validity !== 'CURRENT'
-    || reviewPackage?.decision?.technical_status !== 'GREEN_TECHNICALLY_READY'
-    || reviewPackage?.decision?.blocking_findings_count !== 0) diagnostics.push('AIGOV_REVIEW_PACKAGE_SEMANTICS_MISMATCH');
+  if (receipt.review.review_package_sha256 !== directory.hashes?.canonical_review_package_sha256
+    || receipt.review.review_package_file_sha256 !== directory.hashes?.review_package_file_sha256
+    || receipt.review.decision_projection_sha256 !== directory.hashes?.decision_projection_sha256
+    || receipt.review.artifact_manifest_sha256 !== directory.hashes?.artifact_manifest_sha256) diagnostics.push('AIGOV_REVIEW_DIRECTORY_HASH_BINDING_MISMATCH');
+  if (receipt.review.ci_identity_digest !== ciIdentity?.identity_digest) diagnostics.push('AIGOV_REVIEW_CI_IDENTITY_MISMATCH');
   const expectedReviewer = `PR-Inspector@${PROTOCOL_VERSION}:${inspectorCommit.sha}`;
   if (receipt.review.reviewer_identity !== expectedReviewer || receipt.review.reviewer_identity === receipt.review.implementer_identity) diagnostics.push('AIGOV_REVIEWER_PROVENANCE_UNVERIFIED');
 
   const reviewDigest = receiptSource.sha256;
+  const ciDigest = ciIdentity?.identity_digest || null;
   const mergeDigest = canonicalSha256({
     repository_id: targetRepository.id,
     pr_number: pullRequest.number,
@@ -218,7 +235,7 @@ export function verifyEvidenceBundle(bundle, scope, schemas) {
     current_main_sha: mainCommit.sha,
     api_url: mainCommit.url,
   });
-  return { diagnostics, reviewDigest, mergeDigest, exactMainDigest };
+  return { diagnostics, reviewDigest, ciDigest, mergeDigest, exactMainDigest, directoryHashes: directory.hashes };
 }
 
 function run(command, args) {
@@ -232,22 +249,31 @@ function run(command, args) {
 }
 
 async function loadBundle(args, scope) {
-  const [targetRepositoryResult, pullRequestResult, mainCommitResult, inspectorRepositoryResult, inspectorCommitResult] = await Promise.all([
+  const [targetRepositoryResult, pullRequestResult, mainCommitResult, inspectorRepositoryResult, inspectorCommitResult, inspectorMainResult, inspectorAncestryResult] = await Promise.all([
     githubJson(`/repos/${TARGET_REPOSITORY}`),
     githubJson(`/repos/${TARGET_REPOSITORY}/pulls/${PR_NUMBER}`),
     githubJson(`/repos/${TARGET_REPOSITORY}/commits/main`),
     githubJson(`/repos/${INSPECTOR_REPOSITORY}`),
     githubJson(`/repos/${INSPECTOR_REPOSITORY}/commits/${args.reviewCommit}`),
+    githubJson(`/repos/${INSPECTOR_REPOSITORY}/commits/main`),
+    githubJson(`/repos/${INSPECTOR_REPOSITORY}/compare/${args.reviewCommit}...main`),
   ]);
   const receiptSource = await githubContent(INSPECTOR_REPOSITORY, args.reviewPath, args.reviewCommit);
   const receipt = receiptSource.json;
-  const [currentVersion, protocolManifestSource, trustPolicySource, reviewPackageSchemaSource] = await Promise.all([
+  const [currentVersion, protocolManifestSource, trustPolicySource, reviewPackageSchemaSource, decisionProjectionSchemaSource, ciResult] = await Promise.all([
     githubContent(INSPECTOR_REPOSITORY, 'CURRENT_VERSION', args.reviewCommit),
     githubContent(INSPECTOR_REPOSITORY, 'protocol-manifest.yaml', args.reviewCommit),
     githubContent(INSPECTOR_REPOSITORY, TRUST_POLICY_PATH, args.reviewCommit),
     githubContent(INSPECTOR_REPOSITORY, REVIEW_SCHEMA_REMOTE_PATH, args.reviewCommit),
+    githubContent(INSPECTOR_REPOSITORY, PROJECTION_SCHEMA_REMOTE_PATH, args.reviewCommit),
+    fetchExactHeadCiIdentity({ githubJson, repository: TARGET_REPOSITORY, repositoryId: TARGET_REPOSITORY_ID, prNumber: PR_NUMBER, headSha: pullRequestResult.value.head?.sha }),
   ]);
-  const artifacts = await Promise.all((receipt?.provenance?.immutable_artifacts || []).map((item) => githubContent(INSPECTOR_REPOSITORY, item.path, args.reviewCommit)));
+  const receiptDirectory = path.posix.dirname(args.reviewPath);
+  const listing = await githubJson(`/repos/${INSPECTOR_REPOSITORY}/contents/${encodedPath(receiptDirectory)}?ref=${encodeURIComponent(args.reviewCommit)}`);
+  if (!Array.isArray(listing.value)) throw new Error('PR Inspector review artifact directory is not an immutable GitHub directory payload.');
+  const allowed = new Set([...FIXED_ARTIFACTS, PROMPT_ARTIFACT]);
+  const artifactPaths = listing.value.filter((item) => item?.type === 'file' && allowed.has(item.name)).map((item) => `${receiptDirectory}/${item.name}`);
+  const artifacts = await Promise.all(artifactPaths.map((artifactPath) => githubContent(INSPECTOR_REPOSITORY, artifactPath, args.reviewCommit)));
   const localHead = git(['rev-parse', 'HEAD']);
   return {
     bundle: {
@@ -256,6 +282,8 @@ async function loadBundle(args, scope) {
       mainCommit: mainCommitResult.value,
       inspectorRepository: inspectorRepositoryResult.value,
       inspectorCommit: inspectorCommitResult.value,
+      inspectorMainCommit: inspectorMainResult.value,
+      inspectorAncestry: inspectorAncestryResult.value,
       receiptSource,
       receipt,
       currentVersion,
@@ -263,6 +291,7 @@ async function loadBundle(args, scope) {
       trustPolicySource,
       trustPolicy: trustPolicySource.json,
       artifacts,
+      ciIdentity: ciResult.identity,
       localHead,
       currentMainSha: mainCommitResult.value.sha,
       reviewedHeadSha: pullRequestResult.value.head?.sha,
@@ -272,6 +301,8 @@ async function loadBundle(args, scope) {
     schemas: {
       reviewReceipt: localJson(REVIEW_SCHEMA_PATH),
       reviewPackage: reviewPackageSchemaSource.json,
+      decisionProjection: decisionProjectionSchemaSource.json,
+      ciIdentity: localJson(CI_SCHEMA_PATH),
     },
     observationTimes: [targetRepositoryResult, pullRequestResult, mainCommitResult, inspectorRepositoryResult, inspectorCommitResult]
       .map((item) => item.observedAt),
@@ -311,7 +342,7 @@ async function main() {
     diagnostics.push(`AIGOV_AUTHORITATIVE_EVIDENCE_UNAVAILABLE:${error.message}`);
   }
 
-  let evidence = { diagnostics: [], reviewDigest: null, mergeDigest: null, exactMainDigest: null };
+  let evidence = { diagnostics: [], reviewDigest: null, ciDigest: null, mergeDigest: null, exactMainDigest: null, directoryHashes: null };
   let fullLedger = null;
   let checks = [];
   if (loaded) {
@@ -339,6 +370,7 @@ async function main() {
         fullLedger = extendLedger(partialLedger, context, loaded.bundle.receipt, loaded.bundle.pullRequest, evidence);
         diagnostics.push(...schemaErrors(localJson(LEDGER_SCHEMA_PATH), fullLedger, 'generated-full-lifecycle-ledger'));
         diagnostics.push(...validateLifecycleLedger(fullLedger, context, {
+          ciDigests: new Set([evidence.ciDigest]),
           reviewDigests: new Set([evidence.reviewDigest]),
           mergeDigests: new Set([evidence.mergeDigest]),
           exactMainDigests: new Set([evidence.exactMainDigest]),
@@ -372,6 +404,9 @@ async function main() {
     { name: 'current-main-api-payload', reference: `https://api.github.com/repos/${TARGET_REPOSITORY}/commits/main`, sha256: canonicalSha256(loaded.bundle.mainCommit) },
     { name: 'inspector-commit-api-payload', reference: loaded.bundle.inspectorCommit.url, sha256: canonicalSha256(loaded.bundle.inspectorCommit) },
     { name: 'external-review-receipt', reference: loaded.bundle.receiptSource.apiUrl, sha256: loaded.bundle.receiptSource.sha256 },
+    { name: 'exact-head-ci-identity', reference: loaded.bundle.ciIdentity.run.html_url, sha256: loaded.bundle.ciIdentity.identity_digest },
+    ...loaded.bundle.ciIdentity.jobs.map((item) => ({ name: `exact-head-ci-job-${item.job_id}`, reference: item.check_run_url, sha256: canonicalSha256(item) })),
+    ...loaded.bundle.ciIdentity.artifacts.map((item) => ({ name: `exact-head-ci-artifact-${item.artifact_id}-${item.name}`, reference: item.api_url, sha256: item.digest.replace(/^sha256:/, '') })),
     ...loaded.bundle.artifacts.map((item) => ({ name: path.basename(item.path), reference: item.apiUrl, sha256: item.sha256 })),
   ] : [];
   const receipt = {
@@ -392,7 +427,11 @@ async function main() {
     scope_revision: scope.scope_revision,
     protocol_version: PROTOCOL_VERSION,
     reviewer_identity: loaded?.bundle.receipt?.review?.reviewer_identity || 'unverified',
-    evidence_source: 'fresh_github_rest_api_and_immutable_inspector_artifacts',
+    ci_identity_digest: evidence.ciDigest || '0'.repeat(64),
+    review_directory_hashes: evidence.directoryHashes || {
+      canonical_review_package_sha256: '0'.repeat(64), review_package_file_sha256: '0'.repeat(64), decision_projection_sha256: '0'.repeat(64), artifact_manifest_sha256: '0'.repeat(64), artifact_byte_hashes: {},
+    },
+    evidence_source: 'fresh_github_rest_api_ci_and_immutable_inspector_directory',
     observed_at: observedAt,
     immutable_artifacts: immutableArtifacts,
     lifecycle_ledger_sha256: fullLedger ? canonicalSha256(fullLedger) : '0'.repeat(64),

@@ -29,6 +29,8 @@ const checks = (head) => [
   ['aigov-fixtures', 'npm', ['run', 'test:aigov-fixtures']],
   ['aigov-sequence-replay', 'npm', ['run', 'test:aigov-sequence']],
   ['aigov-forged-provenance', 'npm', ['run', 'test:aigov-provenance']],
+  ['aigov-review-directory', 'npm', ['run', 'test:aigov-review-directory']],
+  ['aigov-ci-identity', 'npm', ['run', 'test:aigov-ci-identity']],
   ['aigov-owner-evidence', 'npm', ['run', 'test:aigov-owner-evidence']],
   ['aigov-forbidden-operations', 'npm', ['run', 'test:aigov-forbidden-operations']],
   ['behavioral-aigov', 'npm', ['run', 'validate:behavioral-coverage:aigov:strict']],
@@ -47,6 +49,7 @@ function run(command, args) {
     status: result.status === 0 ? 'passed' : 'failed',
     exitCode: result.status ?? 1,
     sha256: crypto.createHash('sha256').update(output).digest('hex'),
+    output,
   };
 }
 
@@ -57,6 +60,7 @@ function main() {
   const scope = JSON.parse(readFileSync(path.join(ROOT, SCOPE_PATH), 'utf8'));
   const manifest = JSON.parse(readFileSync(path.join(ROOT, TEMPLATE_PATH), 'utf8'));
   mkdirSync(path.join(ROOT, 'artifacts'), { recursive: true });
+  mkdirSync(path.join(ROOT, 'artifacts/aigov-command-logs'), { recursive: true });
   manifest.manifest_state = 'executed_exact_head';
   manifest.head_sha = args.head;
   manifest.generated_at = new Date().toISOString();
@@ -71,8 +75,10 @@ function main() {
     if (!item) throw new Error(`Evidence template is missing ${evidenceId}.`);
     item.status = result.status;
     item.sha256 = result.sha256;
-    item.authoritative_reference = `git:${args.head}#${evidenceId}`;
-    results.push({ evidence_id: evidenceId, command: [command, ...commandArgs].join(' '), exit_code: result.exitCode, sha256: result.sha256 });
+    const logPath = `artifacts/aigov-command-logs/${evidenceId}.log`;
+    writeFileSync(path.join(ROOT, logPath), result.output);
+    item.authoritative_reference = `local-file:${logPath}`;
+    results.push({ evidence_id: evidenceId, command: [command, ...commandArgs].join(' '), exit_code: result.exitCode, sha256: result.sha256, filename: logPath, hash_scope: 'final_file_bytes' });
     process.stdout.write(`${evidenceId}: ${result.status} (exit ${result.exitCode})\n`);
   }
   manifest.verification_budget.executed_checks = results.length;
@@ -81,7 +87,9 @@ function main() {
   writeFileSync(outputPath, `${JSON.stringify(manifest, null, 2)}\n`);
   const validation = run('npm', ['run', 'validate:aigov', '--', '--evidence-manifest', args.output, '--expected-head', args.head, '--require-executed-budget']);
   process.stdout.write(`executed-evidence-semantic-validation: ${validation.status} (exit ${validation.exitCode})\n`);
-  const report = { head_sha: args.head, scope_revision: scope.scope_revision, output: args.output, checks: results, semantic_validation: validation };
+  const { output: validationOutput, ...semanticValidation } = validation;
+  void validationOutput;
+  const report = { head_sha: args.head, scope_revision: scope.scope_revision, output: args.output, checks: results, semantic_validation: semanticValidation };
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   if (results.some((result) => result.exit_code !== 0) || validation.exitCode !== 0) process.exitCode = 1;
 }

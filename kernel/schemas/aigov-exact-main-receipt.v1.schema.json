@@ -4,7 +4,7 @@
   "title": "EV4 AIGOV Exact-Main Receipt v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "receipt_id", "plan_id", "batch_id", "repository", "repository_id", "pr_number", "pr_author", "merge_actor", "merged_at", "base_sha", "pr_head_sha", "merge_commit_sha", "current_main_sha", "scope_revision", "protocol_version", "reviewer_identity", "evidence_source", "observed_at", "immutable_artifacts", "lifecycle_ledger_sha256", "checks", "coverage_status", "kroad_012r_status", "status", "diagnostics"],
+  "required": ["schema_version", "receipt_id", "plan_id", "batch_id", "repository", "repository_id", "pr_number", "pr_author", "merge_actor", "merged_at", "base_sha", "pr_head_sha", "merge_commit_sha", "current_main_sha", "scope_revision", "protocol_version", "reviewer_identity", "ci_identity_digest", "review_directory_hashes", "evidence_source", "observed_at", "immutable_artifacts", "lifecycle_ledger_sha256", "checks", "coverage_status", "kroad_012r_status", "status", "diagnostics"],
   "properties": {
     "schema_version": {"const": "aigov-exact-main-receipt.v1"},
     "receipt_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
@@ -23,7 +23,19 @@
     "scope_revision": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "protocol_version": {"const": "v1.10.1"},
     "reviewer_identity": {"type": "string", "minLength": 1},
-    "evidence_source": {"const": "fresh_github_rest_api_and_immutable_inspector_artifacts"},
+    "ci_identity_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "review_directory_hashes": {
+      "type": "object", "additionalProperties": false,
+      "required": ["canonical_review_package_sha256", "review_package_file_sha256", "decision_projection_sha256", "artifact_manifest_sha256", "artifact_byte_hashes"],
+      "properties": {
+        "canonical_review_package_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "review_package_file_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "decision_projection_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "artifact_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "artifact_byte_hashes": {"type": "object", "minProperties": 6, "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+      }
+    },
+    "evidence_source": {"const": "fresh_github_rest_api_ci_and_immutable_inspector_directory"},
     "observed_at": {"type": "string", "format": "date-time"},
     "immutable_artifacts": {"type": "array", "minItems": 4, "items": {"type": "object", "additionalProperties": false, "required": ["name", "reference", "sha256"], "properties": {"name": {"type": "string", "minLength": 1}, "reference": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}}},
     "lifecycle_ledger_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},

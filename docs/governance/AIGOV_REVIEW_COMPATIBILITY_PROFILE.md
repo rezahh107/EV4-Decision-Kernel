@@ -14,7 +14,7 @@ The reviewer receives the exact repository, PR number, base SHA, head SHA, `scop
 
 ## Receipt Contract
 
-The external result must conform to `kernel/schemas/aigov-review-receipt.v1.schema.json` before any semantic field is read. The active receipt schema is `aigov-review-receipt.v2` and binds repository ID/name, PR #49, exact base/head, `scope_revision`, review time, derived reviewer identity, PR-author implementer identity, exact inspector repository/commit/protocol and three immutable artifact hashes.
+The external result must conform to `kernel/schemas/aigov-review-receipt.v1.schema.json` before any semantic field is read. The active receipt schema is `aigov-review-receipt.v2` and binds repository ID/name, PR #49, exact base/head, `scope_revision`, review time, derived reviewer identity, PR-author implementer identity, exact inspector repository/commit/protocol, authoritative exact-head CI digest, canonical review-package hash, review-package file-byte hash, projection hash, manifest hash and all canonical artifact declarations.
 
 The authoritative technical result is the validated PR Inspector review package status:
 
@@ -24,7 +24,7 @@ YELLOW_CHANGES_OR_VERIFICATION_REQUIRED
 RED_DO_NOT_MERGE
 ```
 
-Different identity strings, `independent: true`, a provider label, PR prose or a local JSON file do not prove independence. Provenance is established only when the verifier retrieves the receipt and `review-package.json`, `DECISION_PROJECTION.json`, and `artifact-manifest.json` from the exact external `rezahh107/PR-Inspector` commit, verifies repository ID `1288323264`, active protocol `v1.10.1`, schemas, Git blob SHAs and recomputed SHA-256 hashes, and derives the reviewer identity from that verified source. A Green result is technical evidence only; it does not grant Merge authority. Merge remains `owner_only`.
+Different identity strings, `independent: true`, a provider label, PR prose or a local JSON file do not prove independence. Provenance is established only when the verifier retrieves and enumerates the official review directory at the exact external `rezahh107/PR-Inspector` commit, verifies repository ID `1288323264`, active protocol `v1.10.1`, full schemas, canonical projection equality, deterministic derived bytes and manifest, Git blob SHAs and all recomputed hashes, and derives the reviewer identity from that verified source. The review timestamp must follow the verified exact-head GitHub Actions completion time. A Green result is technical evidence only; it does not grant Merge authority. Merge remains `owner_only`.
 
 ## Staleness
 

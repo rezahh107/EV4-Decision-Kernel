@@ -4,7 +4,12 @@ import { readFileSync } from 'node:fs';
 import { verifyEvidenceBundle } from './verify-aigov-exact-main.mjs';
 import { validEvidenceFixture } from './lib/aigov-test-fixtures.mjs';
 
-const schemas = { reviewReceipt: JSON.parse(readFileSync('kernel/schemas/aigov-review-receipt.v1.schema.json', 'utf8')), reviewPackage: { type: 'object' } };
+const schemas = {
+  reviewReceipt: JSON.parse(readFileSync('kernel/schemas/aigov-review-receipt.v1.schema.json', 'utf8')),
+  reviewPackage: JSON.parse(readFileSync('kernel/vendor/pr-inspector/v1.10.1/review-package.schema.json', 'utf8')),
+  decisionProjection: JSON.parse(readFileSync('kernel/vendor/pr-inspector/v1.10.1/decision-projection.schema.json', 'utf8')),
+  ciIdentity: JSON.parse(readFileSync('kernel/schemas/aigov-ci-identity.v1.schema.json', 'utf8')),
+};
 const cases = [];
 
 function check(name, mutate, expected) {

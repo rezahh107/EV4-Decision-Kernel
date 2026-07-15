@@ -35,7 +35,7 @@ Implemented:
 - target workflow pinned to immutable active issuer `7a21045366bb9ad1ca2f950b8341ebb867dd8a52`;
 - protected validation contains exactly the approved immutable checkout and one fail-propagating bash validation step;
 - the validation step uses only the four externally verified Coverage identity outputs;
-- reset, clean-worktree, exact-HEAD, `npm ci` and `npm run validate:coverage` execute in the protected boundary;
+- externally bound checkout, clean-worktree and exact-HEAD assertions, `npm ci` and `npm run validate:coverage` execute in the protected boundary;
 - unrelated MVK, roadmap and history regressions execute in a dependent separate job;
 - shallow exact-head checkouts hydrate only authoritative target history after repository/origin/head verification, without changing the worktree.
 

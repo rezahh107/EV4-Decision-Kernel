@@ -39,7 +39,7 @@
             "additionalProperties": false,
             "required": ["kind", "sha256", "reference"],
             "properties": {
-              "kind": {"enum": ["local_deterministic", "external_review", "authoritative_owner_merge", "authoritative_exact_main"]},
+              "kind": {"enum": ["local_deterministic", "authoritative_exact_head_ci", "external_review", "authoritative_owner_merge", "authoritative_exact_main"]},
               "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
               "reference": {"type": "string", "minLength": 1}
             }

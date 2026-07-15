@@ -9,7 +9,9 @@ Neither a PR head, successful CI, target-authored record, caller-supplied actor,
 
 The verifier accepts no `--merge-actor`, `--expected-sha`, local receipt boolean, or caller-authored GitHub payload. It fetches the target repository, PR #49, current `main`, PR author, `merged_by`, base, reviewed head and merge commit from the public GitHub REST API. The checkout remote, local HEAD, API current-main identity and reviewed-head ancestry must agree.
 
-The review input is an immutable external source tuple: exact `rezahh107/PR-Inspector` commit plus a receipt path under the exact target head and `scope_revision`. The verifier fetches the receipt, active protocol metadata, trust policy, review package, decision projection and artifact manifest from that commit; validates schemas before semantic fields; recomputes file hashes; verifies Git blob SHAs; and rejects target-repository or local receipt lookalikes. The active compatibility source is `PR-Inspector@v1.10.1`, repository ID `1288323264`.
+The review input is an immutable external source tuple: exact `rezahh107/PR-Inspector` commit plus a receipt path under the exact target head and `scope_revision`. The verifier enumerates the review directory from GitHub rather than trusting receipt declarations. It validates the complete active `v1.10.1` package and projection schemas, reconstructs the canonical projection and every derived artifact byte, verifies prompt routing and the deterministic manifest, recomputes canonical-package/file/projection/manifest/final-byte hashes, verifies Git blob SHAs, and rejects BOM, encoding, newline, path, byte or target-authored lookalike drift. The active compatibility source is `PR-Inspector@v1.10.1`, repository ID `1288323264`.
+
+The verifier separately fetches the completed GitHub Actions run, jobs, check runs and uploaded artifact for the exact PR head. The accepted identity is a `pull_request` head execution, not a synthetic merge ref; every required job must be successful and produced by the GitHub Actions App identity. The independent review must be later than that authoritative CI completion time and bind the CI identity digest.
 
 ## Batch A
 
@@ -31,7 +33,7 @@ Generated workflow artifacts are evidence outputs; no post-merge repository comm
 
 ## Lifecycle and replay boundary
 
-`aigov-lifecycle-ledger.v1` is the sequence carrier. Exact-head CI materializes the first five events through `exact_head_validated`; the exact-main verifier appends only API-verified `independent_review_green`, `owner_merge` and `exact_main_verified` events. Duplicate IDs, replayed evidence hashes, missing predecessors, out-of-order events, foreign repository/PR/head/scope identities and unverified external evidence fail closed.
+`aigov-lifecycle-ledger.v1` is the sequence carrier. The workflow publishes local command-log files and an executed manifest while the run is in progress. Only after the run completes may `aigov:capture-ci-evidence` fetch the authoritative run/job/check/artifact identity and `aigov:lifecycle-ledger` materialize the first five events through `exact_head_validated` using the actual CI completion time and digest. The exact-main verifier appends only verified `independent_review_green`, API-derived `owner_merge` and authoritative `exact_main_verified` events. Duplicate IDs, replayed CI/review evidence, missing predecessors, time/order violations, foreign repository/PR/head/scope identities and unverified external evidence fail closed.
 
 ## Current limitation
 

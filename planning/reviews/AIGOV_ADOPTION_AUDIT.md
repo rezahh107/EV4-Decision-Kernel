@@ -75,6 +75,8 @@ The V2 Batch A scope adds machine-readable carriers for all fourteen listed rule
 
 The PR #49 bounded repair replaces caller-authored provenance and fixture-only sequence assumptions with fresh GitHub payload derivation, immutable PR Inspector artifact verification, a schema-backed lifecycle ledger and an exact-head executed evidence manifest. This repair remains `implemented_pending_rereview`; it does not change the repository adoption status.
 
+The follow-up bounded repair validates the complete official PR Inspector v1.10.1 directory rather than trusting declared hashes, binds `exact_head_validated` to a completed PR-head GitHub Actions run/job/check/artifact identity, and follows reachable local workflow scripts/actions for forbidden operations. The workflow itself publishes local command logs only; the authoritative CI identity and lifecycle prefix are generated after run completion. No target file claims that an in-progress run proves its own completion.
+
 `AIGOV-ADOPT-008`, the recovery execution program, product capabilities and Coverage promotion are excluded from Batch A.
 
 ## Evidence Limits

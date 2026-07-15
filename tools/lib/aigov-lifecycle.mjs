@@ -46,6 +46,7 @@ function add(diagnostics, code, message) {
 
 export function validateLifecycleLedger(ledger, context, verifiedEvidence = {}) {
   const diagnostics = [];
+  const ciDigests = verifiedEvidence.ciDigests || new Set();
   const reviewDigests = verifiedEvidence.reviewDigests || new Set();
   const mergeDigests = verifiedEvidence.mergeDigests || new Set();
   const exactMainDigests = verifiedEvidence.exactMainDigests || new Set();
@@ -83,9 +84,22 @@ export function validateLifecycleLedger(ledger, context, verifiedEvidence = {}) 
     if (digest && seenEvidenceDigests.has(digest)) add(diagnostics, 'AIGOV_LIFECYCLE_EVIDENCE_REPLAY', `Evidence digest was replayed by ${event.event_type}.`);
     if (digest) seenEvidenceDigests.add(digest);
 
+    if (index > 0 && Date.parse(event.occurred_at) < Date.parse(ledger.events[index - 1]?.occurred_at)) {
+      add(diagnostics, 'AIGOV_LIFECYCLE_TIME_ORDER_INVALID', `Event ${event.event_type} predates its predecessor.`);
+    }
+
+    if (event.event_type === 'exact_head_validated') {
+      if (event.evidence?.kind !== 'authoritative_exact_head_ci' || !ciDigests.has(digest)) {
+        add(diagnostics, 'AIGOV_EXACT_HEAD_CI_UNVERIFIED', 'Exact-head validation lacks a fresh authoritative PR-head GitHub Actions identity.');
+      }
+    }
+
     if (event.event_type === 'independent_review_green') {
       if (event.evidence?.kind !== 'external_review' || !reviewDigests.has(digest)) {
         add(diagnostics, 'AIGOV_REVIEW_PROVENANCE_UNVERIFIED', 'Independent review event lacks a verifier-created external provenance capability.');
+      }
+      if (ledger.events[index - 1]?.event_type !== 'exact_head_validated') {
+        add(diagnostics, 'AIGOV_REVIEW_BEFORE_EXACT_HEAD_CI', 'Independent review cannot precede authoritative exact-head CI completion.');
       }
     }
     if (event.event_type === 'owner_merge') {

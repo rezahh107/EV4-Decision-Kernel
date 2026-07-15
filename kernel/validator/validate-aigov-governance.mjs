@@ -150,7 +150,7 @@ function collectWorkflowValues(value, result = { uses: [], runs: [], scalarEntri
 
 const permissionRank = (value) => ({ none: 0, read: 1, write: 2 }[value] ?? (value === 'read-all' ? 1 : value === 'write-all' ? 2 : -1));
 function normalizePermissions(value) {
-  if (value == null || value === {}) return {};
+  if (value == null) return null;
   if (typeof value === 'string') return { '*': permissionRank(value) };
   if (typeof value !== 'object' || Array.isArray(value)) return { invalid: 99 };
   return Object.fromEntries(Object.entries(value).map(([key, permission]) => [key, permissionRank(permission)]));
@@ -159,6 +159,7 @@ function normalizePermissions(value) {
 export function permissionExpansions(baseValue, currentValue) {
   const base = normalizePermissions(baseValue);
   const current = normalizePermissions(currentValue);
+  if (base === null || current === null) return [];
   const keys = new Set([...Object.keys(base), ...Object.keys(current)]);
   return [...keys].filter((key) => {
     const baseRank = base[key] ?? base['*'] ?? 0;
@@ -167,10 +168,160 @@ export function permissionExpansions(baseValue, currentValue) {
   }).sort();
 }
 
-function workflowPermissions(workflow) {
-  const result = [{ location: 'workflow', value: workflow?.permissions }];
-  for (const [jobName, job] of Object.entries(workflow?.jobs || {})) result.push({ location: `jobs.${jobName}`, value: job?.permissions });
+function effectiveWorkflowPermissions(workflow) {
+  const result = [{ location: 'workflow', value: workflow?.permissions, explicit: workflow?.permissions != null }];
+  for (const [jobName, job] of Object.entries(workflow?.jobs || {})) {
+    result.push({ location: `jobs.${jobName}`, value: job?.permissions ?? workflow?.permissions, explicit: job?.permissions != null || workflow?.permissions != null });
+  }
   return result;
+}
+
+function dangerousCommandDiagnostics(commands, source) {
+  const diagnostics = [];
+  if (/\bgh\s+pr\s+merge\b|\bgh\s+api\b[^\n]*(?:\/merges|\/auto-merge)|enablePullRequestAutoMerge|\bgit\s+merge(?!-)\b/i.test(commands)) diagnostics.push(diagnostic('AIGOV_MERGE_COMMAND_FORBIDDEN', 'Executable path contains a merge or auto-merge command.', source));
+  if (/\bgit\s+push\b[^\n]*(?:--force(?:-with-lease)?|-f\b)/i.test(commands)) diagnostics.push(diagnostic('AIGOV_FORCE_PUSH_FORBIDDEN', 'Executable path contains a force-push command.', source));
+  if (/\bgit\s+(?:rebase|filter-branch|filter-repo)\b|\bgit\s+commit\b[^\n]*--amend|\bgit\s+update-ref\b|\bgit\s+reflog\s+expire\b|\bgit\s+reset\b[^\n]*--hard/i.test(commands)) diagnostics.push(diagnostic('AIGOV_HISTORY_REWRITE_FORBIDDEN', 'Executable path contains a history-rewrite command.', source));
+  if (/(?:\bgh\s+api\b|\bcurl\b)[^\n]*(?:--method\s+(?:POST|PUT|PATCH|DELETE)|-X\s*(?:POST|PUT|PATCH|DELETE))[^\n]*(?:\/rulesets|\/branches\/[^\s]+\/protection|\/actions\/permissions)/i.test(commands)) diagnostics.push(diagnostic('AIGOV_REPOSITORY_SETTINGS_MUTATION_FORBIDDEN', 'Executable path contains a repository-settings or branch-protection mutation.', source));
+  if (/\bgit\s+push\b|\bgh\s+(?:pr|repo|release)\s+(?:create|edit|close|merge|delete)\b|\bgh\s+api\b[^\n]*(?:--method\s+(?:POST|PUT|PATCH|DELETE)|-X\s*(?:POST|PUT|PATCH|DELETE))|\bcurl\b[^\n]*-X\s*(?:POST|PUT|PATCH|DELETE)/i.test(commands)) diagnostics.push(diagnostic('AIGOV_EXTERNAL_REPOSITORY_WRITE_FORBIDDEN', 'Executable repository write target cannot be proven in-bounds.', source));
+  if (/\brm\s+-[^\n]*r[^\n]*f|\bgit\s+rm\b|\bgit\s+clean\b[^\n]*-[^\n]*[fd]|\bfind\b[^\n]*-delete\b|\bgh\s+api\b[^\n]*(?:--method\s+DELETE|-X\s*DELETE)/i.test(commands)) diagnostics.push(diagnostic('AIGOV_DESTRUCTIVE_DELETION_FORBIDDEN', 'Executable path contains destructive deletion.', source));
+  if (/\b(?:npm|pnpm|yarn)\s+(?:update|upgrade|up)\b|\bnpm\s+audit\s+fix\b[^\n]*--force|\bnpx\s+npm-check-updates\b[^\n]*-u\b/i.test(commands)) diagnostics.push(diagnostic('AIGOV_BROAD_DEPENDENCY_UPGRADE_FORBIDDEN', 'Executable path contains a broad dependency-upgrade command.', source));
+  return diagnostics;
+}
+
+function maskJavascript(text) {
+    const chars = [...text];
+    let quote = null;
+    let lineComment = false;
+    let blockComment = false;
+    let escaped = false;
+    for (let index = 0; index < chars.length; index += 1) {
+      const char = chars[index];
+      const next = chars[index + 1];
+      if (lineComment) { if (char === '\n') lineComment = false; else chars[index] = ' '; continue; }
+      if (blockComment) { chars[index] = char === '\n' ? '\n' : ' '; if (char === '*' && next === '/') { chars[index + 1] = ' '; blockComment = false; index += 1; } continue; }
+      if (quote) {
+        chars[index] = char === '\n' ? '\n' : ' ';
+        if (escaped) escaped = false;
+        else if (char === '\\') escaped = true;
+        else if (char === quote) quote = null;
+        continue;
+      }
+      if (char === '/' && next === '/') { chars[index] = chars[index + 1] = ' '; lineComment = true; index += 1; continue; }
+      if (char === '/' && next === '*') { chars[index] = chars[index + 1] = ' '; blockComment = true; index += 1; continue; }
+      if (char === '\'' || char === '"' || char === '`') { quote = char; chars[index] = ' '; }
+    }
+    return chars.join('');
+}
+
+function javascriptOperationDiagnostics(text, source) {
+  const diagnostics = [];
+  const mask = maskJavascript(text);
+  const callSlices = (pattern) => {
+    const slices = [];
+    for (const match of mask.matchAll(pattern)) {
+      const start = match.index;
+      const open = mask.indexOf('(', start);
+      if (open < 0) continue;
+      let depth = 0;
+      let end = open;
+      for (; end < mask.length; end += 1) {
+        if (mask[end] === '(') depth += 1;
+        else if (mask[end] === ')' && --depth === 0) { end += 1; break; }
+      }
+      slices.push(text.slice(start, end));
+    }
+    return slices;
+  };
+  const childCalls = callSlices(/\b(?:exec|execSync|execFile|execFileSync|spawn|spawnSync)\s*\(/g);
+  diagnostics.push(...dangerousCommandDiagnostics(childCalls.join('\n'), source));
+  const apiCalls = callSlices(/\b(?:fetch|https\.request|request|octokit\.request|github\.request)\s*\(/gi);
+  const apiText = apiCalls.join('\n');
+  const mutatingMethod = /\b(?:method\s*:\s*['"](?:POST|PUT|PATCH|DELETE)['"]|['"](?:POST|PUT|PATCH|DELETE)\s+\/repos\/|\.request\s*\(\s*['"](?:POST|PUT|PATCH|DELETE))/i.test(apiText);
+  const githubMutationApi = apiCalls.length > 0 && mutatingMethod;
+  const repositoryEndpoint = /\/repos\/(?:[A-Za-z0-9_.-]+|\$\{[^}]+\})\/(?:[A-Za-z0-9_.-]+|\$\{[^}]+\})/i.test(text);
+  const settingsEndpoint = /\/(?:rulesets|branches\/(?:[^\s'"`]+|\$\{[^}]+\})\/protection|actions\/permissions)\b/i.test(text);
+  const mergeEndpoint = /enablePullRequestAutoMerge|\/(?:merges|auto-merge)\b|\.merge\s*\(/i.test(text);
+  if (githubMutationApi && settingsEndpoint) diagnostics.push(diagnostic('AIGOV_REPOSITORY_SETTINGS_MUTATION_FORBIDDEN', 'Local JavaScript performs a GitHub settings mutation.', source));
+  if (githubMutationApi && repositoryEndpoint) diagnostics.push(diagnostic('AIGOV_EXTERNAL_REPOSITORY_WRITE_FORBIDDEN', 'Local JavaScript performs a repository write whose target cannot be proven in-bounds.', source));
+  if (githubMutationApi && mergeEndpoint) diagnostics.push(diagnostic('AIGOV_MERGE_COMMAND_FORBIDDEN', 'Local JavaScript performs a merge or auto-merge mutation.', source));
+  if (/\boctokit\.(?:rest\.)?repos\.(?:update|create|delete|replace|add|remove)|\bgithub\.rest\.repos\.(?:update|create|delete|replace|add|remove)/i.test(mask)) diagnostics.push(diagnostic('AIGOV_EXTERNAL_REPOSITORY_WRITE_FORBIDDEN', 'Local JavaScript invokes a mutating Octokit repository method.', source));
+  if (/\b(?:eval|Function)\s*\(/i.test(mask) || childCalls.some((call) => /\(\s*(?:process\.(?:env|argv)|[`'"]?\$\{)/i.test(call)) || (githubMutationApi && /\b(?:fetch|request)\s*\(\s*[A-Za-z_$]/i.test(apiText))) diagnostics.push(diagnostic('AIGOV_DYNAMIC_EXECUTION_UNRESOLVED', 'Reachable local JavaScript contains an unresolved dynamic execution path.', source));
+  return diagnostics;
+}
+
+function shellInvocations(command) {
+  const paths = [];
+  for (const match of command.matchAll(/(?:^|[;&|\n]\s*|\b)(?:node|bash|sh|python3?|ruby)\s+(?:--?[^\s]+\s+)*([A-Za-z0-9_./-]+(?:\.(?:mjs|cjs|js|sh|py|rb)))/g)) paths.push(match[1]);
+  for (const match of command.matchAll(/(?:^|[;&|\n]\s*)(\.\/[A-Za-z0-9_./-]+)/g)) paths.push(match[1]);
+  for (const match of command.matchAll(/(?:^|[;&|\n]\s*)(?:source|\.)\s+([A-Za-z0-9_./-]+)/g)) paths.push(match[1]);
+  return uniqueSorted(paths);
+}
+
+function npmInvocations(command) {
+  return [...command.matchAll(/\bnpm\s+run\s+([A-Za-z0-9:_.-]+)/g)].map((match) => match[1]);
+}
+
+function reachableScriptDiagnostics(workflow, source, readRepositoryFile) {
+  if (!readRepositoryFile) return [];
+  const diagnostics = [];
+  const visitedFiles = new Set();
+  const visitedScripts = new Set();
+  let packageScripts = null;
+  try { packageScripts = JSON.parse(readRepositoryFile('package.json') || '{}').scripts || {}; } catch { diagnostics.push(diagnostic('AIGOV_LOCAL_SCRIPT_UNRESOLVED', 'package.json could not be parsed for workflow script reachability.', source)); }
+
+  const scanCommand = (command, commandSource) => {
+    diagnostics.push(...dangerousCommandDiagnostics(command, commandSource));
+    if (/\beval\b|\b(?:bash|sh)\s+-c\s+["']?\$|\b(?:node|bash|sh|python3?)\s+["']?\$/.test(command)) diagnostics.push(diagnostic('AIGOV_DYNAMIC_EXECUTION_UNRESOLVED', 'Reachable shell command contains unresolved dynamic execution.', commandSource));
+    for (const scriptName of npmInvocations(command)) {
+      if (visitedScripts.has(scriptName)) continue;
+      visitedScripts.add(scriptName);
+      const script = packageScripts?.[scriptName];
+      if (typeof script !== 'string') diagnostics.push(diagnostic('AIGOV_LOCAL_SCRIPT_UNRESOLVED', `npm script ${scriptName} cannot be resolved.`, commandSource));
+      else scanCommand(script, `package.json#scripts.${scriptName}`);
+    }
+    for (const relative of shellInvocations(command)) scanFile(relative, commandSource);
+  };
+
+  const scanAction = (relative, parentSource) => {
+    const root = relative.replace(/^\.\//, '').replace(/\/$/, '');
+    const actionPath = [`${root}/action.yml`, `${root}/action.yaml`].find((candidate) => readRepositoryFile(candidate) != null);
+    if (!actionPath) { diagnostics.push(diagnostic('AIGOV_LOCAL_ACTION_UNRESOLVED', `Local action ${relative} has no resolvable action.yml/action.yaml.`, parentSource)); return; }
+    let action;
+    try { action = parseWorkflow(readRepositoryFile(actionPath), actionPath); } catch (error) { diagnostics.push(diagnostic('AIGOV_LOCAL_ACTION_UNRESOLVED', error.message, actionPath)); return; }
+    if (action.runs?.using === 'composite') {
+      for (const step of action.runs.steps || []) {
+        if (typeof step.run === 'string') scanCommand(step.run, actionPath);
+        if (typeof step.uses === 'string' && step.uses.startsWith('./')) scanAction(path.posix.join(root, step.uses), actionPath);
+      }
+    } else {
+      for (const field of ['pre', 'main', 'post']) if (typeof action.runs?.[field] === 'string') scanFile(path.posix.join(root, action.runs[field]), actionPath);
+    }
+  };
+
+  const scanFile = (relative, parentSource) => {
+    const normalized = path.posix.normalize(relative.replace(/^\.\//, ''));
+    if (normalized.startsWith('../') || path.posix.isAbsolute(normalized)) { diagnostics.push(diagnostic('AIGOV_LOCAL_SCRIPT_UNRESOLVED', `Local script escapes repository: ${relative}.`, parentSource)); return; }
+    if (visitedFiles.has(normalized)) return;
+    visitedFiles.add(normalized);
+    const text = readRepositoryFile(normalized);
+    if (typeof text !== 'string') { diagnostics.push(diagnostic('AIGOV_LOCAL_SCRIPT_UNRESOLVED', `Local script cannot be resolved: ${normalized}.`, parentSource)); return; }
+    if (/\.(?:mjs|cjs|js)$/.test(normalized)) {
+      diagnostics.push(...javascriptOperationDiagnostics(text, normalized));
+      const codeMask = maskJavascript(text);
+      for (const match of text.matchAll(/(?:\bimport(?:[\s\S]*?\bfrom)?|\brequire\s*\()\s*['"](\.{1,2}\/[A-Za-z0-9_./-]+)['"]/g)) {
+        if (codeMask.slice(match.index, match.index + 6).trim() === '') continue;
+        const candidate = path.posix.normalize(path.posix.join(path.posix.dirname(normalized), match[1]));
+        const resolved = [candidate, `${candidate}.mjs`, `${candidate}.js`, `${candidate}.cjs`, `${candidate}/index.mjs`, `${candidate}/index.js`].find((item) => readRepositoryFile(item) != null);
+        if (!resolved) diagnostics.push(diagnostic('AIGOV_LOCAL_SCRIPT_UNRESOLVED', `Static local import cannot be resolved: ${match[1]}.`, normalized));
+        else scanFile(resolved, normalized);
+      }
+    } else scanCommand(text, normalized);
+  };
+
+  const values = collectWorkflowValues(workflow);
+  for (const command of values.runs) scanCommand(command, source);
+  for (const target of values.uses.filter((item) => item.startsWith('./'))) scanAction(target, source);
+  return diagnostics;
 }
 
 export function classifyDependencyChange(basePackage, currentPackage) {
@@ -196,7 +347,7 @@ export function classifyDependencyChange(basePackage, currentPackage) {
   };
 }
 
-export function analyzeWorkflowYaml(currentText, { source = 'workflow.yml', baseText = null } = {}) {
+export function analyzeWorkflowYaml(currentText, { source = 'workflow.yml', baseText = null, readRepositoryFile = null } = {}) {
   const diagnostics = [];
   let current;
   try {
@@ -209,16 +360,11 @@ export function analyzeWorkflowYaml(currentText, { source = 'workflow.yml', base
     if (!target.startsWith('./') && !target.startsWith('docker://') && !/@[0-9a-fA-F]{40}$/.test(target)) diagnostics.push(diagnostic('AIGOV_ACTION_NOT_IMMUTABLY_PINNED', `Workflow action is not pinned by a 40-character SHA: ${target}.`, source));
   }
   const commands = values.runs.join('\n');
-  if (/\bgh\s+pr\s+merge\b|\bgh\s+api\b[^\n]*(?:\/merges|\/auto-merge)|enablePullRequestAutoMerge|\bgit\s+merge(?!-)\b/i.test(commands)) diagnostics.push(diagnostic('AIGOV_MERGE_COMMAND_FORBIDDEN', 'Workflow contains a merge or auto-merge command.', source));
-  if (/\bgit\s+push\b[^\n]*(?:--force(?:-with-lease)?|-f\b)/i.test(commands)) diagnostics.push(diagnostic('AIGOV_FORCE_PUSH_FORBIDDEN', 'Workflow contains a force-push command.', source));
-  if (/\bgit\s+(?:rebase|filter-branch|filter-repo)\b|\bgit\s+commit\b[^\n]*--amend|\bgit\s+update-ref\b|\bgit\s+reflog\s+expire\b/i.test(commands)) diagnostics.push(diagnostic('AIGOV_HISTORY_REWRITE_FORBIDDEN', 'Workflow contains a history-rewrite command.', source));
-  if (/(?:\bgh\s+api\b|\bcurl\b)[^\n]*(?:--method\s+(?:POST|PUT|PATCH|DELETE)|-X\s*(?:POST|PUT|PATCH|DELETE))[^\n]*(?:\/rulesets|\/branches\/[^\s]+\/protection|\/actions\/permissions)/i.test(commands)) diagnostics.push(diagnostic('AIGOV_REPOSITORY_SETTINGS_MUTATION_FORBIDDEN', 'Workflow contains a repository-settings or branch-protection mutation.', source));
-  if (/\bgit\s+push\b|\bgh\s+(?:pr|repo|release)\s+(?:create|edit|close|merge|delete)\b|\bgh\s+api\b[^\n]*(?:--method\s+(?:POST|PUT|PATCH|DELETE)|-X\s*(?:POST|PUT|PATCH|DELETE))/i.test(commands)) diagnostics.push(diagnostic('AIGOV_EXTERNAL_REPOSITORY_WRITE_FORBIDDEN', 'Workflow contains a repository write command; external target identity cannot be proven safe.', source));
-  if (/\brm\s+-[^\n]*r[^\n]*f|\bgit\s+rm\b|\bfind\b[^\n]*-delete\b|\bgh\s+api\b[^\n]*(?:--method\s+DELETE|-X\s*DELETE)/i.test(commands)) diagnostics.push(diagnostic('AIGOV_DESTRUCTIVE_DELETION_FORBIDDEN', 'Workflow contains a destructive deletion command.', source));
-  if (/\b(?:npm|pnpm|yarn)\s+(?:update|upgrade|up)\b|\bnpm\s+audit\s+fix\b[^\n]*--force|\bnpx\s+npm-check-updates\b[^\n]*-u\b/i.test(commands)) diagnostics.push(diagnostic('AIGOV_BROAD_DEPENDENCY_UPGRADE_FORBIDDEN', 'Workflow contains a broad dependency-upgrade command.', source));
+  diagnostics.push(...dangerousCommandDiagnostics(commands, source));
   for (const entry of values.scalarEntries) {
     if (/\$\{\{\s*secrets\.[A-Za-z_][A-Za-z0-9_]*\s*\}\}|\$\{\{\s*github\.token\s*\}\}/i.test(entry.value)) diagnostics.push(diagnostic('AIGOV_SECRET_ACCESS_FORBIDDEN', `Workflow accesses a credential at ${entry.path}.`, source));
   }
+  diagnostics.push(...reachableScriptDiagnostics(current, source, readRepositoryFile));
 
   if (baseText != null) {
     let base;
@@ -228,11 +374,16 @@ export function analyzeWorkflowYaml(currentText, { source = 'workflow.yml', base
       diagnostics.push(diagnostic('AIGOV_WORKFLOW_BASE_YAML_INVALID', error.message, source));
       return diagnostics;
     }
-    const basePermissions = new Map(workflowPermissions(base).map((item) => [item.location, item.value]));
-    for (const currentPermission of workflowPermissions(current)) {
-      const expansions = permissionExpansions(basePermissions.get(currentPermission.location), currentPermission.value);
+    const basePermissions = new Map(effectiveWorkflowPermissions(base).map((item) => [item.location, item]));
+    for (const currentPermission of effectiveWorkflowPermissions(current)) {
+      if (!currentPermission.explicit || currentPermission.value == null) diagnostics.push(diagnostic('AIGOV_WORKFLOW_PERMISSION_BOUNDARY_UNKNOWN', `Effective permission boundary at ${currentPermission.location} is inherited from an unproven default.`, source));
+      const basePermission = basePermissions.get(currentPermission.location);
+      if (!basePermission && currentPermission.location !== 'workflow') diagnostics.push(diagnostic('AIGOV_WORKFLOW_PERMISSION_BOUNDARY_UNKNOWN', `No base permission boundary exists for ${currentPermission.location}.`, source));
+      const expansions = permissionExpansions(basePermission?.value, currentPermission.value);
       if (expansions.length) diagnostics.push(diagnostic('AIGOV_WORKFLOW_PERMISSION_EXPANSION', `Permission expansion at ${currentPermission.location}: ${expansions.join(', ')}.`, source));
     }
+    const baseWorkflowPermission = basePermissions.get('workflow')?.value;
+    if (baseWorkflowPermission != null && current?.permissions == null) diagnostics.push(diagnostic('AIGOV_WORKFLOW_PERMISSION_BOUNDARY_UNKNOWN', 'An explicit workflow permission boundary was removed.', source));
   }
   return diagnostics;
 }
@@ -255,11 +406,17 @@ function securityCarrierDiagnostics(policy) {
 function workflowSecurityDiagnostics(policy) {
   const diagnostics = [...securityCarrierDiagnostics(policy)];
   const workflowDir = path.join(ROOT, '.github/workflows');
+  const readRepositoryFile = (relativePath) => {
+    const normalized = path.posix.normalize(relativePath.replace(/^\.\//, ''));
+    if (normalized.startsWith('../') || path.posix.isAbsolute(normalized)) return null;
+    const absolute = path.join(ROOT, normalized);
+    return existsSync(absolute) ? readFileSync(absolute, 'utf8') : null;
+  };
   for (const name of readdirSync(workflowDir).filter((entry) => /\.ya?ml$/.test(entry)).sort()) {
     const relativePath = `.github/workflows/${name}`;
     const currentText = readFileSync(path.join(ROOT, relativePath), 'utf8');
     const baseText = git(['show', `${BASE_SHA}:${relativePath}`]) || null;
-    diagnostics.push(...analyzeWorkflowYaml(currentText, { source: relativePath, baseText }));
+    diagnostics.push(...analyzeWorkflowYaml(currentText, { source: relativePath, baseText, readRepositoryFile }));
   }
   const basePackageRaw = git(['show', `${BASE_SHA}:package.json`]);
   if (basePackageRaw) {
@@ -305,6 +462,7 @@ export function evidenceManifestDiagnostics(evidence, policy, scope, { expectedH
   for (const item of evidence.evidence_items) {
     if (item.head_sha !== evidence.head_sha) diagnostics.push(diagnostic('AIGOV_EVIDENCE_HEAD_MISMATCH', `${item.evidence_id} is not bound to the manifest head.`, EVIDENCE_PATH));
     if (item.status === 'passed' && (!item.sha256 || !item.authoritative_reference)) diagnostics.push(diagnostic('AIGOV_PASSED_EVIDENCE_UNHASHED', `${item.evidence_id} passed without a hash and stable reference.`, EVIDENCE_PATH));
+    if (item.evidence_source === 'github_actions' && item.status === 'passed' && !item.github_actions) diagnostics.push(diagnostic('AIGOV_GITHUB_ACTIONS_IDENTITY_MISSING', `${item.evidence_id} lacks workflow/run/job/check/artifact identity.`, EVIDENCE_PATH));
   }
   const externalKinds = ['independent_review', 'owner_merge', 'exact_main_receipt'];
   if (evidence.evidence_items.some((item) => externalKinds.includes(item.kind) && item.status !== 'pending')) diagnostics.push(diagnostic('AIGOV_EXTERNAL_GATE_PREMATURE', 'Independent review, owner Merge and exact-main items must remain pending on the PR head.', EVIDENCE_PATH));
@@ -313,9 +471,14 @@ export function evidenceManifestDiagnostics(evidence, policy, scope, { expectedH
     if (evidence.head_sha !== 'derived_at_runtime' || evidence.generated_at !== null || evidence.verification_budget.executed_checks !== 0 || executedItems.length) diagnostics.push(diagnostic('AIGOV_EVIDENCE_TEMPLATE_INVALID', 'Committed evidence template must remain unexecuted and runtime-bound.', EVIDENCE_PATH));
     if (evidence.evidence_items.filter((item) => ['validation', 'scope_disclosure'].includes(item.kind)).length < minimumVerification) diagnostics.push(diagnostic('AIGOV_EVIDENCE_ITEM_BUDGET_INCOMPLETE', 'Evidence template does not define enough stable verification items.', EVIDENCE_PATH));
     if (requireExecutedBudget) diagnostics.push(diagnostic('AIGOV_EXECUTED_EVIDENCE_REQUIRED', 'An executed exact-head evidence manifest is required.', EVIDENCE_PATH));
-  } else if (evidence.manifest_state === 'executed_exact_head') {
+  } else if (['executed_exact_head', 'executed_exact_head_ci_verified'].includes(evidence.manifest_state)) {
     if (!/^[0-9a-f]{40}$/.test(evidence.head_sha) || evidence.head_sha !== expectedHead || !evidence.generated_at) diagnostics.push(diagnostic('AIGOV_EVIDENCE_HEAD_MISMATCH', 'Executed evidence must bind the exact expected head.', EVIDENCE_PATH));
     if (evidence.verification_budget.executed_checks < minimumVerification || executedItems.some((item) => item.status !== 'passed')) diagnostics.push(diagnostic('AIGOV_VERIFICATION_BUDGET_INSUFFICIENT', 'Executed exact-head evidence is below budget or contains a failed check.', EVIDENCE_PATH));
+    if (evidence.manifest_state === 'executed_exact_head_ci_verified') {
+      const ciItem = evidence.evidence_items.find((item) => item.evidence_id === 'exact-head-ci-identity');
+      if (!ciItem || ciItem.status !== 'passed' || ciItem.evidence_source !== 'github_actions' || !ciItem.github_actions) diagnostics.push(diagnostic('AIGOV_EXACT_HEAD_CI_UNVERIFIED', 'Finalized evidence must bind the authoritative exact-head CI identity.', EVIDENCE_PATH));
+      if (executedItems.some((item) => item.evidence_source !== 'github_actions' || !item.github_actions)) diagnostics.push(diagnostic('AIGOV_GITHUB_ACTIONS_IDENTITY_MISSING', 'Finalized executed checks must reference their workflow run, job, check run and artifact file.', EVIDENCE_PATH));
+    }
   }
   return diagnostics;
 }
