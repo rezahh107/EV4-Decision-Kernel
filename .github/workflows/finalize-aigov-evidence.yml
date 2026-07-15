@@ -104,7 +104,7 @@ jobs:
           --output artifacts/aigov-post-ci/aigov-batch-a-finalized-evidence.json
           --ci-output artifacts/aigov-post-ci/aigov-batch-a-ci-identity.json
           --validation-artifact-id "${{ steps.validation-evidence.outputs.artifact-id }}"
-          --validation-artifact-digest "${{ steps.validation-evidence.outputs.artifact-digest }}"
+          --validation-artifact-digest "sha256:${{ steps.validation-evidence.outputs.artifact-digest }}"
           --validation-artifact-name "aigov-validation-evidence-${SOURCE_HEAD_SHA}"
           --finalizer-run-id "${{ github.run_id }}"
           --artifact-identity-output artifacts/aigov-post-ci/aigov-validation-artifact-identity.json
@@ -144,7 +144,7 @@ jobs:
       - name: Index assigned payload artifact identity and every file hash
         env:
           PAYLOAD_ARTIFACT_ID: ${{ steps.payload.outputs.artifact-id }}
-          PAYLOAD_ARTIFACT_DIGEST: ${{ steps.payload.outputs.artifact-digest }}
+          PAYLOAD_ARTIFACT_DIGEST: sha256:${{ steps.payload.outputs.artifact-digest }}
           PAYLOAD_ARTIFACT_NAME: aigov-post-ci-evidence-${{ github.event.pull_request.head.sha }}
         run: >-
           node tools/index-aigov-post-ci-artifact.mjs
