@@ -57,7 +57,7 @@ jobs:
       - name: Materialize exact-bound pending rereview sequence
         env:
           EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          WORKFLOW_SHA: ${{ github.workflow_sha }}
+          WORKFLOW_SHA: ${{ github.event.pull_request.head.sha }}
           SOURCE_RUN_ID: ${{ github.run_id }}
           SOURCE_RUN_ATTEMPT: ${{ github.run_attempt }}
         run: >-
