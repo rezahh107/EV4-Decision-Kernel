@@ -1,0 +1,50 @@
+{
+  "impact_id": "coverage-impact.dcov-exec-001.pr48-aigov-roadmap-reconciliation",
+  "impact_version": "1.0.0",
+  "sequence_number": 3,
+  "previous_impact_id": "coverage-impact.dcov-exec-001.pr47-fixture-oracle-repair",
+  "repository": "rezahh107/EV4-Decision-Kernel",
+  "pull_request": 48,
+  "base_sha": "d0e465276f395c11518162f4a1ff8ceec8c03f40",
+  "work_package_id": "DCOV-EXEC-001",
+  "work_type": "blocking_defect",
+  "coverage_sensitive": false,
+  "impact_classification": "not_applicable",
+  "changed_paths": [
+    ".github/workflows/validate-mvk.yml",
+    "package.json",
+    "planning/NEXT_WORK.md",
+    "planning/coverage/impacts/dcov-exec-001.pr48-aigov-roadmap-reconciliation.json"
+  ],
+  "bootstrap_exception": false,
+  "reason": "records_higher_priority_aigov_governance_adoption_without_changing_coverage_contract_data_metrics_or_proof_state",
+  "coverage_state_before": "not_measurable",
+  "coverage_state_after": "not_measurable",
+  "baseline_before": "coverage-baseline.v1.0.0",
+  "baseline_after": "coverage-baseline.v1.0.0",
+  "completed_obligation_ids": [],
+  "remaining_obligation_ids": [
+    "OB-EXEC-002-RECONCILE-ELEMENTS",
+    "OB-EXEC-002-EXPAND-CATALOG",
+    "OB-EXEC-002-CLOSE-SELECTED-P0-FAMILY",
+    "OB-EXEC-002-LAYOUT-BOUNDED-PROOF",
+    "OB-EXEC-005-VALIDATE-DENOMINATORS",
+    "OB-EXEC-005-CRITICAL-100"
+  ],
+  "closed_family_ids": [],
+  "element_coverage_delta": null,
+  "question_coverage_delta": null,
+  "known_gaps": [
+    "External project-owner governance approval carrier remains absent; Coverage policy remains non-active.",
+    "Element and Question denominators remain unresolved and all Coverage percentages remain null.",
+    "AIGOV-ADOPT-000 records authority and roadmap priority only; it creates no Coverage content, proof credit or readiness claim.",
+    "KROAD-012 remains the next content-expansion package after governance adoption closure."
+  ],
+  "zero_delta": true,
+  "blocking_defect": {
+    "defect_id": "AIGOV-ADOPT-000-ROADMAP-AUTHORITY-RECONCILIATION",
+    "reason": "Repository authority and current-task memory must be reconciled before later governance or product increments can proceed safely."
+  },
+  "next_content_expansion_package": "KROAD-012",
+  "exact_head_sha": "derived_at_pr_runtime"
+}
