@@ -2,7 +2,7 @@ import { canonicalSha256 } from './aigov-lifecycle.mjs';
 
 export const GITHUB_ACTIONS_PRODUCER = { app_id: 15368, slug: 'github-actions', name: 'GitHub Actions', owner: 'github' };
 export const REQUIRED_WORKFLOW = { name: 'Validate MVK', path: '.github/workflows/validate-mvk.yml' };
-export const REQUIRED_JOBS = ['External Coverage Trust Gate', 'MVK and roadmap regressions', 'Validate MVK'];
+export const REQUIRED_JOBS = ['External Coverage Trust Gate / Verify authoritative Coverage trust identity', 'MVK and roadmap regressions', 'Validate MVK'];
 export const REQUIRED_ARTIFACT = 'aigov-batch-a-scope-disclosure';
 
 function iso(value) {

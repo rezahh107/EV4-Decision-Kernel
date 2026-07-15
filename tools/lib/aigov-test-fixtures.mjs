@@ -48,7 +48,7 @@ export function validCiIdentityFixture() {
       updated_at: '2026-07-15T09:30:01.000Z',
     },
     jobs: [
-      ['External Coverage Trust Gate', 3001],
+      ['External Coverage Trust Gate / Verify authoritative Coverage trust identity', 3001],
       ['Validate MVK', 3002],
       ['MVK and roadmap regressions', 3003],
     ].map(([name, jobId], index) => ({

@@ -14,7 +14,7 @@ function payloads() {
     repository: { id: repositoryId, full_name: repository }, head_repository: { id: repositoryId, full_name: repository },
     pull_requests: [{ number: prNumber, head: { sha: headSha, ref: 'governance/aigov-v2-batch-a-enforcement' }, base: { sha: 'b'.repeat(40), ref: 'main' } }],
   };
-  const names = ['External Coverage Trust Gate', 'Validate MVK', 'MVK and roadmap regressions'];
+  const names = ['External Coverage Trust Gate / Verify authoritative Coverage trust identity', 'Validate MVK', 'MVK and roadmap regressions'];
   const jobs = names.map((name, index) => ({ id: 3001 + index, name, head_sha: headSha, status: 'completed', conclusion: 'success', check_run_url: `https://api.github.com/repos/${repository}/check-runs/${3001 + index}`, html_url: `https://github.com/${repository}/actions/runs/2001/job/${3001 + index}`, started_at: `2026-07-15T09:${index}0:00Z`, completed_at: `2026-07-15T09:${index}9:00Z` }));
   const checkRuns = jobs.map((job) => ({ id: job.id, head_sha: headSha, status: 'completed', conclusion: 'success', details_url: job.html_url, external_id: `check-${job.id}`, app: { id: 15368, slug: 'github-actions', name: 'GitHub Actions', owner: { login: 'github' } } }));
   const artifacts = [{ id: 4001, name: 'aigov-batch-a-scope-disclosure', expired: false, digest: `sha256:${'e'.repeat(64)}`, url: `https://api.github.com/repos/${repository}/actions/artifacts/4001`, archive_download_url: `https://api.github.com/repos/${repository}/actions/artifacts/4001/zip`, created_at: '2026-07-15T09:29:00Z', expires_at: '2026-07-29T09:29:00Z', workflow_run: { id: 2001, head_sha: headSha, head_repository_id: repositoryId } }];
