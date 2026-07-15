@@ -1,7 +1,7 @@
 # AIGOV Independent Review Compatibility Profile
 
-**Status:** active Batch A protocol  
-**Plan:** `GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2`  
+**Status:** active Batch A protocol
+**Plan:** `GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2`
 **Owner:** repository owner for Merge administration; external AI reviewer for technical verdict
 
 ## Boundary

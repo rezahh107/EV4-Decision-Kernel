@@ -1,6 +1,6 @@
 # AIGOV Exact-Main Closure Protocol
 
-**Status:** active verification protocol; not a closure receipt  
+**Status:** active verification protocol; not a closure receipt
 **Plan:** `GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2`
 
 ## Rule
