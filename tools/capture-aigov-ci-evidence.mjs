@@ -4,7 +4,7 @@ import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import { fetchExactHeadCiIdentity, validateCiIdentity } from './lib/aigov-ci-evidence.mjs';
-import { sha256 } from './lib/aigov-lifecycle.mjs';
+import { canonicalSha256, sha256 } from './lib/aigov-lifecycle.mjs';
 import { fetchSequenceProducerIdentity, validateSequenceProducerIdentity } from './lib/aigov-sequence-producer.mjs';
 
 const ROOT = process.cwd();
@@ -104,8 +104,33 @@ async function main() {
   if (!evidenceValidator(evidence)) throw new Error(`AIGOV_EVIDENCE_SCHEMA_INVALID:${JSON.stringify(evidenceValidator.errors)}`);
   writeFileSync(path.resolve(ROOT, args.ciOutput), `${JSON.stringify(identity, null, 2)}\n`);
   writeFileSync(path.resolve(ROOT, args.output), `${JSON.stringify(evidence, null, 2)}\n`);
-  const validationArtifactIdentity = { schema_version: 'aigov-validation-artifact-identity.v1', repository: REPOSITORY, repository_id: REPOSITORY_ID, pr_number: PR_NUMBER, exact_head_sha: args.head, scope_revision: scope.scope_revision, workflow_id: finalizer.workflow_id, run_id: finalizer.id, job_id: finalizerJob.id, artifact_id: artifact.id, artifact_name: artifact.name, artifact_digest: artifact.digest, api_url: artifact.url, files: evidence.evidence_items.filter((item) => item.github_actions?.artifact_id === artifact.id).map((item) => ({ evidence_id: item.evidence_id, filename: item.github_actions.filename, final_file_byte_sha256: item.sha256 })) };
+  const validationArtifactIdentity = {
+    schema_version: 'aigov-validation-artifact-identity.v1',
+    identity_digest: '',
+    repository: REPOSITORY,
+    repository_id: REPOSITORY_ID,
+    pr_number: PR_NUMBER,
+    exact_head_sha: args.head,
+    scope_revision: scope.scope_revision,
+    workflow_id: finalizer.workflow_id,
+    workflow_name: finalizer.name,
+    workflow_path: finalizer.path,
+    run_id: finalizer.id,
+    run_api_url: finalizer.url,
+    run_html_url: finalizer.html_url,
+    job_id: finalizerJob.id,
+    job_check_run_url: finalizerJob.check_run_url,
+    artifact_id: artifact.id,
+    artifact_name: artifact.name,
+    artifact_digest: artifact.digest,
+    api_url: artifact.url,
+    evidence_source: 'fresh_github_rest_api_https',
+    observed_at: finalizerResult.observedAt,
+    files: evidence.evidence_items.filter((item) => item.github_actions?.artifact_id === artifact.id).map((item) => ({ evidence_id: item.evidence_id, filename: item.github_actions.filename, final_file_byte_sha256: item.sha256 })),
+  };
+  validationArtifactIdentity.identity_digest = canonicalSha256({ ...validationArtifactIdentity, identity_digest: undefined });
   writeFileSync(path.resolve(ROOT, args.artifactIdentityOutput), `${JSON.stringify(validationArtifactIdentity, null, 2)}\n`);
+  writeFileSync(path.join(path.dirname(path.resolve(ROOT, args.output)), 'aigov-sequence-producer-identity.json'), `${JSON.stringify(sequenceResult.identity, null, 2)}\n`);
   console.log(JSON.stringify({ status: 'pass', head_sha: args.head, scope_revision: scope.scope_revision, ci_identity_digest: identity.identity_digest, workflow_id: identity.workflow.workflow_id, run_id: identity.run.run_id, jobs: identity.jobs, artifacts: identity.artifacts, validation_artifact: validationArtifactIdentity, ci_output: args.ciOutput, evidence_output: args.output }, null, 2));
 }
 
