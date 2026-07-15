@@ -61,6 +61,10 @@ jobs:
         env:
           PR_INSPECTOR_ROOT: ${{ github.workspace }}/_external/pr-inspector
           SOURCE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          COVERAGE_REPOSITORY: ${{ github.repository }}
+          COVERAGE_PR_NUMBER: ${{ github.event.pull_request.number }}
+          COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          COVERAGE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: npm run aigov:validation-suite -- --head "${SOURCE_HEAD_SHA}"
 
       - name: Materialize exact scope disclosure
