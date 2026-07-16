@@ -86,6 +86,15 @@ jobs:
           PR_INSPECTOR_ROOT: ${{ github.workspace }}/_external/pr-inspector
         run: npm run test:aigov-v4-hardening
 
+      - name: Upload exact verifier source snapshot
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-v4-repair-source-${{ github.event.pull_request.head.sha }}
+          path: tools/verify-aigov-v3-exact-main.mjs
+          if-no-files-found: error
+          retention-days: 1
+
       - name: Upload sequence producer execution evidence
         if: ${{ success() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
