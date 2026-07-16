@@ -18,7 +18,7 @@ method_aware_delivery:
   rebase: exact_result_tree_equality_or_verified_commit_mapping
 ```
 
-This binding is the active Batch B boundary. Historical PR #49 evidence remains separate and does not become a `v1.10.2` review receipt.
+This binding is the active Batch B boundary. Historical PR #49 evidence remains separate and does not become a `v1.10.2` review receipt. The compatibility label `merge_commit:` refers only to the `merge` delivery case above and does not define another Merge method or weaken its ancestry proof.
 
 ## General evidence rule
 
