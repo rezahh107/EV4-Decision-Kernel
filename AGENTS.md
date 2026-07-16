@@ -141,21 +141,23 @@ The maintainer may make other bounded technical decisions about paths, schemas, 
 
 ## 4.2 Active AIGOV Enforcement Boundary
 
-The active governance carrier is `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3`, `BATCH_B`, based on exact audited `main` SHA `86e25a9073df7e257ca7df799de85baf9b3fafb0`.
+The active governance carrier is `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`, `BATCH_B`, based on exact audited `main` SHA `86e25a9073df7e257ca7df799de85baf9b3fafb0`.
 
-V3 contains one non-reusable and non-precedential Batch A reconciliation exception bound only to repository `rezahh107/EV4-Decision-Kernel`, PR #49, final head `c141923bf411f802f1673acf06dc92a77b415593` and Merge commit `86e25a9073df7e257ca7df799de85baf9b3fafb0`. It does not claim or fabricate a historical independent Green review.
+V4 contains one non-reusable and non-precedential Batch A reconciliation exception bound only to repository `rezahh107/EV4-Decision-Kernel`, PR #49, base `5ff5d7b20db11af36ab787eb8ac2d1127ea74644`, final head `c141923bf411f802f1673acf06dc92a77b415593` and squash commit `86e25a9073df7e257ca7df799de85baf9b3fafb0`. The exception passed only because both live Git commit objects have exact tree SHA `8a8c83aee95ab36ab59ba128c7710bafedaa2d20`. It does not claim or fabricate a historical independent Green review.
 
 Agents must preserve the normal Batch B sequence:
 
 ```text
-exact base -> declared scope -> exact-head CI -> independent external review on exact head and scope -> owner-only Merge -> reviewed-head ancestry and current-main validation
+exact base -> declared scope -> exact-head CI -> independent external review on exact head and scope -> owner-only Merge -> method-aware deterministic Merge-result proof -> current-main validation
 ```
 
-A second independent review after Merge is not required. Post-Merge verification must prove that the already reviewed exact head reached `main`; it cannot replace or bypass the pre-Merge review.
+For a merge commit, delivery proof is reviewed-head ancestry. For Squash Merge, delivery proof is exact tree or reconstructed-tree equality. For rebase, delivery proof is deterministic result-tree equivalence or verified commit mapping. Merge-method handling cannot weaken exact-head CI, independent review, owner identity, scope binding or current-main validation.
+
+A second independent review after Merge is not required. Post-Merge verification must prove that the already reviewed exact content reached `main`; it cannot replace or bypass the pre-Merge review.
 
 Any head or `scope_revision` mutation invalidates earlier CI and review evidence. The implementation agent cannot act as the independent reviewer. A Batch B PR head cannot claim final repository adoption, Merge authority, Coverage promotion, product implementation or exact-main completion. `KREC-001` through `KREC-009` remain `registered_planned_task` only. `planning/NEXT_WORK.md` remains the only mutable current-status authority.
 
-Exact-main evidence must derive repository, PR, author, Merge actor, CI and current-main identity from fresh GitHub payloads and Git ancestry. Caller-authored strings, booleans, local receipt files and target-repository lookalikes cannot unlock closure.
+Exact-main evidence must derive repository, PR, author, Merge actor, CI, Git tree and current-main identity from fresh GitHub payloads. Caller-authored strings, booleans, local receipt files and target-repository lookalikes cannot unlock closure.
 
 For PR Inspector `v1.10.1`, ordinary exact-head CI and a package boolean cannot prove the personal minimum-security profile. Only the official opaque `VerifiedSequenceEnforcement` capability, derived from the exact `Validate rereview sequence enforcement` context, App ID, immutable producer workflow and authoritative required-check settings evidence, may support Green. Repository settings enforcement remains unclaimed unless independently proven.
 
@@ -306,6 +308,7 @@ Before opening or merging a patch, answer:
 ```
 
 If any answer is no, revise the patch before finalizing.
+
 ---
 
 ## 11. Repository Memory / Next Work
