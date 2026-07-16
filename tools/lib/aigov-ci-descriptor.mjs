@@ -4,26 +4,10 @@ export const GITHUB_ACTIONS_APP_ID = 15368;
 export const GITHUB_ACTIONS_APP_SLUG = 'github-actions';
 
 export const AUTHORITATIVE_WORKFLOWS = Object.freeze({
-  behavioral: Object.freeze({
-    name: 'Behavioral Coverage Audit',
-    path: '.github/workflows/behavioral-coverage.yml',
-    checkName: 'Behavioral coverage',
-  }),
-  sequence: Object.freeze({
-    name: 'Validate rereview sequence enforcement',
-    path: '.github/workflows/validate-rereview-sequence.yml',
-    checkName: 'Validate rereview sequence enforcement',
-  }),
-  mvk: Object.freeze({
-    name: 'Validate MVK',
-    path: '.github/workflows/validate-mvk.yml',
-    checkName: 'Validate MVK',
-  }),
-  main: Object.freeze({
-    name: 'Validate Main',
-    path: '.github/workflows/validate-main.yml',
-    checkName: 'Validate Main',
-  }),
+  behavioral: Object.freeze({ name: 'Behavioral Coverage Audit', path: '.github/workflows/behavioral-coverage.yml', checkName: 'Behavioral coverage' }),
+  sequence: Object.freeze({ name: 'Validate rereview sequence enforcement', path: '.github/workflows/validate-rereview-sequence.yml', checkName: 'Validate rereview sequence enforcement' }),
+  mvk: Object.freeze({ name: 'Validate MVK', path: '.github/workflows/validate-mvk.yml', checkName: 'Validate MVK' }),
+  main: Object.freeze({ name: 'Validate Main', path: '.github/workflows/validate-main.yml', checkName: 'Validate Main' }),
 });
 
 const VERIFIED_RUNS = new WeakSet();
@@ -58,6 +42,7 @@ export function verifyWorkflowDescriptorPayloads({
   checkRuns,
   allRepositoryRuns = runs,
   expectedRunId = null,
+  jobsRunId = null,
 }) {
   const diagnostics = [];
   const add = (condition, code) => { if (condition) diagnostics.push(code); };
@@ -101,13 +86,15 @@ export function verifyWorkflowDescriptorPayloads({
   if (diagnostics.length) return { diagnostics: unique(diagnostics), evidence: null };
 
   add(!Array.isArray(jobs) || !Array.isArray(checkRuns), 'AIGOV_CI_JOB_CHECK_PAYLOAD_MALFORMED');
+  const boundJobsRunId = jobsRunId ?? jobs?.[0]?.run_id ?? null;
+  add(!Number.isInteger(boundJobsRunId) || boundJobsRunId !== run.id, 'AIGOV_CI_JOB_SOURCE_RUN_MISMATCH');
   if (diagnostics.length) return { diagnostics: unique(diagnostics), evidence: null };
+
   const matchingJobs = jobs.filter((job) => job?.name === expected.checkName);
   add(matchingJobs.length !== 1, matchingJobs.length ? 'AIGOV_CI_AMBIGUOUS_JOB' : 'AIGOV_CI_JOB_MISSING');
   const job = matchingJobs[0];
   add(!job
     || !Number.isInteger(job.id)
-    || job.run_id !== run.id
     || job.head_sha !== exactHeadSha
     || job.status !== 'completed'
     || job.conclusion !== 'success', 'AIGOV_CI_JOB_DESCRIPTOR_MISMATCH');
@@ -175,16 +162,9 @@ export function aggregateAuthoritativeCi({ exactHeadSha, event, descriptors, req
 export function verifyMergeResultPayloads({ pr, reviewedHeadSha, headCommit, mergeCommit, headToMain, mergeToMain }) {
   const diagnostics = [];
   const add = (condition, code) => { if (condition) diagnostics.push(code); };
-  add(!pr
-    || pr.number !== 50
-    || pr.merged !== true
-    || pr.head?.sha !== reviewedHeadSha
-    || !validSha(pr.merge_commit_sha), 'AIGOV_BATCH_B_MERGE_IDENTITY_UNVERIFIED');
+  add(!pr || pr.number !== 50 || pr.merged !== true || pr.head?.sha !== reviewedHeadSha || !validSha(pr.merge_commit_sha), 'AIGOV_BATCH_B_MERGE_IDENTITY_UNVERIFIED');
   add(!headCommit || headCommit.sha !== reviewedHeadSha || !validSha(headCommit.tree?.sha), 'AIGOV_BATCH_B_REVIEWED_HEAD_TREE_UNVERIFIED');
-  add(!mergeCommit
-    || mergeCommit.sha !== pr?.merge_commit_sha
-    || !validSha(mergeCommit.tree?.sha)
-    || !Array.isArray(mergeCommit.parents), 'AIGOV_BATCH_B_MERGE_COMMIT_UNVERIFIED');
+  add(!mergeCommit || mergeCommit.sha !== pr?.merge_commit_sha || !validSha(mergeCommit.tree?.sha) || !Array.isArray(mergeCommit.parents), 'AIGOV_BATCH_B_MERGE_COMMIT_UNVERIFIED');
   if (diagnostics.length) return { diagnostics: unique(diagnostics), evidence: null };
   const parents = mergeCommit.parents.map((item) => item.sha);
   const exactTree = headCommit.tree.sha === mergeCommit.tree.sha;
@@ -232,12 +212,7 @@ export function verifyCurrentMainExecution({ beforeSha, afterSha, eventHeadSha, 
   if (diagnostics.length) return { diagnostics: unique(diagnostics), evidence: null };
   return {
     diagnostics: [],
-    evidence: freezeEvidence({
-      schema_version: 'aigov-current-main-evidence.v1',
-      current_main_sha: beforeSha,
-      validation: descriptor,
-      green: true,
-    }, VERIFIED_CURRENT_MAIN),
+    evidence: freezeEvidence({ schema_version: 'aigov-current-main-evidence.v1', current_main_sha: beforeSha, validation: descriptor, green: true }, VERIFIED_CURRENT_MAIN),
   };
 }
 
@@ -251,9 +226,7 @@ function rulesetEvidence(payload) {
     for (const rule of ruleset.rules || []) {
       if (rule?.type !== 'required_status_checks') continue;
       strict ||= rule.parameters?.strict_required_status_checks_policy === true;
-      for (const item of rule.parameters?.required_status_checks || []) {
-        checks.push({ context: item.context, app_id: item.integration_id ?? item.app_id ?? null });
-      }
+      for (const item of rule.parameters?.required_status_checks || []) checks.push({ context: item.context, app_id: item.integration_id ?? item.app_id ?? null });
     }
   }
   return { checks, bypass, strict };
@@ -264,15 +237,11 @@ export function verifyRepositoryEnforcementPayloads({ branchProtection, rulesets
   const branchAvailable = Boolean(branchProtection && branchProtection.__unavailable !== true);
   const rulesetAvailable = Array.isArray(rulesets);
   if (!branchAvailable && !rulesetAvailable) diagnostics.push('AIGOV_BATCH_B_REQUIRED_CHECK_CONFIGURATION_UNVERIFIED');
-
   const bpChecks = branchAvailable ? (branchProtection.required_status_checks?.checks || []) : [];
   const bpStrict = branchAvailable && branchProtection.required_status_checks?.strict === true;
   const bpAdminEnforced = branchAvailable && branchProtection.enforce_admins?.enabled === true;
   const rs = rulesetEvidence(rulesets);
-  const checks = [
-    ...bpChecks.map((item) => ({ context: item.context, app_id: item.app_id ?? null })),
-    ...rs.checks,
-  ];
+  const checks = [...bpChecks.map((item) => ({ context: item.context, app_id: item.app_id ?? null })), ...rs.checks];
   for (const required of requiredChecks || []) {
     if (!checks.some((item) => item.context === required.context && item.app_id === required.appId)) diagnostics.push(`AIGOV_BATCH_B_REQUIRED_CHECK_MISSING:${required.context}`);
   }
