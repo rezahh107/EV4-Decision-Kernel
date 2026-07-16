@@ -74,11 +74,11 @@ jobs:
           test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
 
-      - name: Checkout pinned PR Inspector
+      - name: Checkout pinned PR Inspector v1.10.2
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: rezahh107/PR-Inspector
-          ref: 7a21045366bb9ad1ca2f950b8341ebb867dd8a52
+          ref: 9ed48bd995ee5b9270756254b04c1d48ccf21cbe
           path: _external/pr-inspector
           persist-credentials: false
 
@@ -106,8 +106,12 @@ jobs:
           node --check kernel/validator/validate-coverage-guarantee-prf010.mjs
           node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
           node --check kernel/validator/validate-recovery-execution-program.mjs
+          node --check tools/lib/aigov-ci-descriptor.mjs
           node --check tools/lib/aigov-v3-closure.mjs
+          node --check tools/lib/aigov-sequence-producer-v1102.mjs
+          node --check tools/lib/pr-inspector-v1102.mjs
           node --check tools/test-aigov-v3-exception.mjs
+          node --check tools/test-aigov-v4-hardening.mjs
           node --check tools/validate-aigov-v4-governance.mjs
           node --check tools/verify-aigov-exact-main.mjs
           node --check tools/verify-aigov-v3-exact-main.mjs
@@ -131,6 +135,7 @@ jobs:
           node --check tools/test-aigov-provenance.mjs
           node --check tools/test-aigov-sequence.mjs
           node --check tools/test-aigov-sequence-producer.mjs
+          python -m py_compile tools/pr-inspector-official-boundary-v1102.py tools/test-pr-inspector-security-capability.py
 
       - name: Check working tree and base-to-head diff
         shell: bash
