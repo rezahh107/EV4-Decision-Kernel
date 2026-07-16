@@ -18,15 +18,25 @@ const EXPECTED = new Map([
   ['KREC-009', ['KREC-003', 'KREC-006', 'KREC-007', 'KREC-008']],
 ]);
 
-function readJson(file) { return JSON.parse(fs.readFileSync(path.join(ROOT, file), 'utf8')); }
-function semanticDiagnostics(value) {
+function readJson(file) {
+  return JSON.parse(fs.readFileSync(path.join(ROOT, file), 'utf8'));
+}
+
+export function recoveryProgramDiagnostics(value) {
   const diagnostics = [];
+  if (value.program_id !== 'DCOV-COVERAGE-EXECUTION-PROGRAM'
+    || value.integration_model !== 'distinct_recovery_execution_program') diagnostics.push('RECOVERY_PROGRAM_IDENTITY_MISMATCH');
   if (value.coverage_promotion_effect !== 'none') diagnostics.push('AIGOV_COVERAGE_PROMOTION_FORBIDDEN');
   if (value.task_activation_effect !== 'none' || value.program_status !== 'registered_non_active') diagnostics.push('RECOVERY_PROGRAM_ACTIVATION_FORBIDDEN');
-  if (value.kroad_012r_status !== 'historical_non_authoritative' || value.kroad_effect === 'superseded') diagnostics.push('RECOVERY_KROAD_SUPERSESSION_FORBIDDEN');
+  if (value.product_effect !== 'none') diagnostics.push('RECOVERY_PRODUCT_EFFECT_FORBIDDEN');
+  if (value.kroad_012r_status !== 'historical_non_authoritative' || value.kroad_supersession_effect !== 'none') diagnostics.push('RECOVERY_KROAD_SUPERSESSION_FORBIDDEN');
+
   const seen = new Set();
   for (const task of value.tasks || []) {
     if (task.status !== 'registered_planned_task') diagnostics.push('RECOVERY_TASK_ACTIVATION_FORBIDDEN');
+    if (task.implementation_authorized !== false) diagnostics.push('RECOVERY_TASK_IMPLEMENTATION_FORBIDDEN');
+    if (task.coverage_credit !== false) diagnostics.push('RECOVERY_COVERAGE_CREDIT_FORBIDDEN');
+    if (task.readiness_claim !== false) diagnostics.push('RECOVERY_READINESS_CLAIM_FORBIDDEN');
     if (seen.has(task.task_id)) diagnostics.push('RECOVERY_TASK_ID_DUPLICATE');
     seen.add(task.task_id);
     const expected = EXPECTED.get(task.task_id);
@@ -38,26 +48,35 @@ function semanticDiagnostics(value) {
 
 const ajv = new Ajv2020({ allErrors: true, strict: false });
 const validate = ajv.compile(readJson(SCHEMA_PATH));
-const program = readJson(PROGRAM_PATH);
-const diagnostics = [];
-if (!validate(program)) diagnostics.push(...(validate.errors || []).map((e) => `RECOVERY_SCHEMA_INVALID:${e.instancePath || '/'}:${e.message}`));
-diagnostics.push(...semanticDiagnostics(program));
+function schemaDiagnostics(value, source) {
+  if (validate(value)) return [];
+  return (validate.errors || []).map((error) => `RECOVERY_SCHEMA_INVALID:${source}${error.instancePath || '/'}:${error.message}`);
+}
 
+const program = readJson(PROGRAM_PATH);
+const diagnostics = [...schemaDiagnostics(program, PROGRAM_PATH), ...recoveryProgramDiagnostics(program)];
 const fixtureRoot = path.join(ROOT, 'kernel/fixtures/recovery-program');
 const fixtureCases = [];
 for (const category of ['valid', 'invalid', 'adversarial']) {
-  for (const name of fs.readdirSync(path.join(fixtureRoot, category)).filter((x) => x.endsWith('.json')).sort()) {
+  for (const name of fs.readdirSync(path.join(fixtureRoot, category)).filter((item) => item.endsWith('.json')).sort()) {
     const value = readJson(`kernel/fixtures/recovery-program/${category}/${name}`);
     const expected = value.expected_diagnostics || [];
     delete value.expected_diagnostics;
-    const fixtureDiagnostics = [];
-    if (!validate(value)) fixtureDiagnostics.push(...(validate.errors || []).map((e) => `RECOVERY_SCHEMA_INVALID:${e.instancePath || '/'}:${e.message}`));
-    fixtureDiagnostics.push(...semanticDiagnostics(value));
-    const pass = category === 'valid' ? fixtureDiagnostics.length === 0 : expected.every((code) => fixtureDiagnostics.includes(code));
-    fixtureCases.push({ category, name, pass, diagnostics: [...new Set(fixtureDiagnostics)], expected });
+    const fixtureDiagnostics = [...schemaDiagnostics(value, `${category}/${name}`), ...recoveryProgramDiagnostics(value)];
+    const uniqueDiagnostics = [...new Set(fixtureDiagnostics)];
+    const pass = category === 'valid'
+      ? uniqueDiagnostics.length === 0
+      : expected.length > 0 && expected.every((code) => uniqueDiagnostics.includes(code));
+    fixtureCases.push({ category, name, pass, diagnostics: uniqueDiagnostics, expected });
   }
 }
 if (fixtureCases.some((item) => !item.pass)) diagnostics.push('RECOVERY_FIXTURE_EXPECTATION_FAILED');
-const report = { validator: 'recovery-execution-program.v1', status: diagnostics.length ? 'fail' : 'pass', diagnostics: [...new Set(diagnostics)], fixtures: fixtureCases };
+
+const report = {
+  validator: 'recovery-execution-program.v1',
+  status: diagnostics.length ? 'fail' : 'pass',
+  diagnostics: [...new Set(diagnostics)],
+  fixtures: fixtureCases,
+};
 console.log(JSON.stringify(report, null, 2));
 if (report.status !== 'pass') process.exitCode = 1;
