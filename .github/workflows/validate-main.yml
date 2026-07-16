@@ -13,6 +13,7 @@ jobs:
     name: Validate Main
     runs-on: ubuntu-latest
     env:
+      AIGOV_GITHUB_TOKEN: ${{ github.token }}
       PR_INSPECTOR_ROOT: ${{ github.workspace }}/_external/pr-inspector
     steps:
       - name: Checkout exact main head with full history
