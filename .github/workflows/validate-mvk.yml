@@ -139,7 +139,20 @@ jobs:
             --output aigov-v3-batch-b-scope-disclosure.json
 
       - name: Reconcile Batch A through the exact V3 exception
-        run: npm run validate:aigov-v3-batch-a-reconciliation
+        id: batch-a-v3-reconciliation
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:aigov-v3-batch-a-reconciliation 2>&1 | tee aigov-v3-batch-a-reconciliation.log
+
+      - name: Upload Batch A V3 reconciliation diagnostics
+        if: ${{ always() && steps.batch-a-v3-reconciliation.outcome == 'failure' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-v3-batch-a-reconciliation-diagnostics-${{ github.event.pull_request.head.sha }}
+          path: aigov-v3-batch-a-reconciliation.log
+          if-no-files-found: error
+          retention-days: 1
 
       - name: Validate V3 exception misuse cases
         run: npm run test:aigov-v3-exception
