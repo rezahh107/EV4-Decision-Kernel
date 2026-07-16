@@ -1,8 +1,8 @@
 # AIGOV Exact-Main Closure Protocol
 
-**Status:** active V4 verification protocol; not a Merge authorization  
-**Plan:** `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`  
-**Active Batch B review protocol:** `PR-Inspector v1.10.2`  
+**Status:** active V4 verification protocol; not a Merge authorization
+**Plan:** `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`
+**Active Batch B review protocol:** `PR-Inspector v1.10.2`
 **Active Inspector release commit:** `9ed48bd995ee5b9270756254b04c1d48ccf21cbe`
 
 ## General evidence rule
