@@ -21,7 +21,7 @@
     "test:aigov-sequence": "node tools/test-aigov-sequence.mjs",
     "test:aigov-provenance": "node -e \"if(process.env.PR_INSPECTOR_V1101_ROOT)process.env.PR_INSPECTOR_ROOT=process.env.PR_INSPECTOR_V1101_ROOT;import('./tools/test-aigov-provenance.mjs')\"",
     "test:aigov-review-directory": "node -e \"if(process.env.PR_INSPECTOR_V1101_ROOT)process.env.PR_INSPECTOR_ROOT=process.env.PR_INSPECTOR_V1101_ROOT;import('./tools/test-aigov-provenance.mjs')\"",
-    "test:aigov-owner-evidence": "node tools/test-aigov-owner-evidence.mjs",
+    "test:aigov-owner-evidence": "node -e \"if(process.env.PR_INSPECTOR_V1101_ROOT)process.env.PR_INSPECTOR_ROOT=process.env.PR_INSPECTOR_V1101_ROOT;import('./tools/test-aigov-owner-evidence.mjs')\"",
     "test:aigov-ci-identity": "node tools/test-aigov-ci-identity.mjs",
     "test:aigov-sequence-producer": "node tools/test-aigov-sequence-producer.mjs",
     "test:aigov-behavioral-sequence-overclaim": "node tools/test-aigov-behavioral-sequence-overclaim.mjs",
