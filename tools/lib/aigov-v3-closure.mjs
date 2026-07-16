@@ -74,7 +74,9 @@ export function verifyBatchBFinalClosure(evidence) {
   if (evidence.independentReviewGreen !== true) diagnostics.push('AIGOV_BATCH_B_REVIEW_REQUIRED');
   if (evidence.reviewedHeadSha !== evidence.headSha || evidence.reviewedScopeRevision !== evidence.scopeRevision) diagnostics.push('AIGOV_BATCH_B_REVIEW_STALE');
   if (evidence.reviewerIdentity === evidence.implementerIdentity) diagnostics.push('AIGOV_BATCH_B_REVIEW_INDEPENDENCE_REQUIRED');
-  if (!evidence.reviewedAt || !evidence.mergedAt || Date.parse(evidence.reviewedAt) >= Date.parse(evidence.mergedAt)) diagnostics.push('AIGOV_BATCH_B_REVIEW_MUST_PREDATE_MERGE');
+  const reviewedTime = Date.parse(evidence.reviewedAt);
+  const mergedTime = Date.parse(evidence.mergedAt);
+  if (!evidence.reviewedAt || !evidence.mergedAt || Number.isNaN(reviewedTime) || Number.isNaN(mergedTime) || reviewedTime >= mergedTime) diagnostics.push('AIGOV_BATCH_B_REVIEW_MUST_PREDATE_MERGE');
   if (evidence.mergeActor !== OWNER) diagnostics.push('AIGOV_BATCH_B_OWNER_MERGE_REQUIRED');
   if (evidence.mergeCommitAncestorVerified !== true) diagnostics.push('AIGOV_BATCH_B_MERGE_RESULT_UNVERIFIED');
   if (evidence.mergeMode === 'merge' && evidence.reviewedHeadAncestorVerified !== true) diagnostics.push('AIGOV_BATCH_B_MERGE_RESULT_UNVERIFIED');
