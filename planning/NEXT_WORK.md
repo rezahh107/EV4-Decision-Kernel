@@ -71,7 +71,9 @@ kroad_supersession_effect: none
 
 No open AIGOV closure PR remains. Recovery activation is represented by the focused owner-policy activation PR.
 
-`DCOV-EXEC-001` remains a separate proposal and does not gain Coverage credit from Recovery activation.
+- [ ] `DCOV-EXEC-001` — Coverage Guarantee proposal and validation foundation
+  - `implementation_eligibility`: `blocked_pending_external_governance_approval`
+  - Recovery activation does not grant Coverage promotion or Coverage credit.
 
 ## Next Task
 
