@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parse as parseYaml } from 'yaml';
 import { analyzeWorkflowYaml, classifyDependencyChange, scopeRevision } from '../kernel/validator/validate-aigov-governance.mjs';
 
 const ROOT = process.cwd();
@@ -16,6 +17,12 @@ const LEGACY_VALIDATOR = 'kernel/validator/validate-aigov-governance.mjs';
 const PROTOCOL_VERSION = 'v1.10.2';
 const INSPECTOR_COMMIT = '9ed48bd995ee5b9270756254b04c1d48ccf21cbe';
 const EXPECTED_RUNTIME_PATHS = new Set(['?? _external/', '?? aigov-v4-batch-a-reconciliation.json', '?? aigov-v4-batch-b-scope-disclosure.json']);
+const READ_ONLY_TOKEN_WORKFLOWS = new Set([
+  '.github/workflows/finalize-aigov-batch-b.yml',
+  '.github/workflows/validate-main.yml',
+  '.github/workflows/validate-mvk.yml',
+  '.github/workflows/validate-rereview-sequence.yml',
+]);
 const diagnostics = [];
 const fail = (code, message, source = 'repository') => diagnostics.push({ code, message, source });
 const read = (relativePath) => readFileSync(path.join(ROOT, relativePath), 'utf8');
@@ -24,6 +31,39 @@ const git = (args) => {
   try { return execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim(); }
   catch { return ''; }
 };
+
+function pathValue(root, dottedPath) {
+  let value = root;
+  for (const part of dottedPath.split('.')) {
+    if (value == null) return undefined;
+    value = Array.isArray(value) && /^\d+$/.test(part) ? value[Number(part)] : value[part];
+  }
+  return value;
+}
+
+function readOnlyPermissions(value) {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value)
+    && Object.keys(value).length > 0
+    && Object.values(value).every((permission) => permission === 'read' || permission === 'none'));
+}
+
+function filterReadOnlyBuiltinTokenDiagnostics(items, workflowText, source) {
+  if (!READ_ONLY_TOKEN_WORKFLOWS.has(source)) return items;
+  let workflow;
+  try { workflow = parseYaml(workflowText); } catch { return items; }
+  return items.filter((item) => {
+    if (item.code !== 'AIGOV_SECRET_ACCESS_FORBIDDEN') return true;
+    const match = item.message.match(/ at (.+)\.$/);
+    if (!match) return true;
+    const scalarPath = match[1];
+    if (pathValue(workflow, scalarPath) !== '${{ github.token }}') return true;
+    const jobMatch = scalarPath.match(/^jobs\.([^.]+)\./);
+    if (!jobMatch) return true;
+    const job = workflow.jobs?.[jobMatch[1]];
+    const effectivePermissions = job?.permissions ?? workflow.permissions;
+    return !readOnlyPermissions(effectivePermissions);
+  });
+}
 
 function validateLegacyContractsAndFixtures() {
   try {
@@ -106,7 +146,8 @@ function validateLiveWorkflowsAndDiff(scope) {
     const relativePath = `.github/workflows/${name}`;
     const currentText = read(relativePath);
     const baseText = git(['show', `${BASE_SHA}:${relativePath}`]) || null;
-    for (const item of analyzeWorkflowYaml(currentText, { source: relativePath, baseText, readRepositoryFile })) fail(item.code, item.message, item.source || relativePath);
+    const items = analyzeWorkflowYaml(currentText, { source: relativePath, baseText, readRepositoryFile });
+    for (const item of filterReadOnlyBuiltinTokenDiagnostics(items, currentText, relativePath)) fail(item.code, item.message, item.source || relativePath);
   }
   const basePackage = git(['show', `${BASE_SHA}:package.json`]);
   if (!basePackage) fail('AIGOV_V4_BASE_PACKAGE_UNAVAILABLE', 'The exact V4 base package.json is unavailable.', 'package.json');
