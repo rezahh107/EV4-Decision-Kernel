@@ -9,7 +9,7 @@ const PLAN_ID = 'GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4';
 const PREVIOUS_PLAN_ID = 'GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3';
 const BASE_SHA = '86e25a9073df7e257ca7df799de85baf9b3fafb0';
 const TREE_SHA = '8a8c83aee95ab36ab59ba128c7710bafedaa2d20';
-const SCOPE_REVISION = 'sha256:d9e095a56170951a147fac582963c6fa7e21b2951ac810fcedffefe76ac6a1c0';
+const SCOPE_REVISION = 'sha256:9a9a9b599b40f23b7f9f2dbc3400125cb25ee32ea65b696181f4d0c0d7029e80';
 const failures = [];
 const fail = (file, problem) => failures.push({ file, problem });
 const read = (file) => {
