@@ -1,7 +1,6 @@
 #!/usr/bin/env node
-import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -23,17 +22,17 @@ const EXPECTED_V3_BASE = BATCH_A_EXCEPTION.mergeCommitSha;
 
 function parseArgs(argv) {
   const out = { mode: null, exceptionPlanId: null, prNumber: null, headSha: null, mergeCommitSha: null, scopeRevision: null, reviewCommit: null, reviewDirectory: null, output: null };
-  for (let i = 0; i < argv.length; i += 1) {
-    const arg = argv[i];
-    if (arg === '--mode') out.mode = argv[++i];
-    else if (arg === '--exception-plan-id') out.exceptionPlanId = argv[++i];
-    else if (arg === '--pr-number') out.prNumber = Number(argv[++i]);
-    else if (arg === '--head-sha') out.headSha = argv[++i];
-    else if (arg === '--merge-commit-sha') out.mergeCommitSha = argv[++i];
-    else if (arg === '--scope-revision') out.scopeRevision = argv[++i];
-    else if (arg === '--review-commit') out.reviewCommit = argv[++i];
-    else if (arg === '--review-directory') out.reviewDirectory = argv[++i];
-    else if (arg === '--output') out.output = argv[++i];
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === '--mode') out.mode = argv[++index];
+    else if (arg === '--exception-plan-id') out.exceptionPlanId = argv[++index];
+    else if (arg === '--pr-number') out.prNumber = Number(argv[++index]);
+    else if (arg === '--head-sha') out.headSha = argv[++index];
+    else if (arg === '--merge-commit-sha') out.mergeCommitSha = argv[++index];
+    else if (arg === '--scope-revision') out.scopeRevision = argv[++index];
+    else if (arg === '--review-commit') out.reviewCommit = argv[++index];
+    else if (arg === '--review-directory') out.reviewDirectory = argv[++index];
+    else if (arg === '--output') out.output = argv[++index];
     else throw new Error(`Unknown argument: ${arg}`);
   }
   if (!['batch-a-v3-reconcile', 'batch-b-final'].includes(out.mode)) throw new Error('--mode must be batch-a-v3-reconcile or batch-b-final.');
@@ -44,14 +43,20 @@ function git(args) {
   return execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 }
 function isAncestor(ancestor, descendant) {
-  try { execFileSync('git', ['merge-base', '--is-ancestor', ancestor, descendant], { cwd: ROOT, stdio: 'ignore' }); return true; } catch { return false; }
+  try {
+    execFileSync('git', ['merge-base', '--is-ancestor', ancestor, descendant], { cwd: ROOT, stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
 }
-function sha256(raw) { return crypto.createHash('sha256').update(raw).digest('hex'); }
-function encodedPath(value) { return value.split('/').map(encodeURIComponent).join('/'); }
+function encodedPath(value) {
+  return value.split('/').map(encodeURIComponent).join('/');
+}
 
 async function githubJson(apiPath) {
   const headers = { Accept: 'application/vnd.github+json', 'User-Agent': 'ev4-aigov-v3-exact-main', 'X-GitHub-Api-Version': '2022-11-28' };
-  if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  if (process.env.AIGOV_GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.AIGOV_GITHUB_TOKEN}`;
   const response = await fetch(`${API}${apiPath}`, { headers, redirect: 'error' });
   if (!response.ok) throw new Error(`GitHub API ${response.status}: ${apiPath}`);
   return { value: await response.json(), observedAt: new Date().toISOString(), url: `${API}${apiPath}` };
@@ -62,7 +67,7 @@ async function githubContent(repository, artifactPath, ref) {
   const item = response.value;
   if (item?.type !== 'file' || item.encoding !== 'base64') throw new Error(`Immutable file unavailable: ${repository}@${ref}:${artifactPath}`);
   const raw = Buffer.from(String(item.content).replace(/\n/g, ''), 'base64');
-  return { repository, path: artifactPath, ref, blobSha: item.sha, sha256: sha256(raw), raw, json: artifactPath.endsWith('.json') ? JSON.parse(raw.toString('utf8')) : null, apiUrl: response.url };
+  return { repository, path: artifactPath, ref, blobSha: item.sha, raw, json: artifactPath.endsWith('.json') ? JSON.parse(raw.toString('utf8')) : null, apiUrl: response.url };
 }
 
 async function workflowEvidence(headSha, requiredNames, event) {
@@ -79,31 +84,42 @@ async function workflowEvidence(headSha, requiredNames, event) {
   };
 }
 
-function currentMemoryState() {
-  const next = readFileSync(path.join(ROOT, 'planning/NEXT_WORK.md'), 'utf8');
-  const coverageNonPromoted = /not_measurable_pending_external_promotion/.test(next)
-    && (/Coverage promotion effect:\s*`none`/i.test(next)
-      || /coverage_promotion_effect:\s*none/i.test(next)
-      || /external project-owner governance approval carrier.*missing/is.test(next));
-  const productInactive = /Product effect:\s*`none`/i.test(next)
-    || /product_effect:\s*none/i.test(next)
-    || /Product implementation.*blocked/is.test(next);
+function deriveMemoryState(nextWork, historicalReview) {
+  const coverageNonPromoted = /not_measurable_pending_external_promotion/.test(nextWork)
+    && (/coverage_promotion_effect:\s*none/i.test(nextWork)
+      || /Coverage promotion effect:\s*`none`/i.test(nextWork)
+      || /external project-owner governance approval carrier.*missing/is.test(nextWork));
+  const productInactive = /product_effect:\s*none/i.test(nextWork)
+    || /Product effect:\s*`none`/i.test(nextWork)
+    || /Product implementation.*blocked/is.test(nextWork);
+  const laterKroadsPreserved = /KROAD-013(?:_through_| through )KROAD-018.*not_started/is.test(nextWork)
+    || /KROAD-013 through KROAD-018.*(?:retain|remain preserved|not_started)/is.test(nextWork);
   return {
-    coverageStatus: /not_measurable_pending_external_promotion/.test(next) ? 'not_measurable_pending_external_promotion' : 'unknown',
+    coverageStatus: /not_measurable_pending_external_promotion/.test(nextWork) ? 'not_measurable_pending_external_promotion' : 'unknown',
     coveragePromotionEffect: coverageNonPromoted ? 'none' : 'unknown',
     productEffect: productInactive ? 'none' : 'unknown',
-    kroad012Status: /KROAD-012.*(?:preserved|blocked_pending_final_aigov_closure|blocked_by_governance_adoption)/is.test(next) ? 'preserved' : 'unknown',
-    kroad013Through018Status: /KROAD-013 through KROAD-018.*(?:not_started|remain preserved)/is.test(next) ? 'not_started' : 'unknown',
-    kroad012rStatus: /KROAD-012R.*historical_non_authoritative/is.test(next) ? 'historical_non_authoritative' : 'unknown',
+    kroad012Status: /KROAD-012.*(?:preserved|blocked_pending_final_aigov_closure|blocked_by_governance_adoption)/is.test(nextWork) ? 'preserved' : 'unknown',
+    kroad013Through018Status: laterKroadsPreserved ? 'not_started' : 'unknown',
+    kroad012rStatus: /historical_non_authoritative/.test(historicalReview) ? 'historical_non_authoritative' : 'unknown',
   };
+}
+
+async function memoryStateAt(ref) {
+  const [nextWork, historicalReview] = await Promise.all([
+    githubContent(TARGET_REPOSITORY, 'planning/NEXT_WORK.md', ref),
+    githubContent(TARGET_REPOSITORY, 'planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md', ref),
+  ]);
+  return deriveMemoryState(nextWork.raw.toString('utf8'), historicalReview.raw.toString('utf8'));
 }
 
 async function loadOfficialReview({ prNumber, headSha, scopeRevision, reviewCommit, reviewDirectory }) {
   if (!/^[0-9a-f]{40}$/.test(reviewCommit || '') || !reviewDirectory) throw new Error('Exact --review-commit and --review-directory are required for Batch B.');
-  const inspectorRepo = await githubJson(`/repos/${INSPECTOR_REPOSITORY}`);
-  const inspectorCommit = await githubJson(`/repos/${INSPECTOR_REPOSITORY}/commits/${reviewCommit}`);
+  const [inspectorRepo, inspectorCommit, listing] = await Promise.all([
+    githubJson(`/repos/${INSPECTOR_REPOSITORY}`),
+    githubJson(`/repos/${INSPECTOR_REPOSITORY}/commits/${reviewCommit}`),
+    githubJson(`/repos/${INSPECTOR_REPOSITORY}/contents/${encodedPath(reviewDirectory)}?ref=${reviewCommit}`),
+  ]);
   if (inspectorRepo.value.id !== INSPECTOR_REPOSITORY_ID || inspectorCommit.value.sha !== reviewCommit) throw new Error('Inspector identity unavailable.');
-  const listing = await githubJson(`/repos/${INSPECTOR_REPOSITORY}/contents/${encodedPath(reviewDirectory)}?ref=${reviewCommit}`);
   if (!Array.isArray(listing.value)) throw new Error('Review directory is not immutable directory content.');
   const allowed = new Set([...FIXED_ARTIFACTS, PROMPT_ARTIFACT]);
   const paths = listing.value.filter((item) => item.type === 'file' && allowed.has(item.name)).map((item) => `${reviewDirectory}/${item.name}`);
@@ -113,18 +129,19 @@ async function loadOfficialReview({ prNumber, headSha, scopeRevision, reviewComm
   const projection = directory.projection;
   const reviewedAt = reviewPackage?.review_identity?.review_completed || null;
   const pathScope = reviewDirectory.match(/\/([0-9a-f]{64})(?:\/)?$/)?.[1];
-  const reviewScope = reviewPackage?.scope?.scope_revision || reviewPackage?.review_identity?.scope_revision || (pathScope ? `sha256:${pathScope}` : null);
+  const reviewedScopeRevision = reviewPackage?.scope?.scope_revision || reviewPackage?.review_identity?.scope_revision || (pathScope ? `sha256:${pathScope}` : null);
   const green = directory.status === 'pass'
     && projection?.technical_status === 'GREEN_TECHNICALLY_READY'
     && projection?.next_action?.kind === 'merge_now'
     && directory.liveSummary?.sequence_capability_verified === true
     && reviewPackage?.review_identity?.reviewed_head_sha === headSha
-    && reviewPackage?.review_identity?.pr_number === prNumber;
+    && reviewPackage?.review_identity?.pr_number === prNumber
+    && reviewedScopeRevision === scopeRevision;
   return {
     green,
     reviewedAt,
     reviewedHeadSha: reviewPackage?.review_identity?.reviewed_head_sha || null,
-    reviewedScopeRevision: reviewScope,
+    reviewedScopeRevision,
     reviewerIdentity: `PR-Inspector@v1.10.1:${reviewCommit}`,
     diagnostics: directory.diagnostics,
     hashes: directory.hashes,
@@ -132,28 +149,34 @@ async function loadOfficialReview({ prNumber, headSha, scopeRevision, reviewComm
 }
 
 async function batchA(args) {
+  const requestedTupleMatches = args.exceptionPlanId === V3_PLAN_ID
+    && args.prNumber === BATCH_A_EXCEPTION.prNumber
+    && args.headSha === BATCH_A_EXCEPTION.headSha
+    && args.mergeCommitSha === BATCH_A_EXCEPTION.mergeCommitSha;
   const [repo, pr, main] = await Promise.all([
     githubJson(`/repos/${TARGET_REPOSITORY}`),
     githubJson(`/repos/${TARGET_REPOSITORY}/pulls/${BATCH_A_EXCEPTION.prNumber}`),
     githubJson(`/repos/${TARGET_REPOSITORY}/commits/main`),
   ]);
-  const ci = await workflowEvidence(BATCH_A_EXCEPTION.headSha, ['Behavioral Coverage Audit', 'Validate rereview sequence enforcement', 'Validate MVK', 'Finalize AIGOV post-CI evidence'], 'pull_request');
-  const mainValidation = await workflowEvidence(main.value.sha, ['Validate Main'], 'push');
-  const memory = currentMemoryState();
+  const [ci, mainValidation, memory] = await Promise.all([
+    workflowEvidence(pr.value.head?.sha, ['Behavioral Coverage Audit', 'Validate rereview sequence enforcement', 'Validate MVK', 'Finalize AIGOV post-CI evidence'], 'pull_request'),
+    workflowEvidence(main.value.sha, ['Validate Main'], 'push'),
+    memoryStateAt(main.value.sha),
+  ]);
   const input = {
     repository: repo.value.full_name,
     repositoryId: repo.value.id,
     batchId: 'BATCH_A',
-    prNumber: args.prNumber,
-    headSha: args.headSha,
-    mergeCommitSha: args.mergeCommitSha,
-    exceptionPlanId: args.exceptionPlanId,
+    prNumber: pr.value.number,
+    headSha: pr.value.head?.sha,
+    mergeCommitSha: pr.value.merge_commit_sha,
+    exceptionPlanId: V3_PLAN_ID,
     exceptionUseCount: 1,
     exceptionReusable: false,
     prMerged: pr.value.merged === true,
     mergeActor: pr.value.merged_by?.login || null,
-    headAncestorVerified: isAncestor(BATCH_A_EXCEPTION.headSha, main.value.sha),
-    mergeAncestorVerified: isAncestor(BATCH_A_EXCEPTION.mergeCommitSha, main.value.sha),
+    headAncestorVerified: isAncestor(pr.value.head?.sha, main.value.sha),
+    mergeAncestorVerified: isAncestor(pr.value.merge_commit_sha, main.value.sha),
     exactHeadCiGreen: ci.green,
     currentMainValidationGreen: mainValidation.green,
     coverageStatus: memory.coverageStatus,
@@ -166,9 +189,23 @@ async function batchA(args) {
     historicalIndependentGreenClaimed: false,
   };
   const result = verifyBatchAOneTimeReconciliation(input);
+  if (!requestedTupleMatches) result.diagnostics.push('AIGOV_V3_EXCEPTION_IDENTITY_MISMATCH');
   if (main.value.sha !== EXPECTED_V3_BASE) result.diagnostics.push('AIGOV_V3_PLAN_BASE_STALE');
+  result.diagnostics = [...new Set(result.diagnostics)];
   result.status = result.diagnostics.length ? 'fail' : 'pass';
-  return { ...result, plan_id: V3_PLAN_ID, repository: TARGET_REPOSITORY, pr_number: BATCH_A_EXCEPTION.prNumber, final_head_sha: BATCH_A_EXCEPTION.headSha, merge_commit_sha: BATCH_A_EXCEPTION.mergeCommitSha, current_main_sha: main.value.sha, merge_actor: pr.value.merged_by?.login || null, exact_head_ci: ci, current_main_validation: mainValidation, reason_for_exception: 'impossible_retrospective_review_cycle' };
+  return {
+    ...result,
+    plan_id: V3_PLAN_ID,
+    repository: TARGET_REPOSITORY,
+    pr_number: pr.value.number,
+    final_head_sha: pr.value.head?.sha,
+    merge_commit_sha: pr.value.merge_commit_sha,
+    current_main_sha: main.value.sha,
+    merge_actor: pr.value.merged_by?.login || null,
+    exact_head_ci: ci,
+    current_main_validation: mainValidation,
+    reason_for_exception: 'impossible_retrospective_review_cycle',
+  };
 }
 
 async function batchB(args) {
@@ -178,16 +215,18 @@ async function batchB(args) {
     githubJson(`/repos/${TARGET_REPOSITORY}/commits/main`),
     loadOfficialReview(args),
   ]);
-  const ci = await workflowEvidence(args.headSha, ['Behavioral Coverage Audit', 'Validate rereview sequence enforcement', 'Validate MVK'], 'pull_request');
-  const mainValidation = await workflowEvidence(main.value.sha, ['Validate Main'], 'push');
-  const memory = currentMemoryState();
+  const [ci, mainValidation, memory] = await Promise.all([
+    workflowEvidence(args.headSha, ['Behavioral Coverage Audit', 'Validate rereview sequence enforcement', 'Validate MVK'], 'pull_request'),
+    workflowEvidence(main.value.sha, ['Validate Main'], 'push'),
+    memoryStateAt(main.value.sha),
+  ]);
   const input = {
     planId: V3_PLAN_ID,
     batchId: 'BATCH_B',
     exceptionApplied: false,
     headSha: args.headSha,
     scopeRevision: args.scopeRevision,
-    exactHeadCiGreen: ci.green,
+    exactHeadCiGreen: ci.green && pr.value.head?.sha === args.headSha,
     independentReviewGreen: review.green && review.reviewedAt && (!ci.completedAt || Date.parse(review.reviewedAt) > Date.parse(ci.completedAt)),
     reviewedHeadSha: review.reviewedHeadSha,
     reviewedScopeRevision: review.reviewedScopeRevision,
@@ -204,7 +243,19 @@ async function batchB(args) {
     productEffect: memory.productEffect,
   };
   const result = verifyBatchBFinalClosure(input);
-  return { ...result, plan_id: V3_PLAN_ID, repository: TARGET_REPOSITORY, pr_number: args.prNumber, head_sha: args.headSha, scope_revision: args.scopeRevision, merge_commit_sha: pr.value.merge_commit_sha, current_main_sha: main.value.sha, exact_head_ci: ci, independent_review: review, current_main_validation: mainValidation };
+  return {
+    ...result,
+    plan_id: V3_PLAN_ID,
+    repository: TARGET_REPOSITORY,
+    pr_number: args.prNumber,
+    head_sha: args.headSha,
+    scope_revision: args.scopeRevision,
+    merge_commit_sha: pr.value.merge_commit_sha,
+    current_main_sha: main.value.sha,
+    exact_head_ci: ci,
+    independent_review: review,
+    current_main_validation: mainValidation,
+  };
 }
 
 async function main() {
