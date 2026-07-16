@@ -54,7 +54,7 @@ function validateV4RepositoryState(scope) {
     'closure_mode: v4_one_time_squash_equivalence',
     'AIGOV-ADOPT-000_through_007: merged_and_post_merge_reconciled',
     'increment: AIGOV-ADOPT-008',
-    'status: pending_final_scope_exact_head_ci_and_fresh_independent_review',
+    'status: pending_exact_head_ci_and_fresh_independent_review',
     'required_check_configuration: unverified',
     'repository_settings_enforced: not_claimed',
     'status: not_measurable_pending_external_promotion',
