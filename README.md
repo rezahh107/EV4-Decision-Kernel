@@ -1,6 +1,6 @@
 # EV4 Decision Kernel
 
-**Status:** working-reference / Kernel-local MVK foundation with source manifest, doc coverage index, decision-card layer, Architect/CE consumption boundaries, external evidence workspace contracts, decision-governance foundation, Behavioral Rule Coverage v0.4.1, and pending V3 AIGOV exact-main closure
+**Status:** working-reference / Kernel-local MVK foundation with source manifest, doc coverage index, decision-card layer, Architect/CE consumption boundaries, external evidence workspace contracts, decision-governance foundation, Behavioral Rule Coverage v0.4.1, and blocked V3 AIGOV reconciliation
 **Owner:** `rezahh107/EV4-Decision-Kernel`
 
 ## Purpose
@@ -55,13 +55,13 @@ The separate `DCOV-COVERAGE-EXECUTION-PROGRAM` is registered in `planning/recove
 
 ## AIGOV V3 Batch B
 
-The active plan is `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3`, based on exact audited `main` SHA `86e25a9073df7e257ca7df799de85baf9b3fafb0`.
+The frozen plan is `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3`, based on exact audited `main` SHA `86e25a9073df7e257ca7df799de85baf9b3fafb0`.
 
-V3 corrects one impossible post-Merge recovery cycle for the exact PR #49 tuple only. The exception is non-reusable, non-precedential and does not fabricate a historical independent Green review. Batch A is reconciled from verified final-head CI, owner Merge, Git ancestry and current-main validation evidence.
+V3 attempted to correct one impossible post-Merge recovery cycle for the exact PR #49 tuple only. The exception is non-reusable, non-precedential and did not fabricate a historical independent Green review. Live reconciliation verified exact-head CI, owner Merge and current-main validation, but failed `AIGOV_V3_BATCH_A_ANCESTRY_UNVERIFIED` because PR #49 was squash-merged: final head `c141923...` and current `main` `86e25a9...` are diverged rather than ancestor/descendant.
 
-Draft PR #50 implements `AIGOV-ADOPT-008`, the V3 exact-main verifier, misuse tests, exact Batch B scope disclosure and registration-only recovery-program validation. A PR head does not establish final repository adoption or Merge authority.
+Draft PR #50 contains `AIGOV-ADOPT-008`, the V3 exact-main verifier, misuse tests, exact Batch B scope disclosure and registration-only recovery-program validation. It is `blocked_pending_new_owner_authorization`; a PR head does not establish final repository adoption or Merge authority.
 
-The normal Batch B sequence remains mandatory:
+The normal Batch B sequence remains mandatory after a new plan explicitly resolves the squash-Merge evidence model:
 
 ```text
 exact final head -> exact-head CI Green -> independent PR-Inspector Green on exact head and scope -> owner-only Merge -> current-main ancestry and validation
@@ -114,7 +114,7 @@ npm run validate:coverage
 npm run validate:mvk
 ```
 
-`npm run validate:mvk` runs the MVK validators and the AIGOV, provenance, sequence, Coverage and recovery-registration regressions. Live Batch A V3 reconciliation additionally uses `npm run validate:aigov-v3-batch-a-reconciliation` from an exact Git checkout with GitHub API access.
+`npm run validate:aigov-v3-batch-a-reconciliation` intentionally fails closed under frozen V3 until a new plan version authorizes an exact squash-Merge equivalence rule. Other validators remain useful for checking that Coverage, KROAD and registration-only boundaries were not weakened.
 
 ## Not Included
 
