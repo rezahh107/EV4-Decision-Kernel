@@ -9,10 +9,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
+EXPECTED_PROTOCOL = "v1.10.2"
+EXPECTED_COMMIT = "9ed48bd995ee5b9270756254b04c1d48ccf21cbe"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--inspector-root", type=Path, required=True)
     args = parser.parse_args()
+    assert (args.inspector_root / "CURRENT_VERSION").read_text(encoding="utf-8").strip() == EXPECTED_PROTOCOL
+    assert (args.inspector_root / ".git").exists()
     sys.path.insert(0, str(args.inspector_root))
 
     from pr_inspector._governance_transport import _mint_response
@@ -25,6 +31,7 @@ def main() -> int:
     )
 
     package = json.loads((args.inspector_root / "fixtures/golden-green/review-package.json").read_text())
+    assert package["protocol_version"] == EXPECTED_PROTOCOL
     bare = project_decision(package)
     assert bare["technical_status"] == "YELLOW_CHANGES_OR_VERIFICATION_REQUIRED"
     assert bare["next_action"]["kind"] == "verify"
@@ -89,7 +96,12 @@ def main() -> int:
     rejected = project_decision(package, sequence_enforcement=serialized)
     assert rejected["technical_status"] == "YELLOW_CHANGES_OR_VERIFICATION_REQUIRED"
     assert rejected["security_profile"]["sequence_ci_enforced"] is False
-    print(json.dumps({"suite": "official-pr-inspector-security-capability", "status": "pass"}))
+    print(json.dumps({
+        "suite": "official-pr-inspector-security-capability-v1102",
+        "status": "pass",
+        "protocol_version": EXPECTED_PROTOCOL,
+        "inspector_commit_sha": EXPECTED_COMMIT,
+    }))
     return 0
 
 
