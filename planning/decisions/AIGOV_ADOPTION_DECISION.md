@@ -17,6 +17,8 @@ owner_approval_source: explicit_owner_authorization
 repository_adoption_status: pending_batch_b_exact_main_completion
 active_batch: BATCH_B
 current_increment_set: AIGOV-ADOPT-008
+active_review_protocol: v1.10.2
+active_inspector_release_commit: 9ed48bd995ee5b9270756254b04c1d48ccf21cbe
 merge_authority: owner_only
 maximum_new_implementation_prs: 0
 maximum_active_implementation_prs: 1
@@ -45,26 +47,45 @@ exception_scope:
   historical_independent_green_receipt: not_claimed
 ```
 
-The verifier derives repository, PR, base, head, squash commit, Merge actor, Git tree identities, exact-head CI, current `main` and current-main validation from live GitHub payloads. Caller-supplied booleans and declared hashes cannot unlock closure.
+Historical PR #49 evidence remains bound to its historical protocol and is not rewritten as Batch B provenance.
+
+## PRF-050 repair decision
+
+The active Batch B review boundary is exactly `PR-Inspector v1.10.2` at release commit `9ed48bd995ee5b9270756254b04c1d48ccf21cbe` in official repository `rezahh107/PR-Inspector` with numeric repository ID `1288323264`.
+
+Batch B must reject stale `v1.10.1` review bundles. It must verify `CURRENT_VERSION`, `protocol-manifest.yaml`, the active release lock, the trust policy, the release commit ancestry on official `main`, and one deterministic official review directory bound to exact PR #50 head and `scope_revision`.
+
+Authoritative CI is identified by repository ID, workflow ID/path/name, event, exact head, run ID/attempt/status/conclusion, job ID, check name/head and GitHub Actions App ID/slug. Display-name equality and caller-supplied success booleans are non-authoritative.
+
+The production `batch-b-final` verifier runs only after exact-main `Validate Main`. It derives Merge method from GitHub objects and applies method-aware proof. It reuses the exact pre-Merge independent review and does not request a second post-Merge review.
+
+Repository settings were not modified. Missing read-only proof of required checks, App binding, strict stale-check policy or bypass configuration remains a fail-closed unresolved gate:
+
+```yaml
+required_check_configuration: unverified
+repository_settings_enforced: not_claimed
+merge_permitted: false
+```
 
 ## Batch disposition
 
 1. `BATCH_A` — `AIGOV-ADOPT-000` through `AIGOV-ADOPT-007` are `merged_and_post_merge_reconciled` under the exact V4 one-time squash-equivalence tuple.
-2. `BATCH_B` — PR #50 implements `AIGOV-ADOPT-008`, method-aware exact-main verification and registration-only `DCOV-COVERAGE-EXECUTION-PROGRAM` carriers.
+2. `BATCH_B` — PR #50 implements `AIGOV-ADOPT-008`, active v1.10.2 review binding, exact CI/check identity, method-aware exact-main verification and registration-only recovery-program carriers.
 
-Batch B must use:
+Required sequence:
 
 ```text
 exact final Batch B head
 → exact-head CI Green
-→ independent PR-Inspector Green on exact head and scope_revision
+→ independent PR-Inspector v1.10.2 Green on exact head and scope_revision
 → owner Merge
 → deterministic Merge-result proof for the actual Merge method
 → current-main validation Green
+→ read-only repository-enforcement proof
 → final adoption closure
 ```
 
-Deterministic post-Merge proof is method-aware:
+Method-aware proof:
 
 ```yaml
 merge_commit: reviewed_head_is_ancestor_of_current_main
@@ -72,13 +93,11 @@ squash: exact_result_tree_equality
 rebase: exact_result_tree_equality_or_verified_commit_mapping
 ```
 
-A second independent review after Merge is not required. Post-Merge verification confirms delivery of the already reviewed content; it cannot replace the required pre-Merge review.
-
 ## Unchanged boundaries
 
 - owner-only Merge;
 - exact-head CI and exact scope binding;
-- independent exact final-head PR-Inspector review for Batch B;
+- independent exact final-head PR-Inspector v1.10.2 review for Batch B;
 - Coverage remains `not_measurable_pending_external_promotion`;
 - `KROAD-012` through `KROAD-018` remain preserved;
 - `KROAD-012R` remains `historical_non_authoritative`;
