@@ -87,6 +87,8 @@ caseA('historical Green fabrication rejected', (x) => { x.historicalIndependentG
 caseB('Batch B review required', (x) => { x.independentReviewGreen = false; }, 'AIGOV_BATCH_B_REVIEW_REQUIRED');
 caseB('Batch B cannot reuse PR49 exception', (x) => { x.exceptionApplied = true; }, 'AIGOV_V4_EXCEPTION_REUSE_FORBIDDEN');
 caseB('Batch B squash result tree required', (x) => { x.resultTreeEquivalent = false; }, 'AIGOV_BATCH_B_MERGE_RESULT_UNVERIFIED');
+caseB('Batch B malformed reviewed timestamp rejected', (x) => { x.reviewedAt = 'not-a-timestamp'; }, 'AIGOV_BATCH_B_REVIEW_MUST_PREDATE_MERGE');
+caseB('Batch B malformed merged timestamp rejected', (x) => { x.mergedAt = 'not-a-timestamp'; }, 'AIGOV_BATCH_B_REVIEW_MUST_PREDATE_MERGE');
 caseB('Coverage remains non-promoted', (x) => { x.coveragePromotionEffect = 'promoted'; }, 'AIGOV_COVERAGE_PROMOTION_FORBIDDEN');
 cases.push({ name: 'Batch B valid squash sequence passes without second review', expected: 'pass', pass: verifyBatchBFinalClosure(baseB()).status === 'pass', diagnostics: [] });
 
