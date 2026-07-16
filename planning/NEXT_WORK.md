@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-The owner approved bounded repair of PR #50 under `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`. `PRF-050-001` through `PRF-050-004` have been implemented on the existing Draft branch: the active Batch B review boundary is now `PR-Inspector v1.10.2` at release commit `9ed48bd995ee5b9270756254b04c1d48ccf21cbe`, CI/check identity is descriptor-bound, and the production post-Merge route executes `batch-b-final` after `Validate Main`. The repair is not complete until the final scope is generated, exact-head CI is Green and a fresh independent review is published.
+The owner approved bounded repair of PR #50 under `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`. `PRF-050-001` through `PRF-050-004` have been implemented on the existing Draft branch: the active Batch B review boundary is now `PR-Inspector v1.10.2` at release commit `9ed48bd995ee5b9270756254b04c1d48ccf21cbe`, CI/check identity is descriptor-bound, the production post-Merge route executes `batch-b-final` after `Validate Main`, and the exact scope has been regenerated. The repair is not complete until exact-head CI is Green and a fresh independent review is published.
 
 ## Status Authority
 
@@ -39,7 +39,8 @@ batch_b:
   batch: BATCH_B
   increment: AIGOV-ADOPT-008
   implementation_state: prf_050_repair_implemented
-  status: pending_final_scope_exact_head_ci_and_fresh_independent_review
+  status: pending_exact_head_ci_and_fresh_independent_review
+  scope_revision: sha256:dc8627e6df4c305fb374d6510395611313d672d77708066f41af4ba722c7b82c
   required_check_configuration: unverified
   repository_settings_enforced: not_claimed
 registered:
@@ -66,10 +67,10 @@ external_repository_effect: none
 
 - [ ] PR #50 — V4 Batch B bounded repair
   - `branch`: `governance/aigov-v3-batch-b-closure`
-  - `status`: `pending_final_scope_exact_head_ci_and_fresh_independent_review`
+  - `status`: `pending_exact_head_ci_and_fresh_independent_review`
   - `review_protocol`: `v1.10.2`
   - `inspector_release_commit`: `9ed48bd995ee5b9270756254b04c1d48ccf21cbe`
-  - `scope_revision`: `pending_final_scope_generation`
+  - `scope_revision`: `sha256:dc8627e6df4c305fb374d6510395611313d672d77708066f41af4ba722c7b82c`
   - `merge_permitted`: `false`
   - `independent_review_handoff_permitted`: `only_after_final_exact_head_ci_green`
   - `required_check_configuration`: `unverified`
@@ -84,10 +85,10 @@ external_repository_effect: none
 ## Next Task
 
 - [ ] AIGOV-ADOPT-008 — Final AIGOV exact-main closure (`BATCH_B`)
-  - `status`: `pending_final_scope_exact_head_ci_and_fresh_independent_review`
+  - `status`: `pending_exact_head_ci_and_fresh_independent_review`
   - `change_class`: `L3`
   - `plan_id`: `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`
-  - Required sequence: final scope → exact final-head CI Green → independent PR-Inspector v1.10.2 Green on exact head and scope → owner Merge → method-aware deterministic Merge-result proof → current-main validation Green → verified repository enforcement.
+  - Required sequence: exact final-head CI Green → independent PR-Inspector v1.10.2 Green on exact head and scope → owner Merge → method-aware deterministic Merge-result proof → current-main validation Green → verified repository enforcement.
   - No Merge, Coverage promotion, KREC implementation or product implementation is authorized.
 
 ## Registered Recovery Program
