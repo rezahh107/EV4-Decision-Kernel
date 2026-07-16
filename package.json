@@ -16,7 +16,7 @@
     "validate:kroad-010-history-matrix": "node tools/validate-kroad-010-history-matrix.mjs",
     "test:kroad-010-history-matrix-fail-closed": "node tools/test-kroad-010-history-matrix-fail-closed.mjs",
     "validate:coverage": "node kernel/validator/validate-coverage-guarantee-history.mjs && node kernel/validator/validate-coverage-guarantee.mjs",
-    "validate:aigov": "node kernel/validator/validate-aigov-governance.mjs",
+    "validate:aigov": "node tools/validate-aigov-v4-governance.mjs",
     "test:aigov-fixtures": "node kernel/validator/validate-aigov-governance.mjs --fixtures-only",
     "test:aigov-sequence": "node tools/test-aigov-sequence.mjs",
     "test:aigov-provenance": "node tools/test-aigov-provenance.mjs",
