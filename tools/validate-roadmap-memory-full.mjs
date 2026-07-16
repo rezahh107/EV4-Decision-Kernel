@@ -4,152 +4,386 @@ import path from 'node:path';
 import zlib from 'node:zlib';
 
 const ROOT = process.cwd();
-const V3_PLAN = 'GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3';
-const V3_BASE = '86e25a9073df7e257ca7df799de85baf9b3fafb0';
-const PART_PATHS = [
-  'part-001-01.b64','part-001-02.b64','part-001-03.b64','part-001-04.b64','part-001-05.b64','part-001-06.b64',
-  'part-002.b64','part-003.b64','part-004.b64','part-005-01.b64','part-005-02.b64','part-005-03.b64',
-  'part-005-04.b64','part-005-05.b64','part-005-06.b64','part-006.b64','part-007.b64','part-008.b64',
-].map((name) => `docs/governance/ssot-v1.1.0-payload/${name}`);
-const PART_HASHES = [
-  '548b94eceb853d87fb8387b8ba1b96464bd495a6eb6654559d2f50cdfbfabd3a',
-  '9f99aa4b9d951e76eec4694f8a3c2c917e5b377b0b1dfa5372e07b9533f9920d',
-  '020b5f2a6a0d8b757307530278301e1720bb4cbbcef335e85826c5f889222979',
-  'c2a19c5357790034a9fca86402cda76ed577917396ac2ad731cdbb2714f6d125',
-  '53e471edeb4a696561009a2245002b8439084ad560b57a969cda49e253de484c',
-  'eeaef0e374959cb2b9a0d2d138f511008d66f0c740c2b20240050db57c1370de',
-  'cc3b95570207848f4fcbbc0fe6bd912638619efae0c67acdeb89b6af13ec0c2a',
-  'e8d42957e7665dc3c1db4c364b7dd242e13e545a31cc6124b34ad28e0284fcd5',
-  '1701611223e4561456569b09a517751c03a48fb487685387fad50e1da2df7c26',
-  '2e7145e45488ba7da40a7c3c486c317d024ba611d51c1efab7fb34dbd8995dbd',
-  '6ad0b4c65345e217eaa7942a74662e0b833b37c45ebe8971554ed1467a7a647f',
-  '313b891ce7d4101f4158a3920fc7070394958eeba4a35a7de1b93592a8e8a70d',
-  '7b74515dafb67d9b76ac2ee6b5203cdb4332851f91ce1f72eaf14312794c7e00',
-  '5e8f923d78729eaf0f19cfe7a3a9615644dafe65c0ec35cdc851d524fcbe4adf',
-  'b6458ca06b7b87186275657480c909c6c8e9793b5a60e423acbbbda20da9942e',
-  'f578e37ca4b9e29fb8505eba97c4d357a6510b7afd2a0ecdbebf0032c060bf43',
-  'ef29003748aee9069ce3975a5abcc313bc63fd84d61a9b714609fcf18a2dd9ab',
-  '8bf646b1cae69fe7a7780d92ec5a23f13eeebf82cbe20f85c6cb52e890d4b55c',
-];
-const REQUIRED = [
+const REQUIRED_FILES = [
   'planning/NEXT_WORK.md',
   'planning/KERNEL_EXECUTION_PLAN.md',
   'planning/decisions/AIGOV_ADOPTION_DECISION.md',
   'planning/reviews/AIGOV_ADOPTION_AUDIT.md',
-  'planning/reviews/AIGOV_BATCH_A_V3_POST_MERGE_RECONCILIATION.md',
-  'docs/governance/AIGOV_EXACT_MAIN_CLOSURE_PROTOCOL.md',
   'docs/governance/AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT_v1.1.0.fa.md',
-  'planning/recovery/recovery-execution-program.v1.json',
-  'kernel/schemas/recovery-execution-program.v1.schema.json',
+  'docs/governance/ssot-v1.1.0-payload/part-001-01.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-001-02.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-001-03.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-001-04.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-001-05.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-001-06.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-002.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-003.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-004.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-005-01.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-005-02.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-005-03.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-005-04.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-005-05.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-005-06.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-006.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-007.b64',
+  'docs/governance/ssot-v1.1.0-payload/part-008.b64',
   'AGENTS.md',
-  ...PART_PATHS,
 ];
+
+const STALE_PRE_MERGE_PHRASES = [
+  'not complete on main until this PR is merged',
+  'expected post-merge state',
+  'becomes complete only after this PR merges',
+  'Pending PR',
+];
+
 const failures = [];
-const fail = (file, problem) => failures.push({ file, problem });
-const read = (file) => {
-  const target = path.join(ROOT, file);
-  if (!fs.existsSync(target)) { fail(file, 'required file is missing'); return ''; }
-  return fs.readFileSync(target, 'utf8');
-};
-const files = Object.fromEntries(REQUIRED.map((file) => [file, read(file)]));
-const section = (text, name) => {
-  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const match = new RegExp(`^## ${escaped}\\s*$`, 'm').exec(text);
+
+function readRequired(filePath) {
+  const abs = path.join(ROOT, filePath);
+  if (!fs.existsSync(abs)) {
+    fail(filePath, 'required file is missing', 'Restore the file or update the roadmap-memory validator if the path intentionally changed.');
+    return '';
+  }
+  return fs.readFileSync(abs, 'utf8');
+}
+
+function fail(filePath, problem, suggestedFix) {
+  failures.push({ filePath, problem, suggestedFix });
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function extractSection(text, heading) {
+  const headingPattern = new RegExp(`^## ${escapeRegExp(heading)}\\s*$`, 'm');
+  const match = headingPattern.exec(text);
   if (!match) return '';
-  const rest = text.slice(match.index + match[0].length);
+  const start = match.index + match[0].length;
+  const rest = text.slice(start);
   const next = /^##\s+/m.exec(rest);
   return next ? rest.slice(0, next.index) : rest;
-};
+}
 
-function validateSsotPayload() {
-  const encoded = PART_PATHS.map((file, index) => {
-    const value = files[file].trim();
+function extractCompletedKroads(nextWork) {
+  const completed = extractSection(nextWork, 'Completed');
+  const matches = [...completed.matchAll(/^- \[x\] (KROAD-\d{3})\s+—\s+(.+)$/gm)];
+  return matches.map((match) => ({ id: match[1], title: match[2] }));
+}
+
+function assertStatusAuthority(nextWork) {
+  const hasAuthorityHeading = /^## Status Authority\s*$/m.test(nextWork);
+  const hasDashboardLanguage = /authoritative current-status dashboard/i.test(nextWork);
+  if (!hasAuthorityHeading || !hasDashboardLanguage) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'NEXT_WORK.md does not clearly declare itself as the current roadmap-status dashboard.',
+      'Add a Status Authority section stating that current roadmap status lives in planning/NEXT_WORK.md.',
+    );
+  }
+}
+
+function assertExactlyOneNextTask(nextWork) {
+  const section = extractSection(nextWork, 'Next Task');
+  const nextTasks = [...section.matchAll(/^- \[ \] ((?:KROAD-\d{3})|(?:DCOV-EXEC-\d{3})|(?:AIGOV-ADOPT-\d{3}))\s+—\s+.+$/gm)];
+  if (nextTasks.length !== 1) {
+    fail(
+      'planning/NEXT_WORK.md',
+      `NEXT_WORK.md must identify exactly one current next task, found ${nextTasks.length}.`,
+      'Keep exactly one unchecked executable item under the Next Task section.',
+    );
+  }
+}
+
+function assertAigovAdoptionBoundary(nextWork, adoptionDecision, adoptionAudit, ssotManifest) {
+  const next = extractSection(nextWork, 'Next Task');
+  const nextProduct = extractSection(nextWork, 'Next Product Task');
+
+  if (!/^- \[ \] AIGOV-ADOPT-001\s+—\s+AIGOV Enforcement Activation \(`BATCH_A`\)$/m.test(next)) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'The current governance task is not the V2 Batch A enforcement activation.',
+      'Keep AIGOV-ADOPT-001 as the single current task carrier for Batch A until owner Merge and exact-main verification.',
+    );
+  }
+  if (!/`status`:\s+`in_batch_a_implementation`/.test(next)) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'Batch A is not classified as in_batch_a_implementation.',
+      'Set the current governance task status to in_batch_a_implementation before exact-main verification.',
+    );
+  }
+  if (!/^- \[ \] KROAD-012\s+—\s+External Evidence Producer Boundary$/m.test(nextProduct)) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'KROAD-012 is not preserved as the next product task.',
+      'Keep KROAD-012 under Next Product Task while the governance adoption sequence is active.',
+    );
+  }
+  if (!/`status`:\s+`next_product_task_blocked_by_governance_adoption`/.test(nextProduct)) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'KROAD-012 does not record the higher-priority governance dependency.',
+      'Set KROAD-012 to next_product_task_blocked_by_governance_adoption.',
+    );
+  }
+  if (!/plan_id:\s+GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2/.test(adoptionDecision)) {
+    fail(
+      'planning/decisions/AIGOV_ADOPTION_DECISION.md',
+      'The approved frozen-plan identity is missing or changed.',
+      'Restore the exact approved plan ID.',
+    );
+  }
+  if (!/current_increment_set:\s+AIGOV-ADOPT-000_through_AIGOV-ADOPT-007/.test(adoptionDecision)
+    || !/active_batch:\s+BATCH_A/.test(adoptionDecision)) {
+    fail(
+      'planning/decisions/AIGOV_ADOPTION_DECISION.md',
+      'The adoption decision does not bind the active V2 Batch A increment set.',
+      'Record BATCH_A and AIGOV-ADOPT-000 through AIGOV-ADOPT-007 as the active bounded increment set.',
+    );
+  }
+  if (!/repository_adoption_status:\s+blocked_open_enforcement_gaps/.test(adoptionAudit)) {
+    fail(
+      'planning/reviews/AIGOV_ADOPTION_AUDIT.md',
+      'The audit overstates repository adoption.',
+      'Keep repository adoption blocked until the full sequence closes on main.',
+    );
+  }
+  if (!/raw_source_sha256:\s+"30ed521c5364ef5131f225c8e61bc8e49e721ae8d6bef5ca08c3941c1d523757"/.test(ssotManifest)) {
+    fail(
+      'docs/governance/AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT_v1.1.0.fa.md',
+      'The exact SSOT source digest is missing or changed.',
+      'Restore the audited v1.1.0 SHA-256 identity.',
+    );
+  }
+}
+
+function assertSsotPayload(files) {
+  const partPaths = [
+    'docs/governance/ssot-v1.1.0-payload/part-001-01.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-001-02.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-001-03.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-001-04.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-001-05.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-001-06.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-002.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-003.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-004.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-005-01.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-005-02.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-005-03.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-005-04.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-005-05.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-005-06.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-006.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-007.b64',
+    'docs/governance/ssot-v1.1.0-payload/part-008.b64',
+  ];
+  const expectedPartSha256 = [
+    '548b94eceb853d87fb8387b8ba1b96464bd495a6eb6654559d2f50cdfbfabd3a',
+    '9f99aa4b9d951e76eec4694f8a3c2c917e5b377b0b1dfa5372e07b9533f9920d',
+    '020b5f2a6a0d8b757307530278301e1720bb4cbbcef335e85826c5f889222979',
+    'c2a19c5357790034a9fca86402cda76ed577917396ac2ad731cdbb2714f6d125',
+    '53e471edeb4a696561009a2245002b8439084ad560b57a969cda49e253de484c',
+    'eeaef0e374959cb2b9a0d2d138f511008d66f0c740c2b20240050db57c1370de',
+    'cc3b95570207848f4fcbbc0fe6bd912638619efae0c67acdeb89b6af13ec0c2a',
+    'e8d42957e7665dc3c1db4c364b7dd242e13e545a31cc6124b34ad28e0284fcd5',
+    '1701611223e4561456569b09a517751c03a48fb487685387fad50e1da2df7c26',
+    '2e7145e45488ba7da40a7c3c486c317d024ba611d51c1efab7fb34dbd8995dbd',
+    '6ad0b4c65345e217eaa7942a74662e0b833b37c45ebe8971554ed1467a7a647f',
+    '313b891ce7d4101f4158a3920fc7070394958eeba4a35a7de1b93592a8e8a70d',
+    '7b74515dafb67d9b76ac2ee6b5203cdb4332851f91ce1f72eaf14312794c7e00',
+    '5e8f923d78729eaf0f19cfe7a3a9615644dafe65c0ec35cdc851d524fcbe4adf',
+    'b6458ca06b7b87186275657480c909c6c8e9793b5a60e423acbbbda20da9942e',
+    'f578e37ca4b9e29fb8505eba97c4d357a6510b7afd2a0ecdbebf0032c060bf43',
+    'ef29003748aee9069ce3975a5abcc313bc63fd84d61a9b714609fcf18a2dd9ab',
+    '8bf646b1cae69fe7a7780d92ec5a23f13eeebf82cbe20f85c6cb52e890d4b55c',
+  ];
+  const normalizedParts = partPaths.map((partPath, index) => {
+    const value = files[partPath].trim();
     const digest = crypto.createHash('sha256').update(value, 'utf8').digest('hex');
-    if (digest !== PART_HASHES[index]) fail(file, `SSOT payload part digest mismatch: ${digest}`);
+    if (digest !== expectedPartSha256[index]) {
+      fail(
+        partPath,
+        `SSOT payload part digest mismatch: expected ${expectedPartSha256[index]}, found ${digest}.`,
+        'Restore the exact audited Base64 payload part.',
+      );
+    }
     return value;
-  }).join('');
-  if (encoded.length !== 42288) fail('docs/governance/ssot-v1.1.0-payload/', `encoded length mismatch: ${encoded.length}`);
+  });
+
+  const encodedPayload = normalizedParts.join('');
+  if (encodedPayload.length !== 42288) {
+    fail(
+      'docs/governance/ssot-v1.1.0-payload/',
+      `SSOT payload encoded length mismatch: expected 42288, found ${encodedPayload.length}.`,
+      'Restore all eighteen exact payload parts in the documented order.',
+    );
+    return;
+  }
+
   try {
-    const source = zlib.gunzipSync(Buffer.from(encoded, 'base64')).toString('utf8');
+    const compressed = Buffer.from(encodedPayload, 'base64');
+    const source = zlib.gunzipSync(compressed);
     const digest = crypto.createHash('sha256').update(source).digest('hex');
     if (source.length !== 101922 || digest !== '30ed521c5364ef5131f225c8e61bc8e49e721ae8d6bef5ca08c3941c1d523757') {
-      fail('docs/governance/ssot-v1.1.0-payload/', `reconstructed identity mismatch size=${source.length} sha256=${digest}`);
+      fail(
+        'docs/governance/ssot-v1.1.0-payload/',
+        `Reconstructed SSOT identity mismatch: size=${source.length}, sha256=${digest}.`,
+        'Restore the exact audited v1.1.0 source payload.',
+      );
     }
-  } catch (error) { fail('docs/governance/ssot-v1.1.0-payload/', `reconstruction failed: ${error.message}`); }
-}
-
-function validateCurrentStatus() {
-  const next = files['planning/NEXT_WORK.md'];
-  const decision = files['planning/decisions/AIGOV_ADOPTION_DECISION.md'];
-  const audit = files['planning/reviews/AIGOV_ADOPTION_AUDIT.md'];
-  const protocol = files['docs/governance/AIGOV_EXACT_MAIN_CLOSURE_PROTOCOL.md'];
-  if (!/^## Status Authority\s*$/m.test(next) || !/authoritative current-status dashboard/i.test(next)) fail('planning/NEXT_WORK.md', 'status authority is missing');
-  const current = section(next, 'Next Task');
-  const open = [...current.matchAll(/^- \[ \] ((?:KROAD|DCOV-EXEC|AIGOV-ADOPT)-\d{3})\s+—/gm)];
-  if (open.length !== 1 || open[0][1] !== 'AIGOV-ADOPT-008') fail('planning/NEXT_WORK.md', 'AIGOV-ADOPT-008 must be the only current task');
-  for (const token of [
-    'repository_adoption_status: pending_batch_b_exact_main_completion',
-    'BATCH_A: exact_main_reconciled_under_v3_exception',
-    'AIGOV-ADOPT-000_through_007: merged_and_post_merge_reconciled',
-    'status: implemented_pending_exact_head_validation_and_review',
-    'KREC-001_through_009: registered_planned_task',
-    'KROAD-012: next_product_task_blocked_pending_final_aigov_closure',
-    'KROAD-013_through_018: not_started',
-    'KROAD-012R: historical_non_authoritative',
-    'status: not_measurable_pending_external_promotion',
-    'coverage_promotion_effect: none',
-    'product_effect: none',
-  ]) if (!next.includes(token)) fail('planning/NEXT_WORK.md', `required V3 status missing: ${token}`);
-  if (!decision.includes(`plan_id: ${V3_PLAN}`) || !decision.includes(`audit_base_sha: ${V3_BASE}`) || !decision.includes('previous_plan_id: GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2')) fail('planning/decisions/AIGOV_ADOPTION_DECISION.md', 'V3 identity is not exact');
-  if (!decision.includes('reusable: false') || !decision.includes('historical_independent_green_receipt: not_claimed')) fail('planning/decisions/AIGOV_ADOPTION_DECISION.md', 'one-time exception boundary is incomplete');
-  if (!audit.includes('impossible_retrospective_review_cycle') || !audit.includes('No historical independent Green receipt is claimed')) fail('planning/reviews/AIGOV_ADOPTION_AUDIT.md', 'contradiction or no-fabrication statement missing');
-  if (!protocol.includes('No second independent review after Merge is required') && !protocol.includes('second independent review after Merge is neither required')) fail('docs/governance/AIGOV_EXACT_MAIN_CLOSURE_PROTOCOL.md', 'post-Merge review deadlock was not removed');
-}
-
-function validateRecoveryProgram() {
-  let program;
-  try { program = JSON.parse(files['planning/recovery/recovery-execution-program.v1.json']); } catch (error) { fail('planning/recovery/recovery-execution-program.v1.json', error.message); return; }
-  const expected = {
-    'KREC-001': [], 'KREC-002': ['KREC-001'], 'KREC-003': ['KREC-001','KREC-002'], 'KREC-004': ['KREC-001'],
-    'KREC-005': ['KREC-002','KREC-003','KREC-004'], 'KREC-006': ['KREC-003','KREC-004','KREC-005'],
-    'KREC-007': ['KREC-005','KREC-006'], 'KREC-008': ['KREC-002','KREC-007'],
-    'KREC-009': ['KREC-003','KREC-006','KREC-007','KREC-008'],
-  };
-  if (program.program_id !== 'DCOV-COVERAGE-EXECUTION-PROGRAM' || program.integration_model !== 'distinct_recovery_execution_program' || program.program_status !== 'registered_non_active') fail('planning/recovery/recovery-execution-program.v1.json', 'program identity or non-active state mismatch');
-  if (program.coverage_promotion_effect !== 'none' || program.task_activation_effect !== 'none' || program.kroad_012r_status !== 'historical_non_authoritative') fail('planning/recovery/recovery-execution-program.v1.json', 'authority boundary mismatch');
-  const tasks = new Map((program.tasks || []).map((task) => [task.task_id, task]));
-  for (const [id, deps] of Object.entries(expected)) {
-    const task = tasks.get(id);
-    if (!task || task.status !== 'registered_planned_task' || JSON.stringify(task.depends_on) !== JSON.stringify(deps)) fail('planning/recovery/recovery-execution-program.v1.json', `${id} registration or dependencies mismatch`);
-  }
-  if (tasks.size !== 9) fail('planning/recovery/recovery-execution-program.v1.json', 'task set must contain exactly KREC-001 through KREC-009');
-}
-
-function validatePreservation() {
-  const next = files['planning/NEXT_WORK.md'];
-  const plan = files['planning/KERNEL_EXECUTION_PLAN.md'];
-  const coverage = section(next, 'Current PR');
-  if (!/DCOV-EXEC-001/.test(coverage) || !/blocked_pending_external_governance_approval/.test(coverage)) fail('planning/NEXT_WORK.md', 'Coverage proposal is not fail-closed');
-  if (/superseded_by_coverage_execution_program/.test(next) || /replaces KROAD-012 through KROAD-018/.test(next)) fail('planning/NEXT_WORK.md', 'KROAD items were superseded');
-  if (!/\*\*Status:\*\* proposed/.test(plan) || /Coverage Execution Program — Active/.test(plan)) fail('planning/KERNEL_EXECUTION_PLAN.md', 'Coverage overlay must remain proposed and non-executable');
-  const completed = section(next, 'Completed');
-  for (let id = 0; id <= 11; id += 1) {
-    const token = `KROAD-${String(id).padStart(3, '0')}`;
-    if (!new RegExp(`^- \\[x\\] ${token}\\s+—`, 'm').test(completed)) fail('planning/NEXT_WORK.md', `${token} completion evidence missing`);
-  }
-  for (const phrase of ['not complete on main until this PR is merged','expected post-merge state','becomes complete only after this PR merges','Pending PR']) {
-    for (const line of next.split('\n')) if (line.toLowerCase().includes(phrase.toLowerCase()) && !/historical|history|legacy/i.test(line)) fail('planning/NEXT_WORK.md', `stale pre-Merge wording: ${phrase}`);
+  } catch (error) {
+    fail(
+      'docs/governance/ssot-v1.1.0-payload/',
+      `SSOT payload reconstruction failed: ${error.message}`,
+      'Restore valid deterministic gzip Base64 payload parts.',
+    );
   }
 }
 
-validateSsotPayload();
-validateCurrentStatus();
-validateRecoveryProgram();
-validatePreservation();
+function assertExternalPromotionBoundary(nextWork, executionPlan) {
+  const coverage = extractSection(nextWork, 'Current PR');
 
-if (failures.length) {
+  if (!/^- \[ \] `?DCOV-EXEC-001`?\s+—\s+Coverage Guarantee proposal and validation foundation$/m.test(coverage)) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'The non-executable DCOV-EXEC-001 proposal is not preserved.',
+      'Record DCOV-EXEC-001 under Current PR as the blocked Coverage proposal.',
+    );
+  }
+  if (!/`implementation_eligibility`:\s+`blocked_pending_external_governance_approval`/.test(coverage)) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'DCOV-EXEC-001 is not fail-closed on missing external governance approval.',
+      'Set implementation_eligibility to blocked_pending_external_governance_approval.',
+    );
+  }
+  if (/superseded_by_coverage_execution_program/.test(nextWork)) {
+    fail(
+      'planning/NEXT_WORK.md',
+      'NEXT_WORK.md still self-supersedes KROAD items through the unapproved Coverage proposal.',
+      'Remove superseded_by_coverage_execution_program from current roadmap memory.',
+    );
+  }
+  if (!/\*\*Status:\*\* proposed/.test(executionPlan)
+    || /Coverage Execution Program — Active/.test(executionPlan)
+    || /replaces KROAD-012 through KROAD-018/.test(executionPlan)) {
+    fail(
+      'planning/KERNEL_EXECUTION_PLAN.md',
+      'The detailed plan still represents the Coverage overlay as active or authoritative.',
+      'Keep the Coverage overlay proposed and non-executable without changing KROAD-012 through KROAD-018.',
+    );
+  }
+}
+
+function assertCompletedItemsHaveEvidence(nextWork) {
+  const completed = extractSection(nextWork, 'Completed');
+  const itemRegex = /^- \[x\] (KROAD-\d{3})\s+—\s+.+$/gm;
+  const items = [...completed.matchAll(itemRegex)];
+
+  for (let i = 0; i < items.length; i += 1) {
+    const current = items[i];
+    const next = items[i + 1];
+    const start = (current.index ?? 0) + current[0].length;
+    const end = next?.index ?? completed.length;
+    const body = completed.slice(start, end);
+    const hasEvidence = /Update note:|Known evidence:|PR #\d+|planning\//i.test(body);
+    if (!hasEvidence) {
+      fail(
+        'planning/NEXT_WORK.md',
+        `${current[1]} is marked complete without an update note or evidence reference.`,
+        'Add an indented Update note or evidence reference under the completed KROAD item.',
+      );
+    }
+  }
+}
+
+function hasExplicitStatusNeutralization(nextWork, id) {
+  const statusAuthority = extractSection(nextWork, 'Status Authority');
+  const mentionsId = new RegExp(escapeRegExp(id), 'i').test(statusAuthority);
+  const mentionsDetailedPlan = /KERNEL_EXECUTION_PLAN\.md/i.test(statusAuthority);
+  const saysNonAuthoritative = /non-authoritative/i.test(statusAuthority);
+  const pointsToNextWork = /Current status source/i.test(statusAuthority) && /planning\/NEXT_WORK\.md/i.test(statusAuthority);
+  return mentionsId && mentionsDetailedPlan && saysNonAuthoritative && pointsToNextWork;
+}
+
+function assertKernelDoesNotOverrideCompletedStatus(nextWork, executionPlan) {
+  const hasStatusAuthority = /^## Status Authority\s*$/m.test(nextWork) && /authoritative current-status dashboard/i.test(nextWork);
+  const completedIds = extractCompletedKroads(nextWork).map((item) => item.id);
+
+  for (const id of completedIds) {
+    const sectionStart = executionPlan.indexOf(`## ${id}`);
+    if (sectionStart === -1) continue;
+    const sectionRest = executionPlan.slice(sectionStart);
+    const nextSection = sectionRest.slice(1).search(/\n## KROAD-\d{3}/);
+    const section = nextSection === -1 ? sectionRest : sectionRest.slice(0, nextSection + 1);
+    const hasStaleNotStarted = /^- \*\*Status:\*\*\s+not_started\s*$/m.test(section);
+
+    if (hasStaleNotStarted && (!hasStatusAuthority || !hasExplicitStatusNeutralization(nextWork, id))) {
+      fail(
+        'planning/KERNEL_EXECUTION_PLAN.md',
+        `${id} is complete in NEXT_WORK.md but still has mutable status not_started in the detailed plan.`,
+        'Replace the stale per-item status with a stable current-status-source note, or explicitly document the legacy detailed-plan status as non-authoritative in NEXT_WORK.md.',
+      );
+    }
+  }
+}
+
+function planningMarkdownFiles() {
+  const planningDir = path.join(ROOT, 'planning');
+  if (!fs.existsSync(planningDir)) return [];
+  return fs.readdirSync(planningDir)
+    .filter((name) => name.endsWith('.md'))
+    .map((name) => `planning/${name}`);
+}
+
+function assertNoStalePreMergeWording() {
+  for (const filePath of planningMarkdownFiles()) {
+    const text = fs.readFileSync(path.join(ROOT, filePath), 'utf8');
+    const lines = text.split('\n');
+    lines.forEach((line, i) => {
+      const lower = line.toLowerCase();
+      const explicitlyHistorical = /historical|history|previous review|past PR|legacy/i.test(line);
+      for (const phrase of STALE_PRE_MERGE_PHRASES) {
+        if (lower.includes(phrase.toLowerCase()) && !explicitlyHistorical) {
+          fail(
+            filePath,
+            `stale pre-merge wording on line ${i + 1}: ${phrase}`,
+            'Rewrite the line as current-state wording, or explicitly mark it as historical context.',
+          );
+        }
+      }
+    });
+  }
+}
+
+const files = Object.fromEntries(REQUIRED_FILES.map((filePath) => [filePath, readRequired(filePath)]));
+
+assertSsotPayload(files);
+assertStatusAuthority(files['planning/NEXT_WORK.md']);
+assertExactlyOneNextTask(files['planning/NEXT_WORK.md']);
+assertAigovAdoptionBoundary(
+  files['planning/NEXT_WORK.md'],
+  files['planning/decisions/AIGOV_ADOPTION_DECISION.md'],
+  files['planning/reviews/AIGOV_ADOPTION_AUDIT.md'],
+  files['docs/governance/AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT_v1.1.0.fa.md'],
+);
+assertExternalPromotionBoundary(files['planning/NEXT_WORK.md'], files['planning/KERNEL_EXECUTION_PLAN.md']);
+assertCompletedItemsHaveEvidence(files['planning/NEXT_WORK.md']);
+assertKernelDoesNotOverrideCompletedStatus(files['planning/NEXT_WORK.md'], files['planning/KERNEL_EXECUTION_PLAN.md']);
+assertNoStalePreMergeWording();
+
+if (failures.length > 0) {
   console.error('Roadmap memory validation failed:');
-  for (const item of failures) console.error(`\n${item.file}\n  Problem: ${item.problem}`);
+  for (const failure of failures) {
+    console.error(`\n${failure.filePath}`);
+    console.error(`  Problem: ${failure.problem}`);
+    console.error(`  Suggested fix: ${failure.suggestedFix}`);
+  }
   process.exit(1);
 }
+
 console.log('Roadmap memory validation passed.');
