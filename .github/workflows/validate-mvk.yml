@@ -45,6 +45,40 @@ jobs:
           npm ci
           npm run validate:coverage
 
+  coverage-diagnostics:
+    name: Coverage failure diagnostics
+    needs: external-coverage-trust
+    if: ${{ always() && needs.external-coverage-trust.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout externally verified exact PR head
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Capture production Coverage validator output
+        shell: bash
+        run: |
+          set +e
+          npm run validate:coverage > "${RUNNER_TEMP}/coverage-validation.log" 2>&1
+          status=$?
+          printf 'exit_code=%s\n' "${status}" > "${RUNNER_TEMP}/coverage-validation.exit"
+          exit 0
+      - name: Upload Coverage diagnostics
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: coverage-validation-diagnostics-${{ github.event.pull_request.head.sha }}
+          path: |
+            ${{ runner.temp }}/coverage-validation.log
+            ${{ runner.temp }}/coverage-validation.exit
+          if-no-files-found: error
+          retention-days: 7
+
   regression-validation:
     name: MVK and roadmap regressions
     needs:
