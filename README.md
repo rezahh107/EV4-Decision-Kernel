@@ -1,6 +1,6 @@
 # EV4 Decision Kernel
 
-**Status:** working-reference / Kernel-local MVK foundation with source manifest, doc coverage index, decision-card layer, Architect/CE consumption boundaries, external evidence workspace contracts, decision-governance foundation, Behavioral Rule Coverage v0.4.1, and pending V3 AIGOV exact-main closure  
+**Status:** working-reference / Kernel-local MVK foundation with source manifest, doc coverage index, decision-card layer, Architect/CE consumption boundaries, external evidence workspace contracts, decision-governance foundation, Behavioral Rule Coverage v0.4.1, and pending V3 AIGOV exact-main closure
 **Owner:** `rezahh107/EV4-Decision-Kernel`
 
 ## Purpose
