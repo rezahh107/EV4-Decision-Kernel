@@ -86,8 +86,13 @@ export function verifyWorkflowDescriptorPayloads({
   if (diagnostics.length) return { diagnostics: unique(diagnostics), evidence: null };
 
   add(!Array.isArray(jobs) || !Array.isArray(checkRuns), 'AIGOV_CI_JOB_CHECK_PAYLOAD_MALFORMED');
-  const boundJobsRunId = jobsRunId ?? jobs?.[0]?.run_id ?? null;
-  add(!Number.isInteger(boundJobsRunId) || boundJobsRunId !== run.id, 'AIGOV_CI_JOB_SOURCE_RUN_MISMATCH');
+  if (diagnostics.length) return { diagnostics: unique(diagnostics), evidence: null };
+  if (jobsRunId != null) {
+    add(!Number.isInteger(jobsRunId) || jobsRunId !== run.id, 'AIGOV_CI_JOB_SOURCE_RUN_MISMATCH');
+  } else if (jobs.length > 0) {
+    const declaredRunIds = [...new Set(jobs.map((job) => job?.run_id).filter(Number.isInteger))];
+    if (declaredRunIds.length > 0) add(declaredRunIds.length !== 1 || declaredRunIds[0] !== run.id, 'AIGOV_CI_JOB_SOURCE_RUN_MISMATCH');
+  }
   if (diagnostics.length) return { diagnostics: unique(diagnostics), evidence: null };
 
   const matchingJobs = jobs.filter((job) => job?.name === expected.checkName);
