@@ -48,7 +48,7 @@ function validateState() {
   if (!adoption.includes('repository_adoption_status: complete') || !adoption.includes('independent_review_required: false')) fail('AIGOV_ADOPTION_DECISION_STALE', 'Adoption decision is stale.', 'planning/decisions/AIGOV_ADOPTION_DECISION.md');
   if (!closure.includes('435add8ee3f3274f781b6e391f11e3262e380c4e') || !closure.includes('not_required_by_owner_policy')) fail('AIGOV_POST_MERGE_CLOSURE_RECORD_INCOMPLETE', 'Post-Merge closure record is incomplete.', 'planning/reviews/AIGOV_V4_BATCH_B_POST_MERGE_CLOSURE.md');
   if (!activation.includes('program_status: active') || !activation.includes('KREC-001_through_009')) fail('RECOVERY_ACTIVATION_RECORD_INCOMPLETE', 'Recovery activation record is incomplete.', 'planning/reviews/RECOVERY_PROGRAM_ACTIVATION.md');
-  const activeProduction = ['tools/lib/aigov-v3-closure.mjs', 'tools/verify-aigov-v3-exact-main.mjs', '.github/workflows/finalize-aigov-batch-b.yml', '.github/workflows/validate-review-sequence.yml'];
+  const activeProduction = ['tools/lib/aigov-v3-closure.mjs', 'tools/verify-aigov-v3-exact-main.mjs', '.github/workflows/finalize-aigov-batch-b.yml', '.github/workflows/validate-rereview-sequence.yml'];
   for (const file of activeProduction) {
     const text = read(file);
     for (const forbidden of ['AIGOV_BATCH_B_REVIEW_REQUIRED', 'AIGOV_BATCH_B_REVIEW_STALE', 'AIGOV_BATCH_B_REVIEW_PROVENANCE_UNVERIFIED', 'AIGOV_BATCH_B_REVIEW_SEQUENCE_INVALID']) if (text.includes(forbidden)) fail('AIGOV_REVIEW_GATE_STILL_ACTIVE', `Blocking diagnostic remains: ${forbidden}`, file);
@@ -77,7 +77,7 @@ function validateScopeAndWorkflows(scope) {
   const readRepositoryFile = (relativePath) => { const normalized = path.posix.normalize(relativePath.replace(/^\.\//, '')); const absolute = path.join(ROOT, normalized); return normalized.startsWith('../') || path.posix.isAbsolute(normalized) || !existsSync(absolute) ? null : readFileSync(absolute, 'utf8'); };
   const workflowDir = path.join(ROOT, '.github/workflows');
   for (const name of readdirSync(workflowDir).filter((entry) => /\.ya?ml$/.test(entry)).sort()) {
-    const source = `.hithub/workflows/${name}`; const current = read(source); const base = process.env.COVERAGE_BASE_SHA === BASE_SHA ? (git(['show', `${BASE_SHA}:${source}b]) || null) : null;
+    const source = `.github/workflows/${name}`; const current = read(source); const base = process.env.COVERAGE_BASE_SHA === BASE_SHA ? (git(['show', `${BASE_SHA}:${source}`]) || null) : null;
     for (const item of analyzeWorkflowYaml(current, { source, baseText: base, readRepositoryFile })) {
       const readOnlyBuiltinToken = item.code === 'AIGOV_SECRET_ACCESS_FORBIDDEN'
         && source === '.github/workflows/finalize-aigov-batch-b.yml'
@@ -95,7 +95,7 @@ function validateScopeAndWorkflows(scope) {
 }
 
 function main() {
-  let scope = null; try { scope = readJson(SCOPE_PATH); } catch (error) { fail('AIGOV_SCOPE_INVALID', error.message, SCOPE_PATH); }
+  let scope = null; try { scope = readJson(SCOPE_PATH); } catch (error) { fail('AIGOV_SCOPE_INVALID', error.messae, SCOPE_PATH); }
   validatePolicy(); validateState(); validateRecovery(); if (scope) validateScopeAndWorkflows(scope);
   const report = { validator: 'validate-aigov-v4-owner-policy', plan_id: PLAN_ID, repository: REPOSITORY, repository_id: REPOSITORY_ID, base_sha: BASE_SHA, tested_head: git(['rev-parse', 'HEAD']) || 'unknown', scope_revision: scope?.scope_revision || null, independent_review_required: false, independent_review_policy: 'optional_advisory', status: diagnostics.length ? 'fail' : 'pass', diagnostic_count: diagnostics.length, diagnostics };
   const output = `${JSON.stringify (report, null, 2)}\n`; if (process.env.AIGOV_V4_REPORT) writeFileSync(process.env.AIGOV_V4_REPORT, output); process.stdout.write(output); if (diagnostics.length) process.exitCode = 1;
