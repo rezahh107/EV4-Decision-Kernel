@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-The owner approved `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4` against exact audited `main` commit `86e25a9073df7e257ca7df799de85baf9b3fafb0`. V4 proved that the exact PR #49 final-head tree equals the GitHub Squash Merge result tree and reconciled Batch A without claiming a historical independent Green review. Batch B remains an unmerged Draft implementation pending final exact-head CI and independent PR-Inspector review.
+The owner approved bounded repair of PR #50 under `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`. `PRF-050-001` through `PRF-050-004` have been implemented on the existing Draft branch: the active Batch B review boundary is now `PR-Inspector v1.10.2` at release commit `9ed48bd995ee5b9270756254b04c1d48ccf21cbe`, CI/check identity is descriptor-bound, and the production post-Merge route executes `batch-b-final` after `Validate Main`. The repair is not complete until the final scope is generated, exact-head CI is Green and a fresh independent review is published.
 
 ## Status Authority
 
@@ -15,6 +15,8 @@ repository_adoption_status: pending_batch_b_exact_main_completion
 active_standard: AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT@1.1.0
 active_plan: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4
 previous_plan: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3
+active_batch_b_review_protocol: v1.10.2
+active_inspector_release_commit: 9ed48bd995ee5b9270756254b04c1d48ccf21cbe
 batch_a:
   status: exact_main_reconciled_under_v4_squash_equivalence
   closure_mode: v4_one_time_squash_equivalence
@@ -36,8 +38,10 @@ AIGOV-ADOPT-000_through_007: merged_and_post_merge_reconciled
 batch_b:
   batch: BATCH_B
   increment: AIGOV-ADOPT-008
-  implementation_state: draft_implemented
-  status: implementation_active_pending_exact_head_validation_and_review
+  implementation_state: prf_050_repair_implemented
+  status: pending_final_scope_exact_head_ci_and_fresh_independent_review
+  required_check_configuration: unverified
+  repository_settings_enforced: not_claimed
 registered:
   KREC-001_through_009: registered_planned_task
 preserved:
@@ -54,19 +58,23 @@ external_repository_effect: none
 
 - Failed PR-head ancestry is classified as expected Squash Merge topology, not content loss.
 - Exact tree equality is scoped only to PR #49 and is non-reusable and non-precedential.
-- Coverage promotion effect: `none`.
-- Product effect: `none`.
+- Historical Batch A provenance is not rewritten as an active v1.10.2 review.
+- Repository settings were not modified or claimed enforced.
 - No coverage credit, trusted ingestion, readiness, release-readiness, runtime-completeness or production-readiness claim is active.
 
 ## Current PR
 
-- [ ] PR #50 — V4 Batch B Draft implementation
+- [ ] PR #50 — V4 Batch B bounded repair
   - `branch`: `governance/aigov-v3-batch-b-closure`
-  - `status`: `implementation_active_pending_exact_head_validation_and_review`
-  - `scope_revision`: `sha256:9a9a9b599b40f23b7f9f2dbc3400125cb25ee32ea65b696181f4d0c0d7029e80`
+  - `status`: `pending_final_scope_exact_head_ci_and_fresh_independent_review`
+  - `review_protocol`: `v1.10.2`
+  - `inspector_release_commit`: `9ed48bd995ee5b9270756254b04c1d48ccf21cbe`
+  - `scope_revision`: `pending_final_scope_generation`
   - `merge_permitted`: `false`
   - `independent_review_handoff_permitted`: `only_after_final_exact_head_ci_green`
-  - Every new commit invalidates older CI and review evidence.
+  - `required_check_configuration`: `unverified`
+  - `repository_settings_enforced`: `not_claimed`
+  - Every new commit invalidates older CI, artifact and review evidence.
 
 - [ ] `DCOV-EXEC-001` — Coverage Guarantee proposal and validation foundation
   - `work_type`: `proposal_with_real_seed_data`
@@ -76,10 +84,10 @@ external_repository_effect: none
 ## Next Task
 
 - [ ] AIGOV-ADOPT-008 — Final AIGOV exact-main closure (`BATCH_B`)
-  - `status`: `implementation_active_pending_exact_head_validation_and_review`
+  - `status`: `pending_final_scope_exact_head_ci_and_fresh_independent_review`
   - `change_class`: `L3`
   - `plan_id`: `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`
-  - Required sequence: exact final head CI Green → independent PR-Inspector Green on exact head and scope → owner Merge → method-aware deterministic Merge-result proof → current-main validation Green.
+  - Required sequence: final scope → exact final-head CI Green → independent PR-Inspector v1.10.2 Green on exact head and scope → owner Merge → method-aware deterministic Merge-result proof → current-main validation Green → verified repository enforcement.
   - No Merge, Coverage promotion, KREC implementation or product implementation is authorized.
 
 ## Registered Recovery Program
@@ -139,11 +147,14 @@ Registration does not mean active, authorized for implementation, implemented, c
 merge_gate:
   batch_a_v4_reconciliation: pass
   squash_equivalence: exact_tree_equality
-  exact_head_ci_green: required_on_final_pr50_head
-  independent_pr_inspector_green: pending
+  active_review_protocol: v1.10.2
+  exact_head_ci_green: pending_new_final_head
+  independent_pr_inspector_green: pending_fresh_review
+  required_check_configuration: unverified
+  repository_settings_enforced: not_claimed
   explicit_owner_merge_command: false
   merge_permitted: false
   coverage_promotion: forbidden
 ```
 
-No Merge, approval or auto-merge is authorized by this file.
+No Merge, approval, ready-for-review transition or auto-merge is authorized by this file.
