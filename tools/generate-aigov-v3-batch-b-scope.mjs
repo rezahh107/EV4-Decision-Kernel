@@ -23,7 +23,7 @@ function args(argv) {
   return out;
 }
 const input = args(process.argv.slice(2));
-const scope = JSON.parse(readFileSync(path.join(ROOT, input.scope), 'utf8'));
+const scope = JSON.parse(readFileSync(path.resolve(ROOT, input.scope), 'utf8'));
 const base = git(['rev-parse', input.base]);
 const head = git(['rev-parse', input.head]);
 const changed = [...new Set(git(['diff', '--name-only', `${base}..${head}`]).split('\n').filter(Boolean))].sort();
@@ -35,6 +35,6 @@ if (scope.scope_revision !== expectedRevision) diagnostics.push({ code: 'AIGOV_S
 if (JSON.stringify(changed) !== JSON.stringify(declared)) diagnostics.push({ code: 'AIGOV_SCOPE_DISCLOSURE_MISMATCH', undeclared: changed.filter((x) => !declared.includes(x)), declared_but_unchanged: declared.filter((x) => !changed.includes(x)) });
 const report = { schema_version: 'aigov-scope-disclosure.v1', repository: scope.repository, plan_id: scope.plan_id, batch_id: scope.batch_id, base_sha: base, head_sha: head, scope_revision: scope.scope_revision, committed: changed, excluded: scope.excluded, deferred_not_deleted: scope.deferred_not_deleted, status: diagnostics.length ? 'fail' : 'pass', diagnostics };
 const output = `${JSON.stringify(report, null, 2)}\n`;
-if (input.output) writeFileSync(path.join(ROOT, input.output), output);
+if (input.output) writeFileSync(path.resolve(ROOT, input.output), output);
 process.stdout.write(output);
 if (diagnostics.length) process.exitCode = 1;
