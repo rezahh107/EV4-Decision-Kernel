@@ -1,7 +1,7 @@
 # AIGOV Exact-Main Closure Protocol
 
-**Status:** active V4 verification protocol; not a Merge authorization  
-**Plan:** `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`  
+**Status:** active V4 verification protocol; not a Merge authorization
+**Plan:** `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`
 **Previous plan:** `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3`
 
 ## General evidence rule
