@@ -9,7 +9,7 @@ const PLAN_ID = 'GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4';
 const PREVIOUS_PLAN_ID = 'GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3';
 const BASE_SHA = '86e25a9073df7e257ca7df799de85baf9b3fafb0';
 const TREE_SHA = '8a8c83aee95ab36ab59ba128c7710bafedaa2d20';
-const SCOPE_REVISION = 'sha256:9a9a9b599b40f23b7f9f2dbc3400125cb25ee32ea65b696181f4d0c0d7029e80';
+const SCOPE_REVISION = 'sha256:dc8627e6df4c305fb374d6510395611313d672d77708066f41af4ba722c7b82c';
 const failures = [];
 const fail = (file, problem) => failures.push({ file, problem });
 const read = (file) => {
@@ -25,6 +25,7 @@ const section = (text, heading) => {
   const next = /^##\s+/m.exec(rest);
   return next ? rest.slice(0, next.index) : rest;
 };
+const sameSet = (left, right) => JSON.stringify([...(left || [])].sort()) === JSON.stringify([...(right || [])].sort());
 
 const nextWork = read('planning/NEXT_WORK.md');
 const decision = read('planning/decisions/AIGOV_ADOPTION_DECISION.md');
@@ -46,6 +47,8 @@ for (const token of [
   `active_plan: ${PLAN_ID}`,
   `previous_plan: ${PREVIOUS_PLAN_ID}`,
   'repository_adoption_status: pending_batch_b_exact_main_completion',
+  'active_batch_b_review_protocol: v1.10.2',
+  'active_inspector_release_commit: 9ed48bd995ee5b9270756254b04c1d48ccf21cbe',
   'status: exact_main_reconciled_under_v4_squash_equivalence',
   'closure_mode: v4_one_time_squash_equivalence',
   `pr_head_tree_sha: ${TREE_SHA}`,
@@ -53,7 +56,9 @@ for (const token of [
   'AIGOV-ADOPT-000_through_007: merged_and_post_merge_reconciled',
   'batch: BATCH_B',
   'increment: AIGOV-ADOPT-008',
-  'status: implementation_active_pending_exact_head_validation_and_review',
+  'status: pending_exact_head_ci_and_fresh_independent_review',
+  'required_check_configuration: unverified',
+  'repository_settings_enforced: not_claimed',
   'KREC-001_through_009: registered_planned_task',
   'KROAD-012: next_product_task_blocked_pending_final_aigov_closure',
   'KROAD-013_through_018: not_started',
@@ -62,17 +67,18 @@ for (const token of [
   'percentages: null',
   'coverage_promotion_effect: none',
   'product_effect: none',
-  `\`scope_revision\`: \`${SCOPE_REVISION}\``,
-]) if (!nextWork.includes(token)) fail('planning/NEXT_WORK.md', `required V4 state missing: ${token}`);
+  'external_repository_effect: none',
+  `scope_revision: ${SCOPE_REVISION}`,
+]) if (!nextWork.includes(token)) fail('planning/NEXT_WORK.md', `required V4 repair state missing: ${token}`);
 const nextTask = section(nextWork, 'Next Task');
 const unchecked = [...nextTask.matchAll(/^- \[ \] ((?:KROAD|DCOV-EXEC|AIGOV-ADOPT)-\d{3})\s+—/gm)];
 if (unchecked.length !== 1 || unchecked[0]?.[1] !== 'AIGOV-ADOPT-008') fail('planning/NEXT_WORK.md', 'AIGOV-ADOPT-008 must be the only current task');
-if (/repository_adoption_status:\s*(?:adopted|complete)|GREEN_MERGE_RECOMMENDED|merge_authorized:\s*true/i.test(nextWork)) fail('planning/NEXT_WORK.md', 'PR head claims final adoption or Merge authority');
+if (/repository_adoption_status:\s*(?:adopted|complete)|GREEN_MERGE_RECOMMENDED|merge_authorized:\s*true|merge_permitted:\s*true/i.test(nextWork)) fail('planning/NEXT_WORK.md', 'PR head claims final adoption or Merge authority');
 
-if (!decision.includes(`plan_id: ${PLAN_ID}`) || !decision.includes('plan_version: 4') || !decision.includes(`previous_plan_id: ${PREVIOUS_PLAN_ID}`) || !decision.includes(`audit_base_sha: ${BASE_SHA}`) || !decision.includes('strict_pr_head_commit_ancestry') || !decision.includes('deterministic_merge_result_equivalence') || !decision.includes('owner_only')) fail('planning/decisions/AIGOV_ADOPTION_DECISION.md', 'authoritative V4 identity or correction boundary is incomplete');
-if (!audit.includes(`plan_id: ${PLAN_ID}`) || !audit.includes('record_status: current_v4_audit') || !audit.includes('repository_adoption_status: pending_batch_b_exact_main_completion') || !/No historical independent Green receipt is claimed/i.test(audit)) fail('planning/reviews/AIGOV_ADOPTION_AUDIT.md', 'audit identity or no-fabrication statement is incorrect');
+if (!decision.includes(`plan_id: ${PLAN_ID}`) || !decision.includes('plan_version: 4') || !decision.includes(`previous_plan_id: ${PREVIOUS_PLAN_ID}`) || !decision.includes(`audit_base_sha: ${BASE_SHA}`) || !decision.includes('strict_pr_head_commit_ancestry') || !decision.includes('deterministic_merge_result_equivalence') || !decision.includes('owner_only') || !decision.includes('v1.10.2') || !decision.includes('9ed48bd995ee5b9270756254b04c1d48ccf21cbe')) fail('planning/decisions/AIGOV_ADOPTION_DECISION.md', 'authoritative V4 repair identity or correction boundary is incomplete');
+if (!audit.includes(`plan_id: ${PLAN_ID}`) || !audit.includes('record_status: current_v4_repair_audit') || !audit.includes('repository_adoption_status: pending_batch_b_exact_main_completion') || !/No historical independent Green receipt is claimed/i.test(audit) || !audit.includes('required_check_configuration: unverified') || !audit.includes('repository_settings_enforced: not_claimed')) fail('planning/reviews/AIGOV_ADOPTION_AUDIT.md', 'repair audit identity or fail-closed enforcement statement is incorrect');
 if (!reconciliation.includes('status: pass') || !reconciliation.includes('closure_mode: v4_one_time_squash_equivalence') || !reconciliation.includes(`pr_head_tree_sha: ${TREE_SHA}`) || !reconciliation.includes(`squash_commit_tree_sha: ${TREE_SHA}`) || !reconciliation.includes('historical_independent_green_receipt: not_claimed')) fail('planning/reviews/AIGOV_BATCH_A_V3_POST_MERGE_RECONCILIATION.md', 'V4 reconciliation evidence is incomplete');
-if (!protocol.includes(`**Plan:** \`${PLAN_ID}\``) || !protocol.includes('exact_tree_equality') || !protocol.includes('merge_commit:') || !protocol.includes('squash:') || !protocol.includes('rebase:')) fail('docs/governance/AIGOV_EXACT_MAIN_CLOSURE_PROTOCOL.md', 'method-aware V4 protocol is incomplete');
+if (!protocol.includes(`**Plan:** \`${PLAN_ID}\``) || !protocol.includes('exact_tree_equality') || !protocol.includes('merge_commit:') || !protocol.includes('squash:') || !protocol.includes('rebase:') || !protocol.includes('v1.10.2') || !protocol.includes('required_check_configuration: unverified')) fail('docs/governance/AIGOV_EXACT_MAIN_CLOSURE_PROTOCOL.md', 'method-aware V4 repair protocol is incomplete');
 if (!/record_status.*historical_non_authoritative/i.test(historicalReview) || /implementation_authority:\s*(?!`?none)/i.test(historicalReview)) fail('planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md', 'KROAD-012R is not historical and non-authoritative');
 if (!/\*\*Status:\*\* proposed/.test(executionPlan) || /Coverage Execution Program — Active/.test(executionPlan) || /replaces KROAD-012 through KROAD-018/.test(executionPlan)) fail('planning/KERNEL_EXECUTION_PLAN.md', 'Coverage overlay became active or superseded KROAD');
 if (!agents.includes(`The active governance carrier is \`${PLAN_ID}\`, \`BATCH_B\``) || agents.includes('The active governance carrier is `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3`')) fail('AGENTS.md', 'active agent boundary is stale or not V4 Batch B');
@@ -91,7 +97,7 @@ if (program) {
   if (tasks.size !== 9) fail('planning/recovery/recovery-execution-program.v1.json', 'exactly nine KREC tasks are required');
   for (const [id, dependencies] of expectedGraph) {
     const task = tasks.get(id);
-    if (!task || task.status !== 'registered_planned_task' || task.implementation_authorized !== false || task.coverage_credit !== false || task.readiness_claim !== false || JSON.stringify(task.depends_on) !== JSON.stringify(dependencies)) fail('planning/recovery/recovery-execution-program.v1.json', `${id} registration or dependency graph mismatch`);
+    if (!task || task.status !== 'registered_planned_task' || task.implementation_authorized !== false || task.coverage_credit !== false || task.readiness_claim !== false || !sameSet(task.depends_on, dependencies)) fail('planning/recovery/recovery-execution-program.v1.json', `${id} registration or dependency graph mismatch`);
   }
 }
 
