@@ -54,7 +54,6 @@ jobs:
     permissions:
       contents: read
     env:
-      AIGOV_GITHUB_TOKEN: ${{ github.token }}
       COVERAGE_REPOSITORY: ${{ needs.external-coverage-trust.outputs.verified_repository }}
       COVERAGE_PR_NUMBER: ${{ needs.external-coverage-trust.outputs.verified_pr_number }}
       COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}
@@ -136,7 +135,7 @@ jobs:
           node --check tools/test-aigov-provenance.mjs
           node --check tools/test-aigov-sequence.mjs
           node --check tools/test-aigov-sequence-producer.mjs
-          python -m py_compile tools/pr-inspector-official-boundary-v1102.py tools/test-pr-inspector-security-capability.py
+          PYTHONPYCACHEPREFIX="${RUNNER_TEMP}/pycache" python -m py_compile tools/pr-inspector-official-boundary-v1102.py tools/test-pr-inspector-security-capability.py
 
       - name: Check working tree and base-to-head diff
         shell: bash
