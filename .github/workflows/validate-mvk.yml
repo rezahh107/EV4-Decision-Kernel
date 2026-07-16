@@ -108,6 +108,7 @@ jobs:
           node --check kernel/validator/validate-recovery-execution-program.mjs
           node --check tools/lib/aigov-v3-closure.mjs
           node --check tools/test-aigov-v3-exception.mjs
+          node --check tools/validate-aigov-v4-governance.mjs
           node --check tools/verify-aigov-exact-main.mjs
           node --check tools/verify-aigov-v3-exact-main.mjs
           node --check tools/generate-aigov-scope-disclosure.mjs
