@@ -65,6 +65,24 @@ function filterReadOnlyBuiltinTokenDiagnostics(items, workflowText, source) {
   });
 }
 
+function filterActiveInspectorBoundaryDiagnostics(items, workflowText, source) {
+  if (source !== '.github/workflows/validate-rereview-sequence.yml') return items;
+  let workflow;
+  try { workflow = parseYaml(workflowText); } catch { return items; }
+  const job = workflow.jobs?.['validate-rereview-sequence'];
+  const steps = Array.isArray(job?.steps) ? job.steps : [];
+  const exactCheckout = steps.some((step) => /^actions\/checkout@[0-9a-fA-F]{40}$/.test(step?.uses || '')
+    && step?.with?.repository === 'rezahh107/PR-Inspector'
+    && step?.with?.ref === INSPECTOR_COMMIT
+    && step?.with?.path === '_external/pr-inspector'
+    && step?.with?.['persist-credentials'] === false);
+  const exactCommand = steps.some((step) => typeof step?.run === 'string'
+    && step.run.trim() === 'python _external/pr-inspector/scripts/validate_rereview_sequence.py artifacts/pr-inspector-rereview-sequence.pending.json');
+  if (!exactCheckout || !exactCommand) return items;
+  return items.filter((item) => !(item.code === 'AIGOV_LOCAL_SCRIPT_UNRESOLVED'
+    && item.message === 'Local script cannot be resolved: _external/pr-inspector/scripts/validate_rereview_sequence.py.'));
+}
+
 function validateLegacyContractsAndFixtures() {
   try {
     const stdout = execFileSync('node', [path.join(ROOT, LEGACY_VALIDATOR), '--fixtures-only'], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
@@ -146,8 +164,10 @@ function validateLiveWorkflowsAndDiff(scope) {
     const relativePath = `.github/workflows/${name}`;
     const currentText = read(relativePath);
     const baseText = git(['show', `${BASE_SHA}:${relativePath}`]) || null;
-    const items = analyzeWorkflowYaml(currentText, { source: relativePath, baseText, readRepositoryFile });
-    for (const item of filterReadOnlyBuiltinTokenDiagnostics(items, currentText, relativePath)) fail(item.code, item.message, item.source || relativePath);
+    let items = analyzeWorkflowYaml(currentText, { source: relativePath, baseText, readRepositoryFile });
+    items = filterReadOnlyBuiltinTokenDiagnostics(items, currentText, relativePath);
+    items = filterActiveInspectorBoundaryDiagnostics(items, currentText, relativePath);
+    for (const item of items) fail(item.code, item.message, item.source || relativePath);
   }
   const basePackage = git(['show', `${BASE_SHA}:package.json`]);
   if (!basePackage) fail('AIGOV_V4_BASE_PACKAGE_UNAVAILABLE', 'The exact V4 base package.json is unavailable.', 'package.json');
