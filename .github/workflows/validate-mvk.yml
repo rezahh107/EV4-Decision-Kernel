@@ -102,28 +102,21 @@ jobs:
       - name: Check validation syntax
         run: |
           node --check kernel/validator/validate-aigov-governance.mjs
-          node --check kernel/validator/validate-coverage-guarantee.mjs
-          node --check kernel/validator/validate-coverage-guarantee-prf010.mjs
-          node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
-          node --check tools/generate-aigov-scope-disclosure.mjs
-          node --check tools/materialize-aigov-lifecycle.mjs
+          node --check kernel/validator/validate-recovery-execution-program.mjs
+          node --check tools/lib/aigov-v3-closure.mjs
+          node --check tools/test-aigov-v3-exception.mjs
+          node --check tools/verify-aigov-v3-exact-main.mjs
+          node --check tools/generate-aigov-v3-batch-b-scope.mjs
           node --check tools/materialize-pr-inspector-rereview-sequence.mjs
-          node --check tools/finalize-aigov-post-ci-evidence.mjs
-          node --check tools/index-aigov-post-ci-artifact.mjs
-          node --check tools/assemble-aigov-post-ci-payload.mjs
-          node --check tools/assemble-aigov-validation-evidence.mjs
-          node --check tools/wait-for-aigov-source-ci.mjs
-          node --check tools/run-aigov-validation-suite.mjs
+          node --check tools/validate-roadmap-memory.mjs
+          node --check tools/validate-roadmap-memory-full.mjs
+          node --check tools/validate-kroad-010-history-matrix.mjs
+          node --check tools/test-kroad-010-history-matrix-fail-closed.mjs
           node --check tools/test-aigov-forbidden-operations.mjs
           node --check tools/test-aigov-owner-evidence.mjs
           node --check tools/test-aigov-provenance.mjs
           node --check tools/test-aigov-sequence.mjs
           node --check tools/test-aigov-sequence-producer.mjs
-          node --check tools/verify-aigov-exact-main.mjs
-          node --check tools/validate-roadmap-memory.mjs
-          node --check tools/validate-roadmap-memory-full.mjs
-          node --check tools/validate-kroad-010-history-matrix.mjs
-          node --check tools/test-kroad-010-history-matrix-fail-closed.mjs
 
       - name: Check working tree and base-to-head diff
         shell: bash
@@ -132,15 +125,25 @@ jobs:
           git diff --check
           git diff --check "${COVERAGE_BASE_SHA}..${COVERAGE_HEAD_SHA}"
 
-      - name: Disclose and validate exact-head AIGOV scope
+      - name: Disclose and validate exact Batch B scope
         shell: bash
         run: |
           set -euo pipefail
-          test "${COVERAGE_BASE_SHA}" = "5ff5d7b20db11af36ab787eb8ac2d1127ea74644"
+          test "${COVERAGE_BASE_SHA}" = "86e25a9073df7e257ca7df799de85baf9b3fafb0"
           test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
-          npm run aigov:scope-disclosure -- \
+          npm run aigov:scope-disclosure:batch-b -- \
             --base "${COVERAGE_BASE_SHA}" \
-            --head "${COVERAGE_HEAD_SHA}"
+            --head "${COVERAGE_HEAD_SHA}" \
+            --output aigov-v3-batch-b-scope-disclosure.json
+
+      - name: Reconcile Batch A through the exact V3 exception
+        run: npm run validate:aigov-v3-batch-a-reconciliation
+
+      - name: Validate V3 exception misuse cases
+        run: npm run test:aigov-v3-exception
+
+      - name: Validate recovery-program registration
+        run: npm run validate:recovery-program
 
       - name: Validate roadmap memory and SSOT reconstruction
         run: npm run validate:roadmap-memory
@@ -157,36 +160,11 @@ jobs:
       - name: Validate KROAD-010 history matrix
         run: npm run validate:kroad-010-history-matrix
 
-      - name: Materialize and validate exact-head AIGOV evidence budget
-        run: npm run aigov:validation-suite -- --head "${COVERAGE_HEAD_SHA}"
-
-      - name: Materialize exact-head AIGOV scope evidence
-        shell: bash
-        run: |
-          set -euo pipefail
-          npm run aigov:scope-disclosure -- \
-            --base "${COVERAGE_BASE_SHA}" \
-            --head "${COVERAGE_HEAD_SHA}" \
-            --output aigov-batch-a-scope-disclosure.json
-
-      - name: Upload KROAD-010 history matrix evidence
-        if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: kroad-010-history-matrix
-          path: kroad-010-history-matrix-report.json
-          if-no-files-found: warn
-          retention-days: 14
-
-      - name: Upload exact-head AIGOV scope evidence
+      - name: Upload exact-head Batch B scope evidence
         if: ${{ success() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: aigov-batch-a-scope-disclosure
-          path: |
-            aigov-batch-a-scope-disclosure.json
-            artifacts/aigov-batch-a-scope-disclosure.json
-            artifacts/aigov-batch-a-executed-evidence.json
-            artifacts/aigov-command-logs
+          name: aigov-v3-batch-b-scope-disclosure
+          path: aigov-v3-batch-b-scope-disclosure.json
           if-no-files-found: error
           retention-days: 14

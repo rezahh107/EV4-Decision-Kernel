@@ -8,7 +8,7 @@
   "properties": {
     "schema_version": {"const": "aigov-scope-manifest.v1"},
     "scope_id": {"type": "string", "pattern": "^aigov-scope\\.[a-z0-9._-]+$"},
-    "plan_id": {"const": "GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2"},
+    "plan_id": {"enum": ["GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2", "GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3"]},
     "batch_id": {"enum": ["BATCH_A", "BATCH_B"]},
     "repository": {"const": "rezahh107/EV4-Decision-Kernel"},
     "base_branch": {"const": "main"},

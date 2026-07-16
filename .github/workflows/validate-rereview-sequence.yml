@@ -60,12 +60,15 @@ jobs:
           WORKFLOW_SHA: ${{ github.event.pull_request.head.sha }}
           SOURCE_RUN_ID: ${{ github.run_id }}
           SOURCE_RUN_ATTEMPT: ${{ github.run_attempt }}
+          TARGET_PR_NUMBER: ${{ github.event.pull_request.number }}
         run: >-
           node tools/materialize-pr-inspector-rereview-sequence.mjs
           --head "${EXPECTED_HEAD_SHA}"
           --workflow-sha "${WORKFLOW_SHA}"
           --run-id "${SOURCE_RUN_ID}"
           --run-attempt "${SOURCE_RUN_ATTEMPT}"
+          --pr-number "${TARGET_PR_NUMBER}"
+          --scope-path planning/governance/scopes/aigov-v3-batch-b.scope.json
 
       - name: Execute official pinned rereview sequence validator
         env:
