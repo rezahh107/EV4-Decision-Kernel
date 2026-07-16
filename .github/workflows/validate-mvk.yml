@@ -148,10 +148,10 @@ jobs:
           npm run aigov:scope-disclosure:batch-b -- \
             --base "${COVERAGE_BASE_SHA}" \
             --head "${COVERAGE_HEAD_SHA}" \
-            --output aigov-v4-batch-b-scope-disclosure.json
+            --output "${RUNNER_TEMP}/aigov-v4-batch-b-scope-disclosure.json"
 
       - name: Reconcile Batch A through exact V4 squash equivalence
-        run: npm run validate:aigov-v4-batch-a-reconciliation -- --output aigov-v4-batch-a-reconciliation.json
+        run: npm run validate:aigov-v4-batch-a-reconciliation -- --output "${RUNNER_TEMP}/aigov-v4-batch-a-reconciliation.json"
 
       - name: Validate V4 exception and merge-method misuse cases
         run: npm run test:aigov-v3-exception
@@ -194,6 +194,15 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Relocate pinned inspector outside the target worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          mv _external/pr-inspector "${RUNNER_TEMP}/pr-inspector"
+          rmdir _external
+          echo "PR_INSPECTOR_ROOT=${RUNNER_TEMP}/pr-inspector" >> "${GITHUB_ENV}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
       - name: Validate Coverage boundary
         run: npm run validate:coverage
 
@@ -228,7 +237,7 @@ jobs:
         with:
           name: aigov-v4-batch-b-validation-evidence
           path: |
-            aigov-v4-batch-a-reconciliation.json
-            aigov-v4-batch-b-scope-disclosure.json
+            ${{ runner.temp }}/aigov-v4-batch-a-reconciliation.json
+            ${{ runner.temp }}/aigov-v4-batch-b-scope-disclosure.json
           if-no-files-found: error
           retention-days: 14
