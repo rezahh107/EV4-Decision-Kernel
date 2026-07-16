@@ -4,65 +4,68 @@
 
 ```yaml
 record_kind: governance_adoption_audit
-record_status: current_v3_audit
-plan_id: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3
-plan_version: 3
-previous_plan_id: GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2
+record_status: current_v4_audit
+plan_id: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4
+plan_version: 4
+previous_plan_id: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3
 target_repository: rezahh107/EV4-Decision-Kernel
 default_branch: main
 audit_base_sha: 86e25a9073df7e257ca7df799de85baf9b3fafb0
-repository_adoption_status: blocked_v3_batch_a_ancestry_mismatch
+repository_adoption_status: pending_batch_b_exact_main_completion
 ```
 
 ## Confirmed baseline
 
-- PR #49 is the merged Batch A PR.
-- Its exact final head is `c141923bf411f802f1673acf06dc92a77b415593`.
-- Its Merge commit and current `main` are `86e25a9073df7e257ca7df799de85baf9b3fafb0`.
-- The final PR #49 head has successful exact-head workflow evidence.
+- PR #49 is merged with base `5ff5d7b20db11af36ab787eb8ac2d1127ea74644`, final head `c141923bf411f802f1673acf06dc92a77b415593` and squash commit `86e25a9073df7e257ca7df799de85baf9b3fafb0`.
 - The Merge actor is repository owner `rezahh107`.
-- Current-main `Validate Main` evidence is Green.
-- No historical independent Green receipt is claimed for that final head.
-- `planning/NEXT_WORK.md` remains the only mutable current-status authority.
-- Coverage remains `not_measurable_pending_external_promotion` with percentages `null`.
-- `KROAD-012` through `KROAD-018` remain preserved and `KROAD-012R` remains `historical_non_authoritative`.
+- Exact-head workflow evidence for PR #49 and current-main `Validate Main` evidence are Green.
+- No historical independent Green receipt is claimed.
+- Coverage remains `not_measurable_pending_external_promotion`; percentages remain `null`.
+- `KROAD-012` through `KROAD-018` remain preserved; `KROAD-012R` remains `historical_non_authoritative`.
 
-## Detected V2 contradiction
+## V3 defect and V4 correction
 
-V2 simultaneously required an independent review before Merge, rejected a review produced after Merge and prohibited Batch A closure without that review. Once PR #49 was merged without a discoverable final-head receipt, those rules formed `impossible_retrospective_review_cycle`.
+GitHub compare reports PR #49 final head and the squash commit as `diverged`, with merge base `5ff5d7b20db11af36ab787eb8ac2d1127ea74644`. This is expected Squash Merge topology and is not evidence of content loss.
 
-CI and review are not equivalent. The defect is the permanent recovery deadlock, not the independent-review requirement itself.
-
-## Executed V3 reconciliation
-
-V3 introduced a non-reusable, non-precedential exception bound only to repository `rezahh107/EV4-Decision-Kernel`, PR #49, head `c141923...`, Merge commit `86e25a9...` and plan `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3`.
-
-The live verifier derived PR identity, `merged_by`, exact-head CI, current-main validation and Git ancestry. It returned:
+V4 replaces the invalid strict PR-head ancestry predicate only for the exact PR #49 tuple. The live verifier reads both Git commit objects and requires exact tree equality:
 
 ```yaml
-status: fail
-diagnostic: AIGOV_V3_BATCH_A_ANCESTRY_UNVERIFIED
-exact_head_ci: green
-current_main_validation: green
-owner_merge: verified
-historical_review_green_claimed: false
+correction:
+  previous_invalid_predicate: strict_pr_head_commit_ancestry
+  replacement_predicate: deterministic_merge_result_equivalence
+  equivalence_mode: exact_tree_equality
+  pr_head_tree_sha: 8a8c83aee95ab36ab59ba128c7710bafedaa2d20
+  squash_commit_tree_sha: 8a8c83aee95ab36ab59ba128c7710bafedaa2d20
+  result: pass
+exception_reusable: false
+exception_precedential: false
+historical_independent_green_receipt: not_claimed
 ```
 
-GitHub compare proved the exact PR #49 final head and Merge commit are `diverged`, with merge base `5ff5d7b20db11af36ab787eb8ac2d1127ea74644`. PR #49 was squash-merged; the final head is not an ancestor of current `main`.
+The first live PR #50 CI execution containing the V4 verifier passed both `Reconcile Batch A through exact V4 squash equivalence` and the V4 adversarial-test step. The subsequent roadmap-memory failure was caused only by still-stale V3 status carriers and did not invalidate the tree-equivalence proof.
 
-Frozen V3 does not authorize tree-equivalence, patch-equivalence or squash-Merge equivalence as a substitute for ancestry. Reconciliation therefore fails closed and requires a new owner-approved plan version before Batch B can proceed to independent review.
-
-## Batch B Draft scope
-
-Draft PR #50 contains `AIGOV-ADOPT-008`, V3 exact-main logic, negative tests for exception misuse and registration-only recovery-program carriers. It does not implement any `KREC-*` task or `KROAD-012` and has no Coverage, product, external-repository, release or deployment effect.
+## Batch A disposition
 
 ```yaml
-batch_b_status: draft_implemented_but_blocked
-independent_review_handoff: not_authorized_while_blocked
+BATCH_A: exact_main_reconciled_under_v4_squash_equivalence
+AIGOV-ADOPT-000_through_007: merged_and_post_merge_reconciled
+closure_mode: v4_one_time_squash_equivalence
+merge_mode: squash
+content_equivalence: verified
+```
+
+## Batch B boundary
+
+Draft PR #50 contains `AIGOV-ADOPT-008`, method-aware exact-main logic, negative/adversarial tests and registration-only recovery-program carriers.
+
+```yaml
+batch_b_status: implementation_active_pending_exact_head_validation_and_review
+independent_review_handoff: permitted_only_after_final_exact_head_ci_green
 merge_authority: owner_only
 merge_permitted: false
+coverage_effect: none
+product_effect: none
+external_repository_effect: none
 ```
 
-## Evidence limits
-
-This audit is not an independent PR-Inspector verdict and does not authorize Merge. No PR-Inspector verdict was requested for the blocked Batch B head. A new owner-approved plan must explicitly resolve squash-Merge equivalence before exact-head CI and independent review can become actionable.
+This audit is not an independent PR-Inspector verdict and does not authorize Merge. Any commit after a CI or review observation makes that evidence stale for the final head.
