@@ -45,47 +45,6 @@ jobs:
           npm ci
           npm run validate:coverage
 
-  coverage-diagnostics:
-    name: Temporary Coverage diagnostics
-    needs: external-coverage-trust
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout externally verified exact PR head
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          ref: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Materialize compact Coverage diagnostics
-        shell: bash
-        env:
-          COVERAGE_REPOSITORY: ${{ needs.external-coverage-trust.outputs.verified_repository }}
-          COVERAGE_PR_NUMBER: ${{ needs.external-coverage-trust.outputs.verified_pr_number }}
-          COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}
-          COVERAGE_HEAD_SHA: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
-        run: |
-          set -uo pipefail
-          git reset --hard "${COVERAGE_HEAD_SHA}"
-          git clean -ffdx
-          npm ci >/dev/null
-          set +e
-          output="$(npm run validate:coverage 2>&1)"
-          status=$?
-          {
-            printf '%s\n' "$output" | grep -E 'COV_|diagnostic|failed|FAIL|Error|error' || true
-            echo "VALIDATE_COVERAGE_EXIT=${status}"
-          } > coverage-diagnostics.txt
-          cat coverage-diagnostics.txt
-      - name: Upload compact Coverage diagnostics
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: coverage-diagnostics-${{ github.event.pull_request.head.sha }}
-          path: coverage-diagnostics.txt
-          if-no-files-found: error
-          retention-days: 1
-
   regression-validation:
     name: MVK and roadmap regressions
     needs:
