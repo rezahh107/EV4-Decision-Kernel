@@ -8,7 +8,7 @@
   "base_sha": "86e25a9073df7e257ca7df799de85baf9b3fafb0",
   "head_binding": "derived_at_runtime",
   "change_class": "L3",
-  "scope_revision": "sha256:d9e095a56170951a147fac582963c6fa7e21b2951ac810fcedffefe76ac6a1c0",
+  "scope_revision": "sha256:9a9a9b599b40f23b7f9f2dbc3400125cb25ee32ea65b696181f4d0c0d7029e80",
   "committed": [
     ".github/workflows/finalize-aigov-evidence.yml",
     ".github/workflows/validate-main.yml",
@@ -36,6 +36,7 @@
     "tools/lib/aigov-v3-closure.mjs",
     "tools/materialize-pr-inspector-rereview-sequence.mjs",
     "tools/test-aigov-v3-exception.mjs",
+    "tools/validate-aigov-v4-governance.mjs",
     "tools/validate-roadmap-memory-v3.mjs",
     "tools/validate-roadmap-memory.mjs",
     "tools/verify-aigov-exact-main.mjs",
