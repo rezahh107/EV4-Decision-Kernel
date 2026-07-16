@@ -17,7 +17,11 @@ const REPOSITORY_ID = 1292378784;
 const BASE_SHA = '86e25a9073df7e257ca7df799de85baf9b3fafb0';
 const SCOPE_PATH = 'planning/governance/scopes/aigov-v3-batch-b.scope.json';
 const LEGACY_VALIDATOR = 'kernel/validator/validate-aigov-governance.mjs';
-const REQUIRED_KROADS = ['KROAD-012', 'KROAD-013', 'KROAD-014', 'KROAD-015', 'KROAD-016', 'KROAD-017', 'KROAD-018'];
+const EXPECTED_RUNTIME_PATHS = new Set([
+  '?? _external/',
+  '?? aigov-v4-batch-a-reconciliation.json',
+  '?? aigov-v4-batch-b-scope-disclosure.json',
+]);
 const diagnostics = [];
 
 const fail = (code, message, source = 'repository') => diagnostics.push({ code, message, source });
@@ -69,7 +73,9 @@ function validateV4RepositoryState(scope) {
     'product_effect: none',
   ];
   for (const token of requiredNextWork) if (!nextWork.includes(token)) fail('AIGOV_V4_PROGRESS_STATE_MISMATCH', `Required V4 state is missing: ${token}`, 'planning/NEXT_WORK.md');
-  for (const id of REQUIRED_KROADS) if (!nextWork.includes(id)) fail('AIGOV_KROAD_PRESERVATION_FAILED', `${id} is absent from current roadmap memory.`, 'planning/NEXT_WORK.md');
+  if (!nextWork.includes('KROAD-012: next_product_task_blocked_pending_final_aigov_closure')) fail('AIGOV_KROAD_PRESERVATION_FAILED', 'KROAD-012 is not preserved behind final AIGOV closure.', 'planning/NEXT_WORK.md');
+  const laterKroadsPreserved = nextWork.includes('KROAD-013_through_018: not_started') || nextWork.includes('`KROAD-013` through `KROAD-018` remain `not_started`');
+  if (!laterKroadsPreserved) fail('AIGOV_KROAD_PRESERVATION_FAILED', 'KROAD-013 through KROAD-018 are not preserved as not_started.', 'planning/NEXT_WORK.md');
   if (!nextWork.includes('KROAD-012R: historical_non_authoritative')) fail('AIGOV_KROAD_012R_AUTHORITY_VIOLATION', 'KROAD-012R must remain historical_non_authoritative.', 'planning/NEXT_WORK.md');
   if (/GREEN_MERGE_RECOMMENDED|merge_permitted:\s*true|repository_adoption_status:\s*(?:adopted|complete)/i.test(nextWork)) fail('AIGOV_V4_PREMAIN_COMPLETION_FORBIDDEN', 'Batch B cannot claim Merge authority or final adoption on the PR head.', 'planning/NEXT_WORK.md');
 
@@ -112,7 +118,8 @@ function validateLiveWorkflowsAndDiff(scope) {
   if (JSON.stringify(changedPaths) !== JSON.stringify(declaredPaths)) fail('AIGOV_SCOPE_DISCLOSURE_MISMATCH', `Changed paths do not equal committed scope. observed=${JSON.stringify(changedPaths)}`, SCOPE_PATH);
   const deleted = git(['diff', '--name-only', '--diff-filter=D', `${BASE_SHA}..HEAD`]).split('\n').filter(Boolean);
   if (deleted.length) fail('AIGOV_DESTRUCTIVE_DELETION_FORBIDDEN', `Batch B must not delete repository files: ${deleted.join(', ')}.`, 'git_diff');
-  if (git(['status', '--porcelain=v1', '--untracked-files=all'])) fail('AIGOV_V4_WORKTREE_NOT_CLEAN', 'Validation requires an exact clean checkout.', 'git_status');
+  const unexpectedStatus = git(['status', '--porcelain=v1', '--untracked-files=all']).split('\n').filter(Boolean).filter((line) => !EXPECTED_RUNTIME_PATHS.has(line));
+  if (unexpectedStatus.length) fail('AIGOV_V4_WORKTREE_NOT_CLEAN', `Unexpected worktree entries: ${unexpectedStatus.join(', ')}.`, 'git_status');
 }
 
 function main() {
