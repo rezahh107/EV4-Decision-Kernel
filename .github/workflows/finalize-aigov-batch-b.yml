@@ -76,7 +76,6 @@ jobs:
 
       - name: Execute authoritative Batch B final verifier
         env:
-          AIGOV_GITHUB_TOKEN: ${{ github.token }}
           PR_INSPECTOR_ROOT: ${{ github.workspace }}/_external/pr-inspector
         run: node tools/verify-aigov-v3-exact-main.mjs --mode batch-b-final --output "${RUNNER_TEMP}/aigov-v4-batch-b-final.json"
 
