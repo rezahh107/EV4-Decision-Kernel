@@ -86,7 +86,7 @@ jobs:
           [[ "${COVERAGE_HEAD_SHA}" =~ ^[0-9a-f]{40}$ ]]
           test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
           git merge-base --is-ancestor "${COVERAGE_BASE_SHA}" "${COVERAGE_HEAD_SHA}"
-          npm run validate:aigov-v3-batch-a-reconciliation
+          npm run validate:aigov-v4-batch-a-reconciliation
           npm run validate:mvk
           npm run validate:roadmap-memory
           npm run validate:coverage
@@ -104,7 +104,7 @@ jobs:
           npm run aigov:scope-disclosure:batch-b -- \
             --base "${AIGOV_BASE_SHA}" \
             --head "${AIGOV_MAIN_SHA}" \
-            --output "aigov-v3-batch-b-main-scope-${AIGOV_MAIN_SHA}.json"
+            --output "aigov-v4-batch-b-main-scope-${AIGOV_MAIN_SHA}.json"
 
       - name: Verify KROAD-010 prototype integrity
         if: ${{ always() }}
@@ -128,7 +128,7 @@ jobs:
         if: ${{ success() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: aigov-v3-batch-b-main-scope-${{ github.sha }}
-          path: aigov-v3-batch-b-main-scope-${{ github.sha }}.json
+          name: aigov-v4-batch-b-main-scope-${{ github.sha }}
+          path: aigov-v4-batch-b-main-scope-${{ github.sha }}.json
           if-no-files-found: error
           retention-days: 14
