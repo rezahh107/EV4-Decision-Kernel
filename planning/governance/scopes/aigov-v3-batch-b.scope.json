@@ -8,7 +8,7 @@
   "base_sha": "86e25a9073df7e257ca7df799de85baf9b3fafb0",
   "head_binding": "derived_at_runtime",
   "change_class": "L3",
-  "scope_revision": "sha256:2745a6d997c6af78da8738af6ad45d3c429d2cce25b5ed20e9de64453aa0df53",
+  "scope_revision": "sha256:3990ed3aab277c754a3016c893bf0815b557acb4fd0ee2d54bde68ff6808386b",
   "committed": [
     ".github/workflows/finalize-aigov-evidence.yml",
     ".github/workflows/validate-main.yml",
@@ -25,7 +25,7 @@
     "kernel/validator/validate-recovery-execution-program.mjs",
     "package.json",
     "planning/NEXT_WORK.md",
-    "planning/coverage/impacts/dcov-exec-001.aigov-v3-batch-b.json",
+    "planning/coverage/impacts/dcov-exec-001.pr50-aigov-v3-batch-b.json",
     "planning/decisions/AIGOV_ADOPTION_DECISION.md",
     "planning/governance/scopes/aigov-v3-batch-b.scope.json",
     "planning/recovery/recovery-execution-program.v1.json",
