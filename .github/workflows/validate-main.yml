@@ -29,11 +29,11 @@ jobs:
           test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
 
-      - name: Checkout pinned PR Inspector
+      - name: Checkout pinned PR Inspector v1.10.2
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: rezahh107/PR-Inspector
-          ref: 7a21045366bb9ad1ca2f950b8341ebb867dd8a52
+          ref: 9ed48bd995ee5b9270756254b04c1d48ccf21cbe
           path: _external/pr-inspector
           persist-credentials: false
 
@@ -61,8 +61,12 @@ jobs:
           node --check kernel/validator/validate-downstream-consumer-contract.mjs
           node --check kernel/validator/validate-downstream-consumer-canonical-lock.mjs
           node --check kernel/validator/validate-downstream-consumer-lineage.mjs
+          node --check tools/lib/aigov-ci-descriptor.mjs
           node --check tools/lib/aigov-v3-closure.mjs
+          node --check tools/lib/aigov-sequence-producer-v1102.mjs
+          node --check tools/lib/pr-inspector-v1102.mjs
           node --check tools/test-aigov-v3-exception.mjs
+          node --check tools/test-aigov-v4-hardening.mjs
           node --check tools/verify-aigov-exact-main.mjs
           node --check tools/verify-aigov-v3-exact-main.mjs
           node --check tools/generate-aigov-v3-batch-b-scope.mjs
@@ -85,12 +89,14 @@ jobs:
           node --check tools/kroad-010-history/common.mjs
           node --check tools/kroad-010-history/build.mjs
           node --check tools/kroad-010-history/validate.mjs
+          python -m py_compile tools/pr-inspector-official-boundary-v1102.py tools/test-pr-inspector-security-capability.py
           node -e "for (const p of process.argv.slice(1)) JSON.parse(require('node:fs').readFileSync(p, 'utf8'))" \
             kernel/decision-governance/downstream-consumer-contract.v0.json \
             kernel/decision-governance/downstream-consumer-lineage-binding.v0.json \
             kernel/fixtures/contract-lock/downstream_consumer/canonical_lock_mutations.json \
             kernel/fixtures/contract-lock/downstream_consumer/primary-validator-baseline.v0.json \
-            kernel/fixtures/history-matrix/downstream_consumer/history-matrix.v0.json
+            kernel/fixtures/history-matrix/downstream_consumer/history-matrix.v0.json \
+            kernel/schemas/aigov-sequence-producer-identity.v2.schema.json
 
       - name: Validate patch whitespace
         run: git diff --check
