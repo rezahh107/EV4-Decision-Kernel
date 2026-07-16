@@ -157,7 +157,22 @@ jobs:
             --output "${RUNNER_TEMP}/aigov-v4-batch-b-scope-disclosure.json"
 
       - name: Reconcile Batch A through exact V4 squash equivalence
+        id: batch-a-reconciliation
+        continue-on-error: true
         run: npm run validate:aigov-v4-batch-a-reconciliation -- --output "${RUNNER_TEMP}/aigov-v4-batch-a-reconciliation.json"
+
+      - name: Upload Batch A reconciliation diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-v4-batch-a-reconciliation-diagnostics-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/aigov-v4-batch-a-reconciliation.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Enforce Batch A reconciliation result
+        if: ${{ steps.batch-a-reconciliation.outcome != 'success' }}
+        run: exit 1
 
       - name: Validate V4 exception and merge-method misuse cases
         run: npm run test:aigov-v3-exception
