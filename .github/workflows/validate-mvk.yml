@@ -139,7 +139,7 @@ jobs:
             --output aigov-v4-batch-b-scope-disclosure.json
 
       - name: Reconcile Batch A through exact V4 squash equivalence
-        run: npm run validate:aigov-v4-batch-a-reconciliation
+        run: npm run validate:aigov-v4-batch-a-reconciliation -- --output aigov-v4-batch-a-reconciliation.json
 
       - name: Validate V4 exception and merge-method misuse cases
         run: npm run test:aigov-v3-exception
@@ -162,11 +162,13 @@ jobs:
       - name: Validate KROAD-010 history matrix
         run: npm run validate:kroad-010-history-matrix
 
-      - name: Upload exact-head Batch B scope evidence
+      - name: Upload exact-head V4 Batch B evidence
         if: ${{ success() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: aigov-v4-batch-b-scope-disclosure
-          path: aigov-v4-batch-b-scope-disclosure.json
+          name: aigov-v4-batch-b-validation-evidence
+          path: |
+            aigov-v4-batch-a-reconciliation.json
+            aigov-v4-batch-b-scope-disclosure.json
           if-no-files-found: error
           retention-days: 14
