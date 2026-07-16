@@ -5,6 +5,21 @@
 **Active Batch B review protocol:** `PR-Inspector v1.10.2`
 **Active Inspector release commit:** `9ed48bd995ee5b9270756254b04c1d48ccf21cbe`
 
+## Active machine binding
+
+```yaml
+plan_id: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4
+review_protocol: PR-Inspector v1.10.2
+inspector_release_commit: 9ed48bd995ee5b9270756254b04c1d48ccf21cbe
+historical_batch_a_equivalence: exact_tree_equality
+method_aware_delivery:
+  merge: reviewed_head_ancestor_of_current_main
+  squash: exact_result_tree_equality
+  rebase: exact_result_tree_equality_or_verified_commit_mapping
+```
+
+This binding is the active Batch B boundary. Historical PR #49 evidence remains separate and does not become a `v1.10.2` review receipt.
+
 ## General evidence rule
 
 A PR head, CI result, target-authored record, caller-supplied actor, declared hash, commit message, path list, schema-valid lookalike, review artifact or Merge metadata alone does not establish completion. `tools/verify-aigov-v3-exact-main.mjs` constructs opaque verified evidence from live GitHub payloads and immutable repository bytes.
