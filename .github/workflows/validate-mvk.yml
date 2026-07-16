@@ -155,16 +155,29 @@ jobs:
       - name: Validate V4 exception and merge-method misuse cases
         run: npm run test:aigov-v3-exception
 
-      - name: Run required V4 validation matrix
-        run: |
-          npm run validate:aigov
-          npm run test:aigov-fixtures
-          npm run test:aigov-sequence
-          npm run validate:behavioral-coverage:aigov
-          npm run validate:roadmap-memory
-          npm run validate:coverage
-          npm run validate:recovery-program
-          npm run validate:mvk
+      - name: Validate AIGOV contracts
+        run: npm run validate:aigov
+
+      - name: Validate AIGOV fixtures
+        run: npm run test:aigov-fixtures
+
+      - name: Validate AIGOV sequence
+        run: npm run test:aigov-sequence
+
+      - name: Validate AIGOV behavioral coverage
+        run: npm run validate:behavioral-coverage:aigov
+
+      - name: Validate roadmap memory
+        run: npm run validate:roadmap-memory
+
+      - name: Validate Coverage boundary
+        run: npm run validate:coverage
+
+      - name: Validate recovery-program registration
+        run: npm run validate:recovery-program
+
+      - name: Validate full MVK regression suite
+        run: npm run validate:mvk
 
       - name: Test fail-closed history diagnostics
         run: npm run test:kroad-010-history-matrix-fail-closed
