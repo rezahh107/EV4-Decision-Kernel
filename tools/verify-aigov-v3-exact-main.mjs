@@ -19,6 +19,7 @@ const API = 'https://api.github.com';
 const INSPECTOR_REPOSITORY = 'rezahh107/PR-Inspector';
 const INSPECTOR_REPOSITORY_ID = 1288323264;
 const EXPECTED_V3_BASE = BATCH_A_EXCEPTION.mergeCommitSha;
+const NON_AUTHORITATIVE_RUN_CONCLUSIONS = new Set(['cancelled', 'skipped']);
 
 function parseArgs(argv) {
   const out = { mode: null, exceptionPlanId: null, prNumber: null, headSha: null, mergeCommitSha: null, scopeRevision: null, reviewCommit: null, reviewDirectory: null, output: null };
@@ -72,11 +73,19 @@ async function githubContent(repository, artifactPath, ref) {
 
 async function workflowEvidence(headSha, requiredNames, event) {
   const runs = await githubJson(`/repos/${TARGET_REPOSITORY}/actions/runs?head_sha=${headSha}&event=${event}&status=completed&per_page=100`);
-  const byName = new Map();
+  const candidatesByName = new Map();
   for (const run of runs.value.workflow_runs || []) {
-    if (!byName.has(run.name) || Date.parse(run.updated_at) > Date.parse(byName.get(run.name).updated_at)) byName.set(run.name, run);
+    if (run.head_sha !== headSha) continue;
+    const candidates = candidatesByName.get(run.name) || [];
+    candidates.push(run);
+    candidatesByName.set(run.name, candidates);
   }
-  const selected = requiredNames.map((name) => byName.get(name)).filter(Boolean);
+  const selected = requiredNames.map((name) => {
+    const candidates = (candidatesByName.get(name) || [])
+      .sort((left, right) => Date.parse(right.updated_at) - Date.parse(left.updated_at));
+    const substantive = candidates.filter((run) => !NON_AUTHORITATIVE_RUN_CONCLUSIONS.has(run.conclusion));
+    return substantive[0] || candidates[0];
+  }).filter(Boolean);
   return {
     green: selected.length === requiredNames.length && selected.every((run) => run.status === 'completed' && run.conclusion === 'success' && run.head_sha === headSha),
     runs: selected.map((run) => ({ id: run.id, name: run.name, conclusion: run.conclusion, head_sha: run.head_sha, completed_at: run.updated_at, html_url: run.html_url })),
