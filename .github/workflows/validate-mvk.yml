@@ -210,7 +210,19 @@ jobs:
         run: npm run validate:recovery-program
 
       - name: Validate full MVK regression suite
-        run: npm run validate:mvk
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:mvk 2>&1 | tee "${RUNNER_TEMP}/aigov-v4-full-mvk.log"
+
+      - name: Upload full MVK diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-v4-full-mvk-diagnostics-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/aigov-v4-full-mvk.log
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Test fail-closed history diagnostics
         run: npm run test:kroad-010-history-matrix-fail-closed
