@@ -1,0 +1,50 @@
+{
+  "impact_id": "coverage-impact.dcov-exec-001.aigov-v3-batch-b",
+  "impact_version": "1.0.0",
+  "sequence_number": 5,
+  "previous_impact_id": "coverage-impact.dcov-exec-001.pr49-aigov-v2-batch-a",
+  "repository": "rezahh107/EV4-Decision-Kernel",
+  "pull_request": 50,
+  "base_sha": "86e25a9073df7e257ca7df799de85baf9b3fafb0",
+  "work_package_id": "DCOV-EXEC-001",
+  "work_type": "blocking_defect",
+  "coverage_sensitive": false,
+  "impact_classification": "not_applicable",
+  "changed_paths": [
+    ".github/workflows/validate-mvk.yml",
+    "package.json",
+    "planning/NEXT_WORK.md",
+    "planning/coverage/impacts/dcov-exec-001.pr50-aigov-v3-batch-b.json"
+  ],
+  "bootstrap_exception": false,
+  "reason": "repairs_the_aigov_post_merge_closure_deadlock_and_registers_non_active_recovery_planning_without_changing_coverage_contract_data_metrics_proof_or_promotion_state",
+  "coverage_state_before": "not_measurable",
+  "coverage_state_after": "not_measurable",
+  "baseline_before": "coverage-baseline.v1.0.0",
+  "baseline_after": "coverage-baseline.v1.0.0",
+  "completed_obligation_ids": [],
+  "remaining_obligation_ids": [
+    "OB-EXEC-002-RECONCILE-ELEMENTS",
+    "OB-EXEC-002-EXPAND-CATALOG",
+    "OB-EXEC-002-CLOSE-SELECTED-P0-FAMILY",
+    "OB-EXEC-002-LAYOUT-BOUNDED-PROOF",
+    "OB-EXEC-005-VALIDATE-DENOMINATORS",
+    "OB-EXEC-005-CRITICAL-100"
+  ],
+  "closed_family_ids": [],
+  "element_coverage_delta": null,
+  "question_coverage_delta": null,
+  "known_gaps": [
+    "External project-owner Coverage governance approval remains absent.",
+    "Element and Question denominators remain unresolved and every Coverage percentage remains null.",
+    "KREC-001 through KREC-009 are registered only and no recovery task is active or implemented.",
+    "KROAD-012 through KROAD-018 remain preserved; KROAD-012R remains historical_non_authoritative."
+  ],
+  "zero_delta": true,
+  "blocking_defect": {
+    "defect_id": "AIGOV-V3-IMPOSSIBLE-RETROSPECTIVE-REVIEW-CYCLE",
+    "reason": "The V2 exact-main closure protocol permanently blocked Batch A after Merge because it required a pre-Merge receipt that could not be created retrospectively."
+  },
+  "next_content_expansion_package": "KROAD-012",
+  "exact_head_sha": "derived_at_pr_runtime"
+}
