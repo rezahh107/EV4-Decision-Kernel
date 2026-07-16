@@ -180,7 +180,19 @@ jobs:
         run: npm run validate:behavioral-coverage:aigov
 
       - name: Validate roadmap memory
-        run: npm run validate:roadmap-memory
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:roadmap-memory 2>&1 | tee "${RUNNER_TEMP}/aigov-v4-roadmap-memory.log"
+
+      - name: Upload AIGOV V4 roadmap diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-v4-roadmap-diagnostics-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/aigov-v4-roadmap-memory.log
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Validate Coverage boundary
         run: npm run validate:coverage
