@@ -59,6 +59,7 @@ jobs:
       COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}
       COVERAGE_HEAD_SHA: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
       PR_INSPECTOR_ROOT: ${{ github.workspace }}/_external/pr-inspector
+      PR_INSPECTOR_V1101_ROOT: ${{ github.workspace }}/_external/pr-inspector-v1101
     steps:
       - name: Checkout externally verified exact PR head with history
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -74,12 +75,20 @@ jobs:
           test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
 
-      - name: Checkout pinned PR Inspector
+      - name: Checkout active PR Inspector v1.10.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: rezahh107/PR-Inspector
+          ref: 9ed48bd995ee5b9270756254b04c1d48ccf21cbe
+          path: _external/pr-inspector
+          persist-credentials: false
+
+      - name: Checkout historical PR Inspector v1.10.1
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: rezahh107/PR-Inspector
           ref: 7a21045366bb9ad1ca2f950b8341ebb867dd8a52
-          path: _external/pr-inspector
+          path: _external/pr-inspector-v1101
           persist-credentials: false
 
       - name: Set up Python
@@ -105,7 +114,18 @@ jobs:
           node --check kernel/validator/validate-coverage-guarantee.mjs
           node --check kernel/validator/validate-coverage-guarantee-prf010.mjs
           node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
+          node --check kernel/validator/validate-recovery-execution-program.mjs
+          node --check tools/lib/aigov-ci-descriptor.mjs
+          node --check tools/lib/aigov-v3-closure.mjs
+          node --check tools/lib/aigov-sequence-producer-v1102.mjs
+          node --check tools/lib/pr-inspector-v1102.mjs
+          node --check tools/test-aigov-v3-exception.mjs
+          node --check tools/test-aigov-v4-hardening.mjs
+          node --check tools/validate-aigov-v4-governance.mjs
+          node --check tools/verify-aigov-exact-main.mjs
+          node --check tools/verify-aigov-v3-exact-main.mjs
           node --check tools/generate-aigov-scope-disclosure.mjs
+          node --check tools/generate-aigov-v3-batch-b-scope.mjs
           node --check tools/materialize-aigov-lifecycle.mjs
           node --check tools/materialize-pr-inspector-rereview-sequence.mjs
           node --check tools/finalize-aigov-post-ci-evidence.mjs
@@ -114,16 +134,17 @@ jobs:
           node --check tools/assemble-aigov-validation-evidence.mjs
           node --check tools/wait-for-aigov-source-ci.mjs
           node --check tools/run-aigov-validation-suite.mjs
+          node --check tools/validate-roadmap-memory.mjs
+          node --check tools/validate-roadmap-memory-v3.mjs
+          node --check tools/validate-roadmap-memory-full.mjs
+          node --check tools/validate-kroad-010-history-matrix.mjs
+          node --check tools/test-kroad-010-history-matrix-fail-closed.mjs
           node --check tools/test-aigov-forbidden-operations.mjs
           node --check tools/test-aigov-owner-evidence.mjs
           node --check tools/test-aigov-provenance.mjs
           node --check tools/test-aigov-sequence.mjs
           node --check tools/test-aigov-sequence-producer.mjs
-          node --check tools/verify-aigov-exact-main.mjs
-          node --check tools/validate-roadmap-memory.mjs
-          node --check tools/validate-roadmap-memory-full.mjs
-          node --check tools/validate-kroad-010-history-matrix.mjs
-          node --check tools/test-kroad-010-history-matrix-fail-closed.mjs
+          PYTHONPYCACHEPREFIX="${RUNNER_TEMP}/pycache" python -m py_compile tools/pr-inspector-official-boundary-v1102.py tools/test-pr-inspector-security-capability.py
 
       - name: Check working tree and base-to-head diff
         shell: bash
@@ -132,61 +153,134 @@ jobs:
           git diff --check
           git diff --check "${COVERAGE_BASE_SHA}..${COVERAGE_HEAD_SHA}"
 
-      - name: Disclose and validate exact-head AIGOV scope
+      - name: Disclose and validate exact Batch B scope
         shell: bash
         run: |
           set -euo pipefail
-          test "${COVERAGE_BASE_SHA}" = "5ff5d7b20db11af36ab787eb8ac2d1127ea74644"
+          test "${COVERAGE_BASE_SHA}" = "86e25a9073df7e257ca7df799de85baf9b3fafb0"
           test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
-          npm run aigov:scope-disclosure -- \
+          npm run aigov:scope-disclosure:batch-b -- \
             --base "${COVERAGE_BASE_SHA}" \
-            --head "${COVERAGE_HEAD_SHA}"
+            --head "${COVERAGE_HEAD_SHA}" \
+            --output "${RUNNER_TEMP}/aigov-v4-batch-b-scope-disclosure.json"
 
-      - name: Validate roadmap memory and SSOT reconstruction
-        run: npm run validate:roadmap-memory
+      - name: Reconcile Batch A through exact V4 squash equivalence
+        id: batch-a-reconciliation
+        continue-on-error: true
+        run: npm run validate:aigov-v4-batch-a-reconciliation -- --output "${RUNNER_TEMP}/aigov-v4-batch-a-reconciliation.json"
+
+      - name: Upload Batch A reconciliation diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-v4-batch-a-reconciliation-diagnostics-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/aigov-v4-batch-a-reconciliation.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Enforce Batch A reconciliation result
+        if: ${{ steps.batch-a-reconciliation.outcome != 'success' }}
+        run: exit 1
+
+      - name: Validate V4 exception and merge-method misuse cases
+        run: npm run test:aigov-v3-exception
+
+      - name: Validate AIGOV contracts
+        env:
+          AIGOV_V4_REPORT: ${{ runner.temp }}/aigov-v4-governance-report.json
+        run: npm run validate:aigov
+
+      - name: Upload AIGOV V4 governance diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-v4-governance-diagnostics-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/aigov-v4-governance-report.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Validate AIGOV fixtures
+        run: npm run test:aigov-fixtures
+
+      - name: Validate AIGOV sequence
+        run: npm run test:aigov-sequence
+
+      - name: Validate AIGOV behavioral coverage
+        run: npm run validate:behavioral-coverage:aigov
+
+      - name: Validate roadmap memory
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:roadmap-memory 2>&1 | tee "${RUNNER_TEMP}/aigov-v4-roadmap-memory.log"
+
+      - name: Upload AIGOV V4 roadmap diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-v4-roadmap-diagnostics-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/aigov-v4-roadmap-memory.log
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Relocate pinned inspectors outside the target worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          mv _external/pr-inspector "${RUNNER_TEMP}/pr-inspector-v1102"
+          mv _external/pr-inspector-v1101 "${RUNNER_TEMP}/pr-inspector-v1101"
+          rmdir _external
+          echo "PR_INSPECTOR_ROOT=${RUNNER_TEMP}/pr-inspector-v1102" >> "${GITHUB_ENV}"
+          echo "PR_INSPECTOR_V1101_ROOT=${RUNNER_TEMP}/pr-inspector-v1101" >> "${GITHUB_ENV}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Validate Coverage boundary
+        run: npm run validate:coverage
+
+      - name: Validate recovery-program registration
+        run: npm run validate:recovery-program
+
+      - name: Validate full MVK regression suite
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run validate:mvk 2>&1 | tee "${RUNNER_TEMP}/aigov-v4-full-mvk.log"
+
+      - name: Upload full MVK diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-v4-full-mvk-diagnostics-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/aigov-v4-full-mvk.log
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Test fail-closed history diagnostics
         run: npm run test:kroad-010-history-matrix-fail-closed
-
-      - name: Validate MVK regression suite
-        run: npm run validate:mvk
 
       - name: Verify KROAD-010 prototype integrity
         run: node tools/validate-kroad-010-prototype-integrity.mjs
 
       - name: Validate KROAD-010 history matrix
+        id: history-matrix
         run: npm run validate:kroad-010-history-matrix
 
-      - name: Materialize and validate exact-head AIGOV evidence budget
-        run: npm run aigov:validation-suite -- --head "${COVERAGE_HEAD_SHA}"
-
-      - name: Materialize exact-head AIGOV scope evidence
-        shell: bash
-        run: |
-          set -euo pipefail
-          npm run aigov:scope-disclosure -- \
-            --base "${COVERAGE_BASE_SHA}" \
-            --head "${COVERAGE_HEAD_SHA}" \
-            --output aigov-batch-a-scope-disclosure.json
-
       - name: Upload KROAD-010 history matrix evidence
-        if: ${{ always() }}
+        if: ${{ always() && steps.history-matrix.outcome == 'success' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: kroad-010-history-matrix
           path: kroad-010-history-matrix-report.json
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 14
 
-      - name: Upload exact-head AIGOV scope evidence
+      - name: Upload exact-head V4 Batch B evidence
         if: ${{ success() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: aigov-batch-a-scope-disclosure
+          name: aigov-v4-batch-b-validation-evidence
           path: |
-            aigov-batch-a-scope-disclosure.json
-            artifacts/aigov-batch-a-scope-disclosure.json
-            artifacts/aigov-batch-a-executed-evidence.json
-            artifacts/aigov-command-logs
+            ${{ runner.temp }}/aigov-v4-batch-a-reconciliation.json
+            ${{ runner.temp }}/aigov-v4-batch-b-scope-disclosure.json
           if-no-files-found: error
           retention-days: 14

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/recovery-execution-program.v1.schema.json",
+  "title": "EV4 Recovery Execution Program v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "program_id",
+    "integration_model",
+    "program_status",
+    "kroad_012r_status",
+    "kroad_supersession_effect",
+    "coverage_promotion_effect",
+    "task_activation_effect",
+    "product_effect",
+    "tasks"
+  ],
+  "properties": {
+    "schema_version": {"const": "recovery-execution-program.v1"},
+    "program_id": {"const": "DCOV-COVERAGE-EXECUTION-PROGRAM"},
+    "integration_model": {"const": "distinct_recovery_execution_program"},
+    "program_status": {"enum": ["registered_non_active", "active", "implemented", "complete"]},
+    "kroad_012r_status": {"enum": ["historical_non_authoritative", "active_authority"]},
+    "kroad_supersession_effect": {"enum": ["none", "superseded"]},
+    "coverage_promotion_effect": {"enum": ["none", "policy_active", "measurement_active", "threshold_enforced"]},
+    "task_activation_effect": {"enum": ["none", "one_or_more_active"]},
+    "product_effect": {"enum": ["none", "product_work_activated"]},
+    "tasks": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["task_id", "title", "status", "depends_on", "implementation_authorized", "coverage_credit", "readiness_claim"],
+        "properties": {
+          "task_id": {"type": "string", "pattern": "^KREC-00[1-9]$"},
+          "title": {"type": "string", "minLength": 1},
+          "status": {"enum": ["registered_planned_task", "active", "implemented", "complete"]},
+          "depends_on": {"type": "array", "items": {"type": "string", "pattern": "^KREC-00[1-9]$"}, "uniqueItems": true},
+          "implementation_authorized": {"type": "boolean"},
+          "coverage_credit": {"type": "boolean"},
+          "readiness_claim": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

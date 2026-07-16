@@ -4,63 +4,106 @@
 
 ```yaml
 record_kind: governance_adoption_decision
-record_status: approved_frozen_plan
-plan_id: GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2
-plan_version: 2
+record_status: approved_active_plan
+plan_id: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4
+plan_version: 4
+previous_plan_id: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3
 standard_id: AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT
 standard_version: 1.1.0
 target_repository: rezahh107/EV4-Decision-Kernel
 audit_base_branch: main
-audit_base_sha: 5ff5d7b20db11af36ab787eb8ac2d1127ea74644
-owner_approval_source: explicit_owner_authorization_without_timestamp
-repository_adoption_status: blocked_open_enforcement_gaps
-active_batch: BATCH_A
-current_increment_set: AIGOV-ADOPT-000_through_AIGOV-ADOPT-007
+audit_base_sha: 86e25a9073df7e257ca7df799de85baf9b3fafb0
+owner_approval_source: explicit_owner_authorization
+repository_adoption_status: pending_batch_b_exact_main_completion
+active_batch: BATCH_B
+current_increment_set: AIGOV-ADOPT-008
+active_review_protocol: v1.10.2
+active_inspector_release_commit: 9ed48bd995ee5b9270756254b04c1d48ccf21cbe
 merge_authority: owner_only
-maximum_implementation_prs: 2
-maximum_active_prs: 1
+maximum_new_implementation_prs: 0
+maximum_active_implementation_prs: 1
 ```
 
-## Decision
+## V4 correction
 
-The owner superseded only the serial execution shape of V1 and approved the frozen two-batch governance adoption plan identified above. The semantic obligations remain the same. Implementation is limited to these ordered batches:
+V3 correctly detected that PR #49 final head `c141923bf411f802f1673acf06dc92a77b415593` is not a commit ancestor of its GitHub Squash Merge result. That predicate was invalid for this Merge method. V4 replaces only that predicate with deterministic Merge-result equivalence; it does not weaken identity, CI, owner Merge, current-main validation, Coverage, KROAD or review boundaries.
 
-1. `BATCH_A` — reconcile `AIGOV-ADOPT-000` after PR #48 and implement `AIGOV-ADOPT-001` through `AIGOV-ADOPT-007` as one exact-head-reviewed enforcement unit;
-2. `BATCH_B` — implement `AIGOV-ADOPT-008` exact-main closure and register the distinct, non-active recovery execution program.
+```yaml
+correction:
+  previous_invalid_predicate: strict_pr_head_commit_ancestry
+  replacement_predicate: deterministic_merge_result_equivalence
+  reason: github_squash_merge_does_not_preserve_pr_commit_ancestry
+exception_scope:
+  repository: rezahh107/EV4-Decision-Kernel
+  pr_number: 49
+  base_sha: 5ff5d7b20db11af36ab787eb8ac2d1127ea74644
+  final_head_sha: c141923bf411f802f1673acf06dc92a77b415593
+  squash_commit_sha: 86e25a9073df7e257ca7df799de85baf9b3fafb0
+  equivalence_mode: exact_tree_equality
+  pr_head_tree_sha: 8a8c83aee95ab36ab59ba128c7710bafedaa2d20
+  squash_commit_tree_sha: 8a8c83aee95ab36ab59ba128c7710bafedaa2d20
+  reusable: false
+  precedential: false
+  historical_independent_green_receipt: not_claimed
+```
 
-`BATCH_B` starts only after the owner merges `BATCH_A`, its exact-main receipt is Green and no Batch A implementation PR remains active. One implementation PR is active at a time. Neither Batch may self-review, self-merge or infer completion from Merge alone.
+Historical PR #49 evidence remains bound to its historical protocol and is not rewritten as Batch B provenance.
 
-## Authorization Boundary
+## PRF-050 repair decision
 
-This decision authorizes, inside the exact increment scope:
+The active Batch B review boundary is exactly `PR-Inspector v1.10.2` at release commit `9ed48bd995ee5b9270756254b04c1d48ccf21cbe` in official repository `rezahh107/PR-Inspector` with numeric repository ID `1288323264`.
 
-- branch creation;
-- repository file changes;
-- commits and push;
-- focused draft PR creation;
-- validation and bounded repair;
-- fresh independent AI review where required.
+Batch B must reject stale `v1.10.1` review bundles. It must verify `CURRENT_VERSION`, `protocol-manifest.yaml`, the active release lock, the trust policy, the release commit ancestry on official `main`, and one deterministic official review directory bound to exact PR #50 head and `scope_revision`.
 
-This decision does not authorize:
+Authoritative CI is identified by repository ID, workflow ID/path/name, event, exact head, run ID/attempt/status/conclusion, job ID, check name/head and GitHub Actions App ID/slug. Display-name equality and caller-supplied success booleans are non-authoritative.
 
-- Merge or auto-merge;
-- deployment, publication or release;
-- destructive or irreversible operations;
-- secret, permission or repository-ruleset changes;
-- external repository modification;
-- material expansion of the frozen plan;
-- implementation of `KROAD-012`, `KROAD-012R`, any `KREC-*` task or any DCOV content-expansion package.
+The production `batch-b-final` verifier runs only after exact-main `Validate Main`. It derives Merge method from GitHub objects and applies method-aware proof. It reuses the exact pre-Merge independent review and does not request a second post-Merge review.
 
-The user performs Merge only as an administrative action after the required technical gates are satisfied. No human technical approval is introduced by this decision.
+Repository settings were not modified. Missing read-only proof of required checks, App binding, strict stale-check policy or bypass configuration remains a fail-closed unresolved gate:
 
-## Roadmap Preservation
+```yaml
+required_check_configuration: unverified
+repository_settings_enforced: not_claimed
+merge_permitted: false
+```
 
-- `planning/NEXT_WORK.md` remains the only mutable current-status dashboard.
-- `planning/KERNEL_EXECUTION_PLAN.md` retains durable product-roadmap meaning and acceptance criteria.
-- `KROAD-012` remains the next product task, temporarily blocked by the higher-priority governance adoption sequence.
-- `KROAD-013` through `KROAD-018`, `KROAD-012R` history and all `DCOV-EXEC-*` mappings remain preserved.
-- The Coverage proposal remains non-executable and cannot approve itself.
+## Batch disposition
 
-## Change Control
+1. `BATCH_A` — `AIGOV-ADOPT-000` through `AIGOV-ADOPT-007` are `merged_and_post_merge_reconciled` under the exact V4 one-time squash-equivalence tuple.
+2. `BATCH_B` — PR #50 implements `AIGOV-ADOPT-008`, active v1.10.2 review binding, exact CI/check identity, method-aware exact-main verification and registration-only recovery-program carriers.
 
-Any material change to the Batch objectives, dependency graph, security profile, external-repository boundary, destructive boundary, two-PR limit or Merge authority requires a new plan version and explicit owner approval.
+Required sequence:
+
+```text
+exact final Batch B head
+→ exact-head CI Green
+→ independent PR-Inspector v1.10.2 Green on exact head and scope_revision
+→ owner Merge
+→ deterministic Merge-result proof for the actual Merge method
+→ current-main validation Green
+→ read-only repository-enforcement proof
+→ final adoption closure
+```
+
+Method-aware proof:
+
+```yaml
+merge_commit: reviewed_head_is_ancestor_of_current_main
+squash: exact_result_tree_equality
+rebase: exact_result_tree_equality_or_verified_commit_mapping
+```
+
+## Unchanged boundaries
+
+- owner-only Merge;
+- exact-head CI and exact scope binding;
+- independent exact final-head PR-Inspector v1.10.2 review for Batch B;
+- Coverage remains `not_measurable_pending_external_promotion`;
+- `KROAD-012` through `KROAD-018` remain preserved;
+- `KROAD-012R` remains `historical_non_authoritative`;
+- `KREC-001` through `KREC-009` remain `registered_planned_task` only;
+- no product implementation, external repository change, deployment or release.
+
+## Change control
+
+Any reuse of the PR #49 exception, another repository or PR, another implementation PR, Coverage promotion, product implementation, external repository change, secret/permission/ruleset change, destructive operation or Merge requires separate owner authorization.

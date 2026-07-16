@@ -29,11 +29,11 @@ jobs:
           test "$(git rev-parse HEAD)" = "${EXPECTED_HEAD_SHA}"
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
 
-      - name: Checkout pinned PR Inspector
+      - name: Checkout pinned PR Inspector v1.10.2
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: rezahh107/PR-Inspector
-          ref: 7a21045366bb9ad1ca2f950b8341ebb867dd8a52
+          ref: 9ed48bd995ee5b9270756254b04c1d48ccf21cbe
           path: _external/pr-inspector
           persist-credentials: false
 
@@ -60,14 +60,17 @@ jobs:
           WORKFLOW_SHA: ${{ github.event.pull_request.head.sha }}
           SOURCE_RUN_ID: ${{ github.run_id }}
           SOURCE_RUN_ATTEMPT: ${{ github.run_attempt }}
+          TARGET_PR_NUMBER: ${{ github.event.pull_request.number }}
         run: >-
           node tools/materialize-pr-inspector-rereview-sequence.mjs
           --head "${EXPECTED_HEAD_SHA}"
           --workflow-sha "${WORKFLOW_SHA}"
           --run-id "${SOURCE_RUN_ID}"
           --run-attempt "${SOURCE_RUN_ATTEMPT}"
+          --pr-number "${TARGET_PR_NUMBER}"
+          --scope-path planning/governance/scopes/aigov-v3-batch-b.scope.json
 
-      - name: Execute official pinned rereview sequence validator
+      - name: Execute official pinned v1.10.2 rereview sequence validator
         env:
           PYTHONPATH: ${{ github.workspace }}/_external/pr-inspector
         run: python _external/pr-inspector/scripts/validate_rereview_sequence.py artifacts/pr-inspector-rereview-sequence.pending.json
@@ -76,6 +79,11 @@ jobs:
         env:
           PR_INSPECTOR_ROOT: ${{ github.workspace }}/_external/pr-inspector
         run: npm run test:aigov-sequence-producer
+
+      - name: Run PRF-050 protocol and identity hardening suite
+        env:
+          PR_INSPECTOR_ROOT: ${{ github.workspace }}/_external/pr-inspector
+        run: npm run test:aigov-v4-hardening
 
       - name: Upload sequence producer execution evidence
         if: ${{ success() }}

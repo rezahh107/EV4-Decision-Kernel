@@ -1,6 +1,6 @@
 # EV4 Decision Kernel
 
-**Status:** working-reference / Kernel-local MVK foundation with source manifest, doc coverage index, decision-card layer, Architect/CE consumption boundaries, external evidence workspace contracts, decision-governance foundation, and Behavioral Rule Coverage v0.4.1 advisory audit model
+**Status:** working-reference / Kernel-local MVK foundation with source manifest, doc coverage index, decision-card layer, Architect/CE consumption boundaries, external evidence workspace contracts, decision-governance foundation, Behavioral Rule Coverage v0.4.1, and pending V4 AIGOV Batch B closure
 **Owner:** `rezahh107/EV4-Decision-Kernel`
 
 ## Purpose
@@ -26,7 +26,7 @@ The coverage index is not a full documentation mirror. It prevents important V4 
 
 ## Decision Governance Foundation
 
-This repository now also defines a Kernel-local taxonomy and execution-risk boundary foundation in:
+This repository also defines a Kernel-local taxonomy and execution-risk boundary foundation in:
 
 ```text
 kernel/decision-governance/decision-domain-taxonomy.v0.json
@@ -49,15 +49,25 @@ docs/decision-governance/EV4_DECISION_COVERAGE_RECOVERY_SPEC.md
 planning/EV4_DECISION_COVERAGE_OPERATIONALIZATION_MAP.md
 ```
 
-They distinguish the long-term product objective from the deliberately small MVK vertical slice. Their authority remains `proposed_recovery_specification_pending_evidence_validation`; they activate no new decision family, Registry, Resolver Rule, producer integration, metric or readiness claim.
+They distinguish the long-term product objective from the deliberately small MVK vertical slice. Their authority remains proposed and non-executable pending external governance promotion. They activate no new decision family, Registry, Resolver Rule, producer integration, metric or readiness claim.
 
-## AIGOV Enforcement Activation
+The separate `DCOV-COVERAGE-EXECUTION-PROGRAM` is registered in `planning/recovery/recovery-execution-program.v1.json`. `KREC-001` through `KREC-009` are `registered_planned_task` only: registration does not authorize implementation, activate product work, supersede KROAD items, promote Coverage, grant Coverage credit or establish readiness.
 
-`BATCH_A` of `GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2` adds the repository-local AIGOV policy, scope/evidence/review schemas, deterministic fixtures, exact scope disclosure and sequence validation. Its exact audited base is `5ff5d7b20db11af36ab787eb8ac2d1127ea74644`.
+## AIGOV V4 Batch B
 
-PR #49 provenance hardening derives Merge/current-main facts from fresh GitHub REST payloads, accepts review evidence only from an immutable hash-verified PR Inspector bundle, materializes a schema-backed exact-head lifecycle ledger, and validates an executed evidence manifest against the L3 budget. These carriers remain pending fresh exact-head CI and independent re-review; they do not establish adoption, Merge readiness, Coverage promotion or repository-settings enforcement.
+The active plan is `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`, based on exact audited `main` SHA `86e25a9073df7e257ca7df799de85baf9b3fafb0`.
 
-The implementation is intentionally pre-closure: independent review is external, Merge is owner-only and exact-main verification is required after Merge. The PR does not activate Coverage, implement `KROAD-012` through `KROAD-018`, promote historical `KROAD-012R`, or establish repository adoption.
+V4 corrects only the invalid strict-ancestry predicate for the exact GitHub Squash Merge of PR #49. Live Git object verification proved exact tree equality between final head `c141923bf411f802f1673acf06dc92a77b415593` and squash commit `86e25a9073df7e257ca7df799de85baf9b3fafb0`; both trees are `8a8c83aee95ab36ab59ba128c7710bafedaa2d20`. The exception is non-reusable and non-precedential, and no historical independent Green review is claimed.
+
+Draft PR #50 contains `AIGOV-ADOPT-008`, method-aware exact-main verification, adversarial tests, exact Batch B scope disclosure and registration-only recovery-program validation. A PR head does not establish final repository adoption or Merge authority.
+
+The Batch B sequence remains mandatory:
+
+```text
+exact final head -> exact-head CI Green -> independent PR-Inspector Green on exact head and scope -> owner-only Merge -> method-aware deterministic Merge-result proof -> current-main validation
+```
+
+No second independent review after Merge is required. Coverage promotion, product implementation, external repository modification, deployment and release remain out of scope.
 
 ## Role Boundary
 
@@ -87,16 +97,25 @@ Downstream enforcement requires inspected downstream rejection evidence.
 
 ```bash
 npm ci --ignore-scripts --no-audit --no-fund
-npm run validate:mvk
+git diff --check
+node --check tools/verify-aigov-exact-main.mjs
+node --check tools/verify-aigov-v3-exact-main.mjs
+node --check kernel/validator/validate-recovery-execution-program.mjs
+node --check tools/validate-roadmap-memory.mjs
+node --check tools/validate-roadmap-memory-v3.mjs
 npm run validate:aigov
 npm run test:aigov-fixtures
 npm run test:aigov-sequence
+npm run test:aigov-v3-exception
+npm run validate:aigov-v4-batch-a-reconciliation
+npm run validate:recovery-program
 npm run validate:behavioral-coverage:aigov
-node tools/audit-behavioral-coverage.mjs --mode advisory
-node tools/audit-behavioral-coverage.mjs --mode strict
+npm run validate:roadmap-memory
+npm run validate:coverage
+npm run validate:mvk
 ```
 
-`npm run validate:mvk` runs the MVK validator, source/card validator, consumption-boundary validator, evidence-workspace validator, Elementor V4 doc coverage validator, and decision-governance foundation validator.
+The live V4 reconciliation command requires GitHub API access and accepts only exact Git tree equality for the PR #49 Squash Merge exception. Other validators check that Coverage, KROAD and registration-only boundaries remain unchanged.
 
 ## Not Included
 
@@ -106,9 +125,12 @@ node tools/audit-behavioral-coverage.mjs --mode strict
 - full control-level registry
 - external exporter implementation
 - browser/runtime collector implementation
-- Project Gate intake
-- downstream EV4 consumer enforcement
+- new Project Gate implementation
+- downstream EV4 consumer enforcement expansion
 - runtime monitor enforcement
+- KREC task implementation
+- KROAD-012 product implementation
+- Coverage promotion or percentage claims
 - Builder execution proof
 - production readiness proof
 ```

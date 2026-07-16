@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/aigov-sequence-producer-identity.v2.schema.json",
+  "title": "EV4 PR Inspector v1.10.2 Sequence Producer Identity v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "identity_digest", "repository", "repository_id", "pr_number",
+    "exact_head_sha", "scope_revision", "protocol_version", "inspector_commit_sha",
+    "check_context", "app_id", "workflow", "run", "job", "check", "artifact",
+    "validator_command", "required_check_configuration", "repository_settings_enforced",
+    "completed_at", "observed_at", "evidence_source"
+  ],
+  "properties": {
+    "schema_version": {"const": "aigov-sequence-producer-identity.v2"},
+    "identity_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "repository": {"const": "rezahh107/EV4-Decision-Kernel"},
+    "repository_id": {"const": 1292378784},
+    "pr_number": {"const": 50},
+    "exact_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "scope_revision": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "protocol_version": {"const": "v1.10.2"},
+    "inspector_commit_sha": {"const": "9ed48bd995ee5b9270756254b04c1d48ccf21cbe"},
+    "check_context": {"const": "Validate rereview sequence enforcement"},
+    "app_id": {"const": 15368},
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workflow_id", "name", "path", "commit_sha", "git_blob_sha", "file_sha256"],
+      "properties": {
+        "workflow_id": {"type": "integer", "minimum": 1},
+        "name": {"const": "Validate rereview sequence enforcement"},
+        "path": {"const": ".github/workflows/validate-rereview-sequence.yml"},
+        "commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "git_blob_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "file_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "run_attempt", "event", "status", "conclusion"],
+      "properties": {
+        "run_id": {"type": "integer", "minimum": 1},
+        "run_attempt": {"type": "integer", "minimum": 1},
+        "event": {"const": "pull_request"},
+        "status": {"const": "completed"},
+        "conclusion": {"const": "success"}
+      }
+    },
+    "job": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["job_id", "name", "conclusion"],
+      "properties": {
+        "job_id": {"type": "integer", "minimum": 1},
+        "name": {"const": "Validate rereview sequence enforcement"},
+        "conclusion": {"const": "success"}
+      }
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["check_name", "check_head_sha", "check_app_id", "check_app_slug"],
+      "properties": {
+        "check_name": {"const": "Validate rereview sequence enforcement"},
+        "check_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "check_app_id": {"const": 15368},
+        "check_app_slug": {"const": "github-actions"}
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "name", "digest"],
+      "properties": {
+        "artifact_id": {"type": "integer", "minimum": 1},
+        "name": {"const": "aigov-rereview-sequence-producer"},
+        "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      }
+    },
+    "validator_command": {"const": "python _external/pr-inspector/scripts/validate_rereview_sequence.py artifacts/pr-inspector-rereview-sequence.pending.json"},
+    "required_check_configuration": {"const": "unverified"},
+    "repository_settings_enforced": {"const": "not_claimed"},
+    "completed_at": {"type": "string", "format": "date-time"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "evidence_source": {"const": "fresh_github_rest_api_exact_descriptor_and_immutable_workflow_bytes"}
+  }
+}

@@ -2,133 +2,165 @@
 
 ## Last Updated
 
-The owner approved frozen plan `GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2` against exact audited `main` commit `5ff5d7b20db11af36ab787eb8ac2d1127ea74644`. `BATCH_A` packages `AIGOV-ADOPT-000` reconciliation and `AIGOV-ADOPT-001` through `AIGOV-ADOPT-007` enforcement work into one active implementation. The repository remains `blocked_open_enforcement_gaps`; implementation on a PR head is not adoption, Merge readiness or exact-main completion.
+The owner-approved bounded repair of PR #50 under `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4` is implemented on the existing Draft branch. `PRF-050-001` through `PRF-050-004` bind active Batch B review to `PR-Inspector v1.10.2` at release commit `9ed48bd995ee5b9270756254b04c1d48ccf21cbe`, use exact CI/check descriptors, execute production `batch-b-final` after `Validate Main`, and preserve the exact regenerated scope. The current gate is a fresh independent review after exact-head CI Green; final adoption and Merge remain blocked.
 
 ## Status Authority
 
-This file is the authoritative current-status dashboard. `planning/KERNEL_EXECUTION_PLAN.md` preserves durable product scope, dependencies, acceptance criteria, evidence and historical KROAD meaning. Mutable current/next state lives here; chat history, PR prose, CI success and target-authored closure records are not governance approval.
-
-The AIGOV adoption sequence is a higher-priority governance repair. It does not change the product meaning of `KROAD-012` through `KROAD-018`; those items remain preserved, and `KROAD-012` remains the next product task after governance adoption closure.
+This file is the authoritative current-status dashboard. `planning/KERNEL_EXECUTION_PLAN.md` preserves durable product meaning and historical KROAD definitions. Historical or detailed-plan statuses are non-authoritative when they conflict with this dashboard.
 
 ## Current State
 
-- Repository adoption status: `blocked_open_enforcement_gaps`.
-- Active standard: `AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT@1.1.0`.
-- Frozen adoption plan: `GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2`.
-- Active batch: `BATCH_A`.
-- Current governance increment set: `AIGOV-ADOPT-000` through `AIGOV-ADOPT-007`.
-- AIGOV-ADOPT-000: `merged_pending_batch_a_reconciliation`.
-- AIGOV-ADOPT-001 through AIGOV-ADOPT-007: `in_batch_a_implementation`.
-- PR #49 bounded repair substate: `implemented_pending_rereview`; this is not technical acceptance, Merge readiness or completion.
-- PR #49 technical acceptance: `pending`.
-- PR #49 sequence enforcement: `pending_verified_capability`.
-- PR #49 repository-hosted enforcement: `unverified`.
-- PR #49 owner Merge permitted: `false`.
-- AIGOV-ADOPT-008: `blocked_pending_batch_a_exact_main`.
-- Product implementation while adoption is open: `blocked_by_higher_priority_governance_repair`.
-- Coverage proposal state: `not_measurable_pending_external_promotion`.
-- External project-owner governance approval carrier for Coverage: `missing`.
-- `DCOV-EXEC-001` implementation eligibility: `blocked_pending_external_governance_approval`.
-- Element Ledger: 15 known in-scope records; 7 confirmed denominator members; denominator `unresolved`.
-- Decision Question Catalog: 29 known in-scope records; 24 confirmed denominator members; denominator `unresolved`.
-- Element coverage percent: `null`.
-- Question coverage percent: `null`.
-- Critical P0/safety percent: `null`.
-- Only active Resolver-backed Family: `layout_structure`; its real runtime/consumer proof remains incomplete.
+```yaml
+repository_adoption_status: pending_batch_b_exact_main_completion
+active_standard: AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT@1.1.0
+active_plan: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4
+previous_plan: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3
+active_batch_b_review_protocol: v1.10.2
+active_inspector_release_commit: 9ed48bd995ee5b9270756254b04c1d48ccf21cbe
+batch_a:
+  status: exact_main_reconciled_under_v4_squash_equivalence
+  closure_mode: v4_one_time_squash_equivalence
+  pr_number: 49
+  base_sha: 5ff5d7b20db11af36ab787eb8ac2d1127ea74644
+  final_head_sha: c141923bf411f802f1673acf06dc92a77b415593
+  pr_head_tree_sha: 8a8c83aee95ab36ab59ba128c7710bafedaa2d20
+  squash_commit_sha: 86e25a9073df7e257ca7df799de85baf9b3fafb0
+  squash_commit_tree_sha: 8a8c83aee95ab36ab59ba128c7710bafedaa2d20
+  equivalence_mode: exact_tree_equality
+  content_equivalence: verified
+  exact_head_ci: green
+  current_main_validation: green
+  owner_merge: verified
+  historical_independent_green_receipt: not_claimed
+  exception_reusable: false
+  exception_precedential: false
+AIGOV-ADOPT-000_through_007: merged_and_post_merge_reconciled
+batch_b:
+  batch: BATCH_B
+  increment: AIGOV-ADOPT-008
+  implementation_state: prf_050_repair_implemented
+  status: exact_head_ci_green_pending_fresh_independent_review
+  previous_status: pending_exact_head_ci_and_fresh_independent_review
+  exact_head_ci: green
+  fresh_independent_review: pending
+  scope_revision: sha256:dc8627e6df4c305fb374d6510395611313d672d77708066f41af4ba722c7b82c
+  required_check_configuration: unverified
+  repository_settings_enforced: not_claimed
+registered:
+  KREC-001_through_009: registered_planned_task
+preserved:
+  KROAD-012: next_product_task_blocked_pending_final_aigov_closure
+  KROAD-013_through_018: not_started
+  KROAD-012R: historical_non_authoritative
+coverage:
+  status: not_measurable_pending_external_promotion
+  percentages: null
+coverage_promotion_effect: none
+product_effect: none
+external_repository_effect: none
+```
+
+- Failed PR-head ancestry is classified as expected Squash Merge topology, not content loss.
+- Exact tree equality is scoped only to PR #49 and is non-reusable and non-precedential.
+- Historical Batch A provenance is not rewritten as an active v1.10.2 review.
+- Repository settings were not modified or claimed enforced.
 - No coverage credit, trusted ingestion, readiness, release-readiness, runtime-completeness or production-readiness claim is active.
 
 ## Current PR
 
+- [ ] PR #50 — V4 Batch B bounded repair
+  - `branch`: `governance/aigov-v3-batch-b-closure`
+  - `status`: `exact_head_ci_green_pending_fresh_independent_review`
+  - `previous_status`: `pending_exact_head_ci_and_fresh_independent_review`
+  - `review_protocol`: `v1.10.2`
+  - `inspector_release_commit`: `9ed48bd995ee5b9270756254b04c1d48ccf21cbe`
+  - `scope_revision`: `sha256:dc8627e6df4c305fb374d6510395611313d672d77708066f41af4ba722c7b82c`
+  - `merge_permitted`: `false`
+  - `independent_review_handoff_permitted`: `true`
+  - `required_check_configuration`: `unverified`
+  - `repository_settings_enforced`: `not_claimed`
+  - Every new commit invalidates older CI, artifact and review evidence.
+
 - [ ] `DCOV-EXEC-001` — Coverage Guarantee proposal and validation foundation
   - `work_type`: `proposal_with_real_seed_data`
-  - `merge_permitted`: `false`
   - `implementation_eligibility`: `blocked_pending_external_governance_approval`
-  - The proposal cannot approve its own recovery source, activate Coverage policy or supersede KROAD-012 through KROAD-018.
-  - Merge metadata, CI success, repository placement and self-authored evidence closure cannot satisfy the missing authority carrier.
+  - The proposal remains non-executable and cannot approve itself.
 
 ## Next Task
 
-- [ ] AIGOV-ADOPT-001 — AIGOV Enforcement Activation (`BATCH_A`)
-  - `status`: `in_batch_a_implementation`
+- [ ] AIGOV-ADOPT-008 — Final AIGOV exact-main closure (`BATCH_B`)
+  - `status`: `exact_head_ci_green_pending_fresh_independent_review`
+  - `previous_status`: `pending_exact_head_ci_and_fresh_independent_review`
   - `change_class`: `L3`
-  - `branch`: `governance/aigov-v2-batch-a-enforcement`
-  - `plan_id`: `GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2`
-  - `repair_substate`: `implemented_pending_rereview`
-  - `covers`: `AIGOV-ADOPT-000` reconciliation and `AIGOV-ADOPT-001` through `AIGOV-ADOPT-007`
-  - Reconcile the merged `AIGOV-ADOPT-000` authority carrier and activate the bounded machine policy, schemas, fixtures, exact-head sequence checks and independent-review compatibility profile.
-  - Do not claim `AIGOV-ADOPT-008`, exact-main adoption closure, product implementation, Coverage promotion or Merge authority.
-  - Fresh exact-head CI and a new immutable PR Inspector review are required because the prior review became stale when the repair changed the head and scope revision.
+  - `plan_id`: `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`
+  - Required sequence: exact final-head CI Green → independent PR-Inspector v1.10.2 Green on exact head and scope → owner Merge → method-aware deterministic Merge-result proof → current-main validation Green → verified repository enforcement.
+  - No Merge, Coverage promotion, KREC implementation or product implementation is authorized.
+
+## Registered Recovery Program
+
+```yaml
+program_id: DCOV-COVERAGE-EXECUTION-PROGRAM
+integration_model: distinct_recovery_execution_program
+program_status: registered_non_active
+kroad_012r_status: historical_non_authoritative
+kroad_supersession_effect: none
+coverage_promotion_effect: none
+task_activation_effect: none
+product_effect: none
+```
+
+| Task | Title | Status |
+|---|---|---|
+| KREC-001 | Recovery Ledger | `registered_planned_task` |
+| KREC-002 | Current Source Verification | `registered_planned_task` |
+| KREC-003 | Element Reconciliation | `registered_planned_task` |
+| KREC-004 | Decision Demand Corpus | `registered_planned_task` |
+| KREC-005 | Canonical Registry Foundation | `registered_planned_task` |
+| KREC-006 | Decision Question Catalog | `registered_planned_task` |
+| KREC-007 | P0 Resolver Expansion | `registered_planned_task` |
+| KREC-008 | Consumer Enforcement Expansion | `registered_planned_task` |
+| KREC-009 | Coverage Baseline | `registered_planned_task` |
+
+Registration does not mean active, authorized for implementation, implemented, complete, Coverage credit or readiness.
 
 ## Next Product Task
 
 - [ ] KROAD-012 — External Evidence Producer Boundary
-  - `status`: `next_product_task_blocked_by_governance_adoption`
-  - `activation_condition`: `AIGOV-ADOPT-008 merged and exact-main adoption closure verified`
-  - Define the proof limits of external evidence producers without implementing broad producer platforms.
-  - Do not replace this item with a target-authored Coverage execution package unless the complete external governance promotion gate is independently satisfied.
-
-## Approved Governance Adoption Sequence
-
-| Increment | Current status | Dependency |
-|---|---|---|
-| AIGOV-ADOPT-000 | `merged_pending_batch_a_reconciliation` | PR #48 merged at audited Batch A base |
-| AIGOV-ADOPT-001 | `in_batch_a_implementation` | owner-approved V2 Batch A |
-| AIGOV-ADOPT-002 | `in_batch_a_implementation` | same atomic Batch A scope |
-| AIGOV-ADOPT-003 | `in_batch_a_implementation` | same atomic Batch A scope |
-| AIGOV-ADOPT-004 | `in_batch_a_implementation` | same atomic Batch A scope |
-| AIGOV-ADOPT-005 | `in_batch_a_implementation` | same atomic Batch A scope |
-| AIGOV-ADOPT-006 | `in_batch_a_implementation` | same atomic Batch A scope |
-| AIGOV-ADOPT-007 | `in_batch_a_implementation` | same atomic Batch A scope |
-| AIGOV-ADOPT-008 | `blocked_pending_batch_a_exact_main` | owner Merge of Batch A and Green exact-main receipt |
+  - `status`: `next_product_task_blocked_pending_final_aigov_closure`
+  - KROAD-013 through KROAD-018 remain not_started.
+  - The recovery program does not supersede or implement any KROAD item.
 
 ## Completed
 
 - [x] KROAD-000 — Live Baseline Precheck
-  - Update note: repository memory and execution-plan authority are established in `planning/NEXT_WORK.md` and `planning/KERNEL_EXECUTION_PLAN.md`.
 - [x] KROAD-001 — Cross-Repository Adoption Report
-  - Update note: PR #13 added `planning/CROSS_REPO_ADOPTION_REPORT.md`.
 - [x] KROAD-002 — Taxonomy + Execution-Risk Boundaries
-  - Update note: PR #11 added the taxonomy and risk-boundary foundation.
 - [x] KROAD-003 — Decision Record Schema v2 + Migration Plan
-  - Update note: PR #17 added Decision Record v2, fixtures, validation and migration evidence.
 - [x] KROAD-004 — P0 Decision Matrices
-  - Update note: the Matrix registry and `planning/reviews/KROAD-004_P0_DECISION_MATRICES_SECOND_PASS_REVIEW.md` preserve evidence.
 - [x] KROAD-005 — Decision Resolver Contract
-  - Update note: Resolver contract schemas, diagnostics and fixtures exist under `kernel/decision-governance` and `kernel/fixtures`.
 - [x] KROAD-006 — Resolver MVP
-  - Update note: `layout_structure` has the bounded deterministic Resolver MVP and review evidence.
 - [x] KROAD-007 — L2 Decision Correctness Audit
-  - Update note: deterministic L2 replay and `planning/reviews/KROAD-007_L2_DECISION_CORRECTNESS_AUDIT_SECOND_PASS_REVIEW.md` exist.
 - [x] KROAD-008 — Resolver Fixture Triplets
-  - Update note: active Resolver triplet policy and exact diagnostic assertions exist.
 - [x] KROAD-009 — Layout Structure Vertical Slice
-  - Update note: `kernel/decision-governance/kroad-009-layout-structure-vertical-slice.v0.json` and its review record preserve closure evidence.
 - [x] KROAD-010 — Downstream Consumer Contract
-  - Update note: current-main closure evidence is `planning/reviews/KROAD-010_CURRENT_MAIN_EVIDENCE_CLOSURE.md`.
+  - Update note: `planning/reviews/KROAD-010_CURRENT_MAIN_EVIDENCE_CLOSURE.md`.
 - [x] KROAD-011 — Project Gate Intake
-  - Update note: exact-main Project Gate evidence is `planning/reviews/KROAD-011_PROJECT_GATE_INTAKE_EVIDENCE_CLOSURE.md`.
-
-## Deferred Requirement Groups
-
-KROAD-013 through KROAD-018 retain their original scope and dependencies. They are not completed and are not superseded by the unapproved Coverage proposal or the governance adoption sequence.
-
-| Item | Status | Dependency |
-|---|---|---|
-| KROAD-013 | `not_started` | KROAD-012 |
-| KROAD-014 | `not_started` | KROAD-012 and KROAD-013 |
-| KROAD-015 | `not_started` | KROAD-014 |
-| KROAD-016 | `not_started` | KROAD-015 |
-| KROAD-017 | `not_started` | KROAD-016 |
-| KROAD-018 | `not_started` | KROAD-017 |
+  - Update note: `planning/reviews/KROAD-011_PROJECT_GATE_INTAKE_EVIDENCE_CLOSURE.md`.
 
 ## Merge Gate
 
 ```yaml
 merge_gate:
-  exact_head_ci_green: required
-  independent_pr_inspector_green: required_for_final_BATCH_A_head
-  external_project_owner_governance_approval_for_coverage: missing
+  batch_a_v4_reconciliation: pass
+  squash_equivalence: exact_tree_equality
+  active_review_protocol: v1.10.2
+  exact_head_ci_green: true
+  independent_pr_inspector_green: pending_fresh_review
+  required_check_configuration: unverified
+  repository_settings_enforced: not_claimed
   explicit_owner_merge_command: false
+  merge_permitted: false
+  coverage_promotion: forbidden
 ```
 
-No Merge, approval or auto-merge is authorized by this file.
+No Merge, approval, ready-for-review transition or auto-merge is authorized by this file.

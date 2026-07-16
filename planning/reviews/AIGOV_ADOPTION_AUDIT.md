@@ -3,92 +3,97 @@
 ## Identity
 
 ```yaml
-record_kind: read_only_adoption_audit
-audit_status: complete
-implementation_status: batch_a_in_implementation_not_adopted_by_this_record
-plan_id: GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2
-plan_version: 2
+record_kind: governance_adoption_audit
+record_status: current_v4_repair_audit
+plan_id: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4
+plan_version: 4
+previous_plan_id: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3
 target_repository: rezahh107/EV4-Decision-Kernel
 default_branch: main
-audit_base_sha: 5ff5d7b20db11af36ab787eb8ac2d1127ea74644
-audit_timestamp: 2026-07-15T01:53:34Z
-standard_id: AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT
-standard_version: 1.1.0
-repository_adoption_status: blocked_open_enforcement_gaps
+audit_base_sha: 86e25a9073df7e257ca7df799de85baf9b3fafb0
+repository_adoption_status: pending_batch_b_exact_main_completion
+active_review_protocol: v1.10.2
+active_inspector_release_commit: 9ed48bd995ee5b9270756254b04c1d48ccf21cbe
 ```
 
-## Confirmed Repository State
+## Confirmed baseline
 
-- The repository is public and its default branch is `main`.
-- The exact audited `main` commit is `5ff5d7b20db11af36ab787eb8ac2d1127ea74644`, the Merge commit for PR #48.
-- `planning/NEXT_WORK.md` is the sole mutable current-status dashboard.
-- `planning/KERNEL_EXECUTION_PLAN.md` is the durable product-roadmap meaning source.
-- The Coverage overlay remains proposed and non-executable.
-- `KROAD-012` remains the next product task; later KROAD items remain preserved.
-- `AIGOV-ADOPT-000` is merged but remains pending the bounded Batch A reconciliation and exact-main successor proof.
-- The Batch A branch introduces the AIGOV machine carriers, but a PR head cannot establish repository adoption or exact-main closure.
+- PR #49 is merged with base `5ff5d7b20db11af36ab787eb8ac2d1127ea74644`, final head `c141923bf411f802f1673acf06dc92a77b415593` and squash commit `86e25a9073df7e257ca7df799de85baf9b3fafb0`.
+- Its exact head and squash commit trees both equal `8a8c83aee95ab36ab59ba128c7710bafedaa2d20`.
+- No historical independent Green receipt is claimed or fabricated.
+- Coverage remains `not_measurable_pending_external_promotion`; percentages remain `null`.
+- `KROAD-012` through `KROAD-018` remain preserved; `KROAD-012R` remains `historical_non_authoritative`.
+- `KREC-001` through `KREC-009` remain registration-only.
 
-## Authority Reconciliation
-
-The title and earlier prose associated with PR #47 referenced authority activation, but the final merged tree preserves fail-closed pending authority. The final implementation evidence therefore comes from the exact merged files and commit diff, not the PR title or target-authored prose.
-
-The current Coverage state remains:
+## Batch A disposition
 
 ```yaml
-coverage_proposal_state: not_measurable_pending_external_promotion
-external_project_owner_governance_approval: missing
-coverage_percentages: null
-dcov_exec_001_implementation_eligibility: blocked_pending_external_governance_approval
+BATCH_A: exact_main_reconciled_under_v4_squash_equivalence
+AIGOV-ADOPT-000_through_007: merged_and_post_merge_reconciled
+closure_mode: v4_one_time_squash_equivalence
+merge_mode: squash
+content_equivalence: verified
+historical_independent_green_receipt: not_claimed
+exception_reusable: false
+exception_precedential: false
 ```
 
-## Material Adoption Gaps
+The Batch A evidence and its historical protocol remain separate from the active Batch B review protocol.
 
-The audited base did not have complete enforcement carriers for:
+## PRF-050 repair audit
 
-- `AIGOV-START-001` repository preflight identity;
-- `AIGOV-SCOPE-001` capability lifecycle and revision;
-- `AIGOV-SCOPE-DISCLOSURE-001` computed set disclosure;
-- `AIGOV-PROGRESS-001` repository-wide completion receipt;
-- `AIGOV-INDEPENDENCE-001` target-compatible independent AI verdict;
-- `AIGOV-STALE-001` scope-revision staleness;
-- `AIGOV-MERGE-001` target merge-readiness sequence;
-- `AIGOV-CHANGE-CLASS-001` deterministic `L0` through `L4` classification;
-- proportional verification and reporting budgets;
-- explicit minimum-security profile;
-- the no-human-technical-approval and coach-evidence boundaries.
+### PRF-050-001
 
-## Preserved Strengths
+The active Batch B boundary now uses a correctly named `pr-inspector-v1102` implementation. It binds review identity to:
 
-The existing repository already provides useful foundations that must be reused rather than duplicated:
+```yaml
+protocol_version: v1.10.2
+inspector_repository: rezahh107/PR-Inspector
+inspector_repository_id: 1288323264
+inspector_release_commit: 9ed48bd995ee5b9270756254b04c1d48ccf21cbe
+```
 
-- evidence-tier and anti-overclaim boundaries;
-- exact diagnostic fixture conventions;
-- deterministic Coverage evidence binding and impact chronology;
-- exact-head checkout and external identity verification;
-- main-branch validation workflow;
-- Behavioral Rule Coverage evidence-state discipline;
-- `NEXT_WORK.md` current-status authority and KROAD preservation rules.
+The boundary validates the immutable checkout, active `CURRENT_VERSION`, manifest, exact release-lock coverage and hashes, trust policy, official repository identity, release-commit ancestry on official `main`, exact head/scope review identity and deterministic official review-directory provenance. Stale `v1.10.1` review input is rejected. Historical v1.10.1 tests run only against an isolated exact historical checkout and cannot satisfy active Batch B review.
 
-## Batch A Enforcement Disposition
+### PRF-050-002
 
-The V2 Batch A scope adds machine-readable carriers for all fourteen listed rules, fixture-exact diagnostics, deterministic scope disclosure, exact-head/stale-review sequencing, verification/reporting budgets and an external-review receipt contract. Those carriers remain `in_batch_a_implementation` until exact-head CI observes the final head. They remain insufficient for repository adoption until independent review, owner Merge and exact-main verification occur in order.
+`.github/workflows/finalize-aigov-batch-b.yml` is the production post-Merge route. It is triggered only by completion of exact-main `Validate Main`, verifies the source workflow name/path/event/status/conclusion/head and executes:
 
-The PR #49 bounded repair replaces caller-authored provenance and fixture-only sequence assumptions with fresh GitHub payload derivation, immutable PR Inspector artifact verification, a schema-backed lifecycle ledger and an exact-head executed evidence manifest. This repair remains `implemented_pending_rereview`; it does not change the repository adoption status.
+```text
+node tools/verify-aigov-v3-exact-main.mjs --mode batch-b-final
+```
 
-The follow-up bounded repair validates the complete official PR Inspector v1.10.1 directory rather than trusting declared hashes, binds `exact_head_validated` to a completed PR-head GitHub Actions run/job/check/artifact identity, and follows reachable local workflow scripts/actions for forbidden operations. The workflow itself publishes local command logs only; the authoritative CI identity and lifecycle prefix are generated after run completion. No target file claims that an in-progress run proves its own completion.
+The verifier obtains target repository/PR identity, exact final PR head, exact scope, official pre-Merge review, Merge actor/method/result, current `main`, current-main CI and repository-enforcement evidence from GitHub. It does not accept PR-body values, target-authored receipts, mutable refs, caller success booleans or an asserted Merge method. A second post-Merge independent review is not required or accepted as a substitute.
 
-`AIGOV-ADOPT-008`, the recovery execution program, product capabilities and Coverage promotion are excluded from Batch A.
+### PRF-050-003
 
-## Evidence Limits
+Authoritative CI is now an exact descriptor containing repository ID, workflow ID/path/name, event, exact head, run ID/attempt/status/conclusion, job ID, check name/head and GitHub Actions App ID/slug. Adversarial coverage rejects same-name collisions, wrong workflow path/ID/App/event/repository/head, ambiguity, skipped/cancelled runs, missing job/check and malformed payloads.
 
-- This audit did not modify the repository.
-- This audit record does not substitute for the local/CI results recorded for the final Batch A head.
-- Repository-hosted branch protection or ruleset enforcement was not independently verified.
-- A separate independent technical verdict was not produced by this audit.
-- CI success, PR text, merge metadata or this audit cannot independently establish adoption.
-- Repository-hosted ruleset or branch-protection enforcement remains `external_evidence_required_not_proven`.
-- No immutable external Green receipt exists for the repaired exact head and scope revision.
+### PRF-050-004
 
-## Approved Repair Sequence
+No repository settings, Ruleset or branch-protection change was made. The verifier attempts read-only collection, but missing or incomplete proof remains fail closed:
 
-The owner-approved two-batch sequence is recorded in `planning/decisions/AIGOV_ADOPTION_DECISION.md`. The current bounded implementation is `BATCH_A`; `BATCH_B`, product implementation and Coverage promotion are not active in the same PR.
+```yaml
+required_check_configuration: unverified
+repository_settings_enforced: not_claimed
+merge_permitted: false
+```
+
+A Green exact-main closure requires exact required contexts and App IDs, strict stale-check handling, admin/bypass evidence and no unresolved settings diagnostic.
+
+## Batch B boundary
+
+```yaml
+batch_b_status: exact_head_ci_green_pending_fresh_independent_review
+previous_batch_b_status: repair_implemented_pending_new_scope_exact_head_ci_and_fresh_independent_review
+exact_head_ci: green
+independent_review_protocol: v1.10.2
+independent_review_handoff: permitted
+merge_authority: owner_only
+merge_permitted: false
+coverage_effect: none
+product_effect: none
+external_repository_effect: none
+```
+
+This audit is target-authored implementation evidence, not an independent PR-Inspector verdict. Every commit invalidates earlier CI, artifact and review evidence; therefore this status head must itself pass the complete exact-head validation suite before its handoff is used.

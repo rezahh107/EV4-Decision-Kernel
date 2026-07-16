@@ -141,19 +141,25 @@ The maintainer may make other bounded technical decisions about paths, schemas, 
 
 ## 4.2 Active AIGOV Enforcement Boundary
 
-The active governance carrier is `GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2`, `BATCH_A`, based on exact `main` SHA `5ff5d7b20db11af36ab787eb8ac2d1127ea74644`.
+The active governance carrier is `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`, `BATCH_B`, based on exact audited `main` SHA `86e25a9073df7e257ca7df799de85baf9b3fafb0`.
 
-Agents must preserve this sequence:
+V4 contains one non-reusable and non-precedential Batch A reconciliation exception bound only to repository `rezahh107/EV4-Decision-Kernel`, PR #49, base `5ff5d7b20db11af36ab787eb8ac2d1127ea74644`, final head `c141923bf411f802f1673acf06dc92a77b415593` and squash commit `86e25a9073df7e257ca7df799de85baf9b3fafb0`. The exception passed only because both live Git commit objects have exact tree SHA `8a8c83aee95ab36ab59ba128c7710bafedaa2d20`. It does not claim or fabricate a historical independent Green review.
+
+Agents must preserve the normal Batch B sequence:
 
 ```text
-exact base -> declared scope -> exact-head validation -> independent external review -> owner-only Merge -> exact-main verification
+exact base -> declared scope -> exact-head CI -> independent external review on exact head and scope -> owner-only Merge -> method-aware deterministic Merge-result proof -> current-main validation
 ```
 
-Any head or `scope_revision` mutation invalidates earlier CI and review evidence. The implementation agent cannot act as the independent reviewer. `BATCH_A` cannot claim `AIGOV-ADOPT-008`, repository adoption, Coverage promotion, product implementation or exact-main completion. `planning/NEXT_WORK.md` remains the only mutable current-status authority.
+For a merge commit, delivery proof is reviewed-head ancestry. For Squash Merge, delivery proof is exact tree or reconstructed-tree equality. For rebase, delivery proof is deterministic result-tree equivalence or verified commit mapping. Merge-method handling cannot weaken exact-head CI, independent review, owner identity, scope binding or current-main validation.
 
-Exact-main evidence must derive repository, PR, author, Merge actor and current-main identity from fresh GitHub payloads. Independent review is accepted only from schema-valid, hash-verified artifacts at an immutable external PR Inspector commit. The runtime `aigov-lifecycle-ledger.v1` and executed exact-head evidence manifest are generated artifacts; caller-authored strings, booleans, local receipt files and target-repository lookalikes cannot unlock lifecycle events.
+A second independent review after Merge is not required. Post-Merge verification must prove that the already reviewed exact content reached `main`; it cannot replace or bypass the pre-Merge review.
 
-For PR Inspector `v1.10.1`, ordinary exact-head CI and a package boolean cannot prove the personal minimum-security profile. Only the official opaque `VerifiedSequenceEnforcement` capability, derived from the exact `Validate rereview sequence enforcement` context, App ID, immutable producer workflow and authoritative required-check settings evidence, may support Green. Until then the honest state is Yellow and repository-hosted enforcement remains unverified.
+Any head or `scope_revision` mutation invalidates earlier CI and review evidence. The implementation agent cannot act as the independent reviewer. A Batch B PR head cannot claim final repository adoption, Merge authority, Coverage promotion, product implementation or exact-main completion. `KREC-001` through `KREC-009` remain `registered_planned_task` only. `planning/NEXT_WORK.md` remains the only mutable current-status authority.
+
+Exact-main evidence must derive repository, PR, author, Merge actor, CI, Git tree and current-main identity from fresh GitHub payloads. Caller-authored strings, booleans, local receipt files and target-repository lookalikes cannot unlock closure.
+
+For active Batch B review, only the immutable `PR-Inspector v1.10.2` implementation at release commit `9ed48bd995ee5b9270756254b04c1d48ccf21cbe` is accepted. Ordinary exact-head CI, a package boolean, a stale `v1.10.1` bundle, or a target-authored receipt cannot prove the personal minimum-security profile. Only the official opaque verified capability, derived from the exact `Validate rereview sequence enforcement` workflow descriptor, GitHub Actions App identity, official review directory, active release lock and authoritative GitHub evidence, may support a technical Green. Repository settings enforcement remains unclaimed unless independently proven.
 
 ---
 
@@ -212,112 +218,3 @@ kernel/official-sources/elementor-v4-source-manifest.v0.json
 kernel/official-sources/elementor-v4-doc-coverage-index.v0.json
 kernel/official-sources/evidence-labels.v0.json
 ```
-
-Non-core documentation areas may be context sources with an explicit `no_decision_card_reason`. Do not create broad decision cards merely because a documentation page exists.
-
-Important context sources include class priority, Class Manager, user roles/classes, responsive editing, reset-style reconciliation, Variables Manager, Nested Links, V3/V4 differences, and viewport control.
-
-Viewport Control is not treated as complete breakpoint semantics. If breakpoint-specific source evidence is missing, use an explicit insufficient-evidence gap.
-
----
-
-## 8. Evidence Workspace Rule
-
-Prompt 5 may add only Kernel-local evidence contracts:
-
-```text
-- evidence status vocabulary
-- evidence workspace envelope
-- project environment profile schema
-- WordPress context evidence schema
-- Elementor project availability evidence schema
-- runtime snapshot evidence schema
-- responsive runtime evidence schema
-- valid and invalid fixtures
-- deterministic validator diagnostics
-```
-
-Prompt 5 and this PR #9 repair must not implement exporters, collectors, downstream adapters, Project Gate intake, or production readiness proof.
-
----
-
-## 9. Safe Patch Types Now
-
-Allowed now:
-
-```text
-- Kernel-local MVK schemas, fixtures, and validators
-- JSON Schema conformance validation for MVK fixtures
-- structured diagnostic codes for validator failures
-- Behavioral Rule Coverage v0.4.1 matrix and advisory audit tooling
-- evidence model docs
-- source manifests and evidence labels
-- Elementor V4 doc coverage index and validator
-- Element Decision Cards
-- Architect/CE source-card consumption-boundary schemas, fixtures, validators, and docs
-- external evidence workspace schemas, fixtures, validator, docs, and registry entries
-- UX boundary docs
-- kernel ownership and distribution decision docs
-```
-
-Not allowed yet:
-
-```text
-- broad registry population
-- validators that claim complete coverage
-- full Elementor documentation mirror
-- full control-level registry
-- release packaging
-- cross-repo CI coupling
-- Project Gate domain validation logic or intake
-- downstream runtime enforcement claims
-- target-project availability proof claims
-- Builder execution proof claims
-- Responsive runtime global-proof claims
-- external exporter implementation
-- browser/runtime collector implementation
-- production readiness proof carriers
-```
-
----
-
-## 10. Required Self-Check Before Finalizing a Patch
-
-Before opening or merging a patch, answer:
-
-```text
-1. Did this patch preserve EV4 role boundaries?
-2. Did it reduce or clearly report prose-only / below-threshold Critical and High gates?
-3. Did it avoid building the full platform too early?
-4. Did it avoid adding local rule forks?
-5. Did it make the next MVK step clearer?
-6. Did it avoid claiming runtime validity without runtime evidence?
-7. Did invalid fixtures assert expected diagnostic codes?
-8. Did coverage status avoid downstream or CI claims without evidence?
-9. Did it avoid treating advisory CI as ci_enforced?
-10. Did it avoid treating cross_turn Critical rules as satisfied by single-artifact CI?
-11. Did evidence workspace fixtures avoid real-world evidence claims?
-12. Did doc coverage fixtures avoid synthetic fixture-case dispatch?
-13. Did source quality notes preserve ambiguity instead of hiding it?
-```
-
-If any answer is no, revise the patch before finalizing.
----
-
-## 11. Repository Memory / Next Work
-
-- Before proposing or implementing the next task, read `planning/NEXT_WORK.md`.
-- For detailed task meaning and acceptance criteria, read `planning/KERNEL_EXECUTION_PLAN.md`.
-- Do not rely on chat history as the source of truth when these files exist.
-- Current roadmap status must live in `planning/NEXT_WORK.md`.
-- Do not duplicate mutable current roadmap status in detailed planning or report documents.
-- `planning/KERNEL_EXECUTION_PLAN.md` should describe item meaning, scope, dependencies, acceptance criteria, evidence requirements, and do-not rules.
-- If a PR completes a KROAD item, search changed planning/report files for stale pre-merge or stale status wording.
-- Stale phrases include `not_started`, `pending PR`, `not complete on main until this PR is merged`, `expected post-merge state`, and `becomes complete only after this PR merges`.
-- After merge, clean up stale pre-merge wording or mark it clearly as historical.
-- If a PR changes files under `kernel/`, `docs/`, `planning/`, schemas, validators, decision cards, governance documents, or roadmap-relevant source files, update `planning/NEXT_WORK.md` in the same PR.
-- If a PR changes the meaning, order, scope, dependency, or acceptance criteria of any KROAD item, update `planning/KERNEL_EXECUTION_PLAN.md` in the same PR.
-- Before ticking any item as complete, verify concrete repository evidence exists.
-- If evidence is missing or uncertain, do not tick the item; add a note explaining what is missing.
-- Add a short note such as: `Update note: This PR completed KROAD-XXX by adding <short evidence>.`
-- If unsure whether a PR requires a roadmap update, update `planning/NEXT_WORK.md` with a short note instead of leaving it stale.
