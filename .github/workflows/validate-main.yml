@@ -13,7 +13,6 @@ jobs:
     name: Validate Main
     runs-on: ubuntu-latest
     env:
-      AIGOV_GITHUB_TOKEN: ${{ github.token }}
       PR_INSPECTOR_ROOT: ${{ github.workspace }}/_external/pr-inspector
     steps:
       - name: Checkout exact main head with full history
@@ -90,7 +89,7 @@ jobs:
           node --check tools/kroad-010-history/common.mjs
           node --check tools/kroad-010-history/build.mjs
           node --check tools/kroad-010-history/validate.mjs
-          python -m py_compile tools/pr-inspector-official-boundary-v1102.py tools/test-pr-inspector-security-capability.py
+          PYTHONPYCACHEPREFIX="${RUNNER_TEMP}/pycache" python -m py_compile tools/pr-inspector-official-boundary-v1102.py tools/test-pr-inspector-security-capability.py
           node -e "for (const p of process.argv.slice(1)) JSON.parse(require('node:fs').readFileSync(p, 'utf8'))" \
             kernel/decision-governance/downstream-consumer-contract.v0.json \
             kernel/decision-governance/downstream-consumer-lineage-binding.v0.json \
