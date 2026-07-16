@@ -40,7 +40,9 @@ export function recoveryProgramDiagnostics(value) {
     if (seen.has(task.task_id)) diagnostics.push('RECOVERY_TASK_ID_DUPLICATE');
     seen.add(task.task_id);
     const expected = EXPECTED.get(task.task_id);
-    if (!expected || JSON.stringify(task.depends_on) !== JSON.stringify(expected)) diagnostics.push('RECOVERY_DEPENDENCY_GRAPH_MISMATCH');
+    const actualDependencies = Array.isArray(task.depends_on) ? [...task.depends_on].sort() : [];
+    const expectedDependencies = expected ? [...expected].sort() : [];
+    if (!expected || JSON.stringify(actualDependencies) !== JSON.stringify(expectedDependencies)) diagnostics.push('RECOVERY_DEPENDENCY_GRAPH_MISMATCH');
   }
   if (seen.size !== EXPECTED.size || [...EXPECTED.keys()].some((id) => !seen.has(id))) diagnostics.push('RECOVERY_TASK_SET_MISMATCH');
   return [...new Set(diagnostics)];
