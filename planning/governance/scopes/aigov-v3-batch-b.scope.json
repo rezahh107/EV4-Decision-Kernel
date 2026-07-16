@@ -1,14 +1,14 @@
 {
   "schema_version": "aigov-scope-manifest.v1",
-  "scope_id": "aigov-scope.gov-adoption-ev4-decision-kernel-86e25a9-v3.batch-b",
-  "plan_id": "GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3",
+  "scope_id": "aigov-scope.gov-adoption-ev4-decision-kernel-86e25a9-v4.batch-b",
+  "plan_id": "GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4",
   "batch_id": "BATCH_B",
   "repository": "rezahh107/EV4-Decision-Kernel",
   "base_branch": "main",
   "base_sha": "86e25a9073df7e257ca7df799de85baf9b3fafb0",
   "head_binding": "derived_at_runtime",
   "change_class": "L3",
-  "scope_revision": "sha256:3990ed3aab277c754a3016c893bf0815b557acb4fd0ee2d54bde68ff6808386b",
+  "scope_revision": "sha256:d9e095a56170951a147fac582963c6fa7e21b2951ac810fcedffefe76ac6a1c0",
   "committed": [
     ".github/workflows/finalize-aigov-evidence.yml",
     ".github/workflows/validate-main.yml",
@@ -60,24 +60,25 @@
     "external Coverage promotion"
   ],
   "dependencies": [
-    "owner approval of GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3",
+    "owner approval of GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4",
     "exact base 86e25a9073df7e257ca7df799de85baf9b3fafb0",
+    "PR #49 exact tree equality between final head and squash commit",
     "merged PR #49 exact tuple and exact-head CI",
     "current-main Validate Main evidence",
     "external independent review on final Batch B head and scope_revision",
     "owner-only Merge"
   ],
   "completion_evidence": [
-    "Batch A V3 reconciliation report",
+    "Batch A V4 exact-tree squash-equivalence report",
     "exact-head Batch B CI Green",
     "fresh independent PR-Inspector Green bound to final head and scope_revision",
     "owner Merge metadata",
-    "reviewed head and Merge ancestry on current main",
+    "method-aware deterministic Merge result proof on current main",
     "current-main AIGOV, roadmap, Coverage, recovery-program and MVK validation Green"
   ],
   "authorized_operations": [
-    "create and update only governance/aigov-v3-batch-b-closure",
-    "create one Draft Batch B PR",
+    "update only governance/aigov-v3-batch-b-closure",
+    "amend existing Draft PR #50 only",
     "bounded repair on the same PR",
     "run local and GitHub exact-head validation",
     "prepare independent-review handoff"
