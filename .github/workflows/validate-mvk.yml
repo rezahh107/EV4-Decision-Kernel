@@ -155,17 +155,19 @@ jobs:
       - name: Validate V4 exception and merge-method misuse cases
         run: npm run test:aigov-v3-exception
 
-      - name: Validate recovery-program registration
-        run: npm run validate:recovery-program
-
-      - name: Validate roadmap memory and SSOT reconstruction
-        run: npm run validate:roadmap-memory
+      - name: Run required V4 validation matrix
+        run: |
+          npm run validate:aigov
+          npm run test:aigov-fixtures
+          npm run test:aigov-sequence
+          npm run validate:behavioral-coverage:aigov
+          npm run validate:roadmap-memory
+          npm run validate:coverage
+          npm run validate:recovery-program
+          npm run validate:mvk
 
       - name: Test fail-closed history diagnostics
         run: npm run test:kroad-010-history-matrix-fail-closed
-
-      - name: Validate MVK regression suite
-        run: npm run validate:mvk
 
       - name: Verify KROAD-010 prototype integrity
         run: node tools/validate-kroad-010-prototype-integrity.mjs
