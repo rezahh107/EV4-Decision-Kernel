@@ -54,6 +54,7 @@ jobs:
     permissions:
       contents: read
     env:
+      AIGOV_GITHUB_TOKEN: ${{ github.token }}
       COVERAGE_REPOSITORY: ${{ needs.external-coverage-trust.outputs.verified_repository }}
       COVERAGE_PR_NUMBER: ${{ needs.external-coverage-trust.outputs.verified_pr_number }}
       COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}
