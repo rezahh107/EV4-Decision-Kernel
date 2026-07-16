@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-The owner approved frozen plan `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3` against exact audited `main` commit `86e25a9073df7e257ca7df799de85baf9b3fafb0`. V3 corrects only the one-time PR #49 retrospective-review deadlock and implements Batch B in one Draft PR. This PR head is not final repository adoption or Merge authority.
+The owner approved frozen plan `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3` against exact audited `main` commit `86e25a9073df7e257ca7df799de85baf9b3fafb0`. Live V3 reconciliation proved exact-head CI, owner Merge and current-main validation, but failed the mandatory final-head ancestry predicate because PR #49 was squash-merged. Batch B remains a blocked Draft implementation and is not eligible for independent-review handoff or Merge.
 
 ## Status Authority
 
@@ -11,21 +11,30 @@ This file is the authoritative current-status dashboard. `planning/KERNEL_EXECUT
 ## Current State
 
 ```yaml
-repository_adoption_status: pending_batch_b_exact_main_completion
+repository_adoption_status: blocked_v3_batch_a_ancestry_mismatch
 active_standard: AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT@1.1.0
 frozen_plan: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3
 previous_plan: GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2
-completed:
-  BATCH_A: exact_main_reconciled_under_v3_exception
-  AIGOV-ADOPT-000_through_007: merged_and_post_merge_reconciled
-active:
-  batch: BATCH_B
+batch_a:
+  status: reconciliation_failed
+  diagnostic: AIGOV_V3_BATCH_A_ANCESTRY_UNVERIFIED
+  pr_number: 49
+  final_head_sha: c141923bf411f802f1673acf06dc92a77b415593
+  merge_commit_sha: 86e25a9073df7e257ca7df799de85baf9b3fafb0
+  compare_status: diverged
+  merge_base_sha: 5ff5d7b20db11af36ab787eb8ac2d1127ea74644
+  exact_head_ci: green
+  current_main_validation: green
+  owner_merge: verified
+  historical_independent_green_receipt: not_claimed
+batch_b:
   increment: AIGOV-ADOPT-008
-  status: implemented_pending_exact_head_validation_and_review
+  implementation_state: draft_implemented_but_blocked
+  status: blocked_pending_new_owner_authorization
 registered:
   KREC-001_through_009: registered_planned_task
 preserved:
-  KROAD-012: next_product_task_blocked_pending_final_aigov_closure
+  KROAD-012: blocked_pending_governance_reauthorization
   KROAD-013_through_018: not_started
   KROAD-012R: historical_non_authoritative
 coverage:
@@ -36,13 +45,21 @@ product_effect: none
 external_repository_effect: none
 ```
 
+- The failed predicate cannot be replaced by tree-equivalence or squash-equivalence under frozen V3 without a new plan version and explicit owner authorization.
 - Coverage promotion effect: `none`.
 - Product effect: `none`.
-- Product implementation remains blocked until final AIGOV exact-main closure.
 - The external project-owner governance approval carrier for Coverage remains missing.
 - No coverage credit, trusted ingestion, readiness, release-readiness, runtime-completeness or production-readiness claim is active.
 
 ## Current PR
+
+- [ ] PR #50 — V3 Batch B Draft implementation
+  - `branch`: `governance/aigov-v3-batch-b-closure`
+  - `status`: `blocked_pending_new_owner_authorization`
+  - `scope_revision`: `sha256:3990ed3aab277c754a3016c893bf0815b557acb4fd0ee2d54bde68ff6808386b`
+  - `merge_permitted`: `false`
+  - `independent_review_handoff_permitted`: `false`
+  - The branch contains V3 verifier, negative tests and registration-only recovery-program carriers, but Batch A reconciliation did not satisfy frozen V3 ancestry.
 
 - [ ] `DCOV-EXEC-001` — Coverage Guarantee proposal and validation foundation
   - `work_type`: `proposal_with_real_seed_data`
@@ -52,13 +69,11 @@ external_repository_effect: none
 ## Next Task
 
 - [ ] AIGOV-ADOPT-008 — Final AIGOV exact-main closure (`BATCH_B`)
-  - `status`: `implemented_pending_exact_head_validation_and_review`
+  - `status`: `blocked_pending_new_owner_authorization`
   - `change_class`: `L3`
-  - `branch`: `governance/aigov-v3-batch-b-closure`
   - `plan_id`: `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3`
-  - `scope`: V3 correction, one-time Batch A reconciliation, Batch B exact-main logic and non-active recovery-program registration.
-  - Exact-head CI and a fresh independent PR-Inspector review are required on the final head and `scope_revision`.
-  - No Merge, Coverage promotion, KREC implementation or product implementation is authorized.
+  - Required owner decision: approve a new plan version that explicitly defines valid squash-Merge equivalence evidence, or abandon/rework the Batch A closure approach.
+  - No Merge, independent-review handoff, Coverage promotion, KREC implementation or product implementation is authorized.
 
 ## Registered Recovery Program
 
@@ -67,8 +82,10 @@ program_id: DCOV-COVERAGE-EXECUTION-PROGRAM
 integration_model: distinct_recovery_execution_program
 program_status: registered_non_active
 kroad_012r_status: historical_non_authoritative
+kroad_supersession_effect: none
 coverage_promotion_effect: none
 task_activation_effect: none
+product_effect: none
 ```
 
 | Task | Title | Status |
@@ -88,8 +105,7 @@ Registration does not mean active, authorized for implementation, implemented, c
 ## Next Product Task
 
 - [ ] KROAD-012 — External Evidence Producer Boundary
-  - `status`: `next_product_task_blocked_pending_final_aigov_closure`
-  - `activation_condition`: `AIGOV-ADOPT-008 merged and final current-main validation Green`
+  - `status`: `blocked_pending_governance_reauthorization`
   - `KROAD-013` through `KROAD-018` remain `not_started`.
   - The recovery program does not supersede or implement any KROAD item.
 
@@ -124,11 +140,12 @@ Registration does not mean active, authorized for implementation, implemented, c
 
 ```yaml
 merge_gate:
-  exact_head_ci_green: required
-  independent_pr_inspector_green: required_for_final_BATCH_B_head
-  review_must_predate_owner_merge: true
-  second_post_merge_independent_review: not_required
+  batch_a_v3_reconciliation: failed
+  blocker: AIGOV_V3_BATCH_A_ANCESTRY_UNVERIFIED
+  exact_head_ci_green: not_sufficient
+  independent_pr_inspector_green: not_requested_while_blocked
   explicit_owner_merge_command: false
+  merge_permitted: false
   coverage_promotion: forbidden
 ```
 
