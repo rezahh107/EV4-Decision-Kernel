@@ -189,10 +189,12 @@ function deriveBatchAMemoryState(nextWork, historicalReview) {
   };
 }
 
-async function batchAMemoryStateAt(ref) {
+async function batchAMemoryStateAt() {
+  const exactHead = process.env.COVERAGE_HEAD_SHA || process.env.GITHUB_SHA;
+  if (!validSha(exactHead)) throw new Error('AIGOV_V4_CURRENT_EXACT_HEAD_UNAVAILABLE');
   const [nextWork, historicalReview] = await Promise.all([
-    githubContent(TARGET_REPOSITORY, 'planning/NEXT_WORK.md', ref),
-    githubContent(TARGET_REPOSITORY, 'planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md', ref),
+    githubContent(TARGET_REPOSITORY, 'planning/NEXT_WORK.md', exactHead),
+    githubContent(TARGET_REPOSITORY, 'planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md', exactHead),
   ]);
   return deriveBatchAMemoryState(
     nextWork.raw.toString('utf8'),
@@ -434,7 +436,7 @@ async function batchA(args) {
       'pull_request',
     ),
     legacyWorkflowEvidence(main.value.sha, ['Validate Main'], 'push'),
-    batchAMemoryStateAt(main.value.sha),
+    batchAMemoryStateAt(),
   ]);
   const headTree = headGit.value.tree?.sha || null;
   const mergeTree = mergeGit.value.tree?.sha || null;
