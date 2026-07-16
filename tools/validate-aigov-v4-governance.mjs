@@ -30,11 +30,10 @@ const git = (args) => {
     return '';
   }
 };
-const unique = (items) => [...new Set(items)];
 
 function validateLegacyContractsAndFixtures() {
   try {
-    const stdout = execFileSync(process.execPath, [path.join(ROOT, LEGACY_VALIDATOR), '--fixtures-only'], {
+    const stdout = execFileSync('node', [path.join(ROOT, LEGACY_VALIDATOR), '--fixtures-only'], {
       cwd: ROOT,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
