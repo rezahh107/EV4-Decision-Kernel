@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -141,7 +141,9 @@ function main() {
     diagnostic_count: diagnostics.length,
     diagnostics: diagnostics.map((item) => ({ ...item })),
   };
-  console.log(JSON.stringify(report, null, 2));
+  const output = `${JSON.stringify(report, null, 2)}\n`;
+  if (process.env.AIGOV_V4_REPORT) writeFileSync(process.env.AIGOV_V4_REPORT, output);
+  process.stdout.write(output);
   if (diagnostics.length) process.exitCode = 1;
 }
 
