@@ -53,7 +53,7 @@ inspector_repository_id: 1288323264
 inspector_release_commit: 9ed48bd995ee5b9270756254b04c1d48ccf21cbe
 ```
 
-The boundary validates the immutable checkout, active `CURRENT_VERSION`, manifest, exact release-lock coverage and hashes, trust policy, official repository identity, release-commit ancestry on official `main`, exact head/scope review identity and deterministic official review-directory provenance. Stale `v1.10.1` review input is rejected.
+The boundary validates the immutable checkout, active `CURRENT_VERSION`, manifest, exact release-lock coverage and hashes, trust policy, official repository identity, release-commit ancestry on official `main`, exact head/scope review identity and deterministic official review-directory provenance. Stale `v1.10.1` review input is rejected. Historical v1.10.1 tests run only against an isolated exact historical checkout and cannot satisfy active Batch B review.
 
 ### PRF-050-002
 
@@ -84,9 +84,11 @@ A Green exact-main closure requires exact required contexts and App IDs, strict 
 ## Batch B boundary
 
 ```yaml
-batch_b_status: repair_implemented_pending_new_scope_exact_head_ci_and_fresh_independent_review
+batch_b_status: exact_head_ci_green_pending_fresh_independent_review
+previous_batch_b_status: repair_implemented_pending_new_scope_exact_head_ci_and_fresh_independent_review
+exact_head_ci: green
 independent_review_protocol: v1.10.2
-independent_review_handoff: permitted_only_after_final_exact_head_ci_green
+independent_review_handoff: permitted
 merge_authority: owner_only
 merge_permitted: false
 coverage_effect: none
@@ -94,4 +96,4 @@ product_effect: none
 external_repository_effect: none
 ```
 
-This audit is target-authored implementation evidence, not an independent PR-Inspector verdict. Every commit invalidates earlier CI, artifact and review evidence.
+This audit is target-authored implementation evidence, not an independent PR-Inspector verdict. Every commit invalidates earlier CI, artifact and review evidence; therefore this status head must itself pass the complete exact-head validation suite before its handoff is used.
