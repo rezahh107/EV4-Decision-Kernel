@@ -4,217 +4,90 @@
 **Scope:** agents and LLM workflows modifying this repository  
 **Language:** Persian for explanations; English for file paths, schema IDs, rule IDs, and technical identifiers.
 
----
+## 1. Mission boundary
 
-## 1. Mission Boundary
+This repository owns shared decision, evidence, behavioral coverage, recovery lifecycle and enforcement contracts for EV4. It must not claim product implementation, Coverage credit, readiness or external-repository effects without their separate evidence.
 
-This repository defines shared decision, evidence, behavioral coverage, and enforcement contracts for the EV4 Elementor V4 workflow.
-
-Agents working here must not implement a full platform unless explicitly instructed by a scoped prompt.
-
-Current safe operating mode:
-
-```text
-Kernel-local MVK implementation, validation hardening, source manifests, Decision Cards, bounded Resolver chains, Coverage Guarantee v1 policy, source-bound Element/Question reconciliation, deterministic coverage diagnostics, and the unified five-package Coverage Execution Program.
-Release automation, reusable workflow centralization, general runtime collectors, target-project availability exporters, Builder execution platforms, broad cross-repository orchestration, and production-readiness proof remain out of scope unless a bounded work package explicitly requires them.
-```
-
----
-
-## 2. Role Boundary
-
-Do not weaken these boundaries:
-
-```text
-Architect:
-  owns candidate generation, comparison, selection, and decision records.
-  Architect may consume Kernel source/cards and evidence workspace packages only as bounded evidence/context.
-  Architect must not treat source/cards, official docs, or schema-valid project evidence as proof of correct design choice.
-
-CE:
-  owns constructability proof, dependency proof, and decision closure.
-  CE may consume evidence packages only with required-evidence checks and limitations.
-  CE must not treat evidence workspace fixtures as Builder execution, runtime validation, downstream acceptance, or production readiness.
-
-Builder:
-  owns execution resolution and safe action batches only.
-  Builder must not invent architecture.
-
-Responsive:
-  owns runtime responsive validation.
-  Runtime snapshot evidence supports only the captured context.
-
-Project Gate:
-  owns lineage, hash, pin, schema, provenance, and handoff acceptance.
-  Project Gate integration is not implemented by this repository phase.
-
-Kernel:
-  owns shared vocabulary, schemas, evidence model, source manifests, doc coverage index, decision cards, source/card consumption-boundary contracts, evidence workspace contracts, behavioral coverage governance, hard gates, fixtures, and validation-pack shape.
-  Kernel must not choose a section-specific design.
-```
-
----
-
-## 3. Critical Non-Negotiables
-
-Agents must preserve these rules:
+## 2. Critical non-negotiables
 
 ```text
 Documented capability != enabled project capability.
-Official docs != current user permission.
-Official docs != active Elementor Pro license.
 Schema valid != semantic valid.
 Semantic valid != runtime valid.
-provided_schema_valid != runtime_validated.
-validated_fixture != real project/runtime proof.
-collected_runtime_evidence != production_ready.
-Workbook-derived rule != official Elementor capability.
-Decision card guidance != correct design choice proof.
-Doc coverage index != full Elementor documentation mirror.
-CE constructability status != Builder execution.
-Builder missing evidence -> ask/repair, not guess.
-Project Gate verifies evidence and authority; it does not design.
-Invalid fixtures must assert expected diagnostics, not just any failure.
-Synthetic fixture dispatch tables are not fixture testing.
-Advisory CI != ci_enforced.
 CI success != production readiness.
-Downstream contract enforcement requires inspected downstream rejection evidence.
-Runtime monitor enforcement requires an actual runtime monitor.
-Sequence CI enforcement requires sequence-aware replay/diff tests or equivalent.
-OS harness enforcement requires OS/process/file/network-level enforcement.
+Registration != activation.
+Activation != implementation.
+Implementation != completion.
+Coverage credit requires separate approved Coverage evidence.
+Readiness requires separate approved readiness evidence.
+Project Gate verifies evidence and authority; it does not design.
+KROAD-012R remains historical_non_authoritative.
+The Recovery Program does not supersede KROAD-012 through KROAD-018.
 ```
 
----
-
-## 4. Anti-Overengineering Rule
-
-Do not create these until an explicit later wave asks for them:
-
-```text
-- full control registry
-- complete Elementor capability registry
-- rule engine platform
-- release automation
-- reusable workflow centralization
-- scheduled official-doc monitoring
-- migration/deprecation automation
-- signed validation outputs
-- Architect repo integration
-- CE repo integration
-- Builder repo integration
-- Responsive repo integration
-- Project Gate integration
-- external exporter implementation
-- browser/runtime collector implementation
-- downstream runtime enforcement claims
-- production readiness proof carriers
-```
-
-The active target is the existing Kernel-local MVK plus the bounded Coverage Execution Program. Keep coverage source-bound, deterministic, fixture-proven and honest when denominators remain unresolved.
-
----
-
-## 4.1 Coverage Governance Precedence
-
-Coverage-sensitive work uses this precedence without weakening higher-level platform or safety constraints:
+## 3. Owner-only merge policy
 
 ```yaml
-contract_class: repository_governance_policy
-precedence:
-  - approved_repository_governance
-  - coverage_guarantee_contract
-  - unified_coverage_execution_roadmap
-  - work_packages
-  - implementation_prompts
+merge_authority: owner_only
+auto_merge: forbidden
+independent_pre_merge_review_required: false
+independent_review_policy: optional_advisory
+missing_independent_review_is_blocking: false
+stale_independent_review_is_blocking: false
+review_sequence_is_blocking: false
+review_provenance_is_blocking: false
+historical_review_fabrication: forbidden
 ```
 
-Only an explicit owner instruction may:
-
-- reduce the 90% minimum content floor, 95% owner target, or 100% critical P0/safety threshold;
-- weaken the definition of Element or Question coverage;
-- remove legitimate denominator members;
-- remove independent exact-head PR inspection;
-- grant Merge authority to an agent;
-- substitute file, schema, validator, Commit, PR or KROAD counts for real content progress.
-
-The maintainer may make other bounded technical decisions about paths, schemas, diagnostics, fixtures, validation and package composition without owner consultation.
-
-## 4.2 Active AIGOV Enforcement Boundary
-
-The active governance carrier is `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`, `BATCH_B`, based on exact audited `main` SHA `86e25a9073df7e257ca7df799de85baf9b3fafb0`.
-
-V4 contains one non-reusable and non-precedential Batch A reconciliation exception bound only to repository `rezahh107/EV4-Decision-Kernel`, PR #49, base `5ff5d7b20db11af36ab787eb8ac2d1127ea74644`, final head `c141923bf411f802f1673acf06dc92a77b415593` and squash commit `86e25a9073df7e257ca7df799de85baf9b3fafb0`. The exception passed only because both live Git commit objects have exact tree SHA `8a8c83aee95ab36ab59ba128c7710bafedaa2d20`. It does not claim or fabricate a historical independent Green review.
-
-Agents must preserve the normal Batch B sequence:
+The mandatory repository sequence is:
 
 ```text
-exact base -> declared scope -> exact-head CI -> independent external review on exact head and scope -> owner-only Merge -> method-aware deterministic Merge-result proof -> current-main validation
+exact base
+-> declared scope
+-> exact-head CI Green
+-> owner-only Merge
+-> method-aware deterministic Merge-result proof
+-> current-main validation Green
 ```
 
-For a merge commit, delivery proof is reviewed-head ancestry. For Squash Merge, delivery proof is exact tree or reconstructed-tree equality. For rebase, delivery proof is deterministic result-tree equivalence or verified commit mapping. Merge-method handling cannot weaken exact-head CI, independent review, owner identity, scope binding or current-main validation.
+An advisory review may be recorded, but it cannot grant Merge authority, replace CI, replace owner Merge, fabricate `GREEN_TECHNICALLY_READY`, or block closure merely because it is absent or stale.
 
-A second independent review after Merge is not required. Post-Merge verification must prove that the already reviewed exact content reached `main`; it cannot replace or bypass the pre-Merge review.
+## 4. Active AIGOV closure
 
-Any head or `scope_revision` mutation invalidates earlier CI and review evidence. The implementation agent cannot act as the independent reviewer. A Batch B PR head cannot claim final repository adoption, Merge authority, Coverage promotion, product implementation or exact-main completion. `KREC-001` through `KREC-009` remain `registered_planned_task` only. `planning/NEXT_WORK.md` remains the only mutable current-status authority.
+The active plan is `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`.
 
-Exact-main evidence must derive repository, PR, author, Merge actor, CI, Git tree and current-main identity from fresh GitHub payloads. Caller-authored strings, booleans, local receipt files and target-repository lookalikes cannot unlock closure.
+PR #49 remains a one-time, non-reusable, non-precedential exact-tree Squash reconciliation. PR #50 is merged from head `e5c0c342d6417c8e85be54e7cb4caf372a116a35` at merge commit `435add8ee3f3274f781b6e391f11e3262e380c4e`.
 
-For active Batch B review, only the immutable `PR-Inspector v1.10.2` implementation at release commit `9ed48bd995ee5b9270756254b04c1d48ccf21cbe` is accepted. Ordinary exact-head CI, a package boolean, a stale `v1.10.1` bundle, or a target-authored receipt cannot prove the personal minimum-security profile. Only the official opaque verified capability, derived from the exact `Validate rereview sequence enforcement` workflow descriptor, GitHub Actions App identity, official review directory, active release lock and authoritative GitHub evidence, may support a technical Green. Repository settings enforcement remains unclaimed unless independently proven.
+Batch B closure must preserve:
 
----
-
-## 5. Documentation Standards
-
-Every major document should include:
-
-```text
-- status
-- scope
-- owner or intended consumer
-- what it is
-- what it is not
-- confirmed facts vs proposed methods vs open decisions
-- next allowed step
-- what must not be done yet
+```yaml
+exact_head_ci: required
+scope_binding: required
+owner_merge: required
+method_aware_merge_result_proof: required
+current_main_validation: required
+coverage_promotion_effect: none
+product_effect: none
+kroad_supersession_effect: none
 ```
 
-Use stable headings and short sections. Prefer small, enforceable contracts over impressive broad prose.
+## 5. Recovery Program boundary
 
----
+`DCOV-COVERAGE-EXECUTION-PROGRAM` is active. `KREC-001` through `KREC-009` are simultaneously authorized with:
 
-## 6. Behavioral Rule Coverage Standard
-
-Behavioral Rule Coverage v0.4.1 is the active practical audit model.
-
-Always distinguish:
-
-```text
-prompt_level_influence:
-  role framing, prose guidance, examples, templates, prompt instructions, review guidance
-
-system_level_enforcement:
-  schema validation, validator rules, real fixtures, CI failure, sequence tests,
-  runtime monitors, OS/harness enforcement, downstream rejection
+```yaml
+status: active
+implementation_authorized: true
+coverage_credit: false
+readiness_claim: false
 ```
 
-A prompt instruction is not an enforcement carrier. A documentation audit workflow is not equivalent to rule-level CI enforcement unless the exact rule validator/test fails the build on violation.
+Authorization may be simultaneous. Execution and completion remain dependency-aware. A task may not become `implemented` or `complete` until every `depends_on` task is `complete`.
 
-`advisory_ci_observed` never satisfies any Critical or High minimum by itself.
+No substantive KREC deliverable is implemented by the activation change itself.
 
-A rule may be `fixture_tested` only when the local validator and real valid/invalid fixtures prove the intended behavior and invalid fixtures assert expected diagnostic codes.
+## 6. Security and scope
 
-A rule may be `ci_enforced` only after the exact relevant workflow run is observed failing on violation and passing for valid artifacts.
+Never modify secrets, permissions, Rulesets, branch protection, teams, bypass actors or external repositories without a separate explicit owner decision. Do not force-push, rewrite history, enable auto-merge, perform broad dependency upgrades or silently delete deferred work.
 
-A rule may be `downstream_contract_enforced` only after an inspected downstream EV4 consumer rejects missing or invalid carriers.
-
----
-
-## 7. Elementor V4 Doc Coverage Rule
-
-Required official documentation areas must be represented in:
-
-```text
-kernel/official-sources/elementor-v4-source-manifest.v0.json
-kernel/official-sources/elementor-v4-doc-coverage-index.v0.json
-kernel/official-sources/evidence-labels.v0.json
-```
+`planning/NEXT_WORK.md` is the mutable current-status authority. `planning/KERNEL_EXECUTION_PLAN.md` preserves durable product meaning.

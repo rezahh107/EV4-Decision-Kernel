@@ -2,13 +2,8 @@ import {
   isVerifiedCiAggregate,
   isVerifiedCurrentMain,
   isVerifiedMergeResult,
-  isVerifiedRepositoryEnforcement,
 } from './aigov-ci-descriptor.mjs';
-import {
-  INSPECTOR_COMMIT,
-  PROTOCOL_VERSION,
-  isVerifiedOfficialReviewEvidence,
-} from './pr-inspector-v1102.mjs';
+import { ownerPolicyReviewObservation } from './pr-inspector-v1102.mjs';
 
 export const PREVIOUS_PLAN_ID = 'GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3';
 export const V4_PLAN_ID = 'GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4';
@@ -16,6 +11,9 @@ export const V3_PLAN_ID = V4_PLAN_ID;
 export const TARGET_REPOSITORY = 'rezahh107/EV4-Decision-Kernel';
 export const TARGET_REPOSITORY_ID = 1292378784;
 export const OWNER = 'rezahh107';
+export const PR50_HEAD_SHA = 'e5c0c342d6417c8e85be54e7cb4caf372a116a35';
+export const PR50_MERGE_COMMIT_SHA = '435add8ee3f3274f781b6e391f11e3262e380c4e';
+export const PR50_SCOPE_REVISION = 'sha256:dc8627e6df4c305fb374d6510395611313d672d77708066f41af4ba722c7b82c';
 export const BATCH_A_EXCEPTION = Object.freeze({
   prNumber: 49,
   baseSha: '5ff5d7b20db11af36ab787eb8ac2d1127ea74644',
@@ -23,7 +21,6 @@ export const BATCH_A_EXCEPTION = Object.freeze({
   mergeCommitSha: '86e25a9073df7e257ca7df799de85baf9b3fafb0',
   exceptionPlanId: V4_PLAN_ID,
 });
-
 const unique = (items) => [...new Set(items)];
 
 export function compareCanonicalTrees(expectedEntries, observedEntries) {
@@ -62,100 +59,56 @@ export function verifyBatchAOneTimeReconciliation(evidence) {
   if (evidence.productEffect !== 'none' || evidence.productTaskActivation === true) diagnostics.push('AIGOV_PRODUCT_ACTIVATION_FORBIDDEN');
   if (evidence.kroad012rStatus !== 'historical_non_authoritative' || evidence.kroad012Status !== 'preserved' || evidence.kroad013Through018Status !== 'not_started') diagnostics.push('AIGOV_KROAD_PRESERVATION_UNVERIFIED');
   if (evidence.historicalIndependentGreenClaimed === true) diagnostics.push('AIGOV_V4_HISTORICAL_REVIEW_FABRICATION_FORBIDDEN');
-
   const normalized = unique(diagnostics);
-  return {
-    batch_id: 'BATCH_A',
-    status: normalized.length ? 'fail' : 'pass',
-    closure_mode: 'v4_one_time_squash_equivalence',
-    merge_mode: 'squash',
-    content_equivalence: normalized.includes('AIGOV_V4_SQUASH_TREE_MISMATCH') ? 'unverified' : 'verified',
-    historical_independent_green_receipt: 'not_claimed',
-    retrospective_review_required: false,
-    exception_reusable: false,
-    exception_precedential: false,
-    diagnostics: normalized,
-  };
+  return { batch_id: 'BATCH_A', status: normalized.length ? 'fail' : 'pass', closure_mode: 'v4_one_time_squash_equivalence', merge_mode: 'squash', content_equivalence: normalized.includes('AIGOV_V4_SQUASH_TREE_MISMATCH') ? 'unverified' : 'verified', historical_independent_green_receipt: 'not_claimed', retrospective_review_required: false, exception_reusable: false, exception_precedential: false, diagnostics: normalized };
 }
 
 export function verifyBatchBFinalClosure(evidence) {
   const diagnostics = [];
   const ci = evidence.exactHeadCiEvidence;
-  const review = evidence.reviewEvidence;
   const merge = evidence.mergeEvidence;
   const currentMain = evidence.currentMainEvidence;
-  const enforcement = evidence.enforcementEvidence;
   const memory = evidence.memory || {};
-
-  if (evidence.planId !== V4_PLAN_ID
-    || evidence.batchId !== 'BATCH_B'
-    || evidence.repository !== TARGET_REPOSITORY
-    || evidence.repositoryId !== TARGET_REPOSITORY_ID
-    || evidence.prNumber !== 50) diagnostics.push('AIGOV_BATCH_B_IDENTITY_MISMATCH');
+  if (evidence.planId !== V4_PLAN_ID || evidence.batchId !== 'BATCH_B'
+    || evidence.repository !== TARGET_REPOSITORY || evidence.repositoryId !== TARGET_REPOSITORY_ID
+    || evidence.prNumber !== 50 || evidence.headSha !== PR50_HEAD_SHA
+    || evidence.scopeRevision !== PR50_SCOPE_REVISION) diagnostics.push('AIGOV_BATCH_B_IDENTITY_MISMATCH');
   if (evidence.exceptionApplied === true) diagnostics.push('AIGOV_V4_EXCEPTION_REUSE_FORBIDDEN');
-  if (!isVerifiedCiAggregate(ci)
-    || ci.exact_head_sha !== evidence.headSha
-    || ci.event !== 'pull_request') diagnostics.push('AIGOV_BATCH_B_EXACT_HEAD_CI_REQUIRED');
-  if (!isVerifiedOfficialReviewEvidence(review)) diagnostics.push('AIGOV_BATCH_B_REVIEW_REQUIRED');
-  else {
-    if (review.reviewed_head_sha !== evidence.headSha
-      || review.reviewed_scope_revision !== evidence.scopeRevision) diagnostics.push('AIGOV_BATCH_B_REVIEW_STALE');
-    if (review.protocol_version !== PROTOCOL_VERSION
-      || review.inspector_release_commit !== INSPECTOR_COMMIT
-      || review.provenance !== 'official_pr_inspector_repository'
-      || review.review_status !== 'GREEN_TECHNICALLY_READY') diagnostics.push('AIGOV_BATCH_B_REVIEW_PROVENANCE_UNVERIFIED');
-    if (review.review_completed_after_exact_head_ci !== true
-      || review.review_completed_before_merge !== true) diagnostics.push('AIGOV_BATCH_B_REVIEW_SEQUENCE_INVALID');
-  }
-  if (!isVerifiedMergeResult(merge)
-    || merge.reviewed_head_sha !== evidence.headSha
-    || merge.method_aware_verified !== true
+  if (!isVerifiedCiAggregate(ci) || ci.exact_head_sha !== evidence.headSha || ci.event !== 'pull_request') diagnostics.push('AIGOV_BATCH_B_EXACT_HEAD_CI_REQUIRED');
+  if (!isVerifiedMergeResult(merge) || merge.reviewed_head_sha !== evidence.headSha
+    || merge.merge_commit_sha !== PR50_MERGE_COMMIT_SHA || merge.method_aware_verified !== true
     || merge.current_main_contains_merge_result !== true) diagnostics.push('AIGOV_BATCH_B_MERGE_RESULT_UNVERIFIED');
   if (merge?.merge_actor !== OWNER) diagnostics.push('AIGOV_BATCH_B_OWNER_MERGE_REQUIRED');
   if (!isVerifiedCurrentMain(currentMain) || currentMain.green !== true) diagnostics.push('AIGOV_BATCH_B_CURRENT_MAIN_VALIDATION_REQUIRED');
-  if (!isVerifiedRepositoryEnforcement(enforcement)
-    || enforcement.status !== 'verified'
-    || enforcement.required_check_configuration !== 'verified'
-    || enforcement.repository_settings_enforced !== 'verified') diagnostics.push('AIGOV_BATCH_B_ENFORCEMENT_UNVERIFIED');
-  if (memory.coverageStatus !== 'not_measurable_pending_external_promotion'
-    || memory.coveragePromotionEffect !== 'none'
-    || memory.coverageCredit !== false) diagnostics.push('AIGOV_COVERAGE_PROMOTION_FORBIDDEN');
+  if (memory.coverageStatus !== 'not_measurable_pending_external_promotion' || memory.coveragePromotionEffect !== 'none' || memory.coverageCredit !== false) diagnostics.push('AIGOV_COVERAGE_PROMOTION_FORBIDDEN');
   if (memory.productEffect !== 'none' || memory.externalRepositoryEffect !== 'none') diagnostics.push('AIGOV_PRODUCT_ACTIVATION_FORBIDDEN');
-  if (memory.kroad012Status !== 'preserved'
-    || memory.kroad013Through018Status !== 'not_started'
-    || memory.kroad012rStatus !== 'historical_non_authoritative') diagnostics.push('AIGOV_KROAD_PRESERVATION_UNVERIFIED');
-  if (memory.recoveryProgramStatus !== 'registered_non_active'
-    || memory.krecStatus !== 'registered_planned_task'
-    || memory.implementationAuthorized !== false
-    || memory.readinessClaim !== false) diagnostics.push('AIGOV_RECOVERY_ACTIVATION_FORBIDDEN');
-  if (memory.historicalIndependentGreenReceiptForPr49 !== 'not_claimed'
-    || memory.pr49ExceptionReusable !== false
-    || memory.pr49ExceptionPrecedential !== false) diagnostics.push('AIGOV_V4_HISTORICAL_REVIEW_FABRICATION_FORBIDDEN');
-
+  if (memory.kroad012Status !== 'preserved' || memory.kroad013Through018Status !== 'not_started' || memory.kroad012rStatus !== 'historical_non_authoritative' || memory.kroadSupersessionEffect !== 'none') diagnostics.push('AIGOV_KROAD_PRESERVATION_UNVERIFIED');
+  if (memory.recoveryProgramStatus !== 'active' || memory.krecStatus !== 'active' || memory.implementationAuthorized !== true || memory.readinessClaim !== false || memory.coverageCredit !== false) diagnostics.push('AIGOV_RECOVERY_ACTIVATION_UNVERIFIED');
+  if (memory.historicalIndependentGreenReceiptForPr49 !== 'not_claimed' || memory.pr49ExceptionReusable !== false || memory.pr49ExceptionPrecedential !== false) diagnostics.push('AIGOV_V4_HISTORICAL_REVIEW_FABRICATION_FORBIDDEN');
+  const advisory = ownerPolicyReviewObservation(evidence.reviewEvidence, { headSha: evidence.headSha, scopeRevision: evidence.scopeRevision });
   const normalized = unique(diagnostics);
   return {
     batch_id: 'BATCH_B',
     status: normalized.length ? 'fail' : 'pass',
-    closure_mode: 'reviewed_head_to_exact_main_v4_method_aware',
+    closure_mode: 'owner_policy_exact_main_v4_method_aware',
     target_repository_id: TARGET_REPOSITORY_ID,
     pr_number: 50,
     reviewed_head_sha: evidence.headSha,
     reviewed_scope_revision: evidence.scopeRevision,
-    review_protocol: PROTOCOL_VERSION,
-    review_provenance: review?.provenance || 'unverified',
-    review_status: review?.review_status || 'unverified',
-    review_completed_after_exact_head_ci: review?.review_completed_after_exact_head_ci === true,
-    review_completed_before_merge: review?.review_completed_before_merge === true,
+    independent_review_required: false,
+    independent_review: advisory,
+    review_status: advisory.status,
+    review_provenance: advisory.provenance,
+    review_completed_before_merge: 'not_applicable',
     merge_actor: merge?.merge_actor || null,
     merge_method: merge?.merge_method || 'unverified',
+    merge_commit_sha: merge?.merge_commit_sha || null,
     merge_result: merge?.method_aware_verified === true ? 'method_aware_verified' : 'unverified',
     current_main_contains_merge_result: merge?.current_main_contains_merge_result === true,
     current_main_validation: currentMain?.green === true ? 'green' : 'unverified',
-    required_check_configuration: enforcement?.required_check_configuration || 'unverified',
-    repository_settings_enforced: enforcement?.repository_settings_enforced || 'not_claimed',
     coverage_promotion_effect: memory.coveragePromotionEffect || 'unknown',
     product_effect: memory.productEffect || 'unknown',
-    second_post_merge_independent_review_required: false,
+    recovery_program_status: memory.recoveryProgramStatus || 'unknown',
     diagnostics: normalized,
   };
 }

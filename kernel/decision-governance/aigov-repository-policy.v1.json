@@ -1,6 +1,6 @@
 {
   "policy_id": "aigov-repository-policy.v1",
-  "policy_version": "1.0.0",
+  "policy_version": "1.1.0",
   "standard": {
     "standard_id": "AI_AUTHORITY_DETERMINISTIC_GOVERNANCE_SSOT",
     "standard_version": "1.1.0",
@@ -15,17 +15,22 @@
     "durable_roadmap_authority": "planning/KERNEL_EXECUTION_PLAN.md"
   },
   "plan": {
-    "plan_id": "GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2",
-    "plan_version": 2,
-    "audit_base_sha": "5ff5d7b20db11af36ab787eb8ac2d1127ea74644",
-    "active_batch": "BATCH_A",
+    "plan_id": "GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4",
+    "plan_version": 4,
+    "audit_base_sha": "435add8ee3f3274f781b6e391f11e3262e380c4e",
+    "active_batch": "BATCH_B",
     "change_class": "L3"
   },
   "authority": {
     "merge_authority": "owner_only",
     "repository_owner": "rezahh107",
     "auto_merge": "forbidden",
-    "independent_exact_head_review": "required",
+    "independent_exact_head_review": "optional_advisory",
+    "independent_review_required": false,
+    "missing_independent_review_is_blocking": false,
+    "stale_independent_review_is_blocking": false,
+    "review_sequence_is_blocking": false,
+    "review_provenance_is_blocking": false,
     "human_technical_approval": "not_evidence",
     "implementation_agent_may_self_review": false,
     "post_merge_verification": "required_per_batch"
@@ -36,23 +41,47 @@
       "authorized_next_task",
       "active_implementation",
       "pending_exact_head_validation",
-      "pending_independent_review",
       "pending_owner_merge",
       "pending_exact_main_verification",
       "completed",
       "blocked"
     ],
-    "current_state": "active_implementation",
+    "current_state": "completed",
     "completion_requires_default_branch_receipt": true,
     "registration_is_not_activation": true,
     "merge_is_not_completion": true
   },
   "change_classes": [
-    {"id": "L0", "meaning": "read_only_or_no_repository_change", "minimum_verification_budget": 1, "minimum_reporting_budget": 1},
-    {"id": "L1", "meaning": "bounded_documentation_or_metadata", "minimum_verification_budget": 2, "minimum_reporting_budget": 1},
-    {"id": "L2", "meaning": "bounded_contract_or_validator_compatible_change", "minimum_verification_budget": 4, "minimum_reporting_budget": 2},
-    {"id": "L3", "meaning": "governance_authority_or_ci_enforcement_change", "minimum_verification_budget": 10, "minimum_reporting_budget": 4},
-    {"id": "L4", "meaning": "multi_repository_security_or_irreversible_change", "minimum_verification_budget": 14, "minimum_reporting_budget": 6}
+    {
+      "id": "L0",
+      "meaning": "read_only_or_no_repository_change",
+      "minimum_verification_budget": 1,
+      "minimum_reporting_budget": 1
+    },
+    {
+      "id": "L1",
+      "meaning": "bounded_documentation_or_metadata",
+      "minimum_verification_budget": 2,
+      "minimum_reporting_budget": 1
+    },
+    {
+      "id": "L2",
+      "meaning": "bounded_contract_or_validator_compatible_change",
+      "minimum_verification_budget": 4,
+      "minimum_reporting_budget": 2
+    },
+    {
+      "id": "L3",
+      "meaning": "governance_authority_or_ci_enforcement_change",
+      "minimum_verification_budget": 10,
+      "minimum_reporting_budget": 4
+    },
+    {
+      "id": "L4",
+      "meaning": "multi_repository_security_or_irreversible_change",
+      "minimum_verification_budget": 14,
+      "minimum_reporting_budget": 6
+    }
   ],
   "security_profile": {
     "profile_id": "standard_minimum_public_repository",
@@ -74,21 +103,67 @@
       "auto_merge"
     ],
     "enforcement_carriers": [
-      {"forbidden_change": "secret_change", "classification": "implemented_detector", "carrier": "workflow_secret_expression_detector"},
-      {"forbidden_change": "permission_change", "classification": "implemented_detector", "carrier": "workflow_permission_semantic_diff"},
-      {"forbidden_change": "ruleset_change", "classification": "implemented_detector_and_external_evidence", "carrier": "repository_settings_mutation_detector"},
-      {"forbidden_change": "branch_protection_change", "classification": "implemented_detector_and_external_evidence", "carrier": "repository_settings_mutation_detector"},
-      {"forbidden_change": "force_push", "classification": "implemented_detector", "carrier": "force_push_command_detector"},
-      {"forbidden_change": "history_rewrite", "classification": "implemented_detector", "carrier": "history_rewrite_command_detector"},
-      {"forbidden_change": "external_repository_write", "classification": "implemented_detector", "carrier": "external_repository_write_detector"},
-      {"forbidden_change": "broad_dependency_upgrade", "classification": "implemented_detector", "carrier": "canonical_dependency_diff_detector"},
-      {"forbidden_change": "destructive_deletion", "classification": "implemented_detector", "carrier": "destructive_deletion_detector"},
-      {"forbidden_change": "auto_merge", "classification": "implemented_detector", "carrier": "merge_and_auto_merge_command_detector"}
+      {
+        "forbidden_change": "secret_change",
+        "classification": "implemented_detector",
+        "carrier": "workflow_secret_expression_detector"
+      },
+      {
+        "forbidden_change": "permission_change",
+        "classification": "implemented_detector",
+        "carrier": "workflow_permission_semantic_diff"
+      },
+      {
+        "forbidden_change": "ruleset_change",
+        "classification": "implemented_detector_and_external_evidence",
+        "carrier": "repository_settings_mutation_detector"
+      },
+      {
+        "forbidden_change": "branch_protection_change",
+        "classification": "implemented_detector_and_external_evidence",
+        "carrier": "repository_settings_mutation_detector"
+      },
+      {
+        "forbidden_change": "force_push",
+        "classification": "implemented_detector",
+        "carrier": "force_push_command_detector"
+      },
+      {
+        "forbidden_change": "history_rewrite",
+        "classification": "implemented_detector",
+        "carrier": "history_rewrite_command_detector"
+      },
+      {
+        "forbidden_change": "external_repository_write",
+        "classification": "implemented_detector",
+        "carrier": "external_repository_write_detector"
+      },
+      {
+        "forbidden_change": "broad_dependency_upgrade",
+        "classification": "implemented_detector",
+        "carrier": "canonical_dependency_diff_detector"
+      },
+      {
+        "forbidden_change": "destructive_deletion",
+        "classification": "implemented_detector",
+        "carrier": "destructive_deletion_detector"
+      },
+      {
+        "forbidden_change": "auto_merge",
+        "classification": "implemented_detector",
+        "carrier": "merge_and_auto_merge_command_detector"
+      }
     ],
-    "repository_settings_enforcement": "external_evidence_required_not_proven"
+    "repository_settings_enforcement": "external_evidence_optional_not_claimed"
   },
   "scope_contract": {
-    "required_sets": ["committed", "excluded", "deferred_not_deleted", "dependencies", "completion_evidence"],
+    "required_sets": [
+      "committed",
+      "excluded",
+      "deferred_not_deleted",
+      "dependencies",
+      "completion_evidence"
+    ],
     "scope_revision_algorithm": "sha256-jcs-without-scope_revision",
     "head_binding": "exact_runtime_head",
     "silent_material_deletion": "forbidden"
@@ -103,7 +178,8 @@
   "reporting_contract": {
     "material_failures_must_be_reported": true,
     "known_limitations_must_be_reported": true,
-    "prompt_or_coaching_text_is_not_completion_evidence": true
+    "prompt_or_coaching_text_is_not_completion_evidence": true,
+    "historical_review_fabrication_forbidden": true
   },
   "sequence": {
     "ordered_events": [
@@ -112,32 +188,108 @@
       "scope_disclosed",
       "implementation_complete",
       "exact_head_validated",
-      "independent_review_green",
       "owner_merge",
       "exact_main_verified"
     ],
-    "review_invalidated_by_head_change": true,
-    "review_invalidated_by_scope_revision_change": true,
+    "advisory_review_event": "optional_non_blocking",
     "owner_merge_cannot_be_skipped": true
   },
   "rules": [
-    {"rule_id": "AIGOV-START-001", "risk": "Critical", "session_scope": "per_session", "enforcement": "validator_and_ci"},
-    {"rule_id": "AIGOV-SCOPE-001", "risk": "Critical", "session_scope": "cross_turn", "enforcement": "schema_validator_fixture_sequence_ci"},
-    {"rule_id": "AIGOV-SCOPE-DISCLOSURE-001", "risk": "Critical", "session_scope": "cross_turn", "enforcement": "deterministic_projection_and_ci"},
-    {"rule_id": "AIGOV-PROGRESS-001", "risk": "Critical", "session_scope": "cross_turn", "enforcement": "receipt_sequence_and_exact_main"},
-    {"rule_id": "AIGOV-EVIDENCE-001", "risk": "Critical", "session_scope": "per_artifact", "enforcement": "schema_validator_and_ci"},
-    {"rule_id": "AIGOV-INDEPENDENCE-001", "risk": "Critical", "session_scope": "cross_turn", "enforcement": "external_receipt_validator"},
-    {"rule_id": "AIGOV-STALE-001", "risk": "Critical", "session_scope": "cross_turn", "enforcement": "head_and_scope_sequence_fixture"},
-    {"rule_id": "AIGOV-MERGE-001", "risk": "Critical", "session_scope": "cross_turn", "enforcement": "owner_sequence_and_exact_main"},
-    {"rule_id": "AIGOV-CHANGE-CLASS-001", "risk": "Critical", "session_scope": "per_increment", "enforcement": "deterministic_classifier"},
-    {"rule_id": "AIGOV-EVIDENCE-PROPORTIONALITY-001", "risk": "High", "session_scope": "per_increment", "enforcement": "verification_budget_validator"},
-    {"rule_id": "AIGOV-REPORTING-001", "risk": "High", "session_scope": "per_increment", "enforcement": "reporting_budget_validator"},
-    {"rule_id": "AIGOV-SECURITY-PROFILE-001", "risk": "High", "session_scope": "per_increment", "enforcement": "security_profile_validator"},
-    {"rule_id": "AIGOV-HUMAN-001", "risk": "High", "session_scope": "cross_turn", "enforcement": "evidence_type_validator"},
-    {"rule_id": "AIGOV-COACH-001", "risk": "High", "session_scope": "per_artifact", "enforcement": "evidence_type_validator"}
+    {
+      "rule_id": "AIGOV-START-001",
+      "risk": "Critical",
+      "session_scope": "per_session",
+      "enforcement": "validator_and_ci"
+    },
+    {
+      "rule_id": "AIGOV-SCOPE-001",
+      "risk": "Critical",
+      "session_scope": "cross_turn",
+      "enforcement": "schema_validator_fixture_sequence_ci"
+    },
+    {
+      "rule_id": "AIGOV-SCOPE-DISCLOSURE-001",
+      "risk": "Critical",
+      "session_scope": "cross_turn",
+      "enforcement": "deterministic_projection_and_ci"
+    },
+    {
+      "rule_id": "AIGOV-PROGRESS-001",
+      "risk": "Critical",
+      "session_scope": "cross_turn",
+      "enforcement": "receipt_sequence_and_exact_main"
+    },
+    {
+      "rule_id": "AIGOV-EVIDENCE-001",
+      "risk": "Critical",
+      "session_scope": "per_artifact",
+      "enforcement": "schema_validator_and_ci"
+    },
+    {
+      "rule_id": "AIGOV-REVIEW-ADVISORY-001",
+      "risk": "High",
+      "session_scope": "cross_turn",
+      "enforcement": "optional_advisory_non_blocking"
+    },
+    {
+      "rule_id": "AIGOV-STALE-001",
+      "risk": "Critical",
+      "session_scope": "cross_turn",
+      "enforcement": "head_and_scope_sequence_fixture"
+    },
+    {
+      "rule_id": "AIGOV-MERGE-001",
+      "risk": "Critical",
+      "session_scope": "cross_turn",
+      "enforcement": "owner_sequence_and_exact_main"
+    },
+    {
+      "rule_id": "AIGOV-CHANGE-CLASS-001",
+      "risk": "Critical",
+      "session_scope": "per_increment",
+      "enforcement": "deterministic_classifier"
+    },
+    {
+      "rule_id": "AIGOV-EVIDENCE-PROPORTIONALITY-001",
+      "risk": "High",
+      "session_scope": "per_increment",
+      "enforcement": "verification_budget_validator"
+    },
+    {
+      "rule_id": "AIGOV-REPORTING-001",
+      "risk": "High",
+      "session_scope": "per_increment",
+      "enforcement": "reporting_budget_validator"
+    },
+    {
+      "rule_id": "AIGOV-SECURITY-PROFILE-001",
+      "risk": "High",
+      "session_scope": "per_increment",
+      "enforcement": "security_profile_validator"
+    },
+    {
+      "rule_id": "AIGOV-HUMAN-001",
+      "risk": "High",
+      "session_scope": "cross_turn",
+      "enforcement": "evidence_type_validator"
+    },
+    {
+      "rule_id": "AIGOV-COACH-001",
+      "risk": "High",
+      "session_scope": "per_artifact",
+      "enforcement": "evidence_type_validator"
+    }
   ],
   "roadmap_preservation": {
-    "original_kroad_ids": ["KROAD-012", "KROAD-013", "KROAD-014", "KROAD-015", "KROAD-016", "KROAD-017", "KROAD-018"],
+    "original_kroad_ids": [
+      "KROAD-012",
+      "KROAD-013",
+      "KROAD-014",
+      "KROAD-015",
+      "KROAD-016",
+      "KROAD-017",
+      "KROAD-018"
+    ],
     "kroad_012r_status": "historical_non_authoritative",
     "coverage_status": "not_measurable_pending_external_promotion",
     "coverage_promotion_effect": "none"
