@@ -1,0 +1,122 @@
+{
+  "schema_version": "coverage-impact.v1",
+  "impact_id": "DCOV-IMPACT-006",
+  "work_package_id": "GOV-OWNER-POLICY-RECOVERY-ACTIVATION",
+  "roadmap_item_ids": [
+    "AIGOV-ADOPT-008",
+    "KREC-001",
+    "KREC-002",
+    "KREC-003",
+    "KREC-004",
+    "KREC-005",
+    "KREC-006",
+    "KREC-007",
+    "KREC-008",
+    "KREC-009"
+  ],
+  "change_class": "L3",
+  "work_type": "maintenance",
+  "coverage_sensitive": false,
+  "impact_classification": "not_applicable",
+  "zero_delta_justification": "Repository owner-policy and Recovery lifecycle activation add no decision family, mapping closure, Coverage validator enforcement, Coverage adversarial fixture, baseline measurement, Coverage credit or readiness claim.",
+  "approved_blocker_id": null,
+  "impact_claims": {
+    "decision_family_added": false,
+    "mapping_closure": false,
+    "validator_enforcement": false,
+    "adversarial_fixture_coverage": false,
+    "baseline_measurement": false,
+    "coverage_metrics_changed": false
+  },
+  "baseline_snapshot_hash": "sha256:7ac47a4009ad57c21767255e7196a34a516c53e5dbb1fe126b16840d9e8d1888",
+  "threshold_policy_snapshot": {
+    "minimum_content_floor": 90,
+    "owner_acceptance_target": 95,
+    "critical_p0_and_safety_coverage": 100
+  },
+  "validator_hash": "sha256:6779dcc9d66aef16308f40afe63d7b1983e84502024059df6a475a86bca8ac05",
+  "dependency_impact": {
+    "affected_task_ids": [
+      "KREC-001",
+      "KREC-002",
+      "KREC-003",
+      "KREC-004",
+      "KREC-005",
+      "KREC-006",
+      "KREC-007",
+      "KREC-008",
+      "KREC-009"
+    ],
+    "dependency_changes": false,
+    "notes": "Authorization changes lifecycle state only; the existing KREC dependency graph is preserved exactly."
+  },
+  "evidence_paths": [
+    "planning/decisions/AIGOV_INDEPENDENT_REVIEW_POLICY_CHANGE.md",
+    "planning/recovery/recovery-execution-program.v1.json",
+    "kernel/validator/validate-recovery-execution-program.mjs",
+    "planning/governance/scopes/aigov-owner-policy-recovery-activation.scope.json"
+  ],
+  "failure_semantics": {
+    "absence_is_failure": true,
+    "ambiguity_is_failure": true,
+    "invalid_claim_blocks_merge": true
+  },
+  "trust_attestation": {
+    "required": true,
+    "verification_method": "pr_inspector_immutable_external_oidc",
+    "expected_issuer_repository": "rezahh107/PR-Inspector",
+    "expected_issuer_repository_id": 1288323264,
+    "expected_workflow_path": ".github/workflows/coverage-trust-gate.yml",
+    "expected_workflow_ref": "refs/heads/main",
+    "expected_workflow_sha": "7a21045366bb9ad1ca2f950b8341ebb867dd8a52",
+    "expected_workflow_sha256": "sha256:1d2858ccb7e6462b1fd209def395477852a98f96374fe2e664b95626b1779815",
+    "expected_job_workflow_ref": "rezahh107/PR-Inspector/.github/workflows/coverage-trust-gate.yml@refs/heads/main",
+    "expected_job_workflow_sha": "7a21045366bb9ad1ca2f950b8341ebb867dd8a52",
+    "expected_target_repository": "rezahh107/EV4-Decision-Kernel",
+    "expected_target_repository_id": 1292378784,
+    "expected_event": "pull_request",
+    "expected_ref": "refs/heads/main",
+    "expected_aud": "ev4-coverage-trust",
+    "required_identity_fields": [
+      "repository",
+      "repository_id",
+      "job_workflow_ref",
+      "job_workflow_sha",
+      "workflow_ref",
+      "workflow_sha",
+      "workflow_path",
+      "event_name",
+      "ref",
+      "aud",
+      "target_repository",
+      "target_repository_id",
+      "target_pr_number",
+      "target_base_sha",
+      "target_head_sha"
+    ],
+    "write_permissions": "none",
+    "secrets_required": "none",
+    "production_verifier": "PR-Inspector/scripts/verify_coverage_trust.py"
+  },
+  "status": "proposed",
+  "sequence_number": 6,
+  "previous_impact_id": "DCOV-IMPACT-005",
+  "created_at": "2026-07-16T13:30:00Z",
+  "repository": "rezahh107/EV4-Decision-Kernel",
+  "pull_request": 51,
+  "base_sha": "435add8ee3f3274f781b6e391f11e3262e380c4e",
+  "head_sha": "derived_at_runtime",
+  "changed_paths": [
+    ".github/workflows/finalize-aigov-batch-b.yml",
+    ".github/workflows/validate-main.yml",
+    ".github/workflows/validate-mvk.yml",
+    ".github/workflows/validate-rereview-sequence.yml",
+    "kernel/schemas/recovery-execution-program.v1.schema.json",
+    "kernel/validator/validate-recovery-execution-program.mjs",
+    "package.json",
+    "planning/NEXT_WORK.md",
+    "planning/coverage/impacts/dcov-recovery.pr51-owner-policy-activation.json",
+    "planning/recovery/recovery-execution-program.v1.json",
+    "tools/validate-roadmap-memory.mjs"
+  ]
+}
