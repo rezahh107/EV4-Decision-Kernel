@@ -1,19 +1,19 @@
-# AIGOV Batch A V3 Post-Merge Reconciliation
+# AIGOV Batch A V4 Post-Merge Reconciliation
 
 ## Identity
 
 ```yaml
-plan_id: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3
+plan_id: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4
+previous_plan_id: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3
 batch_id: BATCH_A
 repository: rezahh107/EV4-Decision-Kernel
 pr_number: 49
+base_sha: 5ff5d7b20db11af36ab787eb8ac2d1127ea74644
 final_head_sha: c141923bf411f802f1673acf06dc92a77b415593
-merge_commit_sha: 86e25a9073df7e257ca7df799de85baf9b3fafb0
-closure_mode: v3_one_time_evidence_reconciliation
-status: fail
-blocking_diagnostic: AIGOV_V3_BATCH_A_ANCESTRY_UNVERIFIED
+squash_commit_sha: 86e25a9073df7e257ca7df799de85baf9b3fafb0
+closure_mode: v4_one_time_squash_equivalence
+status: pass
 historical_independent_green_receipt: not_claimed
-reason_for_exception: impossible_retrospective_review_cycle
 exception_reusable: false
 exception_precedential: false
 coverage_effect: none
@@ -21,52 +21,11 @@ product_effect: none
 external_repository_effect: none
 ```
 
-## Executed evidence
+The filename is retained for scope/path stability. This record is authoritative for V4 content despite the historical `V3` token in its path.
 
-The authoritative command was executed under PR #50 exact-head CI:
+## Why strict ancestry failed
 
-```bash
-npm run validate:aigov-v3-batch-a-reconciliation
-```
-
-Observed result:
-
-```yaml
-repository_identity: verified
-pr_49_merged: true
-final_head_identity: verified
-merge_commit_identity: verified
-merge_actor: rezahh107
-owner_merge: verified
-exact_head_ci: green
-current_main_sha: 86e25a9073df7e257ca7df799de85baf9b3fafb0
-current_main_validation: green
-coverage_non_promotion: verified
-kroad_preservation: verified
-historical_review_green_claimed: false
-head_ancestry: failed
-merge_commit_ancestry: verified_equal_to_current_main
-```
-
-The exact PR #49 workflow evidence was Green:
-
-- `Behavioral Coverage Audit` — run `29416251978`;
-- `Validate rereview sequence enforcement` — run `29416251941`;
-- `Validate MVK` — run `29416252504`;
-- `Finalize AIGOV post-CI evidence` — run `29416251929`.
-
-Current-main validation was Green in `Validate Main` run `29419596499` for `86e25a9073df7e257ca7df799de85baf9b3fafb0`.
-
-## Commit-graph evidence
-
-GitHub compare for:
-
-```text
-base: c141923bf411f802f1673acf06dc92a77b415593
-head: 86e25a9073df7e257ca7df799de85baf9b3fafb0
-```
-
-returned:
+GitHub compare for final head `c141923bf411f802f1673acf06dc92a77b415593` and squash commit `86e25a9073df7e257ca7df799de85baf9b3fafb0` returned:
 
 ```yaml
 status: diverged
@@ -75,17 +34,58 @@ behind_by: 11
 merge_base_sha: 5ff5d7b20db11af36ab787eb8ac2d1127ea74644
 ```
 
-PR #49 was squash-merged. Its final reviewed head is therefore not an ancestor of current `main`, even though the resulting Merge commit is current `main` and contains the Batch A change set.
+PR #49 was merged by GitHub Squash Merge. The final PR commit chain is therefore not preserved as an ancestor chain. This topology is not content-loss evidence.
+
+## Deterministic content proof
+
+The V4 verifier independently fetched the Git commit objects for the exact PR head and exact squash commit from GitHub and compared their tree identities byte-for-byte through Git object identity.
+
+```yaml
+equivalence_mode: exact_tree_equality
+base_sha: 5ff5d7b20db11af36ab787eb8ac2d1127ea74644
+pr_head_sha: c141923bf411f802f1673acf06dc92a77b415593
+pr_head_tree_sha: 8a8c83aee95ab36ab59ba128c7710bafedaa2d20
+reconstructed_tree_sha: null
+squash_commit_sha: 86e25a9073df7e257ca7df799de85baf9b3fafb0
+squash_commit_tree_sha: 8a8c83aee95ab36ab59ba128c7710bafedaa2d20
+result: pass
+```
+
+No file-list similarity, commit-message similarity, whitespace-insensitive comparison, partial-path comparison or caller-supplied boolean was accepted as proof.
+
+## Other required predicates
+
+```yaml
+repository_identity: verified
+pr_49_merged: true
+merge_mode: squash
+merge_actor: rezahh107
+owner_merge: verified
+exact_head_ci: green
+current_main_sha: 86e25a9073df7e257ca7df799de85baf9b3fafb0
+squash_commit_on_current_main: verified_equal
+current_main_validation: green
+coverage_non_promotion: verified
+kroad_preservation: verified
+historical_review_green_claimed: false
+```
+
+Exact PR #49 workflow evidence:
+
+- `Behavioral Coverage Audit` — run `29416251978`;
+- `Validate rereview sequence enforcement` — run `29416251941`;
+- `Validate MVK` — run `29416252504`;
+- `Finalize AIGOV post-CI evidence` — run `29416251929`.
+
+Current-main `Validate Main` evidence: run `29419596499` on `86e25a9073df7e257ca7df799de85baf9b3fafb0`.
 
 ## Disposition
 
-Frozen V3 explicitly requires final-head ancestry. It does not authorize tree-equivalence, patch-equivalence or squash-Merge equivalence as a substitute. The verifier therefore correctly fails closed.
-
 ```yaml
-BATCH_A: reconciliation_failed
-BATCH_B: blocked_pending_new_owner_authorization
-independent_review_handoff: forbidden_while_blocked
+BATCH_A: exact_main_reconciled_under_v4_squash_equivalence
+AIGOV-ADOPT-000_through_007: merged_and_post_merge_reconciled
+BATCH_B: implementation_active_pending_exact_head_validation_and_review
 merge_permitted: false
 ```
 
-No historical Green review was fabricated. No Coverage promotion, product implementation, external write or Merge occurred.
+No historical Green review was fabricated. No Coverage promotion, product implementation, `KREC-*` implementation, external write or Merge occurred.
