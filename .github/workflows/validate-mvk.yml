@@ -136,12 +136,12 @@ jobs:
           npm run aigov:scope-disclosure:batch-b -- \
             --base "${COVERAGE_BASE_SHA}" \
             --head "${COVERAGE_HEAD_SHA}" \
-            --output aigov-v3-batch-b-scope-disclosure.json
+            --output aigov-v4-batch-b-scope-disclosure.json
 
-      - name: Reconcile Batch A through the exact V3 exception
-        run: npm run validate:aigov-v3-batch-a-reconciliation
+      - name: Reconcile Batch A through exact V4 squash equivalence
+        run: npm run validate:aigov-v4-batch-a-reconciliation
 
-      - name: Validate V3 exception misuse cases
+      - name: Validate V4 exception and merge-method misuse cases
         run: npm run test:aigov-v3-exception
 
       - name: Validate recovery-program registration
@@ -166,7 +166,7 @@ jobs:
         if: ${{ success() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: aigov-v3-batch-b-scope-disclosure
-          path: aigov-v3-batch-b-scope-disclosure.json
+          name: aigov-v4-batch-b-scope-disclosure
+          path: aigov-v4-batch-b-scope-disclosure.json
           if-no-files-found: error
           retention-days: 14
