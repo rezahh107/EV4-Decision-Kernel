@@ -157,7 +157,18 @@ jobs:
         run: npm run test:aigov-v3-exception
 
       - name: Validate AIGOV contracts
+        env:
+          AIGOV_V4_REPORT: ${{ runner.temp }}/aigov-v4-governance-report.json
         run: npm run validate:aigov
+
+      - name: Upload AIGOV V4 governance diagnostics
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: aigov-v4-governance-diagnostics-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/aigov-v4-governance-report.json
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Validate AIGOV fixtures
         run: npm run test:aigov-fixtures
