@@ -8,8 +8,9 @@
   "base_sha": "86e25a9073df7e257ca7df799de85baf9b3fafb0",
   "head_binding": "derived_at_runtime",
   "change_class": "L3",
-  "scope_revision": "sha256:9a9a9b599b40f23b7f9f2dbc3400125cb25ee32ea65b696181f4d0c0d7029e80",
+  "scope_revision": "sha256:dc8627e6df4c305fb374d6510395611313d672d77708066f41af4ba722c7b82c",
   "committed": [
+    ".github/workflows/finalize-aigov-batch-b.yml",
     ".github/workflows/finalize-aigov-evidence.yml",
     ".github/workflows/validate-main.yml",
     ".github/workflows/validate-mvk.yml",
@@ -21,6 +22,7 @@
     "kernel/fixtures/recovery-program/invalid/activated-without-carrier.json",
     "kernel/fixtures/recovery-program/valid/registered-only.json",
     "kernel/schemas/aigov-scope-manifest.v1.schema.json",
+    "kernel/schemas/aigov-sequence-producer-identity.v2.schema.json",
     "kernel/schemas/recovery-execution-program.v1.schema.json",
     "kernel/validator/validate-recovery-execution-program.mjs",
     "package.json",
@@ -33,9 +35,16 @@
     "planning/reviews/AIGOV_BATCH_A_V3_POST_MERGE_RECONCILIATION.md",
     "planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md",
     "tools/generate-aigov-v3-batch-b-scope.mjs",
+    "tools/lib/aigov-ci-descriptor.mjs",
+    "tools/lib/aigov-sequence-producer-v1102.mjs",
     "tools/lib/aigov-v3-closure.mjs",
+    "tools/lib/pr-inspector-v1102.mjs",
     "tools/materialize-pr-inspector-rereview-sequence.mjs",
+    "tools/pr-inspector-official-boundary-v1102.py",
+    "tools/test-aigov-sequence-producer.mjs",
     "tools/test-aigov-v3-exception.mjs",
+    "tools/test-aigov-v4-hardening.mjs",
+    "tools/test-pr-inspector-security-capability.py",
     "tools/validate-aigov-v4-governance.mjs",
     "tools/validate-roadmap-memory-v3.mjs",
     "tools/validate-roadmap-memory.mjs",
@@ -53,9 +62,10 @@
     "deployment or release"
   ],
   "deferred_not_deleted": [
-    "independent PR-Inspector review on the final Batch B exact head and scope",
+    "fresh independent PR-Inspector v1.10.2 review on the final Batch B exact head and scope",
     "owner-only Merge",
-    "post-Merge current-main validation",
+    "read-only verification of repository required checks, stale-check policy and bypass actors",
+    "post-Merge current-main validation and batch-b-final closure",
     "KROAD-012 product implementation",
     "KROAD-013 through KROAD-018",
     "external Coverage promotion"
@@ -65,23 +75,26 @@
     "exact base 86e25a9073df7e257ca7df799de85baf9b3fafb0",
     "PR #49 exact tree equality between final head and squash commit",
     "merged PR #49 exact tuple and exact-head CI",
-    "current-main Validate Main evidence",
-    "external independent review on final Batch B head and scope_revision",
-    "owner-only Merge"
+    "PR-Inspector v1.10.2 release commit 9ed48bd995ee5b9270756254b04c1d48ccf21cbe",
+    "exact-head authoritative CI descriptors",
+    "official independent review on final Batch B head and scope_revision",
+    "owner-only Merge",
+    "verified repository enforcement evidence"
   ],
   "completion_evidence": [
     "Batch A V4 exact-tree squash-equivalence report",
-    "exact-head Batch B CI Green",
-    "fresh independent PR-Inspector Green bound to final head and scope_revision",
+    "exact-head Batch B CI Green with exact workflow/job/check/App descriptors",
+    "fresh official PR-Inspector v1.10.2 Green bound to final head and scope_revision",
     "owner Merge metadata",
     "method-aware deterministic Merge result proof on current main",
-    "current-main AIGOV, roadmap, Coverage, recovery-program and MVK validation Green"
+    "current-main AIGOV, roadmap, Coverage, recovery-program and MVK validation Green",
+    "read-only required-check, stale-check and bypass evidence"
   ],
   "authorized_operations": [
     "update only governance/aigov-v3-batch-b-closure",
     "amend existing Draft PR #50 only",
     "bounded repair on the same PR",
-    "run local and GitHub exact-head validation",
+    "run GitHub exact-head validation",
     "prepare independent-review handoff"
   ],
   "forbidden_changes": [
