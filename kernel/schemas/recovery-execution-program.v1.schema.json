@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/recovery-execution-program.v1.schema.json",
+  "title": "EV4 Recovery Execution Program v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "program_id", "integration_model", "program_status", "kroad_012r_status", "coverage_promotion_effect", "task_activation_effect", "tasks"],
+  "properties": {
+    "schema_version": {"const": "recovery-execution-program.v1"},
+    "program_id": {"const": "DCOV-COVERAGE-EXECUTION-PROGRAM"},
+    "integration_model": {"const": "distinct_recovery_execution_program"},
+    "program_status": {"const": "registered_non_active"},
+    "kroad_012r_status": {"const": "historical_non_authoritative"},
+    "coverage_promotion_effect": {"const": "none"},
+    "task_activation_effect": {"const": "none"},
+    "tasks": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["task_id", "title", "status", "depends_on"],
+        "properties": {
+          "task_id": {"type": "string", "pattern": "^KREC-00[1-9]$"},
+          "title": {"type": "string", "minLength": 1},
+          "status": {"const": "registered_planned_task"},
+          "depends_on": {"type": "array", "items": {"type": "string", "pattern": "^KREC-00[1-9]$"}, "uniqueItems": true}
+        }
+      }
+    }
+  }
+}

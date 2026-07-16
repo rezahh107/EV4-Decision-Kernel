@@ -1,42 +1,70 @@
 # AIGOV Exact-Main Closure Protocol
 
-**Status:** active verification protocol; not a closure receipt
-**Plan:** `GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2`
+**Status:** active V3 verification protocol; not a Merge authorization  
+**Plan:** `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3`  
+**Previous plan:** `GOV-ADOPTION-EV4-DECISION-KERNEL-5FF5D7B-V2`
 
-## Rule
+## General evidence rule
 
-Neither a PR head, successful CI, target-authored record, caller-supplied actor, schema-valid lookalike, independent review, nor Merge metadata alone establishes completion. Completion is derived only by `tools/verify-aigov-exact-main.mjs` on the current default-branch checkout after an owner Merge.
+A PR head, successful CI, target-authored record, caller-supplied actor, schema-valid lookalike, review artifact or Merge metadata alone does not establish completion. `tools/verify-aigov-v3-exact-main.mjs` derives live repository, PR, exact-head CI, Merge actor, current `main` and ancestry evidence. Caller-supplied booleans are not accepted as authority.
 
-The verifier accepts no `--merge-actor`, `--expected-sha`, local receipt boolean, or caller-authored GitHub payload. It fetches the target repository, PR #49, current `main`, PR author, `merged_by`, base, reviewed head and merge commit from the public GitHub REST API. The checkout remote, local HEAD, API current-main identity and reviewed-head ancestry must agree.
+## Batch A one-time reconciliation
 
-The review input is an immutable external source tuple: exact `rezahh107/PR-Inspector` commit plus a receipt path under the exact target head and `scope_revision`. The verifier enumerates the review directory from GitHub rather than trusting receipt declarations. It passes the complete directory to the official pinned `v1.10.1` final-byte verification boundary; target code does not reconstruct `project_decision`, canonical projection, owner output, handoff, prompt or manifest. The official boundary validates schemas and semantics, canonical projection equality, prompt routing, deterministic rendered bytes, manifest and final-byte hashes, while the target verifier separately verifies Git blob SHAs and immutable source identity. The active compatibility source is `PR-Inspector@v1.10.1`, repository ID `1288323264`, commit `7a21045366bb9ad1ca2f950b8341ebb867dd8a52`.
+The only retrospective exception is:
 
-The verifier separately fetches the completed GitHub Actions run, jobs, check runs and uploaded artifact for the exact PR head. The accepted identity is a `pull_request` head execution, not a synthetic merge ref; every required job must be successful and produced by the GitHub Actions App identity. It also verifies the designated `Validate rereview sequence enforcement` run, job, App ID, immutable workflow bytes, producer artifact and official validator command. The independent review must be later than both authoritative completion times and bind the exact identities.
-
-Neither run upgrades the official security profile. Green and `merge_now` additionally require the official opaque sequence capability, which cannot exist until authoritative GitHub settings evidence proves the exact context plus App ID is a required check. This PR adds the producer but does not claim or change repository settings.
-
-## Batch A
-
-Batch A remains incomplete until the verifier confirms ancestry, exact current `main`, preserved SSOT identity, Green local gates invoked with the exact fetched review receipt, API-derived owner Merge evidence, a complete lifecycle ledger, preserved KROAD memory, historical `KROAD-012R`, and non-promoted Coverage state. The workflow artifact name is:
-
-```text
-aigov-batch-a-exact-main-<sha>.json
+```yaml
+repository: rezahh107/EV4-Decision-Kernel
+pr_number: 49
+head_sha: c141923bf411f802f1673acf06dc92a77b415593
+merge_commit_sha: 86e25a9073df7e257ca7df799de85baf9b3fafb0
+exception_plan_id: GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3
+reason: impossible_retrospective_review_cycle
+reusable: false
+precedential: false
 ```
 
-## Batch B
+The verifier must confirm:
 
-Final adoption remains pending until the valid Batch A receipt, Batch B exact-head validation, independent exact-head review, owner Merge, and final exact-main matrix are all present. The final artifact name is:
+- authoritative Merge of PR #49;
+- exact final head and Merge commit identity;
+- owner Merge;
+- final head and Merge commit ancestry on current `main`;
+- Green exact-head CI for the final PR #49 head;
+- Green current-main validation covering AIGOV, roadmap memory, Coverage and MVK;
+- preserved `KROAD-012` through `KROAD-018`;
+- `KROAD-012R: historical_non_authoritative`;
+- Coverage non-promotion and no product activation.
 
-```text
-aigov-final-exact-main-<sha>.json
+The exception does not require or permit fabrication of a pre-Merge Green receipt, a new retrospective PR-Inspector verdict, a separate reconciliation PR or a third implementation PR. Its pass result must state:
+
+```yaml
+batch_id: BATCH_A
+status: pass
+closure_mode: v3_one_time_evidence_reconciliation
+historical_review_green_claimed: false
+retrospective_review_required: false
+exception_reusable: false
 ```
 
-Generated workflow artifacts are evidence outputs; no post-merge repository commit or third implementation PR is authorized merely to store them.
+## Batch B exact-head and exact-main rule
 
-## Lifecycle and replay boundary
+Batch B has no exception. Before Merge, its exact final head and exact `scope_revision` require Green exact-head CI and an independent PR-Inspector Green verdict. Any head or scope mutation invalidates prior CI and review.
 
-`aigov-lifecycle-ledger.v1` is the sequence carrier. The two source workflows publish their ordinary outputs and complete independently. A separate read-only `pull_request` verifier waits for, re-fetches and validates both completed exact-head source runs; uploads its validation logs first; verifies the assigned artifact ID and digest through GitHub; then materializes the finalized CI identity, evidence manifest, ledger through `exact_head_validated`, scope disclosure and designated producer identity. It uploads one final payload and a detached index containing the assigned workflow/run/job/artifact identity plus every final-file-byte SHA-256. This avoids both the same-run artifact-ID cycle and the default-branch activation limitation of a newly introduced `workflow_run` workflow. A local post-run file is never described as a GitHub Actions artifact. The exact-main verifier appends only verified `independent_review_green`, API-derived `owner_merge` and authoritative `exact_main_verified` events. Duplicate IDs, replayed CI/review/producer evidence, missing predecessors, time/order violations, foreign repository/PR/head/scope identities and unverified external evidence fail closed.
+After the owner Merge, the verifier accepts that same pre-Merge review when:
 
-## Current limitation
+- the review was completed after exact-head CI and before Merge;
+- the review binds the exact final head, PR and scope;
+- the owner performed the Merge;
+- the reviewed head and Merge commit reached current `main` by ancestry;
+- current-main validation is Green;
+- Coverage remains non-promoted and product work remains inactive.
 
-Repository ruleset and branch-protection enforcement are not claimed. Required-check configuration for `Validate rereview sequence enforcement` is a separate owner administrative action and is not authorized in Batch A repair. The exact-main command cannot convert the pending Yellow security profile to Green and cannot succeed until an official opaque capability exists, a fresh independent Green bundle is published immutably by PR Inspector, and the owner later merges the exact reviewed head.
+A second independent review after Merge is neither required nor accepted as a substitute for the pre-Merge review. A generated exact-main report may be retained as evidence, but absence of a separately published post-Merge external receipt cannot create a permanent closure deadlock.
+
+## Recovery-program boundary
+
+`DCOV-COVERAGE-EXECUTION-PROGRAM` and `KREC-001` through `KREC-009` are registration-only carriers. They do not supersede KROAD items, activate tasks, implement recovery work, grant Coverage credit or establish readiness.
+
+## Merge boundary
+
+The implementation agent cannot issue `GREEN_MERGE_RECOMMENDED`, approve, Merge or enable auto-merge. Merge authority remains owner-only.

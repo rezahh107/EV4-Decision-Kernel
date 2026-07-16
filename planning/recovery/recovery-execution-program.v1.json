@@ -1,0 +1,20 @@
+{
+  "schema_version": "recovery-execution-program.v1",
+  "program_id": "DCOV-COVERAGE-EXECUTION-PROGRAM",
+  "integration_model": "distinct_recovery_execution_program",
+  "program_status": "registered_non_active",
+  "kroad_012r_status": "historical_non_authoritative",
+  "coverage_promotion_effect": "none",
+  "task_activation_effect": "none",
+  "tasks": [
+    {"task_id": "KREC-001", "title": "Recovery Ledger", "status": "registered_planned_task", "depends_on": []},
+    {"task_id": "KREC-002", "title": "Current Source Verification", "status": "registered_planned_task", "depends_on": ["KREC-001"]},
+    {"task_id": "KREC-003", "title": "Element Reconciliation", "status": "registered_planned_task", "depends_on": ["KREC-001", "KREC-002"]},
+    {"task_id": "KREC-004", "title": "Decision Demand Corpus", "status": "registered_planned_task", "depends_on": ["KREC-001"]},
+    {"task_id": "KREC-005", "title": "Canonical Registry Foundation", "status": "registered_planned_task", "depends_on": ["KREC-002", "KREC-003", "KREC-004"]},
+    {"task_id": "KREC-006", "title": "Decision Question Catalog", "status": "registered_planned_task", "depends_on": ["KREC-003", "KREC-004", "KREC-005"]},
+    {"task_id": "KREC-007", "title": "P0 Resolver Expansion", "status": "registered_planned_task", "depends_on": ["KREC-005", "KREC-006"]},
+    {"task_id": "KREC-008", "title": "Consumer Enforcement Expansion", "status": "registered_planned_task", "depends_on": ["KREC-002", "KREC-007"]},
+    {"task_id": "KREC-009", "title": "Coverage Baseline", "status": "registered_planned_task", "depends_on": ["KREC-003", "KREC-006", "KREC-007", "KREC-008"]}
+  ]
+}
