@@ -54,21 +54,43 @@ jobs:
       - name: Install MVK validator dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
 
-      - name: Check source syntax
+      - name: Check source syntax and deterministic JSON
         run: |
           node --check kernel/validator/validate-aigov-governance.mjs
           node --check kernel/validator/validate-recovery-execution-program.mjs
+          node --check kernel/validator/validate-downstream-consumer-contract.mjs
+          node --check kernel/validator/validate-downstream-consumer-canonical-lock.mjs
+          node --check kernel/validator/validate-downstream-consumer-lineage.mjs
           node --check tools/lib/aigov-v3-closure.mjs
           node --check tools/test-aigov-v3-exception.mjs
           node --check tools/verify-aigov-exact-main.mjs
           node --check tools/verify-aigov-v3-exact-main.mjs
           node --check tools/generate-aigov-v3-batch-b-scope.mjs
+          node --check tools/generate-aigov-scope-disclosure.mjs
+          node --check tools/materialize-aigov-lifecycle.mjs
           node --check tools/materialize-pr-inspector-rereview-sequence.mjs
+          node --check tools/finalize-aigov-post-ci-evidence.mjs
+          node --check tools/index-aigov-post-ci-artifact.mjs
+          node --check tools/assemble-aigov-post-ci-payload.mjs
+          node --check tools/assemble-aigov-validation-evidence.mjs
+          node --check tools/wait-for-aigov-source-ci.mjs
+          node --check tools/run-aigov-validation-suite.mjs
           node --check tools/validate-roadmap-memory.mjs
           node --check tools/validate-roadmap-memory-v3.mjs
           node --check tools/validate-roadmap-memory-full.mjs
+          node --check tools/validate-kroad-010-primary-baseline.mjs
+          node --check tools/validate-kroad-010-prototype-integrity.mjs
           node --check tools/validate-kroad-010-history-matrix.mjs
           node --check tools/test-kroad-010-history-matrix-fail-closed.mjs
+          node --check tools/kroad-010-history/common.mjs
+          node --check tools/kroad-010-history/build.mjs
+          node --check tools/kroad-010-history/validate.mjs
+          node -e "for (const p of process.argv.slice(1)) JSON.parse(require('node:fs').readFileSync(p, 'utf8'))" \
+            kernel/decision-governance/downstream-consumer-contract.v0.json \
+            kernel/decision-governance/downstream-consumer-lineage-binding.v0.json \
+            kernel/fixtures/contract-lock/downstream_consumer/canonical_lock_mutations.json \
+            kernel/fixtures/contract-lock/downstream_consumer/primary-validator-baseline.v0.json \
+            kernel/fixtures/history-matrix/downstream_consumer/history-matrix.v0.json
 
       - name: Validate patch whitespace
         run: git diff --check
