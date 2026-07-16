@@ -122,7 +122,7 @@ Registration does not mean active, authorized for implementation, implemented, c
 
 - [ ] KROAD-012 — External Evidence Producer Boundary
   - `status`: `next_product_task_blocked_pending_final_aigov_closure`
-  - `KROAD-013` through `KROAD-018` remain `not_started`.
+  - KROAD-013 through KROAD-018 remain not_started.
   - The recovery program does not supersede or implement any KROAD item.
 
 ## Completed
