@@ -8,6 +8,7 @@ import { INSPECTOR_COMMIT, SEQUENCE_APP_ID, SEQUENCE_CONTEXT, SEQUENCE_WORKFLOW,
 const ROOT = process.cwd();
 const REPOSITORY = 'rezahh107/EV4-Decision-Kernel';
 const REPOSITORY_ID = 1292378784;
+const PLAN_ID = 'GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4';
 const DEFAULT_SCOPE = 'planning/governance/scopes/aigov-v3-batch-b.scope.json';
 
 function args(argv) {
@@ -33,7 +34,7 @@ function main() {
   const observedHead = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim();
   if (observedHead !== input.head) throw new Error('AIGOV_SEQUENCE_PRODUCER_HEAD_MISMATCH');
   const scope = JSON.parse(readFileSync(path.join(ROOT, input.scopePath), 'utf8'));
-  if (scope.plan_id !== 'GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3' || scope.batch_id !== 'BATCH_B') throw new Error('AIGOV_SEQUENCE_PRODUCER_SCOPE_MISMATCH');
+  if (scope.plan_id !== PLAN_ID || scope.batch_id !== 'BATCH_B') throw new Error('AIGOV_SEQUENCE_PRODUCER_SCOPE_MISMATCH');
   const sequence = {
     schema_version: 3,
     events: [{ event_id: `implemented-pending-rereview-${input.head}`, event_type: 'implemented_pending_rereview', target_repository: REPOSITORY, pr_number: input.prNumber, resulting_head_sha: input.head }],
@@ -69,6 +70,6 @@ function main() {
   mkdirSync(path.dirname(path.resolve(ROOT, input.output)), { recursive: true });
   writeFileSync(path.resolve(ROOT, input.output), sequenceRaw);
   writeFileSync(path.resolve(ROOT, input.producerOutput), `${JSON.stringify(producer, null, 2)}\n`);
-  console.log(JSON.stringify({ status: 'pass', sequence: input.output, producer: input.producerOutput, pr_number: input.prNumber, scope_revision: scope.scope_revision }, null, 2));
+  console.log(JSON.stringify({ status: 'pass', plan_id: PLAN_ID, sequence: input.output, producer: input.producerOutput, pr_number: input.prNumber, scope_revision: scope.scope_revision }, null, 2));
 }
 main();
