@@ -63,7 +63,7 @@ external_repository_effect: none
 - [ ] PR #50 — V4 Batch B Draft implementation
   - `branch`: `governance/aigov-v3-batch-b-closure`
   - `status`: `implementation_active_pending_exact_head_validation_and_review`
-  - `scope_revision`: `sha256:d9e095a56170951a147fac582963c6fa7e21b2951ac810fcedffefe76ac6a1c0`
+  - `scope_revision`: `sha256:9a9a9b599b40f23b7f9f2dbc3400125cb25ee32ea65b696181f4d0c0d7029e80`
   - `merge_permitted`: `false`
   - `independent_review_handoff_permitted`: `only_after_final_exact_head_ci_green`
   - Every new commit invalidates older CI and review evidence.
