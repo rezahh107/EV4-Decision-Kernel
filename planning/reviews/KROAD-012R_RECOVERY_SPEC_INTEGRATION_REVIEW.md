@@ -32,9 +32,9 @@ The following remain insufficient individually or collectively:
 - a target file declaring itself authoritative;
 - this historical review file.
 
-## V3 Batch B registration effect
+## V4 Batch B registration effect
 
-`GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V3` registers `DCOV-COVERAGE-EXECUTION-PROGRAM` as a distinct, non-active planning carrier only.
+`GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4` registers `DCOV-COVERAGE-EXECUTION-PROGRAM` as a distinct, non-active planning carrier only.
 
 ```yaml
 kroad_012r_status: historical_non_authoritative
