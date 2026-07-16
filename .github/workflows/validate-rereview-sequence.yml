@@ -72,7 +72,6 @@ jobs:
 
       - name: Execute official pinned v1.10.2 rereview sequence validator
         env:
-          GITHUB_TOKEN: ${{ github.token }}
           PYTHONPATH: ${{ github.workspace }}/_external/pr-inspector
         run: python _external/pr-inspector/scripts/validate_rereview_sequence.py artifacts/pr-inspector-rereview-sequence.pending.json
 
