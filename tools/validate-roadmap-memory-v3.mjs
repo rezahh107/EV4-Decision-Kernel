@@ -62,7 +62,7 @@ for (const token of [
   'percentages: null',
   'coverage_promotion_effect: none',
   'product_effect: none',
-  `scope_revision: \`${SCOPE_REVISION}\``,
+  `\`scope_revision\`: \`${SCOPE_REVISION}\``,
 ]) if (!nextWork.includes(token)) fail('planning/NEXT_WORK.md', `required V4 state missing: ${token}`);
 const nextTask = section(nextWork, 'Next Task');
 const unchecked = [...nextTask.matchAll(/^- \[ \] ((?:KROAD|DCOV-EXEC|AIGOV-ADOPT)-\d{3})\s+—/gm)];
