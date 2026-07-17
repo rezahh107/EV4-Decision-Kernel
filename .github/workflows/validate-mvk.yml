@@ -68,8 +68,6 @@ jobs:
         shell: bash
         run: |
           set +e
-          git reset --hard "${COVERAGE_HEAD_SHA}"
-          git clean -ffdx
           test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
           npm ci > "${RUNNER_TEMP}/coverage-install.log" 2>&1
