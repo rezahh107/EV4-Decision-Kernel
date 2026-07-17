@@ -166,22 +166,40 @@ jobs:
             --head "${COVERAGE_HEAD_SHA}" \
             --output "${RUNNER_TEMP}/aigov-owner-policy-activation-scope.json"
 
-      - name: Validate owner policy, AIGOV, Recovery and Coverage governance
+      - name: Validate owner policy
+        if: ${{ always() }}
         env:
           AIGOV_V4_REPORT: ${{ runner.temp }}/aigov-owner-policy-report.json
+        run: npm run validate:aigov
+
+      - name: Validate AIGOV exception and hardening suites
+        if: ${{ always() }}
         run: |
-          set -euo pipefail
-          npm run validate:aigov
           npm run test:aigov-v3-exception
           npm run test:aigov-v4-hardening
+
+      - name: Validate Recovery lifecycle
+        if: ${{ always() }}
+        run: |
           npm run validate:recovery-program
           npm run test:recovery-lifecycle
-          npm run validate:roadmap-memory
+
+      - name: Validate roadmap memory
+        if: ${{ always() }}
+        run: npm run validate:roadmap-memory
+
+      - name: Validate Coverage impact and contract
+        if: ${{ always() }}
+        run: |
           npm run test:coverage-impact-governance
           npm run validate:coverage
-          npm run validate:mvk
+
+      - name: Validate complete MVK
+        if: ${{ always() }}
+        run: npm run validate:mvk
 
       - name: Verify PR #50 closure against exact current main
+        if: ${{ always() }}
         run: >-
           node tools/verify-aigov-v3-exact-main.mjs
           --mode batch-b-policy-preview
