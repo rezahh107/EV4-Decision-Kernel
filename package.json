@@ -15,7 +15,7 @@
     "validate:downstream-consumer-lineage": "node kernel/validator/validate-downstream-consumer-lineage.mjs",
     "validate:kroad-010-history-matrix": "node tools/validate-kroad-010-history-matrix.mjs",
     "test:kroad-010-history-matrix-fail-closed": "node tools/test-kroad-010-history-matrix-fail-closed.mjs",
-    "validate:coverage": "node kernel/validator/validate-coverage-guarantee-history.mjs && node kernel/validator/validate-coverage-guarantee-owner-policy.mjs",
+    "validate:coverage": "node kernel/validator/validate-coverage-guarantee-history.mjs && node kernel/validator/validate-coverage-guarantee.mjs",
     "validate:aigov": "node tools/validate-aigov-v4-governance.mjs",
     "test:aigov-fixtures": "node tools/test-aigov-v4-hardening.mjs",
     "test:aigov-v3-exception": "node tools/test-aigov-v3-exception.mjs",
