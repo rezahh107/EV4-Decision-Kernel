@@ -151,12 +151,18 @@ jobs:
           node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
           node --check kernel/validator/validate-recovery-execution-program.mjs
 
-      - name: Validate patch whitespace and exact scope
+      - name: Validate patch whitespace
         shell: bash
         run: |
           set -euo pipefail
           git diff --check
           git diff --check "${COVERAGE_BASE_SHA}..${COVERAGE_HEAD_SHA}"
+
+      - name: Validate exact scope
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -euo pipefail
           npm run aigov:scope-disclosure:batch-b -- \
             --base "${COVERAGE_BASE_SHA}" \
             --head "${COVERAGE_HEAD_SHA}" \
