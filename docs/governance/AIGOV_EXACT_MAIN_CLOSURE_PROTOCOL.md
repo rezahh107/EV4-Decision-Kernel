@@ -1,8 +1,8 @@
 # AIGOV Exact-Main Closure Protocol
 
-**Status:** active owner-policy V4 verification protocol  
-**Plan:** `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`  
-**Merge authority:** owner-only  
+**Status:** active owner-policy V4 verification protocol
+**Plan:** `GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4`
+**Merge authority:** owner-only
 **Independent review:** optional advisory, non-blocking
 
 ## Active sequence
