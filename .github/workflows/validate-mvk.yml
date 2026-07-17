@@ -82,6 +82,7 @@ jobs:
             status=${install_status}
           fi
           printf 'exit_code=%s\n' "${status}" > "${RUNNER_TEMP}/coverage-validation.exit"
+          sha256sum kernel/decision-governance/coverage-guarantee-contract.v1.json | awk '{print $1}' > "${RUNNER_TEMP}/coverage-contract.sha256"
           exit 0
       - name: Upload Coverage diagnostics
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -90,6 +91,7 @@ jobs:
           path: |
             ${{ runner.temp }}/coverage-validation.log
             ${{ runner.temp }}/coverage-validation.exit
+            ${{ runner.temp }}/coverage-contract.sha256
           if-no-files-found: error
           retention-days: 7
 
