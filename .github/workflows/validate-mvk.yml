@@ -64,7 +64,7 @@ jobs:
           ref: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Capture production Coverage validator output
+      - name: Reproduce production Coverage validation
         shell: bash
         run: |
           set +e
@@ -82,16 +82,14 @@ jobs:
             status=${install_status}
           fi
           printf 'exit_code=%s\n' "${status}" > "${RUNNER_TEMP}/coverage-validation.exit"
-          git rev-parse 'HEAD^{tree}' > "${RUNNER_TEMP}/head-tree.txt"
           exit 0
-      - name: Upload Coverage diagnostics and tree identity
+      - name: Upload Coverage diagnostics
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: coverage-validation-diagnostics-${{ github.event.pull_request.head.sha }}
           path: |
             ${{ runner.temp }}/coverage-validation.log
             ${{ runner.temp }}/coverage-validation.exit
-            ${{ runner.temp }}/head-tree.txt
           if-no-files-found: error
           retention-days: 7
 
@@ -147,6 +145,7 @@ jobs:
           node --check kernel/validator/coverage-work-package-id.mjs
           node --check kernel/validator/validate-coverage-guarantee-history.mjs
           node --check kernel/validator/validate-coverage-guarantee.mjs
+          node --check kernel/validator/validate-coverage-guarantee-owner-policy.mjs
           node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
           node --check kernel/validator/validate-recovery-execution-program.mjs
 
