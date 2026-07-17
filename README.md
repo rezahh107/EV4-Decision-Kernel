@@ -1,6 +1,6 @@
 # EV4 Decision Kernel
 
-**Status:** AIGOV V4 Batch B closed; Recovery Program active  
+**Status:** AIGOV V4 Batch B closed; Recovery Program active
 **Owner:** `rezahh107/EV4-Decision-Kernel`
 
 ## Purpose
