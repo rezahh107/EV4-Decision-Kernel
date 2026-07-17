@@ -69,6 +69,8 @@ kroad_supersession_effect: none
 
 ## Current PR
 
+current_work_package_id: GOV-OWNER-POLICY-RECOVERY-ACTIVATION
+
 No open AIGOV closure PR remains. Recovery activation is represented by the focused owner-policy activation PR.
 
 - [ ] `DCOV-EXEC-001` — Coverage Guarantee proposal and validation foundation
