@@ -52,6 +52,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      COVERAGE_REPOSITORY: ${{ needs.external-coverage-trust.outputs.verified_repository }}
+      COVERAGE_PR_NUMBER: ${{ needs.external-coverage-trust.outputs.verified_pr_number }}
+      COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}
+      COVERAGE_HEAD_SHA: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
     steps:
       - name: Checkout externally verified exact PR head
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -60,7 +65,14 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Install dependencies
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        shell: bash
+        run: |
+          set -euo pipefail
+          git reset --hard "${COVERAGE_HEAD_SHA}"
+          git clean -ffdx
+          test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          npm ci --ignore-scripts --no-audit --no-fund
       - name: Capture production Coverage validator output
         shell: bash
         run: |
@@ -69,13 +81,15 @@ jobs:
           status=$?
           printf 'exit_code=%s\n' "${status}" > "${RUNNER_TEMP}/coverage-validation.exit"
           exit 0
-      - name: Upload Coverage diagnostics
+      - name: Upload Coverage diagnostics and bounded repair source snapshot
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: coverage-validation-diagnostics-${{ github.event.pull_request.head.sha }}
           path: |
             ${{ runner.temp }}/coverage-validation.log
             ${{ runner.temp }}/coverage-validation.exit
+            kernel/validator/validate-coverage-guarantee-legacy.mjs
+            planning/KERNEL_EXECUTION_PLAN.md
           if-no-files-found: error
           retention-days: 7
 
