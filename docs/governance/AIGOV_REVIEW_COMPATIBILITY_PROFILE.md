@@ -1,6 +1,6 @@
 # AIGOV Review Compatibility Profile
 
-**Status:** historical compatibility and optional advisory guidance  
+**Status:** historical compatibility and optional advisory guidance
 **Active owner policy:** mandatory independent review removed repository-wide
 
 ## Current rule
