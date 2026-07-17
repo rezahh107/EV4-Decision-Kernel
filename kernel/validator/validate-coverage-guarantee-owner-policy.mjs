@@ -17,7 +17,7 @@ import {
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DIR = dirname(fileURLToPath(import.meta.url));
-const WRAPPER = join(DIR, 'validate-coverage-guarantee.mjs');
+const WRAPPER_REPOSITORY_PATH = 'kernel/validator/validate-coverage-guarantee.mjs';
 const PRF010 = join(DIR, 'validate-coverage-guarantee-prf010.mjs');
 const LEGACY = join(DIR, 'validate-coverage-guarantee-legacy.mjs');
 const RUNTIME_WRAPPER = join(DIR, '.validate-coverage-guarantee.runtime.mjs');
@@ -96,6 +96,9 @@ function validatePolicyAndImpact() {
   const repository = process.env.COVERAGE_REPOSITORY || TARGET_REPOSITORY;
   const pullRequest = Number.parseInt(process.env.COVERAGE_PR_NUMBER || '', 10);
   const baseSha = process.env.COVERAGE_BASE_SHA || '';
+  if (!/^[0-9a-f]{40}$/.test(baseSha)) {
+    fail('COV_IMPACT_BASE_MISSING', 'Coverage validation requires an authoritative 40-character base SHA.');
+  }
   const allChanged = changedPaths(baseSha);
   const sensitive = allChanged.filter((path) => matchesSensitive(path, contract.coverage_sensitive_paths));
   const impacts = readdirSync(join(ROOT, IMPACT_DIR))
@@ -136,6 +139,7 @@ function validatePolicyAndImpact() {
     external_promotion_independent_review: 'required',
     coverage_credit_authorized: false,
   }, null, 2));
+  return baseSha;
 }
 
 function replaceExactlyOnce(source, needle, replacement, code) {
@@ -152,7 +156,19 @@ function cleanup() {
   }
 }
 
-function prepareRuntime() {
+function trustedBaseWrapperSource(baseSha) {
+  try {
+    return execFileSync('git', ['show', `${baseSha}:${WRAPPER_REPOSITORY_PATH}`], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+  } catch {
+    fail('COV_TRUSTED_BASE_WRAPPER_MISSING', 'The canonical Coverage wrapper cannot be resolved from the exact trusted base.');
+  }
+}
+
+function prepareRuntime(baseSha) {
   cleanup();
   writeFileSync(RUNTIME_LEGACY, adaptLegacyValidatorSource(readFileSync(LEGACY, 'utf8')), 'utf8');
   const prf010Source = readFileSync(PRF010, 'utf8');
@@ -162,7 +178,7 @@ function prepareRuntime() {
     "'.validate-coverage-guarantee-legacy.runtime.mjs'",
     'COV_PRF010_ADAPTER_SOURCE_MISMATCH',
   ), 'utf8');
-  let wrapperSource = readFileSync(WRAPPER, 'utf8');
+  let wrapperSource = trustedBaseWrapperSource(baseSha);
   wrapperSource = replaceExactlyOnce(
     wrapperSource,
     "'validate-coverage-guarantee-prf010.mjs'",
@@ -178,12 +194,12 @@ function prepareRuntime() {
   writeFileSync(RUNTIME_WRAPPER, wrapperSource, 'utf8');
 }
 
-if (!existsSync(WRAPPER) || !existsSync(PRF010) || !existsSync(LEGACY)) {
-  fail('COV_PRESERVED_VALIDATOR_MISSING', 'The pinned wrapper, PRF-010 gate, and legacy validator are required.');
+if (!existsSync(PRF010) || !existsSync(LEGACY)) {
+  fail('COV_PRESERVED_VALIDATOR_MISSING', 'The PRF-010 gate and legacy validator are required.');
 }
 
-validatePolicyAndImpact();
-prepareRuntime();
+const baseSha = validatePolicyAndImpact();
+prepareRuntime(baseSha);
 process.once('exit', cleanup);
 try {
   await import(pathToFileURL(RUNTIME_WRAPPER).href);
