@@ -6,13 +6,26 @@ import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import {
   adaptLegacyValidatorSource,
+  buildTrustedWrapperRuntimeSource,
+  classifyTrustedWrapperSource,
+  COVERAGE_IDENTITY_MODES,
   impactIdentityCodes,
   parseCurrentWorkPackageId,
+  resolveCoverageIdentityMode,
+  selectCurrentImpactCarriers,
+  TRUSTED_WRAPPER_GENERATIONS,
 } from '../kernel/validator/coverage-work-package-id.mjs';
 
 const schema = JSON.parse(readFileSync('kernel/schemas/coverage-impact.v1.schema.json', 'utf8'));
 const actual = JSON.parse(readFileSync('planning/coverage/impacts/dcov-recovery.pr51-owner-policy-activation.json', 'utf8'));
 const nextWork = readFileSync('planning/NEXT_WORK.md', 'utf8');
+const validateMain = readFileSync('.github/workflows/validate-main.yml', 'utf8');
+const currentWrapper = readFileSync('kernel/validator/validate-coverage-guarantee.mjs', 'utf8');
+const generationAWrapper = execFileSync(
+  'git',
+  ['show', `${actual.base_sha}:kernel/validator/validate-coverage-guarantee.mjs`],
+  { encoding: 'utf8' },
+);
 const ajv = new Ajv2020({ allErrors: true, strict: false });
 addFormats(ajv);
 const validate = ajv.compile(schema);
@@ -22,6 +35,27 @@ const results = [];
 function test(id, fn) {
   try { fn(); results.push({ id, status: 'pass' }); }
   catch (error) { results.push({ id, status: 'fail', error: error.message }); }
+}
+
+function syntaxCheckSource(source, temp) {
+  try {
+    writeFileSync(temp, source, 'utf8');
+    execFileSync(process.execPath, ['--check', temp], { stdio: 'pipe' });
+  } finally {
+    try { unlinkSync(temp); } catch { /* absent */ }
+  }
+}
+
+function selectionContext(identityMode, overrides = {}) {
+  return {
+    identityMode,
+    repository: actual.repository,
+    pullRequest: identityMode === COVERAGE_IDENTITY_MODES.PULL_REQUEST ? actual.pull_request : null,
+    baseSha: actual.base_sha,
+    currentWorkPackage,
+    sensitivePaths: actual.changed_paths,
+    ...overrides,
+  };
 }
 
 test('valid-non-dcov-maintenance-work-package', () => {
@@ -85,13 +119,99 @@ test('legacy-adapter-is-exact-and-syntax-valid', () => {
   assert(adapted.includes('current_work_package_id:'));
   assert(adapted.includes('validNonCoverageMaintenance'));
   assert(adapted.includes('merge_gate: contract.merge_gate'));
-  const temp = 'kernel/validator/.coverage-adapter-focused-test.mjs';
-  try {
-    writeFileSync(temp, adapted, 'utf8');
-    execFileSync(process.execPath, ['--check', temp], { stdio: 'pipe' });
-  } finally {
-    try { unlinkSync(temp); } catch { /* absent */ }
-  }
+  syntaxCheckSource(adapted, 'kernel/validator/.coverage-adapter-focused-test.mjs');
+});
+
+test('exact-head-pr-identity-selects-pr51-carrier', () => {
+  assert.deepEqual(resolveCoverageIdentityMode('', actual.pull_request), {
+    mode: COVERAGE_IDENTITY_MODES.PULL_REQUEST,
+    diagnostic_code: null,
+  });
+  const selected = selectCurrentImpactCarriers(
+    [actual],
+    selectionContext(COVERAGE_IDENTITY_MODES.PULL_REQUEST),
+  );
+  assert.equal(selected.diagnostic_code, null);
+  assert.deepEqual(selected.matches.map((impact) => impact.impact_id), [actual.impact_id]);
+});
+
+test('post-merge-identity-without-pr-selects-pr51-carrier', () => {
+  assert.deepEqual(resolveCoverageIdentityMode(COVERAGE_IDENTITY_MODES.POST_MERGE, null), {
+    mode: COVERAGE_IDENTITY_MODES.POST_MERGE,
+    diagnostic_code: null,
+  });
+  const selected = selectCurrentImpactCarriers(
+    [actual],
+    selectionContext(COVERAGE_IDENTITY_MODES.POST_MERGE),
+  );
+  assert.equal(selected.diagnostic_code, null);
+  assert.deepEqual(selected.matches.map((impact) => impact.impact_id), [actual.impact_id]);
+});
+
+test('post-merge-zero-carrier-fails-stably', () => {
+  const selected = selectCurrentImpactCarriers(
+    [actual],
+    selectionContext(COVERAGE_IDENTITY_MODES.POST_MERGE, {
+      currentWorkPackage: 'GOV-UNRELATED',
+    }),
+  );
+  assert.equal(selected.diagnostic_code, 'COV_IMPACT_POST_MERGE_NOT_FOUND');
+  assert.deepEqual(selected.matches, []);
+});
+
+test('post-merge-multiple-carriers-fail-stably', () => {
+  const duplicate = { ...structuredClone(actual), impact_id: `${actual.impact_id}.duplicate` };
+  const selected = selectCurrentImpactCarriers(
+    [actual, duplicate],
+    selectionContext(COVERAGE_IDENTITY_MODES.POST_MERGE),
+  );
+  assert.equal(selected.diagnostic_code, 'COV_IMPACT_POST_MERGE_AMBIGUOUS');
+  assert.equal(selected.matches.length, 2);
+});
+
+test('validate-main-declares-post-merge-mode-without-pr-number', () => {
+  assert(validateMain.includes('COVERAGE_IDENTITY_MODE: post_merge'));
+  const mainEnv = validateMain.match(/    env:\n([\s\S]*?)    steps:/)?.[1] || '';
+  assert(!mainEnv.includes('COVERAGE_PR_NUMBER:'));
+  assert(validateMain.includes('test "${COVERAGE_IDENTITY_MODE}" = "post_merge"'));
+});
+
+test('generation-a-trusted-base-adapter-is-supported', () => {
+  assert.equal(
+    classifyTrustedWrapperSource(generationAWrapper),
+    TRUSTED_WRAPPER_GENERATIONS.EXTERNAL_AUTHORITY_V1,
+  );
+  const runtime = buildTrustedWrapperRuntimeSource(generationAWrapper, generationAWrapper);
+  assert.equal(runtime.generation, TRUSTED_WRAPPER_GENERATIONS.EXTERNAL_AUTHORITY_V1);
+  assert(runtime.source.includes('.validate-coverage-guarantee-prf010.runtime.mjs'));
+  assert(runtime.source.includes('.validate-coverage-guarantee-legacy.runtime.mjs'));
+  assert(!runtime.source.includes('validate-coverage-guarantee-owner-policy.mjs'));
+  syntaxCheckSource(runtime.source, 'kernel/validator/.coverage-generation-a-wrapper-test.mjs');
+});
+
+test('generation-b-future-pr-adapter-uses-pinned-generation-a', () => {
+  assert.equal(
+    classifyTrustedWrapperSource(currentWrapper),
+    TRUSTED_WRAPPER_GENERATIONS.OWNER_POLICY_V1,
+  );
+  const runtime = buildTrustedWrapperRuntimeSource(currentWrapper, generationAWrapper);
+  assert.equal(runtime.generation, TRUSTED_WRAPPER_GENERATIONS.OWNER_POLICY_V1);
+  assert(runtime.source.includes('.validate-coverage-guarantee-prf010.runtime.mjs'));
+  assert(runtime.source.includes('.validate-coverage-guarantee-legacy.runtime.mjs'));
+  assert(!runtime.source.includes('validate-coverage-guarantee-owner-policy.mjs'));
+  syntaxCheckSource(runtime.source, 'kernel/validator/.coverage-generation-b-wrapper-test.mjs');
+});
+
+test('unknown-wrapper-shape-fails-closed', () => {
+  assert.throws(
+    () => buildTrustedWrapperRuntimeSource(`${currentWrapper}\n// mutated\n`, generationAWrapper),
+    (error) => error.code === 'COV_TRUSTED_BASE_WRAPPER_GENERATION_UNSUPPORTED',
+  );
+});
+
+test('owner-policy-recursive-runtime-is-forbidden', () => {
+  const runtime = buildTrustedWrapperRuntimeSource(currentWrapper, generationAWrapper);
+  assert(!runtime.source.includes("await import('./validate-coverage-guarantee-owner-policy.mjs')"));
 });
 
 for (const result of results) {
