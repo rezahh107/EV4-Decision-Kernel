@@ -8,9 +8,10 @@
   "base_sha": "435add8ee3f3274f781b6e391f11e3262e380c4e",
   "head_binding": "derived_at_runtime",
   "change_class": "L3",
-  "scope_revision": "sha256:1a0794c8894e600a66e152199c1515f1709f280f71585290185771e101d98d94",
+  "scope_revision": "sha256:140b4ec707b8ca56175ef9bd931fb58fbc275ce18038e86d6ab4f8ba4bd48718",
   "committed": [
     ".github/workflows/finalize-aigov-batch-b.yml",
+    ".github/workflows/finalize-aigov-evidence.yml",
     ".github/workflows/validate-main.yml",
     ".github/workflows/validate-mvk.yml",
     ".github/workflows/validate-rereview-sequence.yml",
@@ -105,14 +106,14 @@
     "PR #50 method-aware Merge-result proof",
     "current-main Validate Main evidence",
     "exact-head activation PR CI Green",
-    "owner-authorized activation PR Merge"
+    "owner Merge remains pending outside this repair"
   ],
   "authorized_operations": [
     "update active repository policy and closure carriers",
     "record PR #50 closure under owner policy",
     "activate DCOV-COVERAGE-EXECUTION-PROGRAM",
     "authorize KREC-001 through KREC-009 without implementing deliverables",
-    "create and Merge one focused activation PR after exact-head CI Green"
+    "prepare one focused activation PR for fresh exact-head rereview"
   ],
   "forbidden_changes": [
     "secret_change",
