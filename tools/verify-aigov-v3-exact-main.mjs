@@ -242,8 +242,7 @@ function memoryState() {
       ? 'not_measurable_pending_external_promotion'
       : 'unknown',
     coveragePromotionEffect: recovery.coverage_promotion_effect,
-    coverageCredit: tasks.length === 9
-      && tasks.every((task) => task.coverage_credit === false),
+    coverageCredit: tasks.some((task) => task.coverage_credit === true),
     productEffect: recovery.product_effect,
     externalRepositoryEffect: /external_repository_effect:\s*none/.test(nextWork)
       ? 'none'
@@ -260,8 +259,7 @@ function memoryState() {
     krecStatus: allActive ? 'active' : 'unknown',
     implementationAuthorized: tasks.length === 9
       && tasks.every((task) => task.implementation_authorized === true),
-    readinessClaim: tasks.length === 9
-      && tasks.every((task) => task.readiness_claim === false),
+    readinessClaim: tasks.some((task) => task.readiness_claim === true),
     historicalIndependentGreenReceiptForPr49:
       /historical_independent_green_receipt:\s*not_claimed/.test(nextWork)
         ? 'not_claimed'
