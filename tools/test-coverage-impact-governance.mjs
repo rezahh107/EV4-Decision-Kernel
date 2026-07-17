@@ -26,6 +26,7 @@ const generationAWrapper = execFileSync(
   ['show', `${actual.base_sha}:kernel/validator/validate-coverage-guarantee.mjs`],
   { encoding: 'utf8' },
 );
+const headSha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 const ajv = new Ajv2020({ allErrors: true, strict: false });
 addFormats(ajv);
 const validate = ajv.compile(schema);
@@ -44,6 +45,16 @@ function syntaxCheckSource(source, temp) {
   } finally {
     try { unlinkSync(temp); } catch { /* absent */ }
   }
+}
+
+function runOwnerPolicy(overrides, removed = []) {
+  const env = { ...process.env, ...overrides };
+  for (const name of removed) delete env[name];
+  return execFileSync(
+    process.execPath,
+    ['kernel/validator/validate-coverage-guarantee-owner-policy.mjs'],
+    { env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+  );
 }
 
 function selectionContext(identityMode, overrides = {}) {
@@ -174,6 +185,7 @@ test('validate-main-declares-post-merge-mode-without-pr-number', () => {
   const mainEnv = validateMain.match(/    env:\n([\s\S]*?)    steps:/)?.[1] || '';
   assert(!mainEnv.includes('COVERAGE_PR_NUMBER:'));
   assert(validateMain.includes('test "${COVERAGE_IDENTITY_MODE}" = "post_merge"'));
+  assert(validateMain.includes('test -z "${COVERAGE_PR_NUMBER:-}"'));
 });
 
 test('generation-a-trusted-base-adapter-is-supported', () => {
@@ -212,6 +224,27 @@ test('unknown-wrapper-shape-fails-closed', () => {
 test('owner-policy-recursive-runtime-is-forbidden', () => {
   const runtime = buildTrustedWrapperRuntimeSource(currentWrapper, generationAWrapper);
   assert(!runtime.source.includes("await import('./validate-coverage-guarantee-owner-policy.mjs')"));
+});
+
+test('post-merge-owner-policy-integration-without-pr-number', () => {
+  const output = runOwnerPolicy({
+    COVERAGE_REPOSITORY: actual.repository,
+    COVERAGE_IDENTITY_MODE: COVERAGE_IDENTITY_MODES.POST_MERGE,
+    COVERAGE_BASE_SHA: actual.base_sha,
+    COVERAGE_HEAD_SHA: headSha,
+  }, ['COVERAGE_PR_NUMBER']);
+  assert(output.includes('"identity_mode": "post_merge"'));
+  assert(output.includes(actual.impact_id));
+});
+
+test('generation-b-future-base-full-validation-passes', () => {
+  const output = runOwnerPolicy({
+    COVERAGE_REPOSITORY: actual.repository,
+    COVERAGE_IDENTITY_MODE: COVERAGE_IDENTITY_MODES.POST_MERGE,
+    COVERAGE_BASE_SHA: headSha,
+    COVERAGE_HEAD_SHA: headSha,
+  }, ['COVERAGE_PR_NUMBER']);
+  assert(output.includes('Coverage trusted-base wrapper generation: owner_policy_v1'));
 });
 
 for (const result of results) {
