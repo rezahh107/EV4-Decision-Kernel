@@ -151,25 +151,6 @@ jobs:
           node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
           node --check kernel/validator/validate-recovery-execution-program.mjs
 
-      - name: Capture patch whitespace diagnostics
-        shell: bash
-        run: |
-          set +e
-          git diff --check "${COVERAGE_BASE_SHA}..${COVERAGE_HEAD_SHA}" > "${RUNNER_TEMP}/patch-whitespace.log" 2>&1
-          status=$?
-          printf 'exit_code=%s\n' "${status}" > "${RUNNER_TEMP}/patch-whitespace.exit"
-          exit 0
-
-      - name: Upload patch whitespace diagnostics
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: patch-whitespace-diagnostics-${{ github.event.pull_request.head.sha }}
-          path: |
-            ${{ runner.temp }}/patch-whitespace.log
-            ${{ runner.temp }}/patch-whitespace.exit
-          if-no-files-found: error
-          retention-days: 7
-
       - name: Validate patch whitespace
         shell: bash
         run: |
