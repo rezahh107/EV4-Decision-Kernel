@@ -15,6 +15,7 @@ permissions:
 jobs:
   finalize-aigov-batch-b:
     name: Finalize AIGOV Batch B exact-main
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -27,58 +28,28 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
           persist-credentials: false
-
       - name: Assert exact current-main source identity
-        shell: bash
-        env:
-          SOURCE_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
-          SOURCE_REPOSITORY_ID: ${{ github.event.repository.id }}
-          SOURCE_WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
-          SOURCE_WORKFLOW_PATH: ${{ github.event.workflow_run.path }}
-          SOURCE_WORKFLOW_EVENT: ${{ github.event.workflow_run.event }}
-          SOURCE_WORKFLOW_STATUS: ${{ github.event.workflow_run.status }}
-          SOURCE_WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
         run: |
           set -euo pipefail
-          test "${SOURCE_REPOSITORY_ID}" = "1292378784"
-          test "${SOURCE_WORKFLOW_NAME}" = "Validate Main"
-          test "${SOURCE_WORKFLOW_PATH}" = ".github/workflows/validate-main.yml"
-          test "${SOURCE_WORKFLOW_EVENT}" = "push"
-          test "${SOURCE_WORKFLOW_STATUS}" = "completed"
-          test "${SOURCE_WORKFLOW_CONCLUSION}" = "success"
-          test "$(git rev-parse HEAD)" = "${SOURCE_HEAD_SHA}"
+          test "${{ github.event.repository.id }}" = "1292378784"
+          test "${{ github.event.workflow_run.name }}" = "Validate Main"
+          test "${{ github.event.workflow_run.path }}" = ".github/workflows/validate-main.yml"
+          test "${{ github.event.workflow_run.event }}" = "push"
+          test "${{ github.event.workflow_run.status }}" = "completed"
+          test "${{ github.event.workflow_run.conclusion }}" = "success"
+          test "$(git rev-parse HEAD)" = "${{ github.event.workflow_run.head_sha }}"
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
-
-      - name: Checkout pinned PR Inspector v1.10.2
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          repository: rezahh107/PR-Inspector
-          ref: 9ed48bd995ee5b9270756254b04c1d48ccf21cbe
-          path: _external/pr-inspector
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
-        with:
-          python-version: '3.12'
-
-      - name: Install pinned PR Inspector runtime dependencies
-        run: python -m pip install --disable-pip-version-check --no-input jsonschema==4.26.0 PyYAML==6.0.3
-
       - name: Set up Node.js LTS
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: lts/*
           package-manager-cache: false
-
-      - name: Install target dependencies without scripts
+      - name: Install dependencies without scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
-
       - name: Execute authoritative Batch B final verifier
         env:
-          PR_INSPECTOR_ROOT: ${{ github.workspace }}/_external/pr-inspector
+          AIGOV_GITHUB_TOKEN: ${{ github.token }}
         run: node tools/verify-aigov-v3-exact-main.mjs --mode batch-b-final --output "${RUNNER_TEMP}/aigov-v4-batch-b-final.json"
-
       - name: Upload Batch B exact-main closure evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

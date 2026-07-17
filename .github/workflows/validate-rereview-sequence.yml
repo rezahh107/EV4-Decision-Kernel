@@ -19,79 +19,29 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
-
       - name: Assert exact clean pull-request head
-        shell: bash
-        env:
-          EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "${EXPECTED_HEAD_SHA}"
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
-
-      - name: Checkout pinned PR Inspector v1.10.2
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          repository: rezahh107/PR-Inspector
-          ref: 9ed48bd995ee5b9270756254b04c1d48ccf21cbe
-          path: _external/pr-inspector
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
-        with:
-          python-version: '3.12'
-
-      - name: Install pinned PR Inspector runtime dependencies
-        run: python -m pip install --disable-pip-version-check --no-input jsonschema==4.26.0 PyYAML==6.0.3
-
       - name: Set up Node.js LTS
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: lts/*
           package-manager-cache: false
-
-      - name: Install target dependencies without scripts
+      - name: Install dependencies without scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
-
-      - name: Materialize exact-bound pending rereview sequence
-        env:
-          EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          WORKFLOW_SHA: ${{ github.event.pull_request.head.sha }}
-          SOURCE_RUN_ID: ${{ github.run_id }}
-          SOURCE_RUN_ATTEMPT: ${{ github.run_attempt }}
-          TARGET_PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: >-
-          node tools/materialize-pr-inspector-rereview-sequence.mjs
-          --head "${EXPECTED_HEAD_SHA}"
-          --workflow-sha "${WORKFLOW_SHA}"
-          --run-id "${SOURCE_RUN_ID}"
-          --run-attempt "${SOURCE_RUN_ATTEMPT}"
-          --pr-number "${TARGET_PR_NUMBER}"
-          --scope-path planning/governance/scopes/aigov-v3-batch-b.scope.json
-
-      - name: Execute official pinned v1.10.2 rereview sequence validator
-        env:
-          PYTHONPATH: ${{ github.workspace }}/_external/pr-inspector
-        run: python _external/pr-inspector/scripts/validate_rereview_sequence.py artifacts/pr-inspector-rereview-sequence.pending.json
-
-      - name: Run designated producer adversarial suite
-        env:
-          PR_INSPECTOR_ROOT: ${{ github.workspace }}/_external/pr-inspector
-        run: npm run test:aigov-sequence-producer
-
-      - name: Run PRF-050 protocol and identity hardening suite
-        env:
-          PR_INSPECTOR_ROOT: ${{ github.workspace }}/_external/pr-inspector
-        run: npm run test:aigov-v4-hardening
-
-      - name: Upload sequence producer execution evidence
-        if: ${{ success() }}
+      - name: Validate owner policy and remaining Merge gates
+        run: |
+          npm run test:aigov-v3-exception
+          npm run test:aigov-v4-hardening
+      - name: Publish advisory-review policy evidence
+        run: |
+          node --input-type=module -e "import {writeFileSync} from 'node:fs';writeFileSync('aigov-owner-review-policy.json',JSON.stringify({independent_review_required:false,independent_review_policy:'optional_advisory',review_merge_authority:false,exact_head_sha:process.env.GITHUB_SHA},null,2)+'\\n')"
+      - name: Upload owner-policy evidence
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: aigov-rereview-sequence-producer
-          path: |
-            artifacts/pr-inspector-rereview-sequence.pending.json
-            artifacts/aigov-sequence-producer-execution.json
+          name: aigov-owner-review-policy
+          path: aigov-owner-review-policy.json
           if-no-files-found: error
           retention-days: 14

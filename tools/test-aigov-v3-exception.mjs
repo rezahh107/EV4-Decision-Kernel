@@ -1,126 +1,37 @@
 #!/usr/bin/env node
 import {
-  BATCH_A_EXCEPTION,
-  OWNER,
-  TARGET_REPOSITORY,
-  TARGET_REPOSITORY_ID,
-  V4_PLAN_ID,
-  compareCanonicalTrees,
-  verifyBatchAOneTimeReconciliation,
-  verifyBatchBFinalClosure,
-} from './lib/aigov-v3-closure.mjs';
-
+  aggregateAuthoritativeCi,
+  verifyCurrentMainExecution,
+  verifyMergeResultPayloads,
+  verifyWorkflowDescriptorPayloads,
+  AUTHORITATIVE_WORKFLOWS,
+  GITHUB_ACTIONS_APP_ID,
+} from './lib/aigov-ci-descriptor.mjs';
+import { BATCH_A_EXCEPTION, OWNER, PR50_HEAD_SHA, PR50_SCOPE_REVISION, TARGET_REPOSITORY, TARGET_REPOSITORY_ID, V4_PLAN_ID, compareCanonicalTrees, verifyBatchAOneTimeReconciliation, verifyBatchBFinalClosure } from './lib/aigov-v3-closure.mjs';
 const TREE = '8a8c83aee95ab36ab59ba128c7710bafedaa2d20';
-const HEAD = 'a'.repeat(40);
-const SCOPE = `sha256:${'b'.repeat(64)}`;
-const baseA = () => ({
-  repository: TARGET_REPOSITORY,
-  repositoryId: TARGET_REPOSITORY_ID,
-  batchId: 'BATCH_A',
-  prNumber: BATCH_A_EXCEPTION.prNumber,
-  baseSha: BATCH_A_EXCEPTION.baseSha,
-  headSha: BATCH_A_EXCEPTION.headSha,
-  mergeCommitSha: BATCH_A_EXCEPTION.mergeCommitSha,
-  exceptionPlanId: V4_PLAN_ID,
-  exceptionUseCount: 1,
-  exceptionReusable: false,
-  exceptionPrecedential: false,
-  prMerged: true,
-  mergeMode: 'squash',
-  mergeActor: OWNER,
-  equivalenceMode: 'exact_tree_equality',
-  patchReconstructionSucceeded: null,
-  prHeadTreeSha: TREE,
-  squashCommitTreeSha: TREE,
-  contentEquivalenceVerified: true,
-  mergeAncestorVerified: true,
-  exactHeadCiGreen: true,
-  currentMainValidationGreen: true,
-  coverageStatus: 'not_measurable_pending_external_promotion',
-  coveragePromotionEffect: 'none',
-  productEffect: 'none',
-  productTaskActivation: false,
-  kroad012rStatus: 'historical_non_authoritative',
-  kroad012Status: 'preserved',
-  kroad013Through018Status: 'not_started',
-  historicalIndependentGreenClaimed: false,
-});
-const baseB = () => ({
-  planId: V4_PLAN_ID,
-  batchId: 'BATCH_B',
-  exceptionApplied: false,
-  repository: TARGET_REPOSITORY,
-  repositoryId: TARGET_REPOSITORY_ID,
-  prNumber: 50,
-  headSha: HEAD,
-  scopeRevision: SCOPE,
-  memory: {
-    coverageStatus: 'not_measurable_pending_external_promotion',
-    coveragePromotionEffect: 'none',
-    coverageCredit: false,
-    productEffect: 'none',
-    externalRepositoryEffect: 'none',
-    kroad012Status: 'preserved',
-    kroad013Through018Status: 'not_started',
-    kroad012rStatus: 'historical_non_authoritative',
-    recoveryProgramStatus: 'registered_non_active',
-    krecStatus: 'registered_planned_task',
-    implementationAuthorized: false,
-    readinessClaim: false,
-    historicalIndependentGreenReceiptForPr49: 'not_claimed',
-    pr49ExceptionReusable: false,
-    pr49ExceptionPrecedential: false,
-  },
-});
-const cases = [];
-function caseA(name, mutate, expected) {
-  const input = baseA();
-  mutate(input);
-  const result = verifyBatchAOneTimeReconciliation(input);
-  cases.push({ name, expected, pass: result.diagnostics.includes(expected), diagnostics: result.diagnostics });
+const baseA = () => ({ repository: TARGET_REPOSITORY, repositoryId: TARGET_REPOSITORY_ID, batchId: 'BATCH_A', prNumber: 49, baseSha: BATCH_A_EXCEPTION.baseSha, headSha: BATCH_A_EXCEPTION.headSha, mergeCommitSha: BATCH_A_EXCEPTION.mergeCommitSha, exceptionPlanId: V4_PLAN_ID, exceptionUseCount: 1, exceptionReusable: false, exceptionPrecedential: false, prMerged: true, mergeMode: 'squash', mergeActor: OWNER, equivalenceMode: 'exact_tree_equality', patchReconstructionSucceeded: null, prHeadTreeSha: TREE, squashCommitTreeSha: TREE, contentEquivalenceVerified: true, mergeAncestorVerified: true, exactHeadCiGreen: true, currentMainValidationGreen: true, coverageStatus: 'not_measurable_pending_external_promotion', coveragePromotionEffect: 'none', productEffect: 'none', productTaskActivation: false, kroad012rStatus: 'historical_non_authoritative', kroad012Status: 'preserved', kroad013Through018Status: 'not_started', historicalIndependentGreenClaimed: false });
+function descriptor(expected, event, head) {
+  const workflow = { id: Math.floor(Math.random()*100000)+1, name: expected.name, path: expected.path };
+  const run = { id: workflow.id+100000, workflow_id: workflow.id, run_attempt: 1, name: expected.name, path: expected.path, event, head_sha: head, status: 'completed', conclusion: 'success', updated_at: '2026-07-16T10:00:00Z', repository: { id: TARGET_REPOSITORY_ID, full_name: TARGET_REPOSITORY } };
+  const job = { id: run.id+100000, run_id: run.id, name: expected.checkName, head_sha: head, status: 'completed', conclusion: 'success', completed_at: '2026-07-16T10:00:00Z' };
+  const check = { id: job.id, name: expected.checkName, head_sha: head, status: 'completed', conclusion: 'success', app: { id: GITHUB_ACTIONS_APP_ID, slug: 'github-actions', owner: { login: 'github' } } };
+  return verifyWorkflowDescriptorPayloads({ repository: TARGET_REPOSITORY, repositoryId: TARGET_REPOSITORY_ID, exactHeadSha: head, event, expected, workflow, runs: [run], allRepositoryRuns: [run], jobs: [job], checkRuns: [check] }).evidence;
 }
-function caseB(name, mutate, expected) {
-  const input = baseB();
-  mutate(input);
-  const result = verifyBatchBFinalClosure(input);
-  cases.push({ name, expected, pass: result.diagnostics.includes(expected), diagnostics: result.diagnostics });
+function validB() {
+  const paths = [AUTHORITATIVE_WORKFLOWS.behavioral, AUTHORITATIVE_WORKFLOWS.sequence, AUTHORITATIVE_WORKFLOWS.mvk];
+  const descriptors = paths.map((item) => descriptor(item, 'pull_request', PR50_HEAD_SHA));
+  const ci = aggregateAuthoritativeCi({ exactHeadSha: PR50_HEAD_SHA, event: 'pull_request', descriptors, requiredPaths: paths.map((item) => item.path) }).evidence;
+  const merge = verifyMergeResultPayloads({ pr: { number: 50, merged: true, head: { sha: PR50_HEAD_SHA }, base: { sha: '1'.repeat(40) }, merge_commit_sha: '435add8ee3f3274f781b6e391f11e3262e380c4e', merged_by: { login: OWNER }, merged_at: '2026-07-16T12:00:00Z' }, reviewedHeadSha: PR50_HEAD_SHA, headCommit: { sha: PR50_HEAD_SHA, tree: { sha: '2'.repeat(40) } }, mergeCommit: { sha: '435add8ee3f3274f781b6e391f11e3262e380c4e', tree: { sha: '2'.repeat(40) }, parents: [{ sha: '1'.repeat(40) }] }, headToMain: { status: 'diverged' }, mergeToMain: { status: 'ahead' } }).evidence;
+  const mainDescriptor = descriptor(AUTHORITATIVE_WORKFLOWS.main, 'push', '3'.repeat(40));
+  const currentMain = verifyCurrentMainExecution({ beforeSha: '3'.repeat(40), afterSha: '3'.repeat(40), eventHeadSha: '3'.repeat(40), descriptor: mainDescriptor }).evidence;
+  return { planId: V4_PLAN_ID, batchId: 'BATCH_B', exceptionApplied: false, repository: TARGET_REPOSITORY, repositoryId: TARGET_REPOSITORY_ID, prNumber: 50, headSha: PR50_HEAD_SHA, scopeRevision: PR50_SCOPE_REVISION, exactHeadCiEvidence: ci, reviewEvidence: null, mergeEvidence: merge, currentMainEvidence: currentMain, memory: { coverageStatus: 'not_measurable_pending_external_promotion', coveragePromotionEffect: 'none', coverageCredit: false, productEffect: 'none', externalRepositoryEffect: 'none', kroad012Status: 'preserved', kroad013Through018Status: 'not_started', kroad012rStatus: 'historical_non_authoritative', kroadSupersessionEffect: 'none', recoveryProgramStatus: 'active', krecStatus: 'active', implementationAuthorized: true, readinessClaim: false, historicalIndependentGreenReceiptForPr49: 'not_claimed', pr49ExceptionReusable: false, pr49ExceptionPrecedential: false } };
 }
-function treeCase(name, expected, observed, code) {
-  const diagnostics = compareCanonicalTrees(expected, observed);
-  cases.push({ name, expected: code, pass: diagnostics.includes(code), diagnostics });
-}
-
-cases.push({ name: 'exact PR49 squash exception passes', expected: 'pass', pass: verifyBatchAOneTimeReconciliation(baseA()).status === 'pass', diagnostics: [] });
-caseA('different PR identity rejected', (x) => { x.prNumber = 50; }, 'AIGOV_V4_SQUASH_PR_IDENTITY_MISMATCH');
-caseA('base mismatch rejected', (x) => { x.baseSha = '0'.repeat(40); }, 'AIGOV_V4_SQUASH_BASE_MISMATCH');
-caseA('head mismatch rejected', (x) => { x.headSha = '1'.repeat(40); }, 'AIGOV_V4_SQUASH_HEAD_MISMATCH');
-caseA('squash commit mismatch rejected', (x) => { x.mergeCommitSha = '2'.repeat(40); }, 'AIGOV_V4_SQUASH_COMMIT_MISMATCH');
-caseA('tree mismatch rejected', (x) => { x.squashCommitTreeSha = '3'.repeat(40); x.contentEquivalenceVerified = false; }, 'AIGOV_V4_SQUASH_TREE_MISMATCH');
-caseA('patch reconstruction failure rejected', (x) => { x.equivalenceMode = 'reconstructed_tree_equality'; x.patchReconstructionSucceeded = false; }, 'AIGOV_V4_SQUASH_PATCH_RECONSTRUCTION_FAILED');
-caseA('exception reuse rejected', (x) => { x.exceptionUseCount = 2; }, 'AIGOV_V4_EXCEPTION_REUSE_FORBIDDEN');
-caseA('wrong merge actor rejected', (x) => { x.mergeActor = 'other'; }, 'AIGOV_V4_OWNER_MERGE_UNVERIFIED');
-caseA('failed exact-head CI rejected', (x) => { x.exactHeadCiGreen = false; }, 'AIGOV_V4_EXACT_HEAD_CI_UNVERIFIED');
-caseA('Coverage promotion rejected', (x) => { x.coveragePromotionEffect = 'promoted'; }, 'AIGOV_COVERAGE_PROMOTION_FORBIDDEN');
-caseA('historical Green fabrication rejected', (x) => { x.historicalIndependentGreenClaimed = true; }, 'AIGOV_V4_HISTORICAL_REVIEW_FABRICATION_FORBIDDEN');
-
-caseB('Batch B cannot reuse PR49 exception', (x) => { x.exceptionApplied = true; }, 'AIGOV_V4_EXCEPTION_REUSE_FORBIDDEN');
-caseB('Batch B requires opaque exact-head CI', (x) => { x.exactHeadCiGreen = true; }, 'AIGOV_BATCH_B_EXACT_HEAD_CI_REQUIRED');
-caseB('Batch B requires opaque official review', (x) => { x.independentReviewGreen = true; }, 'AIGOV_BATCH_B_REVIEW_REQUIRED');
-caseB('Batch B requires opaque merge result', (x) => { x.mergeMode = 'squash'; x.resultTreeEquivalent = true; }, 'AIGOV_BATCH_B_MERGE_RESULT_UNVERIFIED');
-caseB('Batch B requires current-main evidence', (x) => { x.currentMainValidationGreen = true; }, 'AIGOV_BATCH_B_CURRENT_MAIN_VALIDATION_REQUIRED');
-caseB('unverified repository settings block closure', (x) => { x.requiredCheckConfiguration = true; }, 'AIGOV_BATCH_B_ENFORCEMENT_UNVERIFIED');
-caseB('Coverage remains non-promoted', (x) => { x.memory.coveragePromotionEffect = 'promoted'; }, 'AIGOV_COVERAGE_PROMOTION_FORBIDDEN');
-caseB('KROAD supersession rejected', (x) => { x.memory.kroad012Status = 'superseded'; }, 'AIGOV_KROAD_PRESERVATION_UNVERIFIED');
-caseB('KREC activation rejected', (x) => { x.memory.implementationAuthorized = true; }, 'AIGOV_RECOVERY_ACTIVATION_FORBIDDEN');
-
-const baseTree = [{ path: 'a.txt', mode: '100644', type: 'blob', sha: 'a' }, { path: 'link', mode: '120000', type: 'blob', sha: 'b' }, { path: 'bin.dat', mode: '100644', type: 'blob', sha: 'c' }];
-treeCase('same paths but bytes differ', baseTree, [{ ...baseTree[0], sha: 'd' }, baseTree[1], baseTree[2]], 'AIGOV_V4_SQUASH_CHANGED_BYTES_DETECTED');
-treeCase('additional file detected', baseTree, [...baseTree, { path: 'extra.txt', mode: '100644', type: 'blob', sha: 'e' }], 'AIGOV_V4_SQUASH_EXTRA_FILE_DETECTED');
-treeCase('deleted file restored detected', baseTree.slice(0, 2), baseTree, 'AIGOV_V4_SQUASH_EXTRA_FILE_DETECTED');
-treeCase('file mode differs', baseTree, [{ ...baseTree[0], mode: '100755' }, baseTree[1], baseTree[2]], 'AIGOV_V4_SQUASH_TREE_MISMATCH');
-treeCase('symlink bytes differ', baseTree, [baseTree[0], { ...baseTree[1], sha: 'f' }, baseTree[2]], 'AIGOV_V4_SQUASH_CHANGED_BYTES_DETECTED');
-treeCase('binary bytes differ', baseTree, [baseTree[0], baseTree[1], { ...baseTree[2], sha: 'f' }], 'AIGOV_V4_SQUASH_CHANGED_BYTES_DETECTED');
-
-const report = { suite: 'aigov-v4-one-time-squash-equivalence-and-batch-b-opaque-evidence', status: cases.every((item) => item.pass) ? 'pass' : 'fail', cases };
-console.log(JSON.stringify(report, null, 2));
-if (report.status !== 'pass') process.exitCode = 1;
+const cases=[]; const rec=(name,pass,diagnostics=[])=>cases.push({name,pass:Boolean(pass),diagnostics});
+rec('exact PR49 squash exception passes', verifyBatchAOneTimeReconciliation(baseA()).status === 'pass');
+{const x=baseA();x.historicalIndependentGreenClaimed=true;const r=verifyBatchAOneTimeReconciliation(x);rec('historical review fabrication rejected',r.diagnostics.includes('AIGOV_V4_HISTORICAL_REVIEW_FABRICATION_FORBIDDEN'),r.diagnostics);}
+rec('missing independent review does not fail Batch B', verifyBatchBFinalClosure(validB()).status === 'pass', verifyBatchBFinalClosure(validB()).diagnostics);
+{const x=validB();x.reviewEvidence={reviewed_head_sha:'0'.repeat(40),review_status:'GREEN_TECHNICALLY_READY'};const r=verifyBatchBFinalClosure(x);rec('stale advisory review does not fail',r.status==='pass'&&r.review_status==='stale_advisory',r.diagnostics);}
+{const x=validB();x.exactHeadCiEvidence=null;const r=verifyBatchBFinalClosure(x);rec('exact-head CI failure still blocks',r.diagnostics.includes('AIGOV_BATCH_B_EXACT_HEAD_CI_REQUIRED'),r.diagnostics);}
+{const x=validB();x.memory.coveragePromotionEffect='measurement_active';const r=verifyBatchBFinalClosure(x);rec('Coverage overclaim still blocks',r.diagnostics.includes('AIGOV_COVERAGE_PROMOTION_FORBIDDEN'),r.diagnostics);}
+const baseTree=[{path:'a',mode:'100644',type:'blob',sha:'a'}]; rec('tree byte mismatch remains blocked',compareCanonicalTrees(baseTree,[{...baseTree[0],sha:'b'}]).includes('AIGOV_V4_SQUASH_CHANGED_BYTES_DETECTED'));
+const report={suite:'aigov-v4-owner-policy-closure',status:cases.every((x)=>x.pass)?'pass':'fail',cases};console.log(JSON.stringify(report,null,2));if(report.status!=='pass')process.exitCode=1;

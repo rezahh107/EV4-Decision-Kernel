@@ -196,62 +196,27 @@
     },
     "generic_fixture_or_document_proof_allowed": false,
     "question_link_roles": {
-      "catalog": [
-        "catalog_record"
-      ],
-      "matrix": [
-        "matrix"
-      ],
-      "resolver_rule": [
-        "resolver_rule"
-      ],
-      "deterministic_evaluator": [
-        "deterministic_evaluator"
-      ],
-      "valid_fixture": [
-        "valid_fixture"
-      ],
-      "invalid_fixture": [
-        "invalid_fixture"
-      ],
-      "adversarial_fixture": [
-        "adversarial_fixture"
-      ],
-      "l2_audit": [
-        "l2_audit"
-      ],
-      "required_runtime_or_consumer_proof": [
-        "runtime_proof",
-        "consumer_proof"
-      ],
-      "coverage_credit": [
-        "coverage_credit"
-      ]
+      "catalog": ["catalog_record"],
+      "matrix": ["matrix"],
+      "resolver_rule": ["resolver_rule"],
+      "deterministic_evaluator": ["deterministic_evaluator"],
+      "valid_fixture": ["valid_fixture"],
+      "invalid_fixture": ["invalid_fixture"],
+      "adversarial_fixture": ["adversarial_fixture"],
+      "l2_audit": ["l2_audit"],
+      "required_runtime_or_consumer_proof": ["runtime_proof", "consumer_proof"],
+      "coverage_credit": ["coverage_credit"]
     },
     "element_obligation_roles": {
-      "applicable_decision_questions": [
-        "decision_question"
-      ],
-      "applicable_p0_families": [
-        "p0_family"
-      ],
-      "required_safety_gates": [
-        "safety_gate"
-      ],
-      "required_runtime_checks": [
-        "runtime_check"
-      ],
-      "required_consumer_proofs": [
-        "consumer_proof"
-      ]
+      "applicable_decision_questions": ["decision_question"],
+      "applicable_p0_families": ["p0_family"],
+      "required_safety_gates": ["safety_gate"],
+      "required_runtime_checks": ["runtime_check"],
+      "required_consumer_proofs": ["consumer_proof"]
     }
   },
   "denominator_integrity": {
-    "known_scope_includes": [
-      "confirmed",
-      "candidate",
-      "unresolved"
-    ],
+    "known_scope_includes": ["confirmed", "candidate", "unresolved"],
     "coverage_percent_requires_validated_denominator": true,
     "reduction_requires_record_level_reasons": true,
     "base_head_diff_required": true,
@@ -279,12 +244,8 @@
   },
   "material_progress": {
     "measurement_active_options": {
-      "option_1": {
-        "coverage_delta_gte_percentage_points": 5
-      },
-      "option_2": {
-        "formula": "max(2, ceil(0.05 * current_denominator))"
-      },
+      "option_1": {"coverage_delta_gte_percentage_points": 5},
+      "option_2": {"formula": "max(2, ceil(0.05 * current_denominator))"},
       "option_3": {
         "complete_p0_family_across_all_applicable_elements": true,
         "measurable_numerator_increase_required": true
@@ -292,7 +253,7 @@
     },
     "policy_active_rule": "complete_materially_bounded_obligations_and_close_one_real_family_slice",
     "limited_exception": "machine_readable_reason_plus_closed_family_plus_numerator_or_completed_obligation_growth",
-    "zero_delta_rule": "blocking_defect_only_with_next_content_expansion_package",
+    "zero_delta_rule": "blocking_defect_or_non_coverage_maintenance_with_preserved_state_and_no_credit",
     "three_consecutive_zero_delta_fail": true,
     "derived_from_verified_base_head": true
   },
@@ -315,11 +276,14 @@
     "planning/KERNEL_EXECUTION_PLAN.md",
     ".github/workflows/validate-mvk.yml",
     "package.json",
-    "kernel/validator/validate-coverage-guarantee"
+    "kernel/validator/validate-coverage-guarantee",
+    "kernel/validator/coverage-work-package-id.mjs",
+    "kernel/validator/validate-coverage-guarantee-owner-policy.mjs",
+    "tools/test-coverage-impact-governance.mjs"
   ],
   "merge_gate": {
     "exact_head_ci_green": "required",
-    "independent_pr_inspector_green": "required",
+    "independent_pr_inspector_green": "optional_advisory",
     "explicit_owner_merge_command": "required"
   },
   "forbidden_claims": [

@@ -1,0 +1,20 @@
+#!/usr/bin/env node
+import { readFileSync } from 'node:fs';
+import { recoveryProgramDiagnostics } from '../kernel/validator/validate-recovery-execution-program.mjs';
+const source = JSON.parse(readFileSync('planning/recovery/recovery-execution-program.v1.json', 'utf8'));
+const clone = (value) => structuredClone(value);
+const cases = [];
+const record = (name, pass, diagnostics = []) => cases.push({ name, pass: Boolean(pass), diagnostics });
+const expect = (name, mutate, code) => { const value = clone(source); mutate(value); const diagnostics = recoveryProgramDiagnostics(value); record(name, diagnostics.includes(code), diagnostics); };
+record('full Recovery activation passes production validator', recoveryProgramDiagnostics(source).length === 0, recoveryProgramDiagnostics(source));
+record('all nine KREC tasks authorized', source.tasks.length === 9 && source.tasks.every((task) => task.status === 'active' && task.implementation_authorized === true));
+const parallel = clone(source); parallel.tasks[0].status = 'complete';
+record('independent branches may progress in parallel', recoveryProgramDiagnostics(parallel).length === 0, recoveryProgramDiagnostics(parallel));
+expect('dependency mutation fails', (x) => x.tasks[8].depends_on.push('KREC-001'), 'RECOVERY_DEPENDENCY_GRAPH_MISMATCH');
+expect('premature implementation fails', (x) => { x.tasks[1].status = 'implemented'; }, 'RECOVERY_IMPLEMENTED_TASK_DEPENDENCY_INCOMPLETE');
+expect('premature completion fails', (x) => { x.tasks[1].status = 'complete'; }, 'RECOVERY_COMPLETE_TASK_DEPENDENCY_INCOMPLETE');
+expect('Coverage credit overclaim fails', (x) => { x.tasks[0].coverage_credit = true; }, 'RECOVERY_COVERAGE_CREDIT_FORBIDDEN');
+expect('readiness overclaim fails', (x) => { x.tasks[0].readiness_claim = true; }, 'RECOVERY_READINESS_CLAIM_FORBIDDEN');
+const report = { suite: 'recovery-program-dependency-aware-lifecycle', status: cases.every((item) => item.pass) ? 'pass' : 'fail', cases };
+console.log(JSON.stringify(report, null, 2));
+if (report.status !== 'pass') process.exitCode = 1;

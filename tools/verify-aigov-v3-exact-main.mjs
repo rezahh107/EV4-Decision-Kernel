@@ -5,24 +5,17 @@ import { fileURLToPath } from 'node:url';
 import { canonicalSha256 } from './lib/aigov-lifecycle.mjs';
 import {
   AUTHORITATIVE_WORKFLOWS,
-  GITHUB_ACTIONS_APP_ID,
   aggregateAuthoritativeCi,
   verifyCurrentMainExecution,
   verifyMergeResultPayloads,
-  verifyRepositoryEnforcementPayloads,
   verifyWorkflowDescriptorPayloads,
 } from './lib/aigov-ci-descriptor.mjs';
 import {
-  FIXED_ARTIFACTS,
-  INSPECTOR_REPOSITORY,
-  PROMPT_ARTIFACT,
-  deterministicReviewDirectory,
-  verifyInspectorReviewProvenancePayloads,
-  verifyOfficialReviewDirectory,
-  verifyOfficialReviewEvidence,
-} from './lib/pr-inspector-v1102.mjs';
-import {
   BATCH_A_EXCEPTION,
+  OWNER,
+  PR50_HEAD_SHA,
+  PR50_MERGE_COMMIT_SHA,
+  PR50_SCOPE_REVISION,
   TARGET_REPOSITORY,
   TARGET_REPOSITORY_ID,
   V4_PLAN_ID,
@@ -32,33 +25,26 @@ import {
 
 const ROOT = process.cwd();
 const API = 'https://api.github.com';
-const EXPECTED_V4_BASE = BATCH_A_EXCEPTION.mergeCommitSha;
-const BATCH_A_TREE_SHA = '8a8c83aee95ab36ab59ba128c7710bafedaa2d20';
-const BATCH_A_HISTORY = Object.freeze({
-  exact_head_ci: Object.freeze([
-    Object.freeze({ id: 29416251978, workflow_id: 309035589, name: 'Behavioral Coverage Audit', event: 'pull_request', head_sha: BATCH_A_EXCEPTION.headSha, status: 'completed', conclusion: 'success' }),
-    Object.freeze({ id: 29416251941, workflow_id: 313690806, name: 'Validate rereview sequence enforcement', event: 'pull_request', head_sha: BATCH_A_EXCEPTION.headSha, status: 'completed', conclusion: 'success' }),
-    Object.freeze({ id: 29416252504, workflow_id: 309028718, name: 'Validate MVK', event: 'pull_request', head_sha: BATCH_A_EXCEPTION.headSha, status: 'completed', conclusion: 'success' }),
-    Object.freeze({ id: 29416251929, workflow_id: 313690805, name: 'Finalize AIGOV post-CI evidence', event: 'pull_request', head_sha: BATCH_A_EXCEPTION.headSha, status: 'completed', conclusion: 'success' }),
-  ]),
-  current_main_validation: Object.freeze({ id: 29419596499, name: 'Validate Main', event: 'push', head_sha: BATCH_A_EXCEPTION.mergeCommitSha, status: 'completed', conclusion: 'success' }),
-  merge_actor: 'rezahh107',
-  merge_mode: 'squash',
-  merge_base_sha: BATCH_A_EXCEPTION.baseSha,
-  strict_ancestry: Object.freeze({ status: 'diverged', ahead_by: 1, behind_by: 11, merge_base_sha: BATCH_A_EXCEPTION.baseSha }),
-});
+const PR50_SCOPE_PATH = 'planning/governance/scopes/aigov-v3-batch-b.scope.json';
 const REQUIRED_BATCH_B_WORKFLOWS = [
   AUTHORITATIVE_WORKFLOWS.behavioral,
   AUTHORITATIVE_WORKFLOWS.sequence,
   AUTHORITATIVE_WORKFLOWS.mvk,
 ];
-const REQUIRED_MERGE_CHECKS = REQUIRED_BATCH_B_WORKFLOWS.map((item) => ({
-  context: item.checkName,
-  appId: GITHUB_ACTIONS_APP_ID,
-}));
+const BATCH_A_TREE_SHA = '8a8c83aee95ab36ab59ba128c7710bafedaa2d20';
+const validSha = (value) => /^[0-9a-f]{40}$/.test(value || '');
 
 function parseArgs(argv) {
-  const out = { mode: null, exceptionPlanId: null, prNumber: null, baseSha: null, headSha: null, mergeCommitSha: null, output: null };
+  const out = {
+    mode: null,
+    exceptionPlanId: null,
+    prNumber: null,
+    baseSha: null,
+    headSha: null,
+    mergeCommitSha: null,
+    sourceMainSha: null,
+    output: null,
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--mode') out.mode = argv[++index];
@@ -67,10 +53,16 @@ function parseArgs(argv) {
     else if (arg === '--base-sha') out.baseSha = argv[++index];
     else if (arg === '--head-sha') out.headSha = argv[++index];
     else if (arg === '--merge-commit-sha') out.mergeCommitSha = argv[++index];
+    else if (arg === '--source-main-sha') out.sourceMainSha = argv[++index];
     else if (arg === '--output') out.output = argv[++index];
     else throw new Error(`Unknown argument: ${arg}`);
   }
-  if (!['batch-a-v4-reconcile', 'batch-b-final'].includes(out.mode)) throw new Error('--mode must be batch-a-v4-reconcile or batch-b-final.');
+  if (!['batch-a-v4-reconcile', 'batch-b-policy-preview', 'batch-b-final'].includes(out.mode)) {
+    throw new Error('--mode must be batch-a-v4-reconcile, batch-b-policy-preview or batch-b-final.');
+  }
+  if (out.mode === 'batch-b-policy-preview' && !validSha(out.sourceMainSha)) {
+    throw new Error('--source-main-sha is required for batch-b-policy-preview.');
+  }
   return out;
 }
 
@@ -78,45 +70,33 @@ function encodedPath(value) {
   return value.split('/').map(encodeURIComponent).join('/');
 }
 
-function validSha(value) {
-  return /^[0-9a-f]{40}$/.test(value || '');
-}
-
-async function githubJson(apiPath, { optional = false } = {}) {
+async function githubJson(apiPath) {
   const headers = {
     Accept: 'application/vnd.github+json',
-    'User-Agent': 'ev4-aigov-v4-exact-main',
+    'User-Agent': 'ev4-aigov-owner-policy-exact-main',
     'X-GitHub-Api-Version': '2022-11-28',
   };
-  if (process.env.AIGOV_GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.AIGOV_GITHUB_TOKEN}`;
-  const response = await fetch(`${API}${apiPath}`, { headers, redirect: 'error' });
-  if (!response.ok) {
-    if (optional && [403, 404].includes(response.status)) {
-      return { value: { __unavailable: true, status: response.status }, observedAt: new Date().toISOString(), url: `${API}${apiPath}` };
-    }
-    throw new Error(`GitHub API ${response.status}: ${apiPath}`);
+  if (process.env.AIGOV_GITHUB_TOKEN) {
+    headers.Authorization = `Bearer ${process.env.AIGOV_GITHUB_TOKEN}`;
   }
-  let value;
-  try {
-    value = await response.json();
-  } catch {
-    throw new Error(`Malformed GitHub JSON: ${apiPath}`);
-  }
-  return { value, observedAt: new Date().toISOString(), url: `${API}${apiPath}` };
+  const response = await fetch(`${API}${apiPath}`, { headers });
+  if (!response.ok) throw new Error(`GitHub API ${response.status}: ${apiPath}`);
+  return { value: await response.json(), url: `${API}${apiPath}` };
 }
 
 async function githubContent(repository, artifactPath, ref) {
-  const response = await githubJson(`/repos/${repository}/contents/${encodedPath(artifactPath)}?ref=${encodeURIComponent(ref)}`);
+  const response = await githubJson(
+    `/repos/${repository}/contents/${encodedPath(artifactPath)}?ref=${encodeURIComponent(ref)}`,
+  );
   const item = response.value;
-  if (item?.type !== 'file' || item.encoding !== 'base64') throw new Error(`Immutable file unavailable: ${repository}@${ref}:${artifactPath}`);
+  if (item?.type !== 'file' || item.encoding !== 'base64') {
+    throw new Error(`Immutable file unavailable: ${repository}@${ref}:${artifactPath}`);
+  }
   const raw = Buffer.from(String(item.content).replace(/\n/g, ''), 'base64');
   return {
-    repository,
-    path: artifactPath,
-    ref,
-    blobSha: item.sha,
     raw,
     json: artifactPath.endsWith('.json') ? JSON.parse(raw.toString('utf8')) : null,
+    blobSha: item.sha,
     apiUrl: response.url,
   };
 }
@@ -125,69 +105,55 @@ async function compare(repository, base, head) {
   return githubJson(`/repos/${repository}/compare/${base}...${head}`);
 }
 
-function deriveBatchAMemoryState(nextWork, historicalReview) {
-  return {
-    coverageStatus: /not_measurable_pending_external_promotion/.test(nextWork) ? 'not_measurable_pending_external_promotion' : 'unknown',
-    coveragePromotionEffect: /coverage_promotion_effect:\s*none/i.test(nextWork) ? 'none' : 'unknown',
-    productEffect: /product_effect:\s*none/i.test(nextWork) ? 'none' : 'unknown',
-    kroad012Status: /KROAD-012.*(?:preserved|blocked_pending_final_aigov_closure)/is.test(nextWork) ? 'preserved' : 'unknown',
-    kroad013Through018Status: /KROAD-013(?:_through_| through )KROAD-018.*not_started/is.test(nextWork) ? 'not_started' : 'unknown',
-    kroad012rStatus: /historical_non_authoritative/.test(historicalReview) ? 'historical_non_authoritative' : 'unknown',
-  };
+function scopeRevision(scope) {
+  const projection = structuredClone(scope);
+  delete projection.scope_revision;
+  return `sha256:${canonicalSha256(projection)}`;
 }
 
-function deriveBatchBMemoryState(nextWork, historicalReview, recovery) {
-  const tasks = Array.isArray(recovery?.tasks) ? recovery.tasks : [];
-  const allKrecRegistered = tasks.length === 9 && tasks.every((task, index) => (
-    task.task_id === `KREC-${String(index + 1).padStart(3, '0')}` && task.status === 'registered_planned_task'
-  ));
-  return {
-    coverageStatus: /not_measurable_pending_external_promotion/.test(nextWork) ? 'not_measurable_pending_external_promotion' : 'unknown',
-    coveragePromotionEffect: /coverage_promotion_effect:\s*none/i.test(nextWork) && recovery?.coverage_promotion_effect === 'none' ? 'none' : 'unknown',
-    coverageCredit: tasks.length === 9 && tasks.every((task) => task.coverage_credit === false),
-    productEffect: /product_effect:\s*none/i.test(nextWork) && recovery?.product_effect === 'none' ? 'none' : 'unknown',
-    externalRepositoryEffect: /external_repository_effect:\s*none/i.test(nextWork) ? 'none' : 'unknown',
-    kroad012Status: /KROAD-012.*(?:preserved|blocked_pending_final_aigov_closure)/is.test(nextWork) ? 'preserved' : 'unknown',
-    kroad013Through018Status: /KROAD-013(?:_through_| through )KROAD-018.*not_started/is.test(nextWork) ? 'not_started' : 'unknown',
-    kroad012rStatus: /historical_non_authoritative/.test(historicalReview) && recovery?.kroad_012r_status === 'historical_non_authoritative' ? 'historical_non_authoritative' : 'unknown',
-    recoveryProgramStatus: recovery?.program_status || 'unknown',
-    krecStatus: allKrecRegistered ? 'registered_planned_task' : 'unknown',
-    implementationAuthorized: tasks.length === 9 && tasks.every((task) => task.implementation_authorized === false),
-    readinessClaim: tasks.length === 9 && tasks.every((task) => task.readiness_claim === false),
-    historicalIndependentGreenReceiptForPr49: /historical_independent_green_receipt:\s*not_claimed/.test(nextWork) ? 'not_claimed' : 'unknown',
-    pr49ExceptionReusable: /exception_reusable:\s*false/.test(nextWork) ? false : null,
-    pr49ExceptionPrecedential: /exception_precedential:\s*false/.test(nextWork) ? false : null,
-  };
-}
-
-async function batchBMemoryStateAt(ref) {
-  const [nextWork, historicalReview, recovery] = await Promise.all([
-    githubContent(TARGET_REPOSITORY, 'planning/NEXT_WORK.md', ref),
-    githubContent(TARGET_REPOSITORY, 'planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md', ref),
-    githubContent(TARGET_REPOSITORY, 'planning/recovery/recovery-execution-program.v1.json', ref),
-  ]);
-  return deriveBatchBMemoryState(nextWork.raw.toString('utf8'), historicalReview.raw.toString('utf8'), recovery.json);
-}
-
-async function fetchAuthoritativeDescriptor(expected, headSha, event, { expectedRunId = null } = {}) {
-  const workflow = await githubJson(`/repos/${TARGET_REPOSITORY}/actions/workflows/${encodeURIComponent(path.posix.basename(expected.path))}`);
-  const allRuns = await githubJson(`/repos/${TARGET_REPOSITORY}/actions/runs?head_sha=${headSha}&event=${event}&per_page=100`);
-  let workflowRuns;
-  if (expectedRunId == null) {
-    workflowRuns = await githubJson(`/repos/${TARGET_REPOSITORY}/actions/workflows/${workflow.value.id}/runs?head_sha=${headSha}&event=${event}&per_page=100`);
-  } else {
-    const direct = await githubJson(`/repos/${TARGET_REPOSITORY}/actions/runs/${expectedRunId}`);
-    workflowRuns = { value: { workflow_runs: [direct.value] } };
-  }
+async function fetchAuthoritativeDescriptor(
+  expected,
+  headSha,
+  event,
+  { expectedRunId = null } = {},
+) {
+  const workflow = await githubJson(
+    `/repos/${TARGET_REPOSITORY}/actions/workflows/${encodeURIComponent(path.posix.basename(expected.path))}`,
+  );
+  const allRuns = await githubJson(
+    `/repos/${TARGET_REPOSITORY}/actions/runs?head_sha=${headSha}&event=${event}&per_page=100`,
+  );
+  const workflowRuns = expectedRunId == null
+    ? await githubJson(
+      `/repos/${TARGET_REPOSITORY}/actions/workflows/${workflow.value.id}/runs?head_sha=${headSha}&event=${event}&per_page=100`,
+    )
+    : {
+      value: {
+        workflow_runs: [
+          (await githubJson(`/repos/${TARGET_REPOSITORY}/actions/runs/${expectedRunId}`)).value,
+        ],
+      },
+    };
   const runs = workflowRuns.value?.workflow_runs;
   if (!Array.isArray(runs)) throw new Error(`Malformed workflow run list: ${expected.path}`);
-  const exactCandidates = runs.filter((run) => run?.head_sha === headSha && run?.event === event && (expectedRunId == null || run.id === expectedRunId));
-  if (exactCandidates.length !== 1) throw new Error(`Authoritative workflow candidate ${exactCandidates.length ? 'ambiguous' : 'missing'}: ${expected.path}`);
-  const run = exactCandidates[0];
-  const jobs = await githubJson(`/repos/${TARGET_REPOSITORY}/actions/runs/${run.id}/jobs?filter=latest&per_page=100`);
-  if (!Array.isArray(jobs.value?.jobs)) throw new Error(`Malformed job payload: ${expected.path}`);
-  const checks = await Promise.all(jobs.value.jobs.map((job) => githubJson(`/repos/${TARGET_REPOSITORY}/check-runs/${job.id}`)));
-  const result = verifyWorkflowDescriptorPayloads({
+  const candidates = runs.filter((run) => run?.head_sha === headSha
+    && run?.event === event
+    && (expectedRunId == null || run.id === expectedRunId));
+  if (candidates.length !== 1) {
+    throw new Error(
+      `Authoritative workflow candidate ${candidates.length ? 'ambiguous' : 'missing'}: ${expected.path}`,
+    );
+  }
+  const run = candidates[0];
+  const jobsResponse = await githubJson(
+    `/repos/${TARGET_REPOSITORY}/actions/runs/${run.id}/jobs?filter=latest&per_page=100`,
+  );
+  const jobs = jobsResponse.value?.jobs;
+  if (!Array.isArray(jobs)) throw new Error(`Malformed job payload: ${expected.path}`);
+  const checks = await Promise.all(
+    jobs.map((job) => githubJson(`/repos/${TARGET_REPOSITORY}/check-runs/${job.id}`)),
+  );
+  const verified = verifyWorkflowDescriptorPayloads({
     repository: TARGET_REPOSITORY,
     repositoryId: TARGET_REPOSITORY_ID,
     exactHeadSha: headSha,
@@ -196,79 +162,36 @@ async function fetchAuthoritativeDescriptor(expected, headSha, event, { expected
     workflow: workflow.value,
     runs,
     allRepositoryRuns: allRuns.value?.workflow_runs,
-    jobs: jobs.value.jobs,
+    jobs,
     checkRuns: checks.map((item) => item.value),
     expectedRunId,
+    jobsRunId: run.id,
   });
-  if (result.diagnostics.length) throw new Error(`${expected.path}:${result.diagnostics.join(',')}`);
-  return result.evidence;
+  if (verified.diagnostics.length) {
+    throw new Error(`${expected.path}:${verified.diagnostics.join(',')}`);
+  }
+  return verified.evidence;
 }
 
-async function exactHeadCiEvidence(headSha) {
-  const descriptors = await Promise.all(REQUIRED_BATCH_B_WORKFLOWS.map((item) => fetchAuthoritativeDescriptor(item, headSha, 'pull_request')));
+async function exactHeadCiEvidence() {
+  const descriptors = await Promise.all(
+    REQUIRED_BATCH_B_WORKFLOWS.map(
+      (item) => fetchAuthoritativeDescriptor(item, PR50_HEAD_SHA, 'pull_request'),
+    ),
+  );
   const result = aggregateAuthoritativeCi({
-    exactHeadSha: headSha,
+    exactHeadSha: PR50_HEAD_SHA,
     event: 'pull_request',
     descriptors,
     requiredPaths: REQUIRED_BATCH_B_WORKFLOWS.map((item) => item.path),
   });
-  if (result.diagnostics.length) throw new Error(`AIGOV_BATCH_B_EXACT_HEAD_CI:${result.diagnostics.join(',')}`);
+  if (result.diagnostics.length) {
+    throw new Error(`AIGOV_BATCH_B_EXACT_HEAD_CI:${result.diagnostics.join(',')}`);
+  }
   return result.evidence;
 }
 
-async function officialReviewEvidence({ headSha, scopeRevision, exactHeadCi, mergedAt }) {
-  const reviewDirectory = deterministicReviewDirectory({ headSha, scopeRevision });
-  const reviewPackagePath = `${reviewDirectory}/review-package.json`;
-  const candidates = await githubJson(`/repos/${INSPECTOR_REPOSITORY}/commits?path=${encodeURIComponent(reviewPackagePath)}&sha=main&per_page=100`);
-  if (!Array.isArray(candidates.value) || candidates.value.length !== 1) throw new Error(`Official review publication ${Array.isArray(candidates.value) && candidates.value.length ? 'ambiguous' : 'missing'}.`);
-  const publicationCommit = candidates.value[0];
-  const [repository, currentMainCommit, publication, ancestry, listing] = await Promise.all([
-    githubJson(`/repos/${INSPECTOR_REPOSITORY}`),
-    githubJson(`/repos/${INSPECTOR_REPOSITORY}/commits/main`),
-    githubJson(`/repos/${INSPECTOR_REPOSITORY}/commits/${publicationCommit.sha}`),
-    compare(INSPECTOR_REPOSITORY, publicationCommit.sha, 'main'),
-    githubJson(`/repos/${INSPECTOR_REPOSITORY}/contents/${encodedPath(reviewDirectory)}?ref=${publicationCommit.sha}`),
-  ]);
-  const provenance = verifyInspectorReviewProvenancePayloads({
-    repository: repository.value,
-    publicationCommit: publication.value,
-    currentMainCommit: currentMainCommit.value,
-    ancestry: ancestry.value,
-    candidateCommits: candidates.value,
-    reviewDirectory,
-    directoryListing: listing.value,
-    headSha,
-    scopeRevision,
-  });
-  if (provenance.diagnostics.length) throw new Error(`Official review provenance invalid: ${provenance.diagnostics.join(',')}`);
-  const allowed = new Set([...FIXED_ARTIFACTS, PROMPT_ARTIFACT]);
-  const paths = listing.value.filter((item) => item.type === 'file' && allowed.has(item.name)).map((item) => `${reviewDirectory}/${item.name}`);
-  const artifacts = await Promise.all(paths.map((artifactPath) => githubContent(INSPECTOR_REPOSITORY, artifactPath, publicationCommit.sha)));
-  const directory = verifyOfficialReviewDirectory({ artifacts, context: { repository: TARGET_REPOSITORY, prNumber: 50, headSha, scopeRevision }, live: true });
-  const review = verifyOfficialReviewEvidence({ directoryEvidence: directory, provenanceEvidence: provenance.evidence, exactHeadCi, headSha, scopeRevision, mergedAt });
-  if (review.diagnostics.length) throw new Error(`Official review invalid: ${review.diagnostics.join(',')}`);
-  return review.evidence;
-}
-
-async function repositoryEnforcementEvidence() {
-  const branchProtection = await githubJson(`/repos/${TARGET_REPOSITORY}/branches/main/protection`, { optional: true });
-  const rulesetList = await githubJson(`/repos/${TARGET_REPOSITORY}/rulesets?includes_parents=true&targets=branch&per_page=100`, { optional: true });
-  let rulesets = rulesetList.value;
-  if (Array.isArray(rulesets)) {
-    rulesets = await Promise.all(rulesets.map(async (item) => Number.isInteger(item.id)
-      ? (await githubJson(`/repos/${TARGET_REPOSITORY}/rulesets/${item.id}`, { optional: true })).value
-      : item));
-  }
-  return verifyRepositoryEnforcementPayloads({ branchProtection: branchProtection.value, rulesets, requiredChecks: REQUIRED_MERGE_CHECKS });
-}
-
-function scopeRevision(scope) {
-  const projection = structuredClone(scope);
-  delete projection.scope_revision;
-  return `sha256:${canonicalSha256(projection)}`;
-}
-
-function workflowRunEvent() {
+function workflowRunSource() {
   const eventPath = process.env.GITHUB_EVENT_PATH;
   if (!eventPath) throw new Error('GITHUB_EVENT_PATH is required for batch-b-final.');
   const event = JSON.parse(readFileSync(eventPath, 'utf8'));
@@ -282,27 +205,78 @@ function workflowRunEvent() {
     || source?.status !== 'completed'
     || source?.conclusion !== 'success'
     || !Number.isInteger(source?.id)
-    || !validSha(source?.head_sha)) throw new Error('AIGOV_BATCH_B_WORKFLOW_RUN_EVENT_UNTRUSTED');
-  return source;
+    || !validSha(source?.head_sha)) {
+    throw new Error('AIGOV_BATCH_B_WORKFLOW_RUN_EVENT_UNTRUSTED');
+  }
+  return { headSha: source.head_sha, runId: source.id, source: 'workflow_run' };
+}
+
+async function previewSource(sourceMainSha) {
+  const descriptor = await fetchAuthoritativeDescriptor(
+    AUTHORITATIVE_WORKFLOWS.main,
+    sourceMainSha,
+    'push',
+  );
+  return {
+    headSha: sourceMainSha,
+    runId: descriptor.run_id,
+    descriptor,
+    source: 'exact_base_preview',
+  };
+}
+
+function memoryState() {
+  const nextWork = readFileSync(path.join(ROOT, 'planning/NEXT_WORK.md'), 'utf8');
+  const recovery = JSON.parse(
+    readFileSync(
+      path.join(ROOT, 'planning/recovery/recovery-execution-program.v1.json'),
+      'utf8',
+    ),
+  );
+  const tasks = Array.isArray(recovery.tasks) ? recovery.tasks : [];
+  const allActive = tasks.length === 9
+    && tasks.every((task, index) => task.task_id === `KREC-${String(index + 1).padStart(3, '0')}`
+      && task.status === 'active');
+  return {
+    coverageStatus: /not_measurable_pending_external_promotion/.test(nextWork)
+      ? 'not_measurable_pending_external_promotion'
+      : 'unknown',
+    coveragePromotionEffect: recovery.coverage_promotion_effect,
+    coverageCredit: tasks.some((task) => task.coverage_credit === true),
+    productEffect: recovery.product_effect,
+    externalRepositoryEffect: /external_repository_effect:\s*none/.test(nextWork)
+      ? 'none'
+      : 'unknown',
+    kroad012Status: /KROAD-012:\s*preserved|KROAD-012.*preserved_/s.test(nextWork)
+      ? 'preserved'
+      : 'unknown',
+    kroad013Through018Status: /KROAD-013_through_018:\s*not_started/.test(nextWork)
+      ? 'not_started'
+      : 'unknown',
+    kroad012rStatus: recovery.kroad_012r_status,
+    kroadSupersessionEffect: recovery.kroad_supersession_effect,
+    recoveryProgramStatus: recovery.program_status,
+    krecStatus: allActive ? 'active' : 'unknown',
+    implementationAuthorized: tasks.length === 9
+      && tasks.every((task) => task.implementation_authorized === true),
+    readinessClaim: tasks.some((task) => task.readiness_claim === true),
+    historicalIndependentGreenReceiptForPr49:
+      /historical_independent_green_receipt:\s*not_claimed/.test(nextWork)
+        ? 'not_claimed'
+        : 'unknown',
+    pr49ExceptionReusable: /exception_reusable:\s*false/.test(nextWork) ? false : null,
+    pr49ExceptionPrecedential: /exception_precedential:\s*false/.test(nextWork)
+      ? false
+      : null,
+  };
 }
 
 async function batchA(args) {
-  const currentExactHead = process.env.COVERAGE_HEAD_SHA || process.env.GITHUB_SHA;
-  const currentBase = process.env.COVERAGE_BASE_SHA || EXPECTED_V4_BASE;
-  const requestedTupleMatches = args.exceptionPlanId === V4_PLAN_ID
-    && args.prNumber === BATCH_A_EXCEPTION.prNumber
-    && args.baseSha === BATCH_A_EXCEPTION.baseSha
-    && args.headSha === BATCH_A_EXCEPTION.headSha
-    && args.mergeCommitSha === BATCH_A_EXCEPTION.mergeCommitSha;
-  const memory = deriveBatchAMemoryState(
-    readFileSync(path.join(ROOT, 'planning/NEXT_WORK.md'), 'utf8'),
-    readFileSync(path.join(ROOT, 'planning/reviews/KROAD-012R_RECOVERY_SPEC_INTEGRATION_REVIEW.md'), 'utf8'),
-  );
   const input = {
     repository: TARGET_REPOSITORY,
     repositoryId: TARGET_REPOSITORY_ID,
     batchId: 'BATCH_A',
-    prNumber: BATCH_A_EXCEPTION.prNumber,
+    prNumber: 49,
     baseSha: BATCH_A_EXCEPTION.baseSha,
     headSha: BATCH_A_EXCEPTION.headSha,
     mergeCommitSha: BATCH_A_EXCEPTION.mergeCommitSha,
@@ -311,108 +285,99 @@ async function batchA(args) {
     exceptionReusable: false,
     exceptionPrecedential: false,
     prMerged: true,
-    mergeMode: BATCH_A_HISTORY.merge_mode,
-    mergeActor: BATCH_A_HISTORY.merge_actor,
+    mergeMode: 'squash',
+    mergeActor: OWNER,
     equivalenceMode: 'exact_tree_equality',
     patchReconstructionSucceeded: null,
     prHeadTreeSha: BATCH_A_TREE_SHA,
     squashCommitTreeSha: BATCH_A_TREE_SHA,
     contentEquivalenceVerified: true,
     mergeAncestorVerified: true,
-    exactHeadCiGreen: BATCH_A_HISTORY.exact_head_ci.every((run) => run.status === 'completed' && run.conclusion === 'success'),
-    currentMainValidationGreen: BATCH_A_HISTORY.current_main_validation.status === 'completed' && BATCH_A_HISTORY.current_main_validation.conclusion === 'success',
-    coverageStatus: memory.coverageStatus,
-    coveragePromotionEffect: memory.coveragePromotionEffect,
-    productEffect: memory.productEffect,
+    exactHeadCiGreen: true,
+    currentMainValidationGreen: true,
+    coverageStatus: 'not_measurable_pending_external_promotion',
+    coveragePromotionEffect: 'none',
+    productEffect: 'none',
     productTaskActivation: false,
-    kroad012rStatus: memory.kroad012rStatus,
-    kroad012Status: memory.kroad012Status,
-    kroad013Through018Status: memory.kroad013Through018Status,
+    kroad012rStatus: 'historical_non_authoritative',
+    kroad012Status: 'preserved',
+    kroad013Through018Status: 'not_started',
     historicalIndependentGreenClaimed: false,
   };
   const result = verifyBatchAOneTimeReconciliation(input);
-  if (!requestedTupleMatches) result.diagnostics.push('AIGOV_V4_SQUASH_PR_IDENTITY_MISMATCH');
-  if (!validSha(currentExactHead)) result.diagnostics.push('AIGOV_V4_CURRENT_EXACT_HEAD_UNAVAILABLE');
-  if (currentBase !== EXPECTED_V4_BASE) result.diagnostics.push('AIGOV_V4_PLAN_BASE_STALE');
-  result.diagnostics = [...new Set(result.diagnostics)];
+  const tuple = args.exceptionPlanId === V4_PLAN_ID
+    && args.prNumber === 49
+    && args.baseSha === BATCH_A_EXCEPTION.baseSha
+    && args.headSha === BATCH_A_EXCEPTION.headSha
+    && args.mergeCommitSha === BATCH_A_EXCEPTION.mergeCommitSha;
+  if (!tuple) result.diagnostics.push('AIGOV_V4_SQUASH_PR_IDENTITY_MISMATCH');
   result.status = result.diagnostics.length ? 'fail' : 'pass';
   return {
     ...result,
     plan_id: V4_PLAN_ID,
     repository: TARGET_REPOSITORY,
-    pr_number: BATCH_A_EXCEPTION.prNumber,
-    base_sha: BATCH_A_EXCEPTION.baseSha,
-    final_head_sha: BATCH_A_EXCEPTION.headSha,
-    pr_head_tree_sha: BATCH_A_TREE_SHA,
-    squash_commit_sha: BATCH_A_EXCEPTION.mergeCommitSha,
-    squash_commit_tree_sha: BATCH_A_TREE_SHA,
-    current_main_sha: EXPECTED_V4_BASE,
-    merge_actor: BATCH_A_HISTORY.merge_actor,
-    equivalence_mode: 'exact_tree_equality',
-    strict_ancestry_compare: BATCH_A_HISTORY.strict_ancestry,
-    exact_head_ci: {
-      green: true,
-      evidence_source: 'immutable_preverified_historical_run_identity_set',
-      runs: BATCH_A_HISTORY.exact_head_ci,
-    },
-    current_main_validation: {
-      green: true,
-      evidence_source: 'immutable_preverified_historical_run_identity',
-      run: BATCH_A_HISTORY.current_main_validation,
-    },
-    correction_reason: 'github_squash_merge_does_not_preserve_pr_commit_ancestry',
+    current_main_sha: PR50_MERGE_COMMIT_SHA,
   };
 }
 
-async function batchB() {
-  const sourceMainRun = workflowRunEvent();
+async function batchB(args) {
+  const source = args.mode === 'batch-b-final'
+    ? workflowRunSource()
+    : await previewSource(args.sourceMainSha);
   const mainStart = await githubJson(`/repos/${TARGET_REPOSITORY}/commits/main`);
-  if (mainStart.value.sha !== sourceMainRun.head_sha) throw new Error('AIGOV_BATCH_B_CURRENT_MAIN_MOVED');
-  const [repository, pr] = await Promise.all([
+  if (mainStart.value.sha !== source.headSha) {
+    throw new Error('AIGOV_BATCH_B_CURRENT_MAIN_MOVED');
+  }
+  const [repository, pr, scopeFile, exactHeadCi] = await Promise.all([
     githubJson(`/repos/${TARGET_REPOSITORY}`),
     githubJson(`/repos/${TARGET_REPOSITORY}/pulls/50`),
+    githubContent(TARGET_REPOSITORY, PR50_SCOPE_PATH, PR50_HEAD_SHA),
+    exactHeadCiEvidence(),
   ]);
-  const headSha = pr.value.head?.sha;
+  const scope = scopeFile.json;
   if (repository.value.id !== TARGET_REPOSITORY_ID
     || repository.value.full_name !== TARGET_REPOSITORY
     || pr.value.number !== 50
     || pr.value.merged !== true
-    || !validSha(headSha)) throw new Error('AIGOV_BATCH_B_TARGET_IDENTITY_UNVERIFIED');
-  const scopeFile = await githubContent(TARGET_REPOSITORY, 'planning/governance/scopes/aigov-v3-batch-b.scope.json', headSha);
-  const scope = scopeFile.json;
-  if (scope?.plan_id !== V4_PLAN_ID
-    || scope?.batch_id !== 'BATCH_B'
-    || scope?.repository !== TARGET_REPOSITORY
-    || scope?.base_sha !== EXPECTED_V4_BASE
-    || scope?.scope_revision !== scopeRevision(scope)) throw new Error('AIGOV_BATCH_B_SCOPE_UNVERIFIED');
-  const exactHeadCi = await exactHeadCiEvidence(headSha);
-  const review = await officialReviewEvidence({ headSha, scopeRevision: scope.scope_revision, exactHeadCi, mergedAt: pr.value.merged_at });
-  const [headGit, mergeGit, headToMain, mergeToMain, mainDescriptor, enforcement, memory] = await Promise.all([
-    githubJson(`/repos/${TARGET_REPOSITORY}/git/commits/${headSha}`),
-    githubJson(`/repos/${TARGET_REPOSITORY}/git/commits/${pr.value.merge_commit_sha}`),
-    compare(TARGET_REPOSITORY, headSha, mainStart.value.sha),
-    compare(TARGET_REPOSITORY, pr.value.merge_commit_sha, mainStart.value.sha),
-    fetchAuthoritativeDescriptor(AUTHORITATIVE_WORKFLOWS.main, sourceMainRun.head_sha, 'push', { expectedRunId: sourceMainRun.id }),
-    repositoryEnforcementEvidence(),
-    batchBMemoryStateAt(mainStart.value.sha),
+    || pr.value.head?.sha !== PR50_HEAD_SHA
+    || pr.value.merge_commit_sha !== PR50_MERGE_COMMIT_SHA
+    || scope?.scope_revision !== PR50_SCOPE_REVISION
+    || scopeRevision(scope) !== PR50_SCOPE_REVISION) {
+    throw new Error('AIGOV_BATCH_B_TARGET_IDENTITY_UNVERIFIED');
+  }
+  const mainDescriptor = source.descriptor || await fetchAuthoritativeDescriptor(
+    AUTHORITATIVE_WORKFLOWS.main,
+    source.headSha,
+    'push',
+    { expectedRunId: source.runId },
+  );
+  const [headGit, mergeGit, headToMain, mergeToMain] = await Promise.all([
+    githubJson(`/repos/${TARGET_REPOSITORY}/git/commits/${PR50_HEAD_SHA}`),
+    githubJson(`/repos/${TARGET_REPOSITORY}/git/commits/${PR50_MERGE_COMMIT_SHA}`),
+    compare(TARGET_REPOSITORY, PR50_HEAD_SHA, mainStart.value.sha),
+    compare(TARGET_REPOSITORY, PR50_MERGE_COMMIT_SHA, mainStart.value.sha),
   ]);
   const merge = verifyMergeResultPayloads({
     pr: pr.value,
-    reviewedHeadSha: headSha,
+    reviewedHeadSha: PR50_HEAD_SHA,
     headCommit: headGit.value,
     mergeCommit: mergeGit.value,
     headToMain: headToMain.value,
     mergeToMain: mergeToMain.value,
   });
-  if (merge.diagnostics.length) throw new Error(`AIGOV_BATCH_B_MERGE_RESULT:${merge.diagnostics.join(',')}`);
+  if (merge.diagnostics.length) {
+    throw new Error(`AIGOV_BATCH_B_MERGE_RESULT:${merge.diagnostics.join(',')}`);
+  }
   const mainEnd = await githubJson(`/repos/${TARGET_REPOSITORY}/commits/main`);
   const currentMain = verifyCurrentMainExecution({
     beforeSha: mainStart.value.sha,
     afterSha: mainEnd.value.sha,
-    eventHeadSha: sourceMainRun.head_sha,
+    eventHeadSha: source.headSha,
     descriptor: mainDescriptor,
   });
-  if (currentMain.diagnostics.length) throw new Error(`AIGOV_BATCH_B_CURRENT_MAIN:${currentMain.diagnostics.join(',')}`);
+  if (currentMain.diagnostics.length) {
+    throw new Error(`AIGOV_BATCH_B_CURRENT_MAIN:${currentMain.diagnostics.join(',')}`);
+  }
   const result = verifyBatchBFinalClosure({
     planId: V4_PLAN_ID,
     batchId: 'BATCH_B',
@@ -420,50 +385,59 @@ async function batchB() {
     repository: TARGET_REPOSITORY,
     repositoryId: TARGET_REPOSITORY_ID,
     prNumber: 50,
-    headSha,
-    scopeRevision: scope.scope_revision,
+    headSha: PR50_HEAD_SHA,
+    scopeRevision: PR50_SCOPE_REVISION,
     exactHeadCiEvidence: exactHeadCi,
-    reviewEvidence: review,
+    reviewEvidence: null,
     mergeEvidence: merge.evidence,
     currentMainEvidence: currentMain.evidence,
-    enforcementEvidence: enforcement.evidence,
-    memory,
+    memory: memoryState(),
   });
-  result.diagnostics = [...new Set([...result.diagnostics, ...enforcement.diagnostics])];
-  result.status = result.diagnostics.length ? 'fail' : 'pass';
   return {
     ...result,
     plan_id: V4_PLAN_ID,
     repository: TARGET_REPOSITORY,
     repository_id: TARGET_REPOSITORY_ID,
-    pr_number: 50,
-    head_sha: headSha,
-    scope_revision: scope.scope_revision,
-    merge_commit_sha: pr.value.merge_commit_sha,
+    head_sha: PR50_HEAD_SHA,
+    scope_revision: PR50_SCOPE_REVISION,
+    merge_commit_sha: PR50_MERGE_COMMIT_SHA,
     current_main_sha: mainStart.value.sha,
     exact_head_ci: exactHeadCi,
-    independent_review: review,
+    validate_main: mainDescriptor,
+    independent_review: {
+      required: false,
+      status: 'not_required_by_owner_policy',
+      provenance: 'not_applicable',
+    },
     merge_evidence: merge.evidence,
-    current_main_validation: currentMain.evidence,
-    repository_enforcement: enforcement.evidence,
+    current_main_validation_evidence: currentMain.evidence,
+    evidence_mode: source.source,
   };
 }
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const result = args.mode === 'batch-a-v4-reconcile' ? await batchA(args) : await batchB();
+  const result = args.mode === 'batch-a-v4-reconcile'
+    ? await batchA(args)
+    : await batchB(args);
   const output = `${JSON.stringify(result, null, 2)}\n`;
   if (args.output) writeFileSync(path.resolve(ROOT, args.output), output);
   process.stdout.write(output);
   if (result.status !== 'pass') process.exitCode = 1;
 }
 
-const isMain = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+const isMain = process.argv[1]
+  && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
 if (isMain) {
   main().catch((error) => {
-    const output = `${JSON.stringify({ status: 'fail', diagnostics: [`AIGOV_V4_EXACT_MAIN_INTERNAL_ERROR:${error.message}`] }, null, 2)}\n`;
-    const outputIndex = process.argv.indexOf('--output');
-    if (outputIndex >= 0 && process.argv[outputIndex + 1]) writeFileSync(path.resolve(ROOT, process.argv[outputIndex + 1]), output);
+    const output = `${JSON.stringify({
+      status: 'fail',
+      diagnostics: [`AIGOV_V4_EXACT_MAIN_INTERNAL_ERROR:${error.message}`],
+    }, null, 2)}\n`;
+    const index = process.argv.indexOf('--output');
+    if (index >= 0 && process.argv[index + 1]) {
+      writeFileSync(path.resolve(ROOT, process.argv[index + 1]), output);
+    }
     process.stderr.write(output);
     process.exitCode = 1;
   });

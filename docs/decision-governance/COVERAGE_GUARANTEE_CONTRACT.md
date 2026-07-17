@@ -1,65 +1,18 @@
 # EV4 Decision Kernel — Coverage Guarantee Contract v1
 
-## Status and authority
+## Authority and boundaries
 
-- `status`: `policy_active_candidate_on_dcov_exec_001`
-- `contract_version`: `1.0.0`
-- `machine_readable_source`: `kernel/decision-governance/coverage-guarantee-contract.v1.json`
-- `owner`: Kernel
+`kernel/decision-governance/coverage-guarantee-contract.v1.json` is authoritative. Coverage remains `not_measurable_pending_external_promotion`; percentages remain `null`. This policy creates no runtime proof, consumer proof, Coverage credit, readiness, production-readiness, product effect, external-repository effect, or KROAD supersession.
 
-The JSON contract is authoritative. This document is its human-readable view. Contract state is derived by `npm run validate:coverage`; it is never promoted by an approval field or a manual authority flag.
+Independent pre-Merge PR review is `optional_advisory` and has no Merge authority. Exact-head CI and an explicit owner Merge command remain required. This repository policy does not alter the separate external Coverage-promotion predicate `independent_review_passed`; CI, Merge, advisory review, or target-repository prose cannot satisfy that predicate.
 
-## Thresholds
+A zero-delta Coverage Impact is permitted only for a bounded blocking defect or non-Coverage maintenance that preserves Coverage state, closes no obligation or Family, grants no credit, and names the next content-expansion package. Every sensitive PR must carry exactly one schema-valid Impact bound to the repository, PR, base, structured work-package identity, exact sensitive changed paths, and runtime-derived head.
 
-- Minimum content floor: **90%**
-- Owner acceptance target: **95%**
-- Critical P0 and safety coverage: **100%**
+PR validation uses `pull_request` identity and requires the externally verified PR number. `Validate Main` uses explicit `post_merge` identity and intentionally supplies no PR number; it selects exactly one Impact carrier by repository, exact pre-push base SHA, structured current work-package ID, and exact sensitive changed-path set. Zero matches fail with `COV_IMPACT_POST_MERGE_NOT_FOUND`; multiple matches fail with `COV_IMPACT_POST_MERGE_AMBIGUOUS`.
 
-An aggregate percentage cannot hide a critical gap. Percentages remain `null` while an in-scope denominator is unresolved.
-
-## Coverage meanings
-
-An Element is covered only when every applicable Decision Question, P0 Family, safety gate, runtime check and consumer proof is either `end_to_end_covered` or `not_applicable_with_validated_reason`. A Decision Card, Matrix, Resolver Rule, fixture, schema, documentation page or CI pass does not independently establish Element coverage.
-
-A Decision Question earns credit only through this complete applicable chain:
-
-`Catalog → Matrix → Resolver Rule → Deterministic Evaluator → Valid Fixture → Invalid Fixture → Adversarial Fixture → L2 Audit → Required Runtime or Consumer Proof → Coverage Credit`
-
-Matrix-only Families receive no Resolver credit. A not-applicable link requires a dedicated disposition under `planning/coverage/dispositions/not-applicable/`. The validator derives acceptance only when the disposition's intrinsic subject, reason, validator rule, exact evidence head and independently resolved source statement all match, and that source predates and is reachable from the validated PR base. A producer-supplied `validator_accepted` flag has no authority.
-
-Every obligation or Question-chain link that contributes credit must use typed repository evidence. The validator resolves the path and JSON Pointer or symbol, then verifies intrinsic role-specific identity: Question, Family, Matrix, active Rule, fixture target, audit target, proof subject, or credit subject as applicable. A carrier's self-declared `subject_record_id` and `coverage_subject_id` are never sufficient. JavaScript symbols require the exact binding in `coverage-evidence-subject-registry.v1.json`; symbol existence alone grants no credit.
-
-Runtime and consumer proof require their dedicated receipts under `planning/coverage/proofs/`, but a dedicated path and schema are only syntax. The validator also resolves every immutable capture lineage item, recomputes hashes, checks exact-head ancestry and freshness, matches a producer registered unchanged at both the evidence head and validated PR base, binds capture time exactly to the enclosing receipt, and confines raw bytes to the role-specific capture directory. The producer registration and capture evidence must predate and be reachable from the PR base; producer or capture files introduced by the coverage-claiming PR cannot authorize that same PR. Runtime observations use the contract's finite vocabulary and must be `observed_pass`; consumer proof must be `accepted`, while `rejected` is blocking negative evidence. The producer registry is initially empty because this PR has no authoritative external capture or consumer source.
-
-Coverage credit is an in-memory validator derivation projected into the dedicated receipt format. Producer-authored `coverage_granted: true` has no authority. The projection must match the current schema-and-hash-validated baseline identity and exactly every preceding link's evidence ID, immutable hash, subject and head; missing, extra, duplicate, stale or cross-Question evidence fails closed. This does not make the unresolved denominator measurement-active. Generic fixtures, planning files and review prose cannot satisfy proof or credit roles. These contracts do not assert that any real runtime proof, consumer acceptance or coverage credit currently exists.
-
-## Contract states
-
-1. `policy_active` — the contract, real non-empty data, baseline, debt, validator, negative fixtures and CI wiring exist.
-2. `measurement_active` — denominator members are source-bound, hashes verify, candidates are dispositioned, denominators are validated and percentages are derived.
-3. `threshold_enforced` — measurement is active, all three thresholds are computed, critical coverage is 100%, and release/readiness checks consume the result.
-
-The expected state after `DCOV-EXEC-001` is `policy_active`. Unresolved denominator candidates are valid at this stage and force percentage values to remain `null`.
-
-## Denominator integrity
-
-Known scope includes non-duplicate `confirmed`, `candidate` and `unresolved` records. Denominator changes are derived from the verified base-to-head Ledger and Catalog transition. Every added, removed or reclassified ID requires a typed record-level reason whose evidence is either the affected record's exact verified source reference or a schema-valid disposition naming the exact record, reason, before/after memberships, target relationship, and source lineage. Unrelated Matrix or governance evidence cannot justify a reduction. Duplicate and supersession dispositions require valid targets. Deleting or disguising hard records to improve a percentage is invalid. When a denominator transition is invalid, its raw attempted values remain available only for diagnostics; effective coverage metrics preserve the verified base values, so a rejected transition cannot reduce a denominator or increase a numerator.
-
-For every coverage-sensitive PR, exactly one newly added Coverage Impact Record must match the repository, PR number, merge base, current work package and the complete sensitive changed-path set. Its exact head is verified from Git and the CI event at runtime; a historical record cannot satisfy a later PR.
-
-## Material progress
-
-After `measurement_active`, a content-expansion package must satisfy at least one of: a coverage increase of at least five percentage points; completion of `max(2, ceil(0.05 * current_denominator))` items; or completion of one P0 Family across every applicable Element with measurable numerator growth.
-
-During `policy_active`, a content package must complete a materially bounded set of obligation IDs and close at least one real Family or Element slice. Completed IDs, closed Families, percentage deltas and zero-delta status are derived from the verified base-to-head artifacts rather than trusted declarations. A zero-delta package is limited to a blocking defect and must name the next content-expansion package. Impact chronology uses a contiguous `sequence_number` plus `previous_impact_id`; gaps, duplicates, forks, predecessor mismatches, and filename/sequence disagreement fail closed. The three-consecutive rule uses only that canonical sequence, never filename order.
-
-## Merge eligibility
-
-Merge requires all three independent conditions: green exact-head CI, green independent PR inspection, and an explicit owner merge command. This contract grants no agent Merge authority.
+The trusted-base Coverage adapter recognizes only the exact pre-owner-policy wrapper generation and the exact owner-policy wrapper generation. The owner-policy generation executes the pinned pre-owner-policy wrapper against PRF-010 and legacy sources read from the exact trusted base, never by recursively importing itself. Unknown or mutated wrapper shapes fail closed with `COV_TRUSTED_BASE_WRAPPER_GENERATION_UNSUPPORTED`.
 
 ## Normative machine-view mirror
-
-The validator compares this block with the authoritative JSON contract. Editing one without the other fails closed.
 
 <!-- COVERAGE-GUARANTEE-NORMATIVE-VIEW:START -->
 ```json
@@ -162,19 +115,15 @@ The validator compares this block with the authoritative JSON contract. Editing 
     "option_2": "max(2, ceil(0.05 * current_denominator))",
     "option_3": "complete_p0_family_with_measurable_numerator_growth",
     "policy_active": "complete_materially_bounded_obligations_and_close_one_real_family_slice",
-    "zero_delta": "blocking_defect_only_with_next_content_expansion_package",
+    "zero_delta": "blocking_defect_or_non_coverage_maintenance_with_preserved_state_and_no_credit",
     "three_consecutive_zero_delta_fail": true,
     "derived_from_verified_base_head": true
   },
-  "merge_gate_requirements": [
-    "exact_head_ci_green",
-    "independent_pr_inspector_green",
-    "explicit_owner_merge_command"
-  ]
+  "merge_gate": {
+    "exact_head_ci_green": "required",
+    "independent_pr_inspector_green": "optional_advisory",
+    "explicit_owner_merge_command": "required"
+  }
 }
 ```
 <!-- COVERAGE-GUARANTEE-NORMATIVE-VIEW:END -->
-
-## Boundaries
-
-This contract measures and rejects unsupported claims. It does not select project-specific design, implement external producers or consumers, create a runtime platform, or assert production readiness.
