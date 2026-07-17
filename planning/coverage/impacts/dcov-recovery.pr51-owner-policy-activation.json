@@ -16,7 +16,7 @@
     "kernel/decision-governance/coverage-guarantee-contract.v1.json",
     "kernel/schemas/coverage-guarantee-contract.v1.schema.json",
     "kernel/validator/coverage-work-package-id.mjs",
-    "kernel/validator/validate-coverage-guarantee.mjs",
+    "kernel/validator/validate-coverage-guarantee-owner-policy.mjs",
     "package.json",
     "planning/KERNEL_EXECUTION_PLAN.md",
     "planning/NEXT_WORK.md",
