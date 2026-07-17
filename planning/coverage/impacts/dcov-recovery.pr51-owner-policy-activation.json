@@ -17,9 +17,11 @@
     "kernel/schemas/coverage-guarantee-contract.v1.schema.json",
     "kernel/validator/coverage-work-package-id.mjs",
     "kernel/validator/validate-coverage-guarantee-owner-policy.mjs",
+    "kernel/validator/validate-coverage-guarantee.mjs",
     "package.json",
     "planning/KERNEL_EXECUTION_PLAN.md",
     "planning/NEXT_WORK.md",
+    "planning/coverage/coverage-baseline.v1.json",
     "planning/coverage/impacts/dcov-recovery.pr51-owner-policy-activation.json",
     "tools/test-coverage-impact-governance.mjs"
   ],
