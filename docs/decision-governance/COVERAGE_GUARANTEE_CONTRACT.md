@@ -8,6 +8,10 @@ Independent pre-Merge PR review is `optional_advisory` and has no Merge authorit
 
 A zero-delta Coverage Impact is permitted only for a bounded blocking defect or non-Coverage maintenance that preserves Coverage state, closes no obligation or Family, grants no credit, and names the next content-expansion package. Every sensitive PR must carry exactly one schema-valid Impact bound to the repository, PR, base, structured work-package identity, exact sensitive changed paths, and runtime-derived head.
 
+PR validation uses `pull_request` identity and requires the externally verified PR number. `Validate Main` uses explicit `post_merge` identity and intentionally supplies no PR number; it selects exactly one Impact carrier by repository, exact pre-push base SHA, structured current work-package ID, and exact sensitive changed-path set. Zero matches fail with `COV_IMPACT_POST_MERGE_NOT_FOUND`; multiple matches fail with `COV_IMPACT_POST_MERGE_AMBIGUOUS`.
+
+The trusted-base Coverage adapter recognizes only the exact pre-owner-policy wrapper generation and the exact owner-policy wrapper generation. The owner-policy generation executes the pinned pre-owner-policy wrapper against PRF-010 and legacy sources read from the exact trusted base, never by recursively importing itself. Unknown or mutated wrapper shapes fail closed with `COV_TRUSTED_BASE_WRAPPER_GENERATION_UNSUPPORTED`.
+
 ## Normative machine-view mirror
 
 <!-- COVERAGE-GUARANTEE-NORMATIVE-VIEW:START -->
