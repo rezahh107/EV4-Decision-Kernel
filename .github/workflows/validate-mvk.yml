@@ -194,6 +194,66 @@ jobs:
           npm run test:coverage-impact-governance
           npm run validate:coverage
 
+      - name: Validate MVK repository core
+        if: ${{ always() }}
+        run: node kernel/validator/validate-mvk.mjs
+
+      - name: Validate Decision Record v2 core
+        if: ${{ always() }}
+        run: node kernel/validator/validate-decision-record-v2.mjs
+
+      - name: Validate source cards core
+        if: ${{ always() }}
+        run: node kernel/validator/validate-source-cards.mjs
+
+      - name: Validate consumption boundaries core
+        if: ${{ always() }}
+        run: node kernel/validator/validate-consumption-boundaries.mjs
+
+      - name: Validate evidence workspace core
+        if: ${{ always() }}
+        run: node kernel/validator/validate-evidence-workspace.mjs
+
+      - name: Validate Elementor documentation coverage core
+        if: ${{ always() }}
+        run: node kernel/validator/validate-elementor-doc-coverage.mjs
+
+      - name: Validate decision-governance foundation core
+        if: ${{ always() }}
+        run: node kernel/validator/validate-decision-governance-foundation.mjs
+
+      - name: Validate resolver contract core
+        if: ${{ always() }}
+        run: node kernel/validator/validate-resolver-contract.mjs
+
+      - name: Validate resolver MVP core
+        if: ${{ always() }}
+        run: node kernel/resolver-mvp/resolve-high-risk-p0.mjs
+
+      - name: Validate resolver fixture triplets core
+        if: ${{ always() }}
+        run: node kernel/validator/validate-resolver-fixture-triplets.mjs
+
+      - name: Validate L2 decision correctness core
+        if: ${{ always() }}
+        run: node kernel/validator/validate-l2-decision-correctness.mjs
+
+      - name: Validate KROAD-009 vertical slice core
+        if: ${{ always() }}
+        run: node kernel/validator/validate-kroad-009-vertical-slice.mjs
+
+      - name: Validate downstream consumer contract core
+        if: ${{ always() }}
+        run: node kernel/validator/validate-downstream-consumer-contract.mjs
+
+      - name: Validate downstream canonical lock core
+        if: ${{ always() }}
+        run: node kernel/validator/validate-downstream-consumer-canonical-lock.mjs
+
+      - name: Validate downstream lineage core
+        if: ${{ always() }}
+        run: node kernel/validator/validate-downstream-consumer-lineage.mjs
+
       - name: Validate complete MVK
         if: ${{ always() }}
         run: npm run validate:mvk
