@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   finalize-aigov-evidence:
-    if: ${{ github.event.pull_request.number == 49 }}
+    if: ${{ false }}
     name: Finalize AIGOV post-CI evidence
     runs-on: ubuntu-latest
     timeout-minutes: 45
