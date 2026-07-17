@@ -16,7 +16,7 @@ jobs:
       contents: read
     env:
       COVERAGE_REPOSITORY: ${{ github.repository }}
-      COVERAGE_IDENTITY_MODE: main_push
+      COVERAGE_IDENTITY_MODE: post_merge
       COVERAGE_BASE_SHA: ${{ github.event.before }}
       COVERAGE_HEAD_SHA: ${{ github.sha }}
     steps:
@@ -66,7 +66,8 @@ jobs:
         run: |
           set -euo pipefail
           test "${COVERAGE_REPOSITORY}" = "rezahh107/EV4-Decision-Kernel"
-          test "${COVERAGE_IDENTITY_MODE}" = "main_push"
+          test "${COVERAGE_IDENTITY_MODE}" = "post_merge"
+          test -z "${COVERAGE_PR_NUMBER:-}"
           [[ "${COVERAGE_BASE_SHA}" =~ ^[0-9a-f]{40}$ ]]
           [[ "${COVERAGE_HEAD_SHA}" =~ ^[0-9a-f]{40}$ ]]
           test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
