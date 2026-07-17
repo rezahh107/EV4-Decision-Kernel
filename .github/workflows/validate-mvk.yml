@@ -64,40 +64,34 @@ jobs:
           ref: ${{ needs.external-coverage-trust.outputs.verified_head_sha }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Install dependencies
-        shell: bash
-        run: |
-          set -euo pipefail
-          git reset --hard "${COVERAGE_HEAD_SHA}"
-          git clean -ffdx
-          test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
-          test -z "$(git status --porcelain=v1 --untracked-files=all)"
-          npm ci --ignore-scripts --no-audit --no-fund
       - name: Capture production Coverage validator output
         shell: bash
         run: |
           set +e
-          npm run validate:coverage > "${RUNNER_TEMP}/coverage-validation.log" 2>&1
-          status=$?
+          git reset --hard "${COVERAGE_HEAD_SHA}"
+          git clean -ffdx
+          test "$(git rev-parse HEAD)" = "${COVERAGE_HEAD_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          npm ci > "${RUNNER_TEMP}/coverage-install.log" 2>&1
+          install_status=$?
+          if [ "${install_status}" -eq 0 ]; then
+            npm run validate:coverage > "${RUNNER_TEMP}/coverage-validation.log" 2>&1
+            status=$?
+          else
+            cp "${RUNNER_TEMP}/coverage-install.log" "${RUNNER_TEMP}/coverage-validation.log"
+            status=${install_status}
+          fi
           printf 'exit_code=%s\n' "${status}" > "${RUNNER_TEMP}/coverage-validation.exit"
+          git rev-parse 'HEAD^{tree}' > "${RUNNER_TEMP}/head-tree.txt"
           exit 0
-      - name: Upload Coverage diagnostics and bounded repair source snapshot
+      - name: Upload Coverage diagnostics and tree identity
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: coverage-validation-diagnostics-${{ github.event.pull_request.head.sha }}
           path: |
             ${{ runner.temp }}/coverage-validation.log
             ${{ runner.temp }}/coverage-validation.exit
-            .github/workflows/validate-mvk.yml
-            AGENTS.md
-            README.md
-            docs/
-            kernel/
-            planning/
-            tools/
-            package.json
-            package-lock.json
-            node_modules/
+            ${{ runner.temp }}/head-tree.txt
           if-no-files-found: error
           retention-days: 7
 
@@ -149,6 +143,11 @@ jobs:
           node --check tools/test-aigov-v3-exception.mjs
           node --check tools/test-aigov-v4-hardening.mjs
           node --check tools/test-recovery-program-lifecycle.mjs
+          node --check tools/test-coverage-impact-governance.mjs
+          node --check kernel/validator/coverage-work-package-id.mjs
+          node --check kernel/validator/validate-coverage-guarantee-history.mjs
+          node --check kernel/validator/validate-coverage-guarantee.mjs
+          node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
           node --check kernel/validator/validate-recovery-execution-program.mjs
 
       - name: Validate patch whitespace and exact scope
@@ -162,7 +161,7 @@ jobs:
             --head "${COVERAGE_HEAD_SHA}" \
             --output "${RUNNER_TEMP}/aigov-owner-policy-activation-scope.json"
 
-      - name: Validate owner policy, AIGOV and Recovery lifecycle
+      - name: Validate owner policy, AIGOV, Recovery and Coverage governance
         env:
           AIGOV_V4_REPORT: ${{ runner.temp }}/aigov-owner-policy-report.json
         run: |
@@ -173,6 +172,7 @@ jobs:
           npm run validate:recovery-program
           npm run test:recovery-lifecycle
           npm run validate:roadmap-memory
+          npm run test:coverage-impact-governance
           npm run validate:coverage
           npm run validate:mvk
 
