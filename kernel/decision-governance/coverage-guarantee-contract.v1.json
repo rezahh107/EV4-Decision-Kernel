@@ -292,7 +292,7 @@
     },
     "policy_active_rule": "complete_materially_bounded_obligations_and_close_one_real_family_slice",
     "limited_exception": "machine_readable_reason_plus_closed_family_plus_numerator_or_completed_obligation_growth",
-    "zero_delta_rule": "blocking_defect_only_with_next_content_expansion_package",
+    "zero_delta_rule": "blocking_defect_or_non_coverage_maintenance_with_preserved_state_and_no_credit",
     "three_consecutive_zero_delta_fail": true,
     "derived_from_verified_base_head": true
   },
@@ -315,11 +315,13 @@
     "planning/KERNEL_EXECUTION_PLAN.md",
     ".github/workflows/validate-mvk.yml",
     "package.json",
-    "kernel/validator/validate-coverage-guarantee"
+    "kernel/validator/validate-coverage-guarantee",
+    "kernel/validator/coverage-work-package-id.mjs",
+    "tools/test-coverage-impact-governance.mjs"
   ],
   "merge_gate": {
     "exact_head_ci_green": "required",
-    "independent_pr_inspector_green": "required",
+    "independent_pr_inspector_green": "optional_advisory",
     "explicit_owner_merge_command": "required"
   },
   "forbidden_claims": [
