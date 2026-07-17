@@ -88,8 +88,16 @@ jobs:
           path: |
             ${{ runner.temp }}/coverage-validation.log
             ${{ runner.temp }}/coverage-validation.exit
-            kernel/validator/validate-coverage-guarantee-legacy.mjs
-            planning/KERNEL_EXECUTION_PLAN.md
+            .github/workflows/validate-mvk.yml
+            AGENTS.md
+            README.md
+            docs/
+            kernel/
+            planning/
+            tools/
+            package.json
+            package-lock.json
+            node_modules/
           if-no-files-found: error
           retention-days: 7
 
