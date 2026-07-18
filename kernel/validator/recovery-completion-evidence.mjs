@@ -149,11 +149,18 @@ export function isRecoveryCompletionCapability(value) {
 }
 
 export function recoveryCompletionCapabilityMatches(value, ledger, task) {
+  const completion = task?.completion_evidence;
   return isRecoveryCompletionCapability(value)
     && value.repository === REPOSITORY
     && value.repository_id === REPOSITORY_ID
     && value.default_branch === DEFAULT_BRANCH
     && value.task_id === task?.task_id
+    && value.pull_request === completion?.pull_request
+    && value.reviewed_head_sha === completion?.reviewed_head_sha
+    && value.resulting_main_sha === completion?.resulting_main_sha
+    && value.exact_head_run_id === completion?.exact_head_ci?.run_id
+    && value.current_main_run_id === completion?.current_main_validation?.run_id
+    && value.merge_method === completion?.merge_method
     && value.binding_sha256 === bindingSha(ledger, task);
 }
 
@@ -168,11 +175,38 @@ export async function fetchRecoveryCompletionCapabilities(ledger, ...unknownArgu
     token: trustedToken,
     now: trustedNow,
   });
-  for (const task of Array.isArray(ledger?.tasks) ? ledger.tasks : []) {
+  const initialTasks = Array.isArray(ledger?.tasks) ? [...ledger.tasks] : [];
+  for (let taskIndex = 0; taskIndex < initialTasks.length; taskIndex += 1) {
+    const task = initialTasks[taskIndex];
     if (task?.lifecycle_state !== 'complete') continue;
-    const result = await verifyRecoveryCompletionEvidence(ledger, task.task_id, { session: verifier });
+    const taskId = task.task_id;
+    const expectedBindingSha = bindingSha(ledger, task);
+    const result = await verifyRecoveryCompletionEvidence(ledger, taskId, { session: verifier });
     diagnostics.push(...result.diagnostics);
-    if (result.evidence) capabilities.set(task.task_id, mintCapability(ledger, task, result.evidence));
+    const currentTask = Array.isArray(ledger?.tasks)
+      ? ledger.tasks.find((item) => item?.task_id === taskId)
+      : null;
+    const observedBindingSha = currentTask ? bindingSha(ledger, currentTask) : null;
+    if (observedBindingSha !== expectedBindingSha
+      || (result.evidence && result.evidence.binding_sha256 !== expectedBindingSha)) {
+      if (!result.diagnostics.some(
+        (item) => item.diagnostic_id === 'RECOVERY_LEDGER_COMPLETION_INPUT_MUTATED',
+      )) {
+        diagnostics.push({
+          diagnostic_id: 'RECOVERY_LEDGER_COMPLETION_INPUT_MUTATED',
+          severity: 'error',
+          path: `/tasks/${taskIndex}`,
+          expected: { binding_sha256: expectedBindingSha },
+          observed: {
+            binding_sha256: observedBindingSha,
+            evidence_binding_sha256: result.evidence?.binding_sha256 || null,
+          },
+          remediation: 'Retry validation with one immutable ledger snapshot; candidate and completion inputs must not change while official evidence is fetched.',
+        });
+      }
+      continue;
+    }
+    if (result.evidence) capabilities.set(taskId, mintCapability(ledger, currentTask, result.evidence));
   }
   return { capabilities, diagnostics };
 }

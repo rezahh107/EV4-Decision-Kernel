@@ -65,6 +65,7 @@ export function recoveryCompletionBinding(ledger, task) {
 
 export function recoveryVerifiedEvidenceMatches(value, ledger, task, nowMs) {
   const expiresAt = parseDate(value?.expires_at || '');
+  const completion = task?.completion_evidence;
   return value?.evidence_type === 'recovery-completion-verification.v1'
     && Number.isFinite(expiresAt)
     && Number.isFinite(nowMs)
@@ -73,16 +74,22 @@ export function recoveryVerifiedEvidenceMatches(value, ledger, task, nowMs) {
     && value.repository_id === REPOSITORY_ID
     && value.default_branch === DEFAULT_BRANCH
     && value.task_id === task?.task_id
+    && value.pull_request === completion?.pull_request
+    && value.reviewed_head_sha === completion?.reviewed_head_sha
+    && value.resulting_main_sha === completion?.resulting_main_sha
+    && value.exact_head_run_id === completion?.exact_head_ci?.run_id
+    && value.current_main_run_id === completion?.current_main_validation?.run_id
+    && value.merge_method === completion?.merge_method
     && value.binding_sha256 === sha256(recoveryCompletionBinding(ledger, task));
 }
 
-function verifiedEvidenceRecord(ledger, task, evidence, expiresAt) {
+function verifiedEvidenceRecord(taskId, bindingSha256, evidence, expiresAt) {
   return Object.freeze({
     evidence_type: 'recovery-completion-verification.v1',
     repository: REPOSITORY,
     repository_id: REPOSITORY_ID,
     default_branch: DEFAULT_BRANCH,
-    task_id: task.task_id,
+    task_id: taskId,
     pull_request: evidence.pull_request,
     reviewed_head_sha: evidence.reviewed_head_sha,
     resulting_main_sha: evidence.resulting_main_sha,
@@ -93,7 +100,7 @@ function verifiedEvidenceRecord(ledger, task, evidence, expiresAt) {
     observed_at: evidence.observed_at,
     expires_at: new NativeDate(expiresAt).toISOString(),
     merge_method: evidence.merge_method,
-    binding_sha256: sha256(recoveryCompletionBinding(ledger, task)),
+    binding_sha256: bindingSha256,
   });
 }
 
@@ -544,8 +551,10 @@ export async function verifyRecoveryCompletionEvidence(
     : -1;
   const task = taskIndex >= 0 ? ledger.tasks[taskIndex] : null;
   const taskPath = taskIndex >= 0 ? `/tasks/${taskIndex}` : '/tasks';
-  const completion = task?.completion_evidence;
-  const candidate = task?.candidate;
+  const initialBinding = task ? canonical(recoveryCompletionBinding(ledger, task)) : null;
+  const initialBindingSha = initialBinding ? sha256(initialBinding) : null;
+  const completion = initialBinding?.completion_evidence;
+  const candidate = initialBinding?.candidate;
   if (!task || task.lifecycle_state !== 'complete' || !completion || !candidate) {
     return {
       evidence: null,
@@ -563,7 +572,7 @@ export async function verifyRecoveryCompletionEvidence(
   try {
     const state = sessionState(evidenceSession);
     expireSessionCaches(state);
-    const evidenceKey = `${taskId}:${sha256(recoveryCompletionBinding(ledger, task))}`;
+    const evidenceKey = `${taskId}:${initialBindingSha}`;
     const cachedEvidence = state.evidenceCache.get(evidenceKey);
     if (cachedEvidence && recoveryVerifiedEvidenceMatches(cachedEvidence, ledger, task, state.now())) {
       return { evidence: cachedEvidence, diagnostics: [] };
@@ -759,6 +768,22 @@ export async function verifyRecoveryCompletionEvidence(
       ));
     }
 
+    const currentTask = Array.isArray(ledger?.tasks)
+      ? ledger.tasks.find((item) => item?.task_id === taskId)
+      : null;
+    const currentBindingSha = currentTask
+      ? sha256(recoveryCompletionBinding(ledger, currentTask))
+      : null;
+    if (currentBindingSha !== initialBindingSha) {
+      diagnostics.push(diagnostic(
+        'RECOVERY_LEDGER_COMPLETION_INPUT_MUTATED',
+        taskPath,
+        { binding_sha256: initialBindingSha },
+        { binding_sha256: currentBindingSha },
+        'Retry validation with one immutable ledger snapshot; candidate and completion inputs must not change while official evidence is fetched.',
+      ));
+    }
+
     const unique = uniqueDiagnostics(diagnostics);
     if (unique.length) return { evidence: null, diagnostics: unique };
     const workflowSourceReference = (descriptor) => Object.freeze({
@@ -770,7 +795,7 @@ export async function verifyRecoveryCompletionEvidence(
       reference: descriptor.workflow_source_reference,
     });
     const expiresAt = evidenceExpiry(allResponses, observedAtMs);
-    const evidence = verifiedEvidenceRecord(ledger, task, {
+    const evidence = verifiedEvidenceRecord(taskId, initialBindingSha, {
       pull_request: completion.pull_request,
       reviewed_head_sha: reviewedHead,
       resulting_main_sha: resultingMain,

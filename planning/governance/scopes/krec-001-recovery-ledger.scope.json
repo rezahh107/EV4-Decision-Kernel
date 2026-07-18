@@ -8,7 +8,7 @@
   "base_sha": "5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a",
   "head_binding": "derived_at_runtime",
   "change_class": "L3",
-  "scope_revision": "sha256:69d451c32f5ad1fda0b54b4bbe2630a42cecc3f69dba2c950c50bbe9e4bfcb7c",
+  "scope_revision": "sha256:77c80f8d483ac6c3f5b24b014ed2f0f2266002a210c276f63a86c8a7b6ecdf4f",
   "committed": [
     ".github/workflows/validate-main.yml",
     ".github/workflows/validate-mvk.yml",
@@ -60,7 +60,7 @@
   ],
   "completion_evidence": [
     "schema and cross-carrier semantic validation",
-    "23 deterministic patch fixtures plus 67 focused lifecycle and workflow-authority cases",
+    "23 deterministic patch fixtures plus 68 focused lifecycle and workflow-authority cases",
     "focused Recovery ledger lifecycle regression test",
     "exact KREC-001 scope disclosure",
     "Coverage impact preserves null percentages and zero credit",

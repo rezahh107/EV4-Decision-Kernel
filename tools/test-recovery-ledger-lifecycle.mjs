@@ -479,6 +479,81 @@ record(
     ),
 );
 
+const toctouLedger = completedLedger();
+const toctouState = officialState();
+const toctouOfficialFetch = officialFetch(toctouState);
+let toctouMutationApplied = false;
+const toctouFetch = async (...args) => {
+  const responseValue = await toctouOfficialFetch(...args);
+  if (!toctouMutationApplied) {
+    toctouMutationApplied = true;
+    const fabricatedHead = 'a'.repeat(40);
+    const fabricatedMain = 'b'.repeat(40);
+    toctouLedger.tasks[0].candidate = {
+      branch: 'fabricated/completion-candidate',
+      pull_request: 999,
+      pr_state: 'merged',
+    };
+    toctouLedger.tasks[0].completion_evidence = {
+      ...toctouLedger.tasks[0].completion_evidence,
+      pull_request: 999,
+      reviewed_head_sha: fabricatedHead,
+      resulting_main_sha: fabricatedMain,
+      exact_head_ci: {
+        ...toctouLedger.tasks[0].completion_evidence.exact_head_ci,
+        run_id: 9991,
+        head_sha: fabricatedHead,
+        reference: `https://github.com/${REPOSITORY}/actions/runs/9991`,
+      },
+      current_main_validation: {
+        ...toctouLedger.tasks[0].completion_evidence.current_main_validation,
+        run_id: 9992,
+        head_sha: fabricatedMain,
+        reference: `https://github.com/${REPOSITORY}/actions/runs/9992`,
+      },
+      evidence_refs: [
+        {
+          kind: 'authoritative_owner_merge',
+          reference: `https://github.com/${REPOSITORY}/pull/999`,
+        },
+        {
+          kind: 'authoritative_exact_head_ci',
+          reference: `https://github.com/${REPOSITORY}/actions/runs/9991`,
+        },
+        {
+          kind: 'authoritative_current_main_validation',
+          reference: `https://github.com/${REPOSITORY}/actions/runs/9992`,
+        },
+      ],
+    };
+  }
+  return responseValue;
+};
+const toctouResult = await verifyRecoveryCompletionEvidence(toctouLedger, 'KREC-001', {
+  fetchImpl: toctouFetch,
+  token: TEST_TOKEN,
+  now: () => Date.parse(OBSERVED_AT),
+});
+const toctouUnlockDiagnostics = validateRecoveryLedgerDocument(
+  toctouLedger,
+  program,
+  schema,
+  new Map(),
+);
+record(
+  'ledger mutation during the first awaited fetch cannot rebind official evidence to fabricated input',
+  toctouMutationApplied
+    && toctouLedger.tasks[0].completion_evidence.pull_request === 999
+    && !toctouResult.evidence
+    && has(toctouResult.diagnostics, 'RECOVERY_LEDGER_COMPLETION_INPUT_MUTATED')
+    && has(
+      toctouUnlockDiagnostics,
+      'RECOVERY_LEDGER_AUTHORITATIVE_COMPLETION_CAPABILITY_REQUIRED',
+    )
+    && has(toctouUnlockDiagnostics, 'RECOVERY_LEDGER_EXECUTION_ELIGIBILITY_MISMATCH'),
+  [...toctouResult.diagnostics, ...toctouUnlockDiagnostics],
+);
+
 let unknownOptionsError = null;
 try {
   await fetchRecoveryCompletionCapabilities(ledger, {
@@ -519,8 +594,15 @@ record(
     && authoritySource.includes('agent: trustedAgent')
     && !authoritySource.includes('NativeDate.parse')
     && !authoritySource.includes('globalAgent')
+    && authoritySource.includes('const expectedBindingSha = bindingSha(ledger, task)')
+    && authoritySource.includes('observedBindingSha !== expectedBindingSha')
     && authoritySource.includes('const verifier = createRecoveryCompletionVerifier({')
-    && authoritySource.includes('for (const task of Array.isArray(ledger?.tasks) ? ledger.tasks : [])')
+    && authoritySource.includes(
+      'const initialTasks = Array.isArray(ledger?.tasks) ? [...ledger.tasks] : []',
+    )
+    && authoritySource.includes(
+      'for (let taskIndex = 0; taskIndex < initialTasks.length; taskIndex += 1)',
+    )
     && !authoritySource.includes('globalThis.fetch')
     && !authoritySource.includes('Date.now')
     && !pureVerifierSource.includes('VERIFIED_COMPLETIONS')
