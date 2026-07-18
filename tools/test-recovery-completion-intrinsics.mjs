@@ -174,7 +174,7 @@ function fixtures(dir) {
   return { verifier, http, https, loader };
 }
 function run(s, f) {
-  const r = spawnSync(process.execPath, ['--no-warnings', `--experimental-loader=${f.loader}`, fileURLToPath(import.meta.url)], { cwd: ROOT, encoding: 'utf8', env: { ...process.env, RECOVERY_GITHUB_TOKEN: TOKEN, RI_CHILD: '1', RECOVERY_INTRINSICS_SCENARIO: s, RI_V: f.verifier, RI_H: f.http, RI_S: f.https } });
+  const r = spawnSync('node', ['--no-warnings', `--experimental-loader=${f.loader}`, fileURLToPath(import.meta.url)], { cwd: ROOT, encoding: 'utf8', env: { ...process.env, RECOVERY_GITHUB_TOKEN: TOKEN, RI_CHILD: '1', RECOVERY_INTRINSICS_SCENARIO: s, RI_V: f.verifier, RI_H: f.http, RI_S: f.https } });
   let out=null; try{out=JSON.parse(r.stdout)}catch{} return {r,out};
 }
 if (process.env.RI_CHILD === '1') await child();
