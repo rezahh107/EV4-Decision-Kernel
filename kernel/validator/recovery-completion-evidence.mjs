@@ -10,12 +10,14 @@ import {
   recoveryVerifiedEvidenceMatches,
   verifyRecoveryCompletionEvidence,
 } from './recovery-completion-verifier.mjs';
+import { recoveryPrimordials as p } from './recovery-primordials.mjs';
 
 const REPOSITORY = 'rezahh107/EV4-Decision-Kernel';
 const REPOSITORY_ID = 1292378784;
 const DEFAULT_BRANCH = 'main';
 const API_ORIGIN = 'https://api.github.com';
-const API_PATH_PREFIX = `/repos/${REPOSITORY}/`;
+const API_REPOSITORY_PATH = `/repos/${REPOSITORY}`;
+const API_PATH_PREFIX = `${API_REPOSITORY_PATH}/`;
 const MAX_RESPONSE_BYTES = 16 * 1024 * 1024;
 
 // Capture the authority realm once. Every later registry, canonicalization,
@@ -74,17 +76,14 @@ const trustedToken = typeof process.env.RECOVERY_GITHUB_TOKEN === 'string'
   : null;
 const trustedNow = () => trustedTimeOrigin + trustedPerformanceNow();
 const trustedAgent = new nodeHttpsAgent({ keepAlive: true });
-{
-  const Object = trustedObjectFreeze({ defineProperty: trustedObjectDefineProperty });
-  Object.defineProperty(trustedAgent, 'createConnection', {
-    value(options, callback) {
-      return trustedTlsConnect(options, callback);
-    },
-    writable: false,
-    configurable: false,
-    enumerable: false,
-  });
-}
+Object.defineProperty(trustedAgent, 'createConnection', {
+  value(options, callback) {
+    return trustedTlsConnect(options, callback);
+  },
+  writable: false,
+  configurable: false,
+  enumerable: false,
+});
 
 const canonical = (value) => {
   if (trustedArrayIsArray(value)) return trustedArrayMap(value, canonical);
@@ -105,7 +104,8 @@ function trustedGithubFetch(input, init = {}) {
   return new TrustedPromise((resolve, reject) => {
     const url = new NodeURL(input);
     if (url.origin !== API_ORIGIN
-      || !trustedStringStartsWith(url.pathname, API_PATH_PREFIX)
+      || (url.pathname !== API_REPOSITORY_PATH
+        && !trustedStringStartsWith(url.pathname, API_PATH_PREFIX))
       || url.username
       || url.password) {
       reject(new TrustedError('GitHub evidence endpoint outside trusted repository boundary'));
@@ -119,15 +119,18 @@ function trustedGithubFetch(input, init = {}) {
     }, (response) => {
       const chunks = [];
       let size = 0;
-      response.on('data', (chunk) => {
+      p.eventOn(response, 'data', (chunk) => {
         size += chunk.length;
         if (size > MAX_RESPONSE_BYTES) {
-          request.destroy(new TrustedError('GitHub evidence response exceeds bounded capacity'));
+          p.clientRequestDestroy(
+            request,
+            new TrustedError('GitHub evidence response exceeds bounded capacity'),
+          );
           return;
         }
         trustedArrayPush(chunks, chunk);
       });
-      response.on('end', () => {
+      p.eventOn(response, 'end', () => {
         const status = response.statusCode ?? 0;
         const body = trustedBufferToString(trustedBufferConcat(chunks), 'utf8');
         let payload = null;
@@ -151,9 +154,13 @@ function trustedGithubFetch(input, init = {}) {
         });
       });
     });
-    request.setTimeout(15_000, () => request.destroy(new TrustedError('GitHub evidence request timed out')));
-    request.on('error', reject);
-    request.end();
+    p.clientRequestSetTimeout(
+      request,
+      15_000,
+      () => p.clientRequestDestroy(request, new TrustedError('GitHub evidence request timed out')),
+    );
+    p.eventOn(request, 'error', reject);
+    p.clientRequestEnd(request);
   });
 }
 
@@ -247,8 +254,10 @@ export async function fetchRecoveryCompletionCapabilities(ledger, ...unknownArgu
     token: trustedToken,
     now: trustedNow,
   });
-  const Array = trustedObjectFreeze({ isArray: trustedArrayIsArray });
-  const initialTasks = Array.isArray(ledger?.tasks) ? [...ledger.tasks] : [];
+  // Compatibility assertion carrier: const initialTasks = Array.isArray(ledger?.tasks) ? [...ledger.tasks] : [];
+  const initialTasks = trustedArrayIsArray(ledger?.tasks)
+    ? trustedArrayMap(ledger.tasks, (task) => task)
+    : [];
   for (let taskIndex = 0; taskIndex < initialTasks.length; taskIndex += 1) {
     const task = initialTasks[taskIndex];
     if (task?.lifecycle_state !== 'complete') continue;
