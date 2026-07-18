@@ -49,16 +49,24 @@ jobs:
           node --check tools/test-aigov-v3-exception.mjs
           node --check tools/test-aigov-v4-hardening.mjs
           node --check tools/test-recovery-program-lifecycle.mjs
+          node --check tools/test-recovery-ledger-lifecycle.mjs
           node --check tools/test-coverage-impact-governance.mjs
           node --check kernel/validator/coverage-work-package-id.mjs
           node --check kernel/validator/validate-coverage-guarantee.mjs
           node --check kernel/validator/validate-coverage-guarantee-owner-policy.mjs
           node --check kernel/validator/validate-recovery-execution-program.mjs
+          node --check kernel/validator/validate-recovery-ledger.mjs
           node -e "for (const p of process.argv.slice(1)) JSON.parse(require('node:fs').readFileSync(p,'utf8'))" \
             kernel/decision-governance/aigov-repository-policy.v1.json \
             kernel/schemas/aigov-repository-policy.v1.schema.json \
+            kernel/schemas/recovery-ledger.v1.schema.json \
             kernel/schemas/recovery-execution-program.v1.schema.json \
+            kernel/fixtures/recovery-ledger/adversarial/cases.json \
+            kernel/fixtures/recovery-ledger/invalid/cases.json \
+            kernel/fixtures/recovery-ledger/valid/cases.json \
+            planning/recovery/recovery-ledger.v1.json \
             planning/recovery/recovery-execution-program.v1.json \
+            planning/governance/scopes/krec-001-recovery-ledger.scope.json \
             planning/governance/scopes/aigov-owner-policy-recovery-activation.scope.json
       - name: Validate patch whitespace
         run: git diff --check
@@ -77,6 +85,8 @@ jobs:
           npm run validate:roadmap-memory
           npm run validate:coverage
           npm run validate:recovery-program
+          npm run validate:recovery-ledger
+          npm run test:recovery-ledger-lifecycle
       - name: Validate activation scope when applicable
         run: |
           set -euo pipefail

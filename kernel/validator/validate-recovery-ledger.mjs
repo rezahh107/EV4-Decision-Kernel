@@ -404,7 +404,7 @@ export function recoveryLedgerDiagnostics(ledger, program) {
     );
     add(
       diagnostics,
-      task.coverage_credit !== false || task.coverage_credit !== carrierTask.coverage_credit,
+      task.coverage_credit !== false,
       'RECOVERY_LEDGER_COVERAGE_CREDIT_FORBIDDEN',
       taskPath + '/coverage_credit',
       false,
@@ -413,7 +413,7 @@ export function recoveryLedgerDiagnostics(ledger, program) {
     );
     add(
       diagnostics,
-      task.readiness_claim !== false || task.readiness_claim !== carrierTask.readiness_claim,
+      task.readiness_claim !== false,
       'RECOVERY_LEDGER_READINESS_CLAIM_FORBIDDEN',
       taskPath + '/readiness_claim',
       false,
@@ -668,8 +668,12 @@ export function repositoryCompletionDiagnostics(ledger) {
     if (completion.merge_method === 'merge') {
       methodAwareMerge = isAncestor(reviewedHead, resultingMain);
     } else if (['squash', 'rebase'].includes(completion.merge_method)) {
-      methodAwareMerge = git(['rev-parse', reviewedHead + '^{tree}'])
-        === git(['rev-parse', resultingMain + '^{tree}']);
+      try {
+        methodAwareMerge = git(['rev-parse', reviewedHead + '^{tree}'])
+          === git(['rev-parse', resultingMain + '^{tree}']);
+      } catch {
+        methodAwareMerge = false;
+      }
     }
     add(
       diagnostics,
@@ -715,6 +719,9 @@ export function applyFixturePatch(document, operations) {
         throw new Error('RECOVERY_LEDGER_FIXTURE_POINTER_UNRESOLVED:' + operation.path);
       }
       parent = parent[part];
+    }
+    if (parent === null || parent === undefined) {
+      throw new Error('RECOVERY_LEDGER_FIXTURE_POINTER_UNRESOLVED:' + operation.path);
     }
     const key = parts.at(-1);
     if (operation.op === 'remove') {

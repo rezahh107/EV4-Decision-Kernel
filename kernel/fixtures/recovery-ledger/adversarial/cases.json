@@ -217,6 +217,25 @@
       ]
     },
     {
+      "case_id": "task-coverage-credit-and-readiness-overclaim",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/tasks/0/coverage_credit",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/readiness_claim",
+          "value": true
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "RECOVERY_LEDGER_COVERAGE_CREDIT_FORBIDDEN",
+        "RECOVERY_LEDGER_READINESS_CLAIM_FORBIDDEN"
+      ]
+    },
+    {
       "case_id": "branch-candidate-unlocks-dependent",
       "patch": [
         {

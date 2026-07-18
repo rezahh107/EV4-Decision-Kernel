@@ -23,12 +23,12 @@
         "carrier_status": "active",
         "implementation_authorized": true
       },
-      "lifecycle_state": "in_progress",
+      "lifecycle_state": "checks_pending",
       "execution_eligibility": "dependency_ready",
       "candidate": {
         "branch": "krec-001/recovery-ledger",
-        "pull_request": null,
-        "pr_state": null
+        "pull_request": 52,
+        "pr_state": "open"
       },
       "completion_evidence": null,
       "coverage_credit": false,

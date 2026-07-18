@@ -148,6 +148,8 @@ jobs:
           node --check kernel/validator/validate-coverage-guarantee-owner-policy.mjs
           node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
           node --check kernel/validator/validate-recovery-execution-program.mjs
+          node --check kernel/validator/validate-recovery-ledger.mjs
+          node --check tools/test-recovery-ledger-lifecycle.mjs
 
       - name: Validate patch whitespace
         shell: bash
@@ -164,7 +166,8 @@ jobs:
           npm run aigov:scope-disclosure:batch-b -- \
             --base "${COVERAGE_BASE_SHA}" \
             --head "${COVERAGE_HEAD_SHA}" \
-            --output "${RUNNER_TEMP}/aigov-owner-policy-activation-scope.json"
+            --scope planning/governance/scopes/krec-001-recovery-ledger.scope.json \
+            --output "${RUNNER_TEMP}/krec-001-recovery-ledger-scope.json"
 
       - name: Validate owner policy
         if: ${{ always() }}
@@ -183,6 +186,8 @@ jobs:
         run: |
           npm run validate:recovery-program
           npm run test:recovery-lifecycle
+          npm run validate:recovery-ledger
+          npm run test:recovery-ledger-lifecycle
 
       - name: Validate roadmap memory
         if: ${{ always() }}
@@ -266,13 +271,13 @@ jobs:
           --source-main-sha "${COVERAGE_BASE_SHA}"
           --output "${RUNNER_TEMP}/aigov-v4-batch-b-owner-policy-preview.json"
 
-      - name: Upload exact-head owner-policy evidence
+      - name: Upload exact-head KREC-001 evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: aigov-owner-policy-recovery-activation-${{ github.event.pull_request.head.sha }}
+          name: krec-001-recovery-ledger-${{ github.event.pull_request.head.sha }}
           path: |
-            ${{ runner.temp }}/aigov-owner-policy-activation-scope.json
+            ${{ runner.temp }}/krec-001-recovery-ledger-scope.json
             ${{ runner.temp }}/aigov-owner-policy-report.json
             ${{ runner.temp }}/aigov-v4-batch-b-owner-policy-preview.json
           if-no-files-found: error

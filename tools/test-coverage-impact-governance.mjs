@@ -17,13 +17,13 @@ import {
 } from '../kernel/validator/coverage-work-package-id.mjs';
 
 const schema = JSON.parse(readFileSync('kernel/schemas/coverage-impact.v1.schema.json', 'utf8'));
-const actual = JSON.parse(readFileSync('planning/coverage/impacts/dcov-recovery.pr51-owner-policy-activation.json', 'utf8'));
+const actual = JSON.parse(readFileSync('planning/coverage/impacts/krec-001.pr52-recovery-ledger.json', 'utf8'));
 const nextWork = readFileSync('planning/NEXT_WORK.md', 'utf8');
 const validateMain = readFileSync('.github/workflows/validate-main.yml', 'utf8');
 const currentWrapper = readFileSync('kernel/validator/validate-coverage-guarantee.mjs', 'utf8');
 const generationAWrapper = execFileSync(
   'git',
-  ['show', `${actual.base_sha}:kernel/validator/validate-coverage-guarantee.mjs`],
+  ['show', '435add8ee3f3274f781b6e391f11e3262e380c4e:kernel/validator/validate-coverage-guarantee.mjs'],
   { encoding: 'utf8' },
 );
 const headSha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
@@ -33,6 +33,11 @@ const validate = ajv.compile(schema);
 const currentWorkPackage = parseCurrentWorkPackageId(nextWork);
 
 const results = [];
+const ownerPolicyRuntimePaths = [
+  'kernel/validator/.validate-coverage-guarantee.runtime.mjs',
+  'kernel/validator/.validate-coverage-guarantee-prf010.runtime.mjs',
+  'kernel/validator/.validate-coverage-guarantee-legacy.runtime.mjs',
+];
 function test(id, fn) {
   try { fn(); results.push({ id, status: 'pass' }); }
   catch (error) { results.push({ id, status: 'fail', error: error.message }); }
@@ -50,11 +55,17 @@ function syntaxCheckSource(source, temp) {
 function runOwnerPolicy(overrides, removed = []) {
   const env = { ...process.env, ...overrides };
   for (const name of removed) delete env[name];
-  return execFileSync(
-    process.execPath,
-    ['kernel/validator/validate-coverage-guarantee-owner-policy.mjs'],
-    { env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
-  );
+  try {
+    return execFileSync(
+      process.execPath,
+      ['kernel/validator/validate-coverage-guarantee-owner-policy.mjs'],
+      { env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+    );
+  } finally {
+    for (const path of ownerPolicyRuntimePaths) {
+      try { unlinkSync(path); } catch { /* absent */ }
+    }
+  }
 }
 
 function selectionContext(identityMode, overrides = {}) {
@@ -70,7 +81,7 @@ function selectionContext(identityMode, overrides = {}) {
 }
 
 test('valid-non-dcov-maintenance-work-package', () => {
-  assert.equal(currentWorkPackage, 'GOV-OWNER-POLICY-RECOVERY-ACTIVATION');
+  assert.equal(currentWorkPackage, 'KREC-001');
   assert.equal(validate(actual), true, JSON.stringify(validate.errors));
   assert.deepEqual(impactIdentityCodes(actual, currentWorkPackage, actual.changed_paths), []);
   assert.equal(actual.work_type, 'maintenance');
@@ -133,7 +144,7 @@ test('legacy-adapter-is-exact-and-syntax-valid', () => {
   syntaxCheckSource(adapted, 'kernel/validator/.coverage-adapter-focused-test.mjs');
 });
 
-test('exact-head-pr-identity-selects-pr51-carrier', () => {
+test('exact-head-pr-identity-selects-current-carrier', () => {
   assert.deepEqual(resolveCoverageIdentityMode('', actual.pull_request), {
     mode: COVERAGE_IDENTITY_MODES.PULL_REQUEST,
     diagnostic_code: null,
@@ -146,7 +157,7 @@ test('exact-head-pr-identity-selects-pr51-carrier', () => {
   assert.deepEqual(selected.matches.map((impact) => impact.impact_id), [actual.impact_id]);
 });
 
-test('post-merge-identity-without-pr-selects-pr51-carrier', () => {
+test('post-merge-identity-without-pr-selects-current-carrier', () => {
   assert.deepEqual(resolveCoverageIdentityMode(COVERAGE_IDENTITY_MODES.POST_MERGE, null), {
     mode: COVERAGE_IDENTITY_MODES.POST_MERGE,
     diagnostic_code: null,

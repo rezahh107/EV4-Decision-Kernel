@@ -94,6 +94,22 @@ record(
   historyDiagnostics,
 );
 
+let unresolvedPointerError = null;
+try {
+  applyFixturePatch(ledger, [{
+    op: 'replace',
+    path: '/tasks/8/candidate/branch',
+    value: 'invented/candidate',
+  }]);
+} catch (error) {
+  unresolvedPointerError = error;
+}
+record(
+  'fixture patching fails closed with a stable unresolved-pointer error',
+  unresolvedPointerError?.message
+    === 'RECOVERY_LEDGER_FIXTURE_POINTER_UNRESOLVED:/tasks/8/candidate/branch',
+);
+
 const report = {
   suite: 'recovery-ledger-dependency-and-evidence-lifecycle',
   status: cases.every((item) => item.pass) ? 'pass' : 'fail',
