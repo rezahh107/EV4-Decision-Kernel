@@ -8,7 +8,7 @@
   "base_sha": "5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a",
   "head_binding": "derived_at_runtime",
   "change_class": "L3",
-  "scope_revision": "sha256:77c80f8d483ac6c3f5b24b014ed2f0f2266002a210c276f63a86c8a7b6ecdf4f",
+  "scope_revision": "sha256:45dce15743197abe1b170f5dc79cd889e235fa1381211b654805c295c08335f3",
   "committed": [
     ".github/workflows/validate-main.yml",
     ".github/workflows/validate-mvk.yml",
@@ -28,6 +28,7 @@
     "tools/lib/aigov-ci-descriptor.mjs",
     "tools/test-aigov-v4-hardening.mjs",
     "tools/test-coverage-impact-governance.mjs",
+    "tools/test-recovery-completion-intrinsics.mjs",
     "tools/test-recovery-ledger-lifecycle.mjs",
     "tools/validate-aigov-v4-governance.mjs",
     "tools/validate-roadmap-memory-v4-owner-policy.mjs",
@@ -60,7 +61,7 @@
   ],
   "completion_evidence": [
     "schema and cross-carrier semantic validation",
-    "23 deterministic patch fixtures plus 68 focused lifecycle and workflow-authority cases",
+    "23 deterministic patch fixtures plus 68 focused lifecycle and workflow-authority cases plus 19 isolated production intrinsic-hardening cases",
     "focused Recovery ledger lifecycle regression test",
     "exact KREC-001 scope disclosure",
     "Coverage impact preserves null percentages and zero credit",
