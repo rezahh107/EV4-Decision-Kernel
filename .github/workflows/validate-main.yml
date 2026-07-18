@@ -90,7 +90,13 @@ jobs:
       - name: Validate activation scope when applicable
         run: |
           set -euo pipefail
-          if [ "${COVERAGE_BASE_SHA}" = "435add8ee3f3274f781b6e391f11e3262e380c4e" ]; then
+          if [ "${COVERAGE_BASE_SHA}" = "5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a" ]; then
+            npm run aigov:scope-disclosure:batch-b -- \
+              --base "${COVERAGE_BASE_SHA}" \
+              --head "${COVERAGE_HEAD_SHA}" \
+              --scope planning/governance/scopes/krec-001-recovery-ledger.scope.json \
+              --output "aigov-owner-policy-main-scope-${COVERAGE_HEAD_SHA}.json"
+          elif [ "${COVERAGE_BASE_SHA}" = "435add8ee3f3274f781b6e391f11e3262e380c4e" ]; then
             npm run aigov:scope-disclosure:batch-b -- \
               --base "${COVERAGE_BASE_SHA}" \
               --head "${COVERAGE_HEAD_SHA}" \

@@ -199,6 +199,12 @@ test('validate-main-declares-post-merge-mode-without-pr-number', () => {
   assert(validateMain.includes('test -z "${COVERAGE_PR_NUMBER:-}"'));
 });
 
+test('validate-main-binds-krec-001-merged-scope-to-exact-base', () => {
+  assert(validateMain.includes('if [ "${COVERAGE_BASE_SHA}" = "5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a" ]; then'));
+  assert(validateMain.includes('--scope planning/governance/scopes/krec-001-recovery-ledger.scope.json'));
+  assert(validateMain.includes('--head "${COVERAGE_HEAD_SHA}"'));
+});
+
 test('generation-a-trusted-base-adapter-is-supported', () => {
   assert.equal(
     classifyTrustedWrapperSource(generationAWrapper),
