@@ -8,7 +8,7 @@
   "base_sha": "5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a",
   "head_binding": "derived_at_runtime",
   "change_class": "L3",
-  "scope_revision": "sha256:bc060a668c62d5b8d1b2f660ce1539f15b16915d8c78e6ad4dc90a4aec00009b",
+  "scope_revision": "sha256:48bdd8343095b131195c2f217aa48dceb485d2e63cb8e3e2c04e81a10544285d",
   "committed": [
     ".github/workflows/validate-main.yml",
     ".github/workflows/validate-mvk.yml",
@@ -29,7 +29,8 @@
     "tools/test-coverage-impact-governance.mjs",
     "tools/test-recovery-ledger-lifecycle.mjs",
     "tools/validate-aigov-v4-governance.mjs",
-    "tools/validate-roadmap-memory-v4-owner-policy.mjs"
+    "tools/validate-roadmap-memory-v4-owner-policy.mjs",
+    "tools/verify-aigov-v3-exact-main.mjs"
   ],
   "excluded": [
     "substantive implementation of KREC-002 through KREC-009",
