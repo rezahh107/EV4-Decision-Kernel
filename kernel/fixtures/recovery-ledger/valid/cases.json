@@ -1,0 +1,100 @@
+{
+  "fixture_version": "recovery-ledger-patch-fixtures.v1",
+  "cases": [
+    {
+      "case_id": "initial-active-program-only-krec-001-ready",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/tasks/0/lifecycle_state",
+          "value": "not_started"
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/candidate",
+          "value": null
+        }
+      ],
+      "expected_diagnostic_ids": []
+    },
+    {
+      "case_id": "legal-in-progress-branch-candidate",
+      "patch": [],
+      "expected_diagnostic_ids": []
+    },
+    {
+      "case_id": "completed-krec-001-unlocks-only-direct-dependents",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/tasks/0/lifecycle_state",
+          "value": "complete"
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/execution_eligibility",
+          "value": "complete"
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/candidate",
+          "value": {
+            "branch": "krec-001/recovery-ledger",
+            "pull_request": 52,
+            "pr_state": "merged"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/completion_evidence",
+          "value": {
+            "pull_request": 52,
+            "reviewed_head_sha": "0123456789abcdef0123456789abcdef01234567",
+            "merge_method": "merge",
+            "merge_actor": "rezahh107",
+            "resulting_main_sha": "89abcdef0123456789abcdef0123456789abcdef",
+            "exact_head_ci": {
+              "workflow": "Validate MVK",
+              "run_id": 1001,
+              "head_sha": "0123456789abcdef0123456789abcdef01234567",
+              "conclusion": "success",
+              "reference": "https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/1001"
+            },
+            "current_main_validation": {
+              "workflow": "Validate Main",
+              "run_id": 1002,
+              "head_sha": "89abcdef0123456789abcdef0123456789abcdef",
+              "conclusion": "success",
+              "reference": "https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/1002"
+            },
+            "evidence_refs": [
+              {
+                "kind": "authoritative_owner_merge",
+                "reference": "https://github.com/rezahh107/EV4-Decision-Kernel/pull/52"
+              },
+              {
+                "kind": "authoritative_exact_head_ci",
+                "reference": "https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/1001"
+              },
+              {
+                "kind": "authoritative_current_main_validation",
+                "reference": "https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/1002"
+              }
+            ]
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/1/execution_eligibility",
+          "value": "dependency_ready"
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/3/execution_eligibility",
+          "value": "dependency_ready"
+        }
+      ],
+      "expected_diagnostic_ids": []
+    }
+  ]
+}

@@ -1,0 +1,383 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/recovery-ledger.v1.schema.json",
+  "title": "EV4 Recovery Ledger v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "ledger_id",
+    "program_id",
+    "program_ref",
+    "repository",
+    "default_branch",
+    "program_authority_state",
+    "effects",
+    "tasks"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "recovery-ledger.v1"
+    },
+    "ledger_id": {
+      "const": "DCOV-COVERAGE-EXECUTION-PROGRAM-RECOVERY-LEDGER"
+    },
+    "program_id": {
+      "const": "DCOV-COVERAGE-EXECUTION-PROGRAM"
+    },
+    "program_ref": {
+      "const": "planning/recovery/recovery-execution-program.v1.json"
+    },
+    "repository": {
+      "const": "rezahh107/EV4-Decision-Kernel"
+    },
+    "default_branch": {
+      "const": "main"
+    },
+    "program_authority_state": {
+      "enum": [
+        "registered_non_active",
+        "active",
+        "implemented",
+        "complete"
+      ]
+    },
+    "effects": {
+      "$ref": "#/$defs/effects"
+    },
+    "tasks": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "$ref": "#/$defs/task"
+      }
+    }
+  },
+  "$defs": {
+    "sha40": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "effects": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coverage_promotion_effect",
+        "coverage_credit",
+        "readiness_claim",
+        "product_effect",
+        "external_repository_effect",
+        "kroad_supersession_effect"
+      ],
+      "properties": {
+        "coverage_promotion_effect": {
+          "const": "none"
+        },
+        "coverage_credit": {
+          "const": false
+        },
+        "readiness_claim": {
+          "const": false
+        },
+        "product_effect": {
+          "const": "none"
+        },
+        "external_repository_effect": {
+          "const": "none"
+        },
+        "kroad_supersession_effect": {
+          "const": "none"
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "carrier_status",
+        "implementation_authorized"
+      ],
+      "properties": {
+        "carrier_status": {
+          "enum": [
+            "registered_planned_task",
+            "active",
+            "implemented",
+            "complete"
+          ]
+        },
+        "implementation_authorized": {
+          "type": "boolean"
+        }
+      }
+    },
+    "candidate": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "branch",
+            "pull_request",
+            "pr_state"
+          ],
+          "properties": {
+            "branch": {
+              "type": "string",
+              "pattern": "^krec-[0-9]{3}/[a-z0-9][a-z0-9-]*$"
+            },
+            "pull_request": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1
+            },
+            "pr_state": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "open",
+                "closed",
+                "merged",
+                null
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "ciEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workflow",
+        "run_id",
+        "head_sha",
+        "conclusion",
+        "reference"
+      ],
+      "properties": {
+        "workflow": {
+          "enum": [
+            "Validate MVK",
+            "Validate Main"
+          ]
+        },
+        "run_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "head_sha": {
+          "$ref": "#/$defs/sha40"
+        },
+        "conclusion": {
+          "const": "success"
+        },
+        "reference": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "evidenceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "reference"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "authoritative_owner_merge",
+            "authoritative_exact_head_ci",
+            "authoritative_current_main_validation"
+          ]
+        },
+        "reference": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "completionEvidence": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pull_request",
+            "reviewed_head_sha",
+            "merge_method",
+            "merge_actor",
+            "resulting_main_sha",
+            "exact_head_ci",
+            "current_main_validation",
+            "evidence_refs"
+          ],
+          "properties": {
+            "pull_request": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1
+            },
+            "reviewed_head_sha": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/sha40"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "merge_method": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "merge",
+                "squash",
+                "rebase",
+                null
+              ]
+            },
+            "merge_actor": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "rezahh107",
+                null
+              ]
+            },
+            "resulting_main_sha": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/sha40"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "exact_head_ci": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ciEvidence"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "current_main_validation": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ciEvidence"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "evidence_refs": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/$defs/evidenceRef"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_id",
+        "title",
+        "declared_dependencies",
+        "authority",
+        "lifecycle_state",
+        "execution_eligibility",
+        "candidate",
+        "completion_evidence",
+        "coverage_credit",
+        "readiness_claim"
+      ],
+      "properties": {
+        "task_id": {
+          "type": "string",
+          "pattern": "^KREC-00[1-9]$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "declared_dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^KREC-00[1-9]$"
+          }
+        },
+        "authority": {
+          "$ref": "#/$defs/authority"
+        },
+        "lifecycle_state": {
+          "enum": [
+            "not_started",
+            "in_progress",
+            "checks_pending",
+            "complete"
+          ]
+        },
+        "execution_eligibility": {
+          "enum": [
+            "dependency_ready",
+            "dependency_blocked",
+            "complete"
+          ]
+        },
+        "candidate": {
+          "$ref": "#/$defs/candidate"
+        },
+        "completion_evidence": {
+          "$ref": "#/$defs/completionEvidence"
+        },
+        "coverage_credit": {
+          "const": false
+        },
+        "readiness_claim": {
+          "const": false
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "schema_version": "recovery-ledger.v1",
+  "ledger_id": "DCOV-COVERAGE-EXECUTION-PROGRAM-RECOVERY-LEDGER",
+  "program_id": "DCOV-COVERAGE-EXECUTION-PROGRAM",
+  "program_ref": "planning/recovery/recovery-execution-program.v1.json",
+  "repository": "rezahh107/EV4-Decision-Kernel",
+  "default_branch": "main",
+  "program_authority_state": "active",
+  "effects": {
+    "coverage_promotion_effect": "none",
+    "coverage_credit": false,
+    "readiness_claim": false,
+    "product_effect": "none",
+    "external_repository_effect": "none",
+    "kroad_supersession_effect": "none"
+  },
+  "tasks": [
+    {
+      "task_id": "KREC-001",
+      "title": "Recovery Ledger",
+      "declared_dependencies": [],
+      "authority": {
+        "carrier_status": "active",
+        "implementation_authorized": true
+      },
+      "lifecycle_state": "in_progress",
+      "execution_eligibility": "dependency_ready",
+      "candidate": {
+        "branch": "krec-001/recovery-ledger",
+        "pull_request": null,
+        "pr_state": null
+      },
+      "completion_evidence": null,
+      "coverage_credit": false,
+      "readiness_claim": false
+    },
+    {
+      "task_id": "KREC-002",
+      "title": "Current Source Verification",
+      "declared_dependencies": [
+        "KREC-001"
+      ],
+      "authority": {
+        "carrier_status": "active",
+        "implementation_authorized": true
+      },
+      "lifecycle_state": "not_started",
+      "execution_eligibility": "dependency_blocked",
+      "candidate": null,
+      "completion_evidence": null,
+      "coverage_credit": false,
+      "readiness_claim": false
+    },
+    {
+      "task_id": "KREC-003",
+      "title": "Element Reconciliation",
+      "declared_dependencies": [
+        "KREC-001",
+        "KREC-002"
+      ],
+      "authority": {
+        "carrier_status": "active",
+        "implementation_authorized": true
+      },
+      "lifecycle_state": "not_started",
+      "execution_eligibility": "dependency_blocked",
+      "candidate": null,
+      "completion_evidence": null,
+      "coverage_credit": false,
+      "readiness_claim": false
+    },
+    {
+      "task_id": "KREC-004",
+      "title": "Decision Demand Corpus",
+      "declared_dependencies": [
+        "KREC-001"
+      ],
+      "authority": {
+        "carrier_status": "active",
+        "implementation_authorized": true
+      },
+      "lifecycle_state": "not_started",
+      "execution_eligibility": "dependency_blocked",
+      "candidate": null,
+      "completion_evidence": null,
+      "coverage_credit": false,
+      "readiness_claim": false
+    },
+    {
+      "task_id": "KREC-005",
+      "title": "Canonical Registry Foundation",
+      "declared_dependencies": [
+        "KREC-002",
+        "KREC-003",
+        "KREC-004"
+      ],
+      "authority": {
+        "carrier_status": "active",
+        "implementation_authorized": true
+      },
+      "lifecycle_state": "not_started",
+      "execution_eligibility": "dependency_blocked",
+      "candidate": null,
+      "completion_evidence": null,
+      "coverage_credit": false,
+      "readiness_claim": false
+    },
+    {
+      "task_id": "KREC-006",
+      "title": "Decision Question Catalog",
+      "declared_dependencies": [
+        "KREC-003",
+        "KREC-004",
+        "KREC-005"
+      ],
+      "authority": {
+        "carrier_status": "active",
+        "implementation_authorized": true
+      },
+      "lifecycle_state": "not_started",
+      "execution_eligibility": "dependency_blocked",
+      "candidate": null,
+      "completion_evidence": null,
+      "coverage_credit": false,
+      "readiness_claim": false
+    },
+    {
+      "task_id": "KREC-007",
+      "title": "P0 Resolver Expansion",
+      "declared_dependencies": [
+        "KREC-005",
+        "KREC-006"
+      ],
+      "authority": {
+        "carrier_status": "active",
+        "implementation_authorized": true
+      },
+      "lifecycle_state": "not_started",
+      "execution_eligibility": "dependency_blocked",
+      "candidate": null,
+      "completion_evidence": null,
+      "coverage_credit": false,
+      "readiness_claim": false
+    },
+    {
+      "task_id": "KREC-008",
+      "title": "Consumer Enforcement Expansion",
+      "declared_dependencies": [
+        "KREC-002",
+        "KREC-007"
+      ],
+      "authority": {
+        "carrier_status": "active",
+        "implementation_authorized": true
+      },
+      "lifecycle_state": "not_started",
+      "execution_eligibility": "dependency_blocked",
+      "candidate": null,
+      "completion_evidence": null,
+      "coverage_credit": false,
+      "readiness_claim": false
+    },
+    {
+      "task_id": "KREC-009",
+      "title": "Coverage Baseline",
+      "declared_dependencies": [
+        "KREC-003",
+        "KREC-006",
+        "KREC-007",
+        "KREC-008"
+      ],
+      "authority": {
+        "carrier_status": "active",
+        "implementation_authorized": true
+      },
+      "lifecycle_state": "not_started",
+      "execution_eligibility": "dependency_blocked",
+      "candidate": null,
+      "completion_evidence": null,
+      "coverage_credit": false,
+      "readiness_claim": false
+    }
+  ]
+}
