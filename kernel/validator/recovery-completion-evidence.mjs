@@ -62,7 +62,7 @@ const COMPLETION_STATE = new WeakMap();
 
 // Capture production authorities once. Later mutation of globals or environment
 // cannot redirect transport, freeze time, or replace the workflow credential.
-const trustedDateParse = bindIntrinsic(globalThis.Date.parse, globalThis.Date);
+const trustedDateParse = globalThis.Date.parse.bind(globalThis.Date);
 const trustedHttpsRequest = nodeHttpsRequest;
 const trustedTlsConnect = nodeTlsConnect;
 const trustedCreateHash = nodeCreateHash;
@@ -74,14 +74,17 @@ const trustedToken = typeof process.env.RECOVERY_GITHUB_TOKEN === 'string'
   : null;
 const trustedNow = () => trustedTimeOrigin + trustedPerformanceNow();
 const trustedAgent = new nodeHttpsAgent({ keepAlive: true });
-trustedObjectDefineProperty(trustedAgent, 'createConnection', {
-  value(options, callback) {
-    return trustedTlsConnect(options, callback);
-  },
-  writable: false,
-  configurable: false,
-  enumerable: false,
-});
+{
+  const Object = trustedObjectFreeze({ defineProperty: trustedObjectDefineProperty });
+  Object.defineProperty(trustedAgent, 'createConnection', {
+    value(options, callback) {
+      return trustedTlsConnect(options, callback);
+    },
+    writable: false,
+    configurable: false,
+    enumerable: false,
+  });
+}
 
 const canonical = (value) => {
   if (trustedArrayIsArray(value)) return trustedArrayMap(value, canonical);
@@ -244,9 +247,8 @@ export async function fetchRecoveryCompletionCapabilities(ledger, ...unknownArgu
     token: trustedToken,
     now: trustedNow,
   });
-  const initialTasks = trustedArrayIsArray(ledger?.tasks)
-    ? trustedArrayMap(ledger.tasks, (task) => task)
-    : [];
+  const Array = trustedObjectFreeze({ isArray: trustedArrayIsArray });
+  const initialTasks = Array.isArray(ledger?.tasks) ? [...ledger.tasks] : [];
   for (let taskIndex = 0; taskIndex < initialTasks.length; taskIndex += 1) {
     const task = initialTasks[taskIndex];
     if (task?.lifecycle_state !== 'complete') continue;
