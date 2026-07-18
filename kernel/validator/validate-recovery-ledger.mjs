@@ -6,8 +6,7 @@ import { fileURLToPath } from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import {
-  createRecoveryEvidenceSession,
-  fetchRecoveryCompletionCapability,
+  fetchRecoveryCompletionCapabilities,
   recoveryCompletionCapabilityMatches,
 } from './recovery-completion-evidence.mjs';
 
@@ -819,17 +818,9 @@ async function run() {
   const schema = readJson(SCHEMA_PATH);
   const fixtures = runFixtureSuite(ledger, program, schema);
   const previousLedger = previousLedgerAtBase();
-  const completionEvidenceSession = createRecoveryEvidenceSession();
-  const completionCapabilities = new Map();
-  const completionBoundaryDiagnostics = [];
-  for (const task of ledger.tasks || []) {
-    if (task?.lifecycle_state !== 'complete') continue;
-    const result = await fetchRecoveryCompletionCapability(ledger, task.task_id, {
-      session: completionEvidenceSession,
-    });
-    completionBoundaryDiagnostics.push(...result.diagnostics);
-    if (result.capability) completionCapabilities.set(task.task_id, result.capability);
-  }
+  const completionBoundary = await fetchRecoveryCompletionCapabilities(ledger);
+  const completionCapabilities = completionBoundary.capabilities;
+  const completionBoundaryDiagnostics = completionBoundary.diagnostics;
   const diagnostics = uniqueDiagnostics([
     ...completionBoundaryDiagnostics,
     ...validateRecoveryLedgerDocument(ledger, program, schema, completionCapabilities),

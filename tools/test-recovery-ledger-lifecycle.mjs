@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import {
   applyFixturePatch,
@@ -10,11 +11,15 @@ import {
   validateRecoveryLedgerDocument,
 } from '../kernel/validator/validate-recovery-ledger.mjs';
 import {
-  createRecoveryEvidenceSession,
-  fetchRecoveryCompletionCapability,
+  fetchRecoveryCompletionCapabilities,
   isRecoveryCompletionCapability,
-  recoveryCompletionCapabilityMatches,
 } from '../kernel/validator/recovery-completion-evidence.mjs';
+import * as recoveryAuthority from '../kernel/validator/recovery-completion-evidence.mjs';
+import {
+  createRecoveryCompletionVerifier,
+  recoveryVerifiedEvidenceMatches,
+  verifyRecoveryCompletionEvidence,
+} from '../kernel/validator/recovery-completion-verifier.mjs';
 import {
   RECOVERY_AUTHORITATIVE_WORKFLOWS,
   analyzeRecoveryWorkflowSource,
@@ -325,12 +330,12 @@ async function verifyScenario(name, mutateLedger, mutateState, expectedDiagnosti
   const state = officialState();
   mutateLedger?.(value);
   mutateState?.(state, value);
-  const result = await fetchRecoveryCompletionCapability(value, 'KREC-001', {
+  const result = await verifyRecoveryCompletionEvidence(value, 'KREC-001', {
     fetchImpl: officialFetch(state, options),
     token: TEST_TOKEN,
     now: () => Date.parse(OBSERVED_AT),
   });
-  record(name, !result.capability && has(result.diagnostics, expectedDiagnosticId), result.diagnostics);
+  record(name, !result.evidence && has(result.diagnostics, expectedDiagnosticId), result.diagnostics);
   return result;
 }
 
@@ -339,22 +344,22 @@ async function verifyExpiredMutation(name, mutateState, expectedDiagnosticId) {
   const state = officialState();
   const requests = [];
   let nowMs = Date.parse(OBSERVED_AT);
-  const session = createRecoveryEvidenceSession({
+  const session = createRecoveryCompletionVerifier({
     fetchImpl: officialFetch(state, { requests }),
     token: TEST_TOKEN,
     now: () => nowMs,
   });
-  const initial = await fetchRecoveryCompletionCapability(value, 'KREC-001', { session });
+  const initial = await verifyRecoveryCompletionEvidence(value, 'KREC-001', { session });
   const initialRequestCount = requests.length;
   nowMs += MAX_RESPONSE_AGE_MS + 1;
   state.responseDate = new Date(nowMs).toISOString();
   mutateState(state);
-  const refreshed = await fetchRecoveryCompletionCapability(value, 'KREC-001', { session });
+  const refreshed = await verifyRecoveryCompletionEvidence(value, 'KREC-001', { session });
   record(
     name,
-    Boolean(initial.capability)
-      && !isRecoveryCompletionCapability(initial.capability)
-      && !refreshed.capability
+    Boolean(initial.evidence)
+      && !recoveryVerifiedEvidenceMatches(initial.evidence, value, value.tasks[0], nowMs)
+      && !refreshed.evidence
       && has(refreshed.diagnostics, expectedDiagnosticId)
       && requests.length > initialRequestCount,
     [...initial.diagnostics, ...refreshed.diagnostics],
@@ -420,27 +425,29 @@ record(
 
 const complete = completedLedger();
 const official = officialState();
-const verified = await fetchRecoveryCompletionCapability(complete, 'KREC-001', {
+const verified = await verifyRecoveryCompletionEvidence(complete, 'KREC-001', {
   fetchImpl: officialFetch(official),
   token: TEST_TOKEN,
   now: () => Date.parse(OBSERVED_AT),
 });
-const capabilities = new Map([['KREC-001', verified.capability]]);
-const completeDiagnostics = validateRecoveryLedgerDocument(complete, program, schema, capabilities);
-const readyAfterCompletion = complete.tasks
-  .filter((task) => task.execution_eligibility === 'dependency_ready')
-  .map((task) => task.task_id)
-  .sort();
+const syntheticEvidenceMap = new Map([['KREC-001', verified.evidence]]);
+const completeDiagnostics = validateRecoveryLedgerDocument(
+  complete,
+  program,
+  schema,
+  syntheticEvidenceMap,
+);
 record(
-  'fresh official evidence mints a sealed capability and unlocks only KREC-002 and KREC-004',
+  'synthetic transport exercises the pure verifier but cannot mint authority or unlock dependents',
   verified.diagnostics.length === 0
-    && isRecoveryCompletionCapability(verified.capability)
-    && completeDiagnostics.length === 0
-    && JSON.stringify(readyAfterCompletion) === JSON.stringify(['KREC-002', 'KREC-004']),
+    && Boolean(verified.evidence)
+    && !isRecoveryCompletionCapability(verified.evidence)
+    && has(completeDiagnostics, 'RECOVERY_LEDGER_AUTHORITATIVE_COMPLETION_CAPABILITY_REQUIRED')
+    && has(completeDiagnostics, 'RECOVERY_LEDGER_EXECUTION_ELIGIBILITY_MISMATCH'),
   [...verified.diagnostics, ...completeDiagnostics],
 );
 
-const serializedCapability = JSON.parse(JSON.stringify(verified.capability));
+const serializedCapability = JSON.parse(JSON.stringify(verified.evidence));
 const serializedDiagnostics = validateRecoveryLedgerDocument(
   complete,
   program,
@@ -456,11 +463,111 @@ record(
 
 const rebound = clone(complete);
 rebound.tasks[0].completion_evidence.current_main_validation.run_id = 9002;
-const reboundDiagnostics = validateRecoveryLedgerDocument(rebound, program, schema, capabilities);
 record(
-  'capability is exact-bound and rejected after ledger evidence mutation',
-  has(reboundDiagnostics, 'RECOVERY_LEDGER_AUTHORITATIVE_COMPLETION_CAPABILITY_REQUIRED'),
-  reboundDiagnostics,
+  'ordinary pure-verifier evidence remains exact-bound after ledger mutation',
+  recoveryVerifiedEvidenceMatches(
+    verified.evidence,
+    complete,
+    complete.tasks[0],
+    Date.parse(OBSERVED_AT),
+  )
+    && !recoveryVerifiedEvidenceMatches(
+      verified.evidence,
+      rebound,
+      rebound.tasks[0],
+      Date.parse(OBSERVED_AT),
+    ),
+);
+
+let unknownOptionsError = null;
+try {
+  await fetchRecoveryCompletionCapabilities(ledger, {
+    fetchImpl: officialFetch(officialState()),
+    token: TEST_TOKEN,
+    now: () => Date.parse(OBSERVED_AT),
+  });
+} catch (error) {
+  unknownOptionsError = error;
+}
+record(
+  'production authority exposes one batch entry point and rejects caller options',
+  recoveryAuthority.createRecoveryEvidenceSession === undefined
+    && recoveryAuthority.createRecoveryCompletionVerifier === undefined
+    && recoveryAuthority.fetchRecoveryCompletionCapability === undefined
+    && unknownOptionsError?.message === 'RECOVERY_COMPLETION_PRODUCTION_OPTIONS_FORBIDDEN',
+);
+
+const authoritySource = readFileSync(
+  'kernel/validator/recovery-completion-evidence.mjs',
+  'utf8',
+);
+const pureVerifierSource = readFileSync(
+  'kernel/validator/recovery-completion-verifier.mjs',
+  'utf8',
+);
+const validatorSource = readFileSync('kernel/validator/validate-recovery-ledger.mjs', 'utf8');
+record(
+  'production CLI uses one private batch verifier and no caller-controlled transport or clock',
+  authoritySource.includes("import { request as nodeHttpsRequest } from 'node:https'")
+    && authoritySource.includes('const verifier = createRecoveryCompletionVerifier({')
+    && authoritySource.includes('for (const task of Array.isArray(ledger?.tasks) ? ledger.tasks : [])')
+    && !authoritySource.includes('globalThis.fetch')
+    && !authoritySource.includes('Date.now')
+    && !pureVerifierSource.includes('VERIFIED_COMPLETIONS')
+    && !pureVerifierSource.includes('COMPLETION_STATE')
+    && !pureVerifierSource.includes('mintCapability')
+    && (validatorSource.match(/fetchRecoveryCompletionCapabilities\(ledger\)/g) || []).length === 1
+    && !validatorSource.includes('createRecoveryEvidenceSession')
+    && !validatorSource.includes('fetchRecoveryCompletionCapability('),
+);
+
+const authorityModuleUrl = new URL(
+  '../kernel/validator/recovery-completion-evidence.mjs',
+  import.meta.url,
+).href;
+const ledgerFileUrl = new URL('../planning/recovery/recovery-ledger.v1.json', import.meta.url);
+const authorityProbe = `
+  import { readFileSync } from 'node:fs';
+  const authority = await import(${JSON.stringify(authorityModuleUrl)});
+  let fakeFetchCalls = 0;
+  let fakeNowCalls = 0;
+  globalThis.fetch = async () => { fakeFetchCalls += 1; throw new Error('fake transport used'); };
+  Date.now = () => { fakeNowCalls += 1; return 0; };
+  process.env.RECOVERY_GITHUB_TOKEN = 'fake-post-initialization-token';
+  const ledger = JSON.parse(readFileSync(new URL(${JSON.stringify(ledgerFileUrl.href)}), 'utf8'));
+  ledger.tasks[0].lifecycle_state = 'complete';
+  ledger.tasks[0].candidate = { branch: 'fake', pull_request: 52, pr_state: 'merged' };
+  ledger.tasks[0].completion_evidence = {};
+  const result = await authority.fetchRecoveryCompletionCapabilities(ledger);
+  process.stdout.write(JSON.stringify({
+    capabilityCount: result.capabilities.size,
+    diagnosticIds: result.diagnostics.map((item) => item.diagnostic_id),
+    fakeFetchCalls,
+    fakeNowCalls,
+  }));
+`;
+const authorityProbeEnv = { ...process.env };
+delete authorityProbeEnv.RECOVERY_GITHUB_TOKEN;
+const authorityProbeResult = spawnSync(
+  process.execPath,
+  ['--input-type=module', '-e', authorityProbe],
+  { encoding: 'utf8', env: authorityProbeEnv },
+);
+let authorityProbeOutput = null;
+try {
+  authorityProbeOutput = JSON.parse(authorityProbeResult.stdout);
+} catch {
+  authorityProbeOutput = null;
+}
+record(
+  'post-initialization fake token transport and clock cannot mint production authority',
+  authorityProbeResult.status === 0
+    && authorityProbeOutput?.capabilityCount === 0
+    && authorityProbeOutput?.fakeFetchCalls === 0
+    && authorityProbeOutput?.fakeNowCalls === 0
+    && authorityProbeOutput?.diagnosticIds?.includes(
+      'RECOVERY_LEDGER_GITHUB_EVIDENCE_UNAVAILABLE',
+    ),
 );
 
 for (const [name, key, mutate, expectedDiagnostic] of [
@@ -772,14 +879,14 @@ for (const status of [403, 429]) {
 }
 
 const missingTokenRequests = [];
-const missingTokenResult = await fetchRecoveryCompletionCapability(completedLedger(), 'KREC-001', {
+const missingTokenResult = await verifyRecoveryCompletionEvidence(completedLedger(), 'KREC-001', {
   fetchImpl: officialFetch(officialState(), { requests: missingTokenRequests }),
   token: null,
   now: () => Date.parse(OBSERVED_AT),
 });
 record(
   'missing RECOVERY_GITHUB_TOKEN fails closed before an unauthenticated request',
-  !missingTokenResult.capability
+  !missingTokenResult.evidence
     && has(missingTokenResult.diagnostics, 'RECOVERY_LEDGER_GITHUB_EVIDENCE_UNAVAILABLE')
     && missingTokenRequests.length === 0,
   missingTokenResult.diagnostics,
@@ -787,17 +894,17 @@ record(
 
 const historicalRequests = [];
 const historicalState = officialState();
-const historicalSession = createRecoveryEvidenceSession({
+const historicalSession = createRecoveryCompletionVerifier({
   fetchImpl: officialFetch(historicalState, { requests: historicalRequests }),
   token: TEST_TOKEN,
   now: () => Date.parse(OBSERVED_AT),
 });
-const historicalResult = await fetchRecoveryCompletionCapability(completedLedger(), 'KREC-001', {
+const historicalResult = await verifyRecoveryCompletionEvidence(completedLedger(), 'KREC-001', {
   session: historicalSession,
 });
 record(
   'historical completion revalidation does not depend on mutable current workflow metadata',
-  Boolean(historicalResult.capability)
+  Boolean(historicalResult.evidence)
     && historicalResult.diagnostics.length === 0
     && historicalRequests.every((requestPath) => !requestPath.includes('/actions/workflows/'))
     && historicalRequests.some((requestPath) => requestPath.includes(`/contents/${RECOVERY_AUTHORITATIVE_WORKFLOWS.mvk.path}?ref=${HEAD}`))
@@ -811,28 +918,28 @@ const cachedFetch = officialFetch(officialState(), {
   requests: cachedRequests,
   authObservations,
 });
-const cachedSession = createRecoveryEvidenceSession({
+const cachedSession = createRecoveryCompletionVerifier({
   fetchImpl: cachedFetch,
   token: TEST_TOKEN,
   now: () => Date.parse(OBSERVED_AT),
 });
 const cachedLedger = completedLedger();
-const firstCached = await fetchRecoveryCompletionCapability(cachedLedger, 'KREC-001', {
+const firstCached = await verifyRecoveryCompletionEvidence(cachedLedger, 'KREC-001', {
   session: cachedSession,
 });
 const firstRequestCount = cachedRequests.length;
-const secondCached = await fetchRecoveryCompletionCapability(cachedLedger, 'KREC-001', {
+const secondCached = await verifyRecoveryCompletionEvidence(cachedLedger, 'KREC-001', {
   session: cachedSession,
 });
 const serializedCacheSurface = JSON.stringify({
   session: cachedSession,
-  capability: secondCached.capability,
+  capability: secondCached.evidence,
   diagnostics: secondCached.diagnostics,
 });
 record(
-  'repeated invocation reuses exact-bound sealed evidence without exposing the token',
-  Boolean(firstCached.capability)
-    && firstCached.capability === secondCached.capability
+  'pure verifier reuses exact-bound ordinary evidence without exposing the token',
+  Boolean(firstCached.evidence)
+    && firstCached.evidence === secondCached.evidence
     && cachedRequests.length === firstRequestCount
     && authObservations.length > 0
     && authObservations.every(Boolean)
@@ -843,35 +950,36 @@ record(
 const expiringState = officialState();
 const expiringRequests = [];
 let expiringNowMs = Date.parse(OBSERVED_AT);
-const expiringSession = createRecoveryEvidenceSession({
+const expiringSession = createRecoveryCompletionVerifier({
   fetchImpl: officialFetch(expiringState, { requests: expiringRequests }),
   token: TEST_TOKEN,
   now: () => expiringNowMs,
 });
 const expiringLedger = completedLedger();
-const beforeExpiry = await fetchRecoveryCompletionCapability(expiringLedger, 'KREC-001', {
+const beforeExpiry = await verifyRecoveryCompletionEvidence(expiringLedger, 'KREC-001', {
   session: expiringSession,
 });
 const beforeExpiryRequestCount = expiringRequests.length;
 expiringNowMs += MAX_RESPONSE_AGE_MS + 1;
 expiringState.responseDate = new Date(expiringNowMs).toISOString();
-const expiredBeforeRefetch = !recoveryCompletionCapabilityMatches(
-  beforeExpiry.capability,
+const expiredBeforeRefetch = !recoveryVerifiedEvidenceMatches(
+  beforeExpiry.evidence,
   expiringLedger,
   expiringLedger.tasks[0],
+  expiringNowMs,
 );
-const afterExpiry = await fetchRecoveryCompletionCapability(expiringLedger, 'KREC-001', {
+const afterExpiry = await verifyRecoveryCompletionEvidence(expiringLedger, 'KREC-001', {
   session: expiringSession,
 });
 record(
-  'capability request and run-evidence caches share one bounded expiry and refresh after five minutes',
-  Boolean(beforeExpiry.capability)
-    && Boolean(afterExpiry.capability)
-    && beforeExpiry.capability !== afterExpiry.capability
+  'ordinary evidence request and run caches share one bounded expiry and refresh after five minutes',
+  Boolean(beforeExpiry.evidence)
+    && Boolean(afterExpiry.evidence)
+    && beforeExpiry.evidence !== afterExpiry.evidence
     && expiredBeforeRefetch
-    && !isRecoveryCompletionCapability(beforeExpiry.capability)
+    && !isRecoveryCompletionCapability(beforeExpiry.evidence)
     && expiringRequests.length === beforeExpiryRequestCount * 2
-    && Date.parse(beforeExpiry.capability.expires_at) - Date.parse(beforeExpiry.capability.observed_at)
+    && Date.parse(beforeExpiry.evidence.expires_at) - Date.parse(beforeExpiry.evidence.observed_at)
       <= MAX_RESPONSE_AGE_MS,
   [...beforeExpiry.diagnostics, ...afterExpiry.diagnostics],
 );
@@ -922,26 +1030,31 @@ for (const [name, mutateState, expectedDiagnosticId] of [
 const outageAfterExpiryState = officialState();
 let outageAfterExpiryNowMs = Date.parse(OBSERVED_AT);
 let outageAfterExpiry = false;
-const outageAfterExpirySession = createRecoveryEvidenceSession({
+const outageAfterExpirySession = createRecoveryCompletionVerifier({
   fetchImpl: officialFetch(outageAfterExpiryState, { unavailable: () => outageAfterExpiry }),
   token: TEST_TOKEN,
   now: () => outageAfterExpiryNowMs,
 });
 const outageAfterExpiryLedger = completedLedger();
-const beforeOutage = await fetchRecoveryCompletionCapability(outageAfterExpiryLedger, 'KREC-001', {
+const beforeOutage = await verifyRecoveryCompletionEvidence(outageAfterExpiryLedger, 'KREC-001', {
   session: outageAfterExpirySession,
 });
 outageAfterExpiryNowMs += MAX_RESPONSE_AGE_MS + 1;
 outageAfterExpiryState.responseDate = new Date(outageAfterExpiryNowMs).toISOString();
 outageAfterExpiry = true;
-const afterOutage = await fetchRecoveryCompletionCapability(outageAfterExpiryLedger, 'KREC-001', {
+const afterOutage = await verifyRecoveryCompletionEvidence(outageAfterExpiryLedger, 'KREC-001', {
   session: outageAfterExpirySession,
 });
 record(
-  'API outage after capability expiry fails closed instead of reusing stale authority',
-  Boolean(beforeOutage.capability)
-    && !isRecoveryCompletionCapability(beforeOutage.capability)
-    && !afterOutage.capability
+  'API outage after ordinary evidence expiry fails closed instead of reusing stale verification',
+  Boolean(beforeOutage.evidence)
+    && !recoveryVerifiedEvidenceMatches(
+      beforeOutage.evidence,
+      outageAfterExpiryLedger,
+      outageAfterExpiryLedger.tasks[0],
+      outageAfterExpiryNowMs,
+    )
+    && !afterOutage.evidence
     && has(afterOutage.diagnostics, 'RECOVERY_LEDGER_GITHUB_EVIDENCE_UNAVAILABLE'),
   [...beforeOutage.diagnostics, ...afterOutage.diagnostics],
 );
@@ -950,27 +1063,27 @@ const recoveringState = officialState();
 recoveringState.runs.get(EXACT_RUN).conclusion = 'failure';
 let recoveringNowMs = Date.parse(OBSERVED_AT);
 const recoveringRequests = [];
-const recoveringSession = createRecoveryEvidenceSession({
+const recoveringSession = createRecoveryCompletionVerifier({
   fetchImpl: officialFetch(recoveringState, { requests: recoveringRequests }),
   token: TEST_TOKEN,
   now: () => recoveringNowMs,
 });
 const recoveringLedger = completedLedger();
-const failedBeforeRefresh = await fetchRecoveryCompletionCapability(recoveringLedger, 'KREC-001', {
+const failedBeforeRefresh = await verifyRecoveryCompletionEvidence(recoveringLedger, 'KREC-001', {
   session: recoveringSession,
 });
 const failedRequestCount = recoveringRequests.length;
 recoveringNowMs += MAX_RESPONSE_AGE_MS + 1;
 recoveringState.responseDate = new Date(recoveringNowMs).toISOString();
 recoveringState.runs.get(EXACT_RUN).conclusion = 'success';
-const successfulAfterRefresh = await fetchRecoveryCompletionCapability(recoveringLedger, 'KREC-001', {
+const successfulAfterRefresh = await verifyRecoveryCompletionEvidence(recoveringLedger, 'KREC-001', {
   session: recoveringSession,
 });
 record(
   'failed workflow payload expires and can refresh to success in the same session',
-  !failedBeforeRefresh.capability
+  !failedBeforeRefresh.evidence
     && has(failedBeforeRefresh.diagnostics, 'RECOVERY_LEDGER_EXACT_HEAD_RUN_UNVERIFIED')
-    && Boolean(successfulAfterRefresh.capability)
+    && Boolean(successfulAfterRefresh.evidence)
     && successfulAfterRefresh.diagnostics.length === 0
     && recoveringRequests.length > failedRequestCount,
   [...failedBeforeRefresh.diagnostics, ...successfulAfterRefresh.diagnostics],
@@ -982,22 +1095,22 @@ sharedLedger.tasks[1].execution_eligibility = 'complete';
 sharedLedger.tasks[1].candidate = clone(sharedLedger.tasks[0].candidate);
 sharedLedger.tasks[1].completion_evidence = clone(sharedLedger.tasks[0].completion_evidence);
 const sharedRequests = [];
-const sharedSession = createRecoveryEvidenceSession({
+const sharedSession = createRecoveryCompletionVerifier({
   fetchImpl: officialFetch(officialState(), { requests: sharedRequests }),
   token: TEST_TOKEN,
   now: () => Date.parse(OBSERVED_AT),
 });
-const sharedFirst = await fetchRecoveryCompletionCapability(sharedLedger, 'KREC-001', {
+const sharedFirst = await verifyRecoveryCompletionEvidence(sharedLedger, 'KREC-001', {
   session: sharedSession,
 });
 const sharedCount = sharedRequests.length;
-const sharedSecond = await fetchRecoveryCompletionCapability(sharedLedger, 'KREC-002', {
+const sharedSecond = await verifyRecoveryCompletionEvidence(sharedLedger, 'KREC-002', {
   session: sharedSession,
 });
 record(
   'two complete tasks sharing runs do not duplicate repository workflow run job or check retrieval',
-  Boolean(sharedFirst.capability)
-    && Boolean(sharedSecond.capability)
+  Boolean(sharedFirst.evidence)
+    && Boolean(sharedSecond.evidence)
     && sharedRequests.length === sharedCount
     && new Set(sharedRequests).size === sharedRequests.length,
   [...sharedFirst.diagnostics, ...sharedSecond.diagnostics],
@@ -1017,7 +1130,7 @@ record(
   has(locallyAmbiguousDiagnostics, 'RECOVERY_LEDGER_MERGE_RESULT_UNVERIFIED'),
   locallyAmbiguousDiagnostics,
 );
-const unavailableLocal = await fetchRecoveryCompletionCapability(locallyCoherent, 'KREC-001', {
+const unavailableLocal = await verifyRecoveryCompletionEvidence(locallyCoherent, 'KREC-001', {
   fetchImpl: officialFetch(officialState(), { unavailable: true }),
   token: TEST_TOKEN,
   now: () => Date.parse(OBSERVED_AT),
