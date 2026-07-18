@@ -5,6 +5,10 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
+import {
+  fetchRecoveryCompletionCapability,
+  recoveryCompletionCapabilityMatches,
+} from './recovery-completion-evidence.mjs';
 
 const ROOT = process.cwd();
 const LEDGER_PATH = 'planning/recovery/recovery-ledger.v1.json';
@@ -246,7 +250,7 @@ function completionDiagnostics(task, taskPath) {
   return diagnostics;
 }
 
-export function recoveryLedgerDiagnostics(ledger, program) {
+export function recoveryLedgerDiagnostics(ledger, program, completionCapabilities = new Map()) {
   const diagnostics = [];
   if (!ledger || typeof ledger !== 'object' || Array.isArray(ledger)) {
     return [diagnostic(
@@ -436,12 +440,18 @@ export function recoveryLedgerDiagnostics(ledger, program) {
   );
   diagnostics.push(...cycleDiagnostics(tasksById));
 
+  const completionCapabilityFor = (task) => completionCapabilities instanceof Map
+    ? completionCapabilities.get(task?.task_id)
+    : null;
+  const hasVerifiedCompletion = (task) => task?.lifecycle_state === 'complete'
+    && recoveryCompletionCapabilityMatches(completionCapabilityFor(task), ledger, task);
+
   for (const [index, task] of tasks.entries()) {
     if (!task || typeof task !== 'object' || Array.isArray(task)) continue;
     const taskPath = '/tasks/' + index;
     const dependencies = Array.isArray(task.declared_dependencies) ? task.declared_dependencies : [];
     const dependenciesComplete = dependencies.every(
-      (dependencyId) => tasksById.get(dependencyId)?.lifecycle_state === 'complete',
+      (dependencyId) => hasVerifiedCompletion(tasksById.get(dependencyId)),
     );
     const expectedEligibility = task.lifecycle_state === 'complete'
       ? 'complete'
@@ -513,10 +523,19 @@ export function recoveryLedgerDiagnostics(ledger, program) {
         'Exact-head checks are candidate evidence, not completion proof.',
       );
     } else if (task.lifecycle_state === 'complete') {
+      add(
+        diagnostics,
+        !hasVerifiedCompletion(task),
+        'RECOVERY_LEDGER_AUTHORITATIVE_COMPLETION_CAPABILITY_REQUIRED',
+        taskPath + '/completion_evidence',
+        'opaque capability sealed to fresh official GitHub evidence and this exact task record',
+        completionCapabilityFor(task) || null,
+        'Fetch and verify official GitHub repository, PR, Merge, workflow, job, and check payloads before accepting complete.',
+      );
       for (const dependencyId of dependencies) {
         add(
           diagnostics,
-          tasksById.get(dependencyId)?.lifecycle_state !== 'complete',
+          !hasVerifiedCompletion(tasksById.get(dependencyId)),
           'RECOVERY_LEDGER_COMPLETE_DEPENDENCY_INCOMPLETE',
           taskPath + '/declared_dependencies',
           'all dependencies complete',
@@ -564,10 +583,15 @@ export function recoveryLedgerDiagnostics(ledger, program) {
   return uniqueDiagnostics(diagnostics);
 }
 
-export function validateRecoveryLedgerDocument(ledger, program, schema) {
+export function validateRecoveryLedgerDocument(
+  ledger,
+  program,
+  schema,
+  completionCapabilities = new Map(),
+) {
   return uniqueDiagnostics([
     ...schemaDiagnostics(ledger, schema),
-    ...recoveryLedgerDiagnostics(ledger, program),
+    ...recoveryLedgerDiagnostics(ledger, program, completionCapabilities),
   ]);
 }
 
@@ -740,6 +764,19 @@ export function applyFixturePatch(document, operations) {
   return result;
 }
 
+export function fixtureExpectationPass(category, expectedDiagnosticIds, observedDiagnosticIds, {
+  allowAdditionalDiagnostics = false,
+} = {}) {
+  const expected = [...new Set(expectedDiagnosticIds || [])].sort();
+  const observed = [...new Set(observedDiagnosticIds || [])].sort();
+  if (category === 'valid') return expected.length === 0 && observed.length === 0;
+  if (expected.length === 0) return false;
+  if (allowAdditionalDiagnostics) {
+    return expected.every((diagnosticId) => observed.includes(diagnosticId));
+  }
+  return same(expected, observed);
+}
+
 function runFixtureSuite(canonicalLedger, program, schema) {
   const fixtures = [];
   for (const category of ['valid', 'invalid', 'adversarial']) {
@@ -748,17 +785,18 @@ function runFixtureSuite(canonicalLedger, program, schema) {
     for (const fixtureCase of fixtureSet.cases || []) {
       const document = applyFixturePatch(canonicalLedger, fixtureCase.patch || []);
       const observed = validateRecoveryLedgerDocument(document, program, schema);
-      const observedIds = new Set(observed.map((item) => item.diagnostic_id));
+      const observedIds = [...new Set(observed.map((item) => item.diagnostic_id))].sort();
       const expected = fixtureCase.expected_diagnostic_ids || [];
-      const pass = category === 'valid'
-        ? observed.length === 0
-        : expected.length > 0 && expected.every((diagnosticId) => observedIds.has(diagnosticId));
+      const pass = fixtureExpectationPass(category, expected, observedIds, {
+        allowAdditionalDiagnostics: fixtureCase.allow_additional_diagnostics === true,
+      });
       fixtures.push({
         category,
         case_id: fixtureCase.case_id,
         pass,
         expected_diagnostic_ids: expected,
-        observed_diagnostic_ids: [...observedIds].sort(),
+        observed_diagnostic_ids: observedIds,
+        allow_additional_diagnostics: fixtureCase.allow_additional_diagnostics === true,
       });
     }
   }
@@ -775,14 +813,23 @@ function previousLedgerAtBase() {
   }
 }
 
-function run() {
+async function run() {
   const ledger = readJson(LEDGER_PATH);
   const program = readJson(PROGRAM_PATH);
   const schema = readJson(SCHEMA_PATH);
   const fixtures = runFixtureSuite(ledger, program, schema);
   const previousLedger = previousLedgerAtBase();
+  const completionCapabilities = new Map();
+  const completionBoundaryDiagnostics = [];
+  for (const task of ledger.tasks || []) {
+    if (task?.lifecycle_state !== 'complete') continue;
+    const result = await fetchRecoveryCompletionCapability(ledger, task.task_id);
+    completionBoundaryDiagnostics.push(...result.diagnostics);
+    if (result.capability) completionCapabilities.set(task.task_id, result.capability);
+  }
   const diagnostics = uniqueDiagnostics([
-    ...validateRecoveryLedgerDocument(ledger, program, schema),
+    ...completionBoundaryDiagnostics,
+    ...validateRecoveryLedgerDocument(ledger, program, schema, completionCapabilities),
     ...(previousLedger ? recoveryLedgerHistoryDiagnostics(previousLedger, ledger) : []),
     ...repositoryCompletionDiagnostics(ledger),
   ]);
@@ -807,4 +854,4 @@ function run() {
 }
 
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
-if (isMain) run();
+if (isMain) await run();

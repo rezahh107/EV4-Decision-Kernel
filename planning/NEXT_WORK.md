@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-PR #50 is merged at `435add8ee3f3274f781b6e391f11e3262e380c4e`. AIGOV Batch B remains closed under the owner-approved sequence. The Recovery Program is active, and open PR #52 is the bounded `KREC-001` candidate with checks pending and no completion, Coverage, readiness, product, external-repository or KROAD supersession effects.
+PR #50 is merged at `435add8ee3f3274f781b6e391f11e3262e380c4e`. AIGOV Batch B remains closed under the owner-approved sequence. The Recovery Program is active, and open non-Draft PR #52 is the bounded `KREC-001` candidate. Exact-head CI succeeded on reviewed Head `935907ade84cd653562129e36446fa4406eb9005`; this remains candidate evidence and creates no completion, Coverage, readiness, product, external-repository or KROAD supersession effects.
 
 ## Status Authority
 
@@ -56,6 +56,9 @@ recovery:
   KREC-001_lifecycle: checks_pending
   KREC-001_candidate_branch: krec-001/recovery-ledger
   KREC-001_candidate_pr: 52
+  KREC-001_candidate_pr_state: non_draft_open
+  KREC-001_reviewed_head_sha: 935907ade84cd653562129e36446fa4406eb9005
+  KREC-001_reviewed_head_exact_head_ci: green
   KREC-001_completion_evidence: null
   KREC-002_execution_eligibility: dependency_blocked
   KREC-004_execution_eligibility: dependency_blocked
@@ -78,7 +81,7 @@ kroad_supersession_effect: none
 
 current_work_package_id: KREC-001
 
-`KREC-001` uses `create_new_candidate` on `krec-001/recovery-ledger`. Open PR #52 targets exact base `5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a`; exact-head CI, owner Merge and completion evidence remain pending.
+`KREC-001` uses `create_new_candidate` on `krec-001/recovery-ledger`. Open non-Draft PR #52 targets exact base `5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a`. Exact-head CI succeeded on reviewed Head `935907ade84cd653562129e36446fa4406eb9005`; owner Merge, method-aware resulting-main proof, and current-main validation remain pending.
 
 - [ ] `DCOV-EXEC-001` — Coverage Guarantee proposal and validation foundation
   - `implementation_eligibility`: `blocked_pending_external_governance_approval`
@@ -101,7 +104,7 @@ current_work_package_id: KREC-001
 
 | Task | Authority | Lifecycle | Execution availability |
 |---|---|---|---|
-| KREC-001 | `active` | `checks_pending` | `dependency_ready; draft_pr_52_open` |
+| KREC-001 | `active` | `checks_pending` | `dependency_ready; non_draft_pr_52_open` |
 | KREC-002 | `active` | `not_started` | `dependency_blocked: KREC-001` |
 | KREC-003 | `active` | `not_started` | `dependency_blocked: KREC-001, KREC-002` |
 | KREC-004 | `active` | `not_started` | `dependency_blocked: KREC-001` |

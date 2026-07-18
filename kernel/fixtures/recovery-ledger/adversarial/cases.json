@@ -35,6 +35,9 @@
         }
       ],
       "expected_diagnostic_ids": [
+        "RECOVERY_LEDGER_AUTHORITATIVE_COMPLETION_CAPABILITY_REQUIRED",
+        "RECOVERY_LEDGER_EXECUTION_ELIGIBILITY_MISMATCH",
+        "RECOVERY_LEDGER_MERGED_CANDIDATE_REQUIRED",
         "RECOVERY_LEDGER_OPEN_PR_NOT_COMPLETION",
         "RECOVERY_LEDGER_COMPLETION_EVIDENCE_REQUIRED"
       ]
@@ -93,11 +96,18 @@
         }
       ],
       "expected_diagnostic_ids": [
-        "RECOVERY_LEDGER_CI_GREEN_NOT_COMPLETION"
+        "RECOVERY_LEDGER_AUTHORITATIVE_COMPLETION_CAPABILITY_REQUIRED",
+        "RECOVERY_LEDGER_CI_GREEN_NOT_COMPLETION",
+        "RECOVERY_LEDGER_COMPLETION_EVIDENCE_UNVERIFIED",
+        "RECOVERY_LEDGER_CURRENT_MAIN_VALIDATION_REQUIRED",
+        "RECOVERY_LEDGER_EXECUTION_ELIGIBILITY_MISMATCH",
+        "RECOVERY_LEDGER_MERGED_CANDIDATE_REQUIRED",
+        "RECOVERY_LEDGER_MERGE_IDENTITY_REQUIRED",
+        "RECOVERY_LEDGER_OPEN_PR_NOT_COMPLETION"
       ]
     },
     {
-      "case_id": "fabricated-completion-evidence-reference",
+      "case_id": "correctly-shaped-nonexistent-github-evidence",
       "patch": [
         {
           "op": "replace",
@@ -132,27 +142,27 @@
               "run_id": 1001,
               "head_sha": "0123456789abcdef0123456789abcdef01234567",
               "conclusion": "success",
-              "reference": "https://example.invalid/actions/runs/1001"
+              "reference": "https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/1001"
             },
             "current_main_validation": {
               "workflow": "Validate Main",
               "run_id": 1002,
               "head_sha": "89abcdef0123456789abcdef0123456789abcdef",
               "conclusion": "success",
-              "reference": "https://example.invalid/actions/runs/1002"
+              "reference": "https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/1002"
             },
             "evidence_refs": [
               {
                 "kind": "authoritative_owner_merge",
-                "reference": "https://example.invalid/pull/52"
+                "reference": "https://github.com/rezahh107/EV4-Decision-Kernel/pull/52"
               },
               {
                 "kind": "authoritative_exact_head_ci",
-                "reference": "https://example.invalid/actions/runs/1001"
+                "reference": "https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/1001"
               },
               {
                 "kind": "authoritative_current_main_validation",
-                "reference": "https://example.invalid/actions/runs/1002"
+                "reference": "https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/1002"
               }
             ]
           }
@@ -169,7 +179,8 @@
         }
       ],
       "expected_diagnostic_ids": [
-        "RECOVERY_LEDGER_COMPLETION_EVIDENCE_UNVERIFIED"
+        "RECOVERY_LEDGER_AUTHORITATIVE_COMPLETION_CAPABILITY_REQUIRED",
+        "RECOVERY_LEDGER_EXECUTION_ELIGIBILITY_MISMATCH"
       ]
     },
     {
@@ -188,7 +199,8 @@
       ],
       "expected_diagnostic_ids": [
         "RECOVERY_LEDGER_COVERAGE_CREDIT_FORBIDDEN",
-        "RECOVERY_LEDGER_READINESS_CLAIM_FORBIDDEN"
+        "RECOVERY_LEDGER_READINESS_CLAIM_FORBIDDEN",
+        "RECOVERY_LEDGER_SCHEMA_INVALID"
       ]
     },
     {
@@ -213,7 +225,8 @@
       "expected_diagnostic_ids": [
         "RECOVERY_LEDGER_PRODUCT_EFFECT_FORBIDDEN",
         "RECOVERY_LEDGER_EXTERNAL_REPOSITORY_EFFECT_FORBIDDEN",
-        "RECOVERY_LEDGER_KROAD_SUPERSESSION_FORBIDDEN"
+        "RECOVERY_LEDGER_KROAD_SUPERSESSION_FORBIDDEN",
+        "RECOVERY_LEDGER_SCHEMA_INVALID"
       ]
     },
     {
@@ -232,7 +245,8 @@
       ],
       "expected_diagnostic_ids": [
         "RECOVERY_LEDGER_COVERAGE_CREDIT_FORBIDDEN",
-        "RECOVERY_LEDGER_READINESS_CLAIM_FORBIDDEN"
+        "RECOVERY_LEDGER_READINESS_CLAIM_FORBIDDEN",
+        "RECOVERY_LEDGER_SCHEMA_INVALID"
       ]
     },
     {
@@ -265,6 +279,24 @@
       "expected_diagnostic_ids": [
         "RECOVERY_LEDGER_SCHEMA_INVALID",
         "RECOVERY_LEDGER_EXECUTION_ELIGIBILITY_MISMATCH"
+      ]
+    },
+    {
+      "case_id": "serialized-capability-lookalike",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/tasks/0/completion_capability",
+          "value": {
+            "capability_type": "recovery-completion-capability.v1",
+            "repository_id": 1292378784,
+            "task_id": "KREC-001",
+            "binding_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "RECOVERY_LEDGER_SCHEMA_INVALID"
       ]
     }
   ]

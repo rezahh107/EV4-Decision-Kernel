@@ -55,6 +55,7 @@ jobs:
           node --check kernel/validator/validate-coverage-guarantee.mjs
           node --check kernel/validator/validate-coverage-guarantee-owner-policy.mjs
           node --check kernel/validator/validate-recovery-execution-program.mjs
+          node --check kernel/validator/recovery-completion-evidence.mjs
           node --check kernel/validator/validate-recovery-ledger.mjs
           node -e "for (const p of process.argv.slice(1)) JSON.parse(require('node:fs').readFileSync(p,'utf8'))" \
             kernel/decision-governance/aigov-repository-policy.v1.json \

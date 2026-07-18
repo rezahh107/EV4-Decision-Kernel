@@ -154,6 +154,7 @@
       ]
     },
     "ciEvidence": {
+      "description": "Ledger comparison input only. A workflow name, run ID, URL, SHA, or success value does not prove execution unless the runtime validator seals matching fresh official GitHub evidence.",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -208,6 +209,7 @@
       }
     },
     "completionEvidence": {
+      "description": "Claimed completion identities. Complete lifecycle acceptance additionally requires an opaque exact-bound runtime capability minted from fresh official GitHub repository, PR, commit, workflow, job, and check payloads.",
       "oneOf": [
         {
           "type": "null"

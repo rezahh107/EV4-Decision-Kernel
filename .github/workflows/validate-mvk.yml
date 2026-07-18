@@ -148,6 +148,7 @@ jobs:
           node --check kernel/validator/validate-coverage-guarantee-owner-policy.mjs
           node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
           node --check kernel/validator/validate-recovery-execution-program.mjs
+          node --check kernel/validator/recovery-completion-evidence.mjs
           node --check kernel/validator/validate-recovery-ledger.mjs
           node --check tools/test-recovery-ledger-lifecycle.mjs
 

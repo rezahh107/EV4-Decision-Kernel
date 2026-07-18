@@ -13,6 +13,35 @@ const coverage = JSON.parse(read('kernel/decision-governance/coverage-guarantee-
 const closure = read('planning/reviews/AIGOV_V4_BATCH_B_POST_MERGE_CLOSURE.md');
 const activation = read('planning/reviews/RECOVERY_PROGRAM_ACTIVATION.md');
 
+function recoveryCandidateMemoryDiagnostics(value) {
+  const diagnostics = [];
+  if (/(?:^|[;\s`])draft_pr_52_open(?:$|[;\s`])/m.test(value)) {
+    diagnostics.push('ROADMAP_RECOVERY_DRAFT_STATE_STALE');
+  }
+  if (!value.includes('non_draft_pr_52_open')
+    || !value.includes('KREC-001_candidate_pr_state: non_draft_open')
+    || !value.includes('open non-Draft PR #52')) {
+    diagnostics.push('ROADMAP_RECOVERY_NON_DRAFT_STATE_MISSING');
+  }
+  if (!value.includes('KREC-001_reviewed_head_sha: 935907ade84cd653562129e36446fa4406eb9005')
+    || !value.includes('KREC-001_reviewed_head_exact_head_ci: green')
+    || !value.includes('Exact-head CI succeeded on reviewed Head `935907ade84cd653562129e36446fa4406eb9005`')) {
+    diagnostics.push('ROADMAP_RECOVERY_REVIEWED_HEAD_CI_MISSING');
+  }
+  if (value.includes('exact-head CI, owner Merge and completion evidence remain pending')) {
+    diagnostics.push('ROADMAP_RECOVERY_EXACT_HEAD_CI_FALSE_PENDING');
+  }
+  return [...new Set(diagnostics)];
+}
+
+for (const code of recoveryCandidateMemoryDiagnostics(next)) {
+  fail('planning/NEXT_WORK.md', code);
+}
+const draftMutation = next.replace('non_draft_pr_52_open', 'draft_pr_52_open');
+if (!recoveryCandidateMemoryDiagnostics(draftMutation).includes('ROADMAP_RECOVERY_DRAFT_STATE_STALE')) {
+  fail('tools/validate-roadmap-memory-v4-owner-policy.mjs', 'draft-state mutation guard did not reject draft_pr_52_open');
+}
+
 for (const token of [
   'repository_adoption_status: complete',
   'status: merged_and_post_merge_verified',
@@ -98,6 +127,8 @@ for (const token of [
   'KREC-001_lifecycle: ' + krec001?.lifecycle_state,
   'KREC-001_candidate_branch: krec-001/recovery-ledger',
   'KREC-001_candidate_pr: ' + krec001?.candidate?.pull_request,
+  'KREC-001_candidate_pr_state: non_draft_open',
+  'KREC-001_reviewed_head_exact_head_ci: green',
   'KREC-001_completion_evidence: null',
   'KREC-002_execution_eligibility: dependency_blocked',
   'KREC-004_execution_eligibility: dependency_blocked',

@@ -8,7 +8,7 @@
   "base_sha": "5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a",
   "head_binding": "derived_at_runtime",
   "change_class": "L3",
-  "scope_revision": "sha256:48cb5bad4b21c89d553bb814be09bd6babee07f7b5a302155a90ef8dede02fc9",
+  "scope_revision": "sha256:4820a2350c7ab9e8c57f1f03b7a04989900d406b128743682639e16bc5af1b94",
   "committed": [
     ".github/workflows/validate-main.yml",
     ".github/workflows/validate-mvk.yml",
@@ -16,6 +16,7 @@
     "kernel/fixtures/recovery-ledger/invalid/cases.json",
     "kernel/fixtures/recovery-ledger/valid/cases.json",
     "kernel/schemas/recovery-ledger.v1.schema.json",
+    "kernel/validator/recovery-completion-evidence.mjs",
     "kernel/validator/validate-recovery-ledger.mjs",
     "package.json",
     "planning/KERNEL_EXECUTION_PLAN.md",
@@ -50,15 +51,15 @@
     "KREC-001 declared dependency set is empty",
     "exact base main commit 5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a",
     "bounded candidate branch krec-001/recovery-ledger",
-    "Open PR #52"
+    "Open non-Draft PR #52"
   ],
   "completion_evidence": [
     "schema and cross-carrier semantic validation",
-    "23 valid invalid and adversarial fixture cases",
+    "23 deterministic patch fixtures plus 27 focused lifecycle cases",
     "focused Recovery ledger lifecycle regression test",
     "exact KREC-001 scope disclosure",
     "Coverage impact preserves null percentages and zero credit",
-    "exact-head PR CI pending",
+    "reviewed Head 935907ade84cd653562129e36446fa4406eb9005 exact-head PR CI succeeded",
     "owner Merge and current-main validation pending",
     "KREC-001 completion remains unclaimed"
   ],
