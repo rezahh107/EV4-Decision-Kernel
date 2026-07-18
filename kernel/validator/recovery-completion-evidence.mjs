@@ -1,7 +1,9 @@
+import { Buffer as NodeBuffer } from 'node:buffer';
 import { createHash as nodeCreateHash } from 'node:crypto';
 import { Agent as nodeHttpsAgent, request as nodeHttpsRequest } from 'node:https';
 import { performance as nodePerformance } from 'node:perf_hooks';
 import { connect as nodeTlsConnect } from 'node:tls';
+import { URL as NodeURL } from 'node:url';
 import {
   createRecoveryCompletionVerifier,
   recoveryCompletionBinding,
@@ -15,16 +17,56 @@ const DEFAULT_BRANCH = 'main';
 const API_ORIGIN = 'https://api.github.com';
 const API_PATH_PREFIX = `/repos/${REPOSITORY}/`;
 const MAX_RESPONSE_BYTES = 16 * 1024 * 1024;
+
+// Capture the authority realm once. Every later registry, canonicalization,
+// transport and freezing operation uses these sealed references rather than a
+// mutable global or prototype lookup.
+const intrinsicCall = Function.prototype.call;
+const intrinsicBind = Function.prototype.bind;
+const bindIntrinsic = intrinsicCall.bind(intrinsicBind);
+const uncurryThis = (method) => bindIntrinsic(intrinsicCall, method);
+
+const trustedJsonParse = bindIntrinsic(JSON.parse, JSON);
+const trustedJsonStringify = bindIntrinsic(JSON.stringify, JSON);
+const trustedObjectCreate = bindIntrinsic(Object.create, Object);
+const trustedObjectDefineProperty = bindIntrinsic(Object.defineProperty, Object);
+const trustedObjectFreeze = bindIntrinsic(Object.freeze, Object);
+const trustedObjectKeys = bindIntrinsic(Object.keys, Object);
+const trustedObjectFromEntries = bindIntrinsic(Object.fromEntries, Object);
+const trustedArrayIsArray = bindIntrinsic(Array.isArray, Array);
+const trustedNumberIsFinite = bindIntrinsic(Number.isFinite, Number);
+const trustedArrayMap = uncurryThis(Array.prototype.map);
+const trustedArrayPush = uncurryThis(Array.prototype.push);
+const trustedArraySort = uncurryThis(Array.prototype.sort);
+const trustedArrayFind = uncurryThis(Array.prototype.find);
+const trustedArraySome = uncurryThis(Array.prototype.some);
+const TrustedString = String;
+const trustedStringStartsWith = uncurryThis(String.prototype.startsWith);
+const trustedStringToLowerCase = uncurryThis(String.prototype.toLowerCase);
+const trustedWeakSetAdd = uncurryThis(WeakSet.prototype.add);
+const trustedWeakSetHas = uncurryThis(WeakSet.prototype.has);
+const trustedWeakSetDelete = uncurryThis(WeakSet.prototype.delete);
+const trustedWeakMapSet = uncurryThis(WeakMap.prototype.set);
+const trustedWeakMapGet = uncurryThis(WeakMap.prototype.get);
+const trustedWeakMapDelete = uncurryThis(WeakMap.prototype.delete);
+const trustedMapSet = uncurryThis(Map.prototype.set);
+const trustedBufferConcat = bindIntrinsic(NodeBuffer.concat, NodeBuffer);
+const trustedBufferToString = uncurryThis(NodeBuffer.prototype.toString);
+const TrustedMap = Map;
+const TrustedPromise = Promise;
+const TrustedError = Error;
+const TrustedTypeError = TypeError;
+
 const VERIFIED_COMPLETIONS = new WeakSet();
 const COMPLETION_STATE = new WeakMap();
 
 // Capture production authorities once. Later mutation of globals or environment
 // cannot redirect transport, freeze time, or replace the workflow credential.
-const trustedDateParse = globalThis.Date.parse.bind(globalThis.Date);
+const trustedDateParse = bindIntrinsic(globalThis.Date.parse, globalThis.Date);
 const trustedHttpsRequest = nodeHttpsRequest;
 const trustedTlsConnect = nodeTlsConnect;
 const trustedCreateHash = nodeCreateHash;
-const trustedPerformanceNow = nodePerformance.now.bind(nodePerformance);
+const trustedPerformanceNow = bindIntrinsic(nodePerformance.now, nodePerformance);
 const trustedTimeOrigin = nodePerformance.timeOrigin;
 const trustedToken = typeof process.env.RECOVERY_GITHUB_TOKEN === 'string'
   && process.env.RECOVERY_GITHUB_TOKEN.length > 0
@@ -32,7 +74,7 @@ const trustedToken = typeof process.env.RECOVERY_GITHUB_TOKEN === 'string'
   : null;
 const trustedNow = () => trustedTimeOrigin + trustedPerformanceNow();
 const trustedAgent = new nodeHttpsAgent({ keepAlive: true });
-Object.defineProperty(trustedAgent, 'createConnection', {
+trustedObjectDefineProperty(trustedAgent, 'createConnection', {
   value(options, callback) {
     return trustedTlsConnect(options, callback);
   },
@@ -42,24 +84,28 @@ Object.defineProperty(trustedAgent, 'createConnection', {
 });
 
 const canonical = (value) => {
-  if (Array.isArray(value)) return value.map(canonical);
+  if (trustedArrayIsArray(value)) return trustedArrayMap(value, canonical);
   if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])]));
+    const keys = trustedObjectKeys(value);
+    trustedArraySort(keys);
+    return trustedObjectFromEntries(
+      trustedArrayMap(keys, (key) => [key, canonical(value[key])]),
+    );
   }
   return value;
 };
 const bindingSha = (ledger, task) => trustedCreateHash('sha256')
-  .update(JSON.stringify(canonical(recoveryCompletionBinding(ledger, task))))
+  .update(trustedJsonStringify(canonical(recoveryCompletionBinding(ledger, task))))
   .digest('hex');
 
 function trustedGithubFetch(input, init = {}) {
-  return new Promise((resolve, reject) => {
-    const url = new URL(input);
+  return new TrustedPromise((resolve, reject) => {
+    const url = new NodeURL(input);
     if (url.origin !== API_ORIGIN
-      || !url.pathname.startsWith(API_PATH_PREFIX)
+      || !trustedStringStartsWith(url.pathname, API_PATH_PREFIX)
       || url.username
       || url.password) {
-      reject(new Error('GitHub evidence endpoint outside trusted repository boundary'));
+      reject(new TrustedError('GitHub evidence endpoint outside trusted repository boundary'));
       return;
     }
     const request = trustedHttpsRequest(url, {
@@ -73,19 +119,19 @@ function trustedGithubFetch(input, init = {}) {
       response.on('data', (chunk) => {
         size += chunk.length;
         if (size > MAX_RESPONSE_BYTES) {
-          request.destroy(new Error('GitHub evidence response exceeds bounded capacity'));
+          request.destroy(new TrustedError('GitHub evidence response exceeds bounded capacity'));
           return;
         }
-        chunks.push(chunk);
+        trustedArrayPush(chunks, chunk);
       });
       response.on('end', () => {
         const status = response.statusCode ?? 0;
-        const body = Buffer.concat(chunks).toString('utf8');
+        const body = trustedBufferToString(trustedBufferConcat(chunks), 'utf8');
         let payload = null;
         try {
-          payload = body ? JSON.parse(body) : null;
+          payload = body ? trustedJsonParse(body) : null;
         } catch {
-          reject(new Error(`GitHub API ${status}: invalid JSON response`));
+          reject(new TrustedError(`GitHub API ${status}: invalid JSON response`));
           return;
         }
         resolve({
@@ -93,29 +139,34 @@ function trustedGithubFetch(input, init = {}) {
           status,
           headers: {
             get(name) {
-              if (String(name).toLowerCase() !== 'date') return null;
+              if (trustedStringToLowerCase(TrustedString(name)) !== 'date') return null;
               const value = response.headers.date;
-              return Array.isArray(value) ? value[0] || null : value || null;
+              return trustedArrayIsArray(value) ? value[0] || null : value || null;
             },
           },
           json: async () => payload,
         });
       });
     });
-    request.setTimeout(15_000, () => request.destroy(new Error('GitHub evidence request timed out')));
+    request.setTimeout(15_000, () => request.destroy(new TrustedError('GitHub evidence request timed out')));
     request.on('error', reject);
     request.end();
   });
 }
 
-function mintCapability(ledger, task, evidence) {
-  const expiresAt = trustedDateParse(evidence?.expires_at || '');
-  if (!recoveryVerifiedEvidenceMatches(evidence, ledger, task, trustedNow())
-    || !Number.isFinite(expiresAt)) {
-    throw new Error('Verified completion evidence expired before authority minting');
-  }
-  const capability = Object.freeze({
-    capability_type: 'recovery-completion-capability.v1',
+function workflowSourceSnapshot(value) {
+  return trustedObjectFreeze({
+    workflow_id: value?.workflow_id ?? null,
+    workflow_commit_sha: value?.workflow_commit_sha ?? null,
+    workflow_blob_sha: value?.workflow_blob_sha ?? null,
+    workflow_final_byte_sha256: value?.workflow_final_byte_sha256 ?? null,
+    workflow_policy_id: value?.workflow_policy_id ?? null,
+    reference: value?.reference ?? null,
+  });
+}
+
+function privateRegistrationSnapshot(ledger, task, evidence, expiresAt) {
+  return trustedObjectFreeze({
     repository: evidence.repository,
     repository_id: evidence.repository_id,
     default_branch: evidence.default_branch,
@@ -125,74 +176,97 @@ function mintCapability(ledger, task, evidence) {
     resulting_main_sha: evidence.resulting_main_sha,
     exact_head_run_id: evidence.exact_head_run_id,
     current_main_run_id: evidence.current_main_run_id,
-    exact_head_workflow_source: evidence.exact_head_workflow_source,
-    current_main_workflow_source: evidence.current_main_workflow_source,
+    merge_method: evidence.merge_method,
+    exact_head_workflow_source: workflowSourceSnapshot(evidence.exact_head_workflow_source),
+    current_main_workflow_source: workflowSourceSnapshot(evidence.current_main_workflow_source),
+    binding_sha256: bindingSha(ledger, task),
     observed_at: evidence.observed_at,
     expires_at: evidence.expires_at,
-    merge_method: evidence.merge_method,
-    binding_sha256: evidence.binding_sha256,
+    expiresAt,
   });
-  VERIFIED_COMPLETIONS.add(capability);
-  COMPLETION_STATE.set(capability, { expiresAt });
+}
+
+function mintCapability(ledger, task, evidence) {
+  const expiresAt = trustedDateParse(evidence?.expires_at || '');
+  if (!recoveryVerifiedEvidenceMatches(evidence, ledger, task, trustedNow())
+    || !trustedNumberIsFinite(expiresAt)) {
+    throw new TrustedError('Verified completion evidence expired before authority minting');
+  }
+  const capability = trustedObjectFreeze(trustedObjectCreate(null));
+  const registration = privateRegistrationSnapshot(ledger, task, evidence, expiresAt);
+  trustedWeakSetAdd(VERIFIED_COMPLETIONS, capability);
+  trustedWeakMapSet(COMPLETION_STATE, capability, registration);
   return capability;
 }
 
-export function isRecoveryCompletionCapability(value) {
-  if (!value || !VERIFIED_COMPLETIONS.has(value)) return false;
-  const state = COMPLETION_STATE.get(value);
-  if (!state || !Number.isFinite(state.expiresAt) || trustedNow() >= state.expiresAt) {
-    VERIFIED_COMPLETIONS.delete(value);
-    COMPLETION_STATE.delete(value);
-    return false;
+function currentRegistration(value) {
+  if (!value || !trustedWeakSetHas(VERIFIED_COMPLETIONS, value)) return null;
+  const registration = trustedWeakMapGet(COMPLETION_STATE, value);
+  if (!registration
+    || !trustedNumberIsFinite(registration.expiresAt)
+    || trustedNow() >= registration.expiresAt) {
+    trustedWeakSetDelete(VERIFIED_COMPLETIONS, value);
+    trustedWeakMapDelete(COMPLETION_STATE, value);
+    return null;
   }
-  return true;
+  return registration;
+}
+
+export function isRecoveryCompletionCapability(value) {
+  return currentRegistration(value) !== null;
 }
 
 export function recoveryCompletionCapabilityMatches(value, ledger, task) {
+  const registration = currentRegistration(value);
   const completion = task?.completion_evidence;
-  return isRecoveryCompletionCapability(value)
-    && value.repository === REPOSITORY
-    && value.repository_id === REPOSITORY_ID
-    && value.default_branch === DEFAULT_BRANCH
-    && value.task_id === task?.task_id
-    && value.pull_request === completion?.pull_request
-    && value.reviewed_head_sha === completion?.reviewed_head_sha
-    && value.resulting_main_sha === completion?.resulting_main_sha
-    && value.exact_head_run_id === completion?.exact_head_ci?.run_id
-    && value.current_main_run_id === completion?.current_main_validation?.run_id
-    && value.merge_method === completion?.merge_method
-    && value.binding_sha256 === bindingSha(ledger, task);
+  return Boolean(registration)
+    && registration.repository === REPOSITORY
+    && registration.repository_id === REPOSITORY_ID
+    && registration.default_branch === DEFAULT_BRANCH
+    && registration.task_id === task?.task_id
+    && registration.pull_request === completion?.pull_request
+    && registration.reviewed_head_sha === completion?.reviewed_head_sha
+    && registration.resulting_main_sha === completion?.resulting_main_sha
+    && registration.exact_head_run_id === completion?.exact_head_ci?.run_id
+    && registration.current_main_run_id === completion?.current_main_validation?.run_id
+    && registration.merge_method === completion?.merge_method
+    && registration.binding_sha256 === bindingSha(ledger, task);
 }
 
 export async function fetchRecoveryCompletionCapabilities(ledger, ...unknownArguments) {
   if (unknownArguments.length) {
-    throw new TypeError('RECOVERY_COMPLETION_PRODUCTION_OPTIONS_FORBIDDEN');
+    throw new TrustedTypeError('RECOVERY_COMPLETION_PRODUCTION_OPTIONS_FORBIDDEN');
   }
-  const capabilities = new Map();
+  const capabilities = new TrustedMap();
   const diagnostics = [];
   const verifier = createRecoveryCompletionVerifier({
     fetchImpl: trustedGithubFetch,
     token: trustedToken,
     now: trustedNow,
   });
-  const initialTasks = Array.isArray(ledger?.tasks) ? [...ledger.tasks] : [];
+  const initialTasks = trustedArrayIsArray(ledger?.tasks)
+    ? trustedArrayMap(ledger.tasks, (task) => task)
+    : [];
   for (let taskIndex = 0; taskIndex < initialTasks.length; taskIndex += 1) {
     const task = initialTasks[taskIndex];
     if (task?.lifecycle_state !== 'complete') continue;
     const taskId = task.task_id;
     const expectedBindingSha = bindingSha(ledger, task);
     const result = await verifyRecoveryCompletionEvidence(ledger, taskId, { session: verifier });
-    diagnostics.push(...result.diagnostics);
-    const currentTask = Array.isArray(ledger?.tasks)
-      ? ledger.tasks.find((item) => item?.task_id === taskId)
+    for (let index = 0; index < result.diagnostics.length; index += 1) {
+      trustedArrayPush(diagnostics, result.diagnostics[index]);
+    }
+    const currentTask = trustedArrayIsArray(ledger?.tasks)
+      ? trustedArrayFind(ledger.tasks, (item) => item?.task_id === taskId)
       : null;
     const observedBindingSha = currentTask ? bindingSha(ledger, currentTask) : null;
     if (observedBindingSha !== expectedBindingSha
       || (result.evidence && result.evidence.binding_sha256 !== expectedBindingSha)) {
-      if (!result.diagnostics.some(
+      if (!trustedArraySome(
+        result.diagnostics,
         (item) => item.diagnostic_id === 'RECOVERY_LEDGER_COMPLETION_INPUT_MUTATED',
       )) {
-        diagnostics.push({
+        trustedArrayPush(diagnostics, {
           diagnostic_id: 'RECOVERY_LEDGER_COMPLETION_INPUT_MUTATED',
           severity: 'error',
           path: `/tasks/${taskIndex}`,
@@ -206,7 +280,9 @@ export async function fetchRecoveryCompletionCapabilities(ledger, ...unknownArgu
       }
       continue;
     }
-    if (result.evidence) capabilities.set(taskId, mintCapability(ledger, currentTask, result.evidence));
+    if (result.evidence) {
+      trustedMapSet(capabilities, taskId, mintCapability(ledger, currentTask, result.evidence));
+    }
   }
   return { capabilities, diagnostics };
 }
