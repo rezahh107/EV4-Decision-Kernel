@@ -508,7 +508,17 @@ const pureVerifierSource = readFileSync(
 const validatorSource = readFileSync('kernel/validator/validate-recovery-ledger.mjs', 'utf8');
 record(
   'production CLI uses one private batch verifier and no caller-controlled transport or clock',
-  authoritySource.includes("import { request as nodeHttpsRequest } from 'node:https'")
+  authoritySource.includes(
+    "import { Agent as nodeHttpsAgent, request as nodeHttpsRequest } from 'node:https'",
+  )
+    && authoritySource.includes("import { connect as nodeTlsConnect } from 'node:tls'")
+    && authoritySource.includes(
+      'const trustedDateParse = globalThis.Date.parse.bind(globalThis.Date)',
+    )
+    && authoritySource.includes("Object.defineProperty(trustedAgent, 'createConnection'")
+    && authoritySource.includes('agent: trustedAgent')
+    && !authoritySource.includes('NativeDate.parse')
+    && !authoritySource.includes('globalAgent')
     && authoritySource.includes('const verifier = createRecoveryCompletionVerifier({')
     && authoritySource.includes('for (const task of Array.isArray(ledger?.tasks) ? ledger.tasks : [])')
     && !authoritySource.includes('globalThis.fetch')
@@ -529,10 +539,25 @@ const ledgerFileUrl = new URL('../planning/recovery/recovery-ledger.v1.json', im
 const authorityProbe = `
   import { readFileSync } from 'node:fs';
   const authority = await import(${JSON.stringify(authorityModuleUrl)});
+  const https = (await import('node:https')).default;
   let fakeFetchCalls = 0;
   let fakeNowCalls = 0;
+  let fakeDateParseCalls = 0;
+  let fakeGlobalAgentConnectionCalls = 0;
+  let fakeGlobalAgentReplacementCalls = 0;
   globalThis.fetch = async () => { fakeFetchCalls += 1; throw new Error('fake transport used'); };
   Date.now = () => { fakeNowCalls += 1; return 0; };
+  Date.parse = () => { fakeDateParseCalls += 1; return Number.MAX_SAFE_INTEGER; };
+  https.globalAgent.createConnection = () => {
+    fakeGlobalAgentConnectionCalls += 1;
+    throw new Error('mutable global agent used');
+  };
+  https.globalAgent = {
+    addRequest() {
+      fakeGlobalAgentReplacementCalls += 1;
+      throw new Error('replacement global agent used');
+    },
+  };
   process.env.RECOVERY_GITHUB_TOKEN = 'fake-post-initialization-token';
   const ledger = JSON.parse(readFileSync(new URL(${JSON.stringify(ledgerFileUrl.href)}), 'utf8'));
   ledger.tasks[0].lifecycle_state = 'complete';
@@ -544,6 +569,9 @@ const authorityProbe = `
     diagnosticIds: result.diagnostics.map((item) => item.diagnostic_id),
     fakeFetchCalls,
     fakeNowCalls,
+    fakeDateParseCalls,
+    fakeGlobalAgentConnectionCalls,
+    fakeGlobalAgentReplacementCalls,
   }));
 `;
 const authorityProbeEnv = { ...process.env };
@@ -560,11 +588,14 @@ try {
   authorityProbeOutput = null;
 }
 record(
-  'post-initialization fake token transport and clock cannot mint production authority',
+  'post-initialization fake token transport clock parser and global agent cannot mint authority',
   authorityProbeResult.status === 0
     && authorityProbeOutput?.capabilityCount === 0
     && authorityProbeOutput?.fakeFetchCalls === 0
     && authorityProbeOutput?.fakeNowCalls === 0
+    && authorityProbeOutput?.fakeDateParseCalls === 0
+    && authorityProbeOutput?.fakeGlobalAgentConnectionCalls === 0
+    && authorityProbeOutput?.fakeGlobalAgentReplacementCalls === 0
     && authorityProbeOutput?.diagnosticIds?.includes(
       'RECOVERY_LEDGER_GITHUB_EVIDENCE_UNAVAILABLE',
     ),

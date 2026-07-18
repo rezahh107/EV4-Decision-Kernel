@@ -1,6 +1,7 @@
 import { createHash as nodeCreateHash } from 'node:crypto';
-import { request as nodeHttpsRequest } from 'node:https';
+import { Agent as nodeHttpsAgent, request as nodeHttpsRequest } from 'node:https';
 import { performance as nodePerformance } from 'node:perf_hooks';
+import { connect as nodeTlsConnect } from 'node:tls';
 import {
   createRecoveryCompletionVerifier,
   recoveryCompletionBinding,
@@ -19,8 +20,9 @@ const COMPLETION_STATE = new WeakMap();
 
 // Capture production authorities once. Later mutation of globals or environment
 // cannot redirect transport, freeze time, or replace the workflow credential.
-const NativeDate = globalThis.Date;
+const trustedDateParse = globalThis.Date.parse.bind(globalThis.Date);
 const trustedHttpsRequest = nodeHttpsRequest;
+const trustedTlsConnect = nodeTlsConnect;
 const trustedCreateHash = nodeCreateHash;
 const trustedPerformanceNow = nodePerformance.now.bind(nodePerformance);
 const trustedTimeOrigin = nodePerformance.timeOrigin;
@@ -29,6 +31,15 @@ const trustedToken = typeof process.env.RECOVERY_GITHUB_TOKEN === 'string'
   ? process.env.RECOVERY_GITHUB_TOKEN
   : null;
 const trustedNow = () => trustedTimeOrigin + trustedPerformanceNow();
+const trustedAgent = new nodeHttpsAgent({ keepAlive: true });
+Object.defineProperty(trustedAgent, 'createConnection', {
+  value(options, callback) {
+    return trustedTlsConnect(options, callback);
+  },
+  writable: false,
+  configurable: false,
+  enumerable: false,
+});
 
 const canonical = (value) => {
   if (Array.isArray(value)) return value.map(canonical);
@@ -55,6 +66,7 @@ function trustedGithubFetch(input, init = {}) {
       method: 'GET',
       headers: init.headers,
       setHost: true,
+      agent: trustedAgent,
     }, (response) => {
       const chunks = [];
       let size = 0;
@@ -97,7 +109,7 @@ function trustedGithubFetch(input, init = {}) {
 }
 
 function mintCapability(ledger, task, evidence) {
-  const expiresAt = NativeDate.parse(evidence?.expires_at || '');
+  const expiresAt = trustedDateParse(evidence?.expires_at || '');
   if (!recoveryVerifiedEvidenceMatches(evidence, ledger, task, trustedNow())
     || !Number.isFinite(expiresAt)) {
     throw new Error('Verified completion evidence expired before authority minting');
