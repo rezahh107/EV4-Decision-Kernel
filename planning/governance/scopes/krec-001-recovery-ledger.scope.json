@@ -8,7 +8,7 @@
   "base_sha": "5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a",
   "head_binding": "derived_at_runtime",
   "change_class": "L3",
-  "scope_revision": "sha256:48bdd8343095b131195c2f217aa48dceb485d2e63cb8e3e2c04e81a10544285d",
+  "scope_revision": "sha256:70af17b3c06c38761945779b1b77717846e4c36de4fe8c22862391805750060a",
   "committed": [
     ".github/workflows/validate-main.yml",
     ".github/workflows/validate-mvk.yml",
@@ -59,11 +59,11 @@
   ],
   "completion_evidence": [
     "schema and cross-carrier semantic validation",
-    "23 deterministic patch fixtures plus 49 focused lifecycle and workflow-authority cases",
+    "23 deterministic patch fixtures plus 64 focused lifecycle and workflow-authority cases",
     "focused Recovery ledger lifecycle regression test",
     "exact KREC-001 scope disclosure",
     "Coverage impact preserves null percentages and zero credit",
-    "reviewed Head 240fa2094005f5494e4823f23c59cdcd9b4ba5ff exact-head PR CI succeeded",
+    "candidate exact Head and exact-head CI identities are derived at runtime",
     "owner Merge and current-main validation pending",
     "KREC-001 completion remains unclaimed"
   ],

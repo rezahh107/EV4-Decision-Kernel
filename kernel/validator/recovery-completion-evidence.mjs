@@ -17,6 +17,7 @@ const OWNER = 'rezahh107';
 const MAX_RESPONSE_AGE_MS = 5 * 60 * 1000;
 const SHA40 = /^[0-9a-f]{40}$/;
 const VERIFIED_COMPLETIONS = new WeakSet();
+const COMPLETION_STATE = new WeakMap();
 const SESSION_STATE = new WeakMap();
 
 const normalized = (value) => value === undefined ? null : value;
@@ -67,7 +68,11 @@ export function isRecoveryCompletionCapability(value) {
 }
 
 export function recoveryCompletionCapabilityMatches(value, ledger, task) {
+  const state = value && COMPLETION_STATE.get(value);
   return isRecoveryCompletionCapability(value)
+    && state
+    && Number.isFinite(state.expiresAt)
+    && state.now() < state.expiresAt
     && value.repository === REPOSITORY
     && value.repository_id === REPOSITORY_ID
     && value.default_branch === DEFAULT_BRANCH
@@ -75,7 +80,7 @@ export function recoveryCompletionCapabilityMatches(value, ledger, task) {
     && value.binding_sha256 === sha256(completionBinding(ledger, task));
 }
 
-function mintCapability(ledger, task, evidence) {
+function mintCapability(ledger, task, evidence, state, expiresAt) {
   const capability = Object.freeze({
     capability_type: 'recovery-completion-capability.v1',
     repository: REPOSITORY,
@@ -90,9 +95,12 @@ function mintCapability(ledger, task, evidence) {
     exact_head_workflow_source: evidence.exact_head_workflow_source,
     current_main_workflow_source: evidence.current_main_workflow_source,
     observed_at: evidence.observed_at,
+    expires_at: new Date(expiresAt).toISOString(),
+    merge_method: evidence.merge_method,
     binding_sha256: sha256(completionBinding(ledger, task)),
   });
   VERIFIED_COMPLETIONS.add(capability);
+  COMPLETION_STATE.set(capability, { now: state.now, expiresAt });
   return capability;
 }
 
@@ -132,10 +140,51 @@ function githubHeaders(token) {
   };
 }
 
+function cacheEntryCurrent(entry, nowMs) {
+  return Boolean(entry && Number.isFinite(entry.expiresAt) && nowMs < entry.expiresAt);
+}
+
+function evidenceExpiry(responses, observedAtMs) {
+  const responseExpiries = responses.map((response) => {
+    const responseMs = Date.parse(response?.response_date || '');
+    return Number.isFinite(responseMs) ? responseMs + MAX_RESPONSE_AGE_MS : observedAtMs;
+  });
+  return Math.min(observedAtMs + MAX_RESPONSE_AGE_MS, ...responseExpiries);
+}
+
+function expireSessionCaches(state) {
+  const nowMs = state.now();
+  let expiredCapability = false;
+  for (const [key, capability] of state.capabilityCache) {
+    const capabilityState = COMPLETION_STATE.get(capability);
+    if (!capabilityState || nowMs >= capabilityState.expiresAt) {
+      state.capabilityCache.delete(key);
+      VERIFIED_COMPLETIONS.delete(capability);
+      COMPLETION_STATE.delete(capability);
+      expiredCapability = true;
+    }
+  }
+  if (expiredCapability) {
+    state.requestCache.clear();
+    state.runEvidenceCache.clear();
+    return;
+  }
+  for (const [key, entry] of state.requestCache) {
+    if (!cacheEntryCurrent(entry, nowMs)) state.requestCache.delete(key);
+  }
+  for (const [key, entry] of state.runEvidenceCache) {
+    if (!cacheEntryCurrent(entry, nowMs)) state.runEvidenceCache.delete(key);
+  }
+}
+
 async function githubJson(apiPath, session) {
   const state = sessionState(session);
-  if (state.requestCache.has(apiPath)) return state.requestCache.get(apiPath);
+  const nowMs = state.now();
+  const cached = state.requestCache.get(apiPath);
+  if (cacheEntryCurrent(cached, nowMs)) return cached.pending;
+  if (cached) state.requestCache.delete(apiPath);
   const url = API + apiPath;
+  const entry = { pending: null, expiresAt: nowMs + MAX_RESPONSE_AGE_MS };
   const pending = (async () => {
     const response = await state.fetchImpl(url, {
       headers: githubHeaders(state.token),
@@ -147,13 +196,16 @@ async function githubJson(apiPath, session) {
       throw new Error(`GitHub API ${status}: ${apiPath}`);
     }
     const responseDate = response.headers?.get?.('date') || null;
-    return {
+    const result = {
       value: await response.json(),
       url,
       response_date: responseDate,
     };
+    entry.expiresAt = evidenceExpiry([result], state.now());
+    return result;
   })();
-  state.requestCache.set(apiPath, pending);
+  entry.pending = pending;
+  state.requestCache.set(apiPath, entry);
   try {
     return await pending;
   } catch (error) {
@@ -331,9 +383,12 @@ async function fetchRunEvidence({
 }) {
   const state = sessionState(session);
   const cacheKey = `${expected.policyId}:${ledgerEvidence?.run_id}:${headSha}:${event}`;
-  let pending = state.runEvidenceCache.get(cacheKey);
-  if (!pending) {
-    pending = (async () => {
+  const nowMs = state.now();
+  let entry = state.runEvidenceCache.get(cacheKey);
+  if (!cacheEntryCurrent(entry, nowMs)) {
+    if (entry) state.runEvidenceCache.delete(cacheKey);
+    entry = { pending: null, expiresAt: nowMs + MAX_RESPONSE_AGE_MS };
+    const pending = (async () => {
       const encodedPath = expected.path.split('/').map(encodeURIComponent).join('/');
       const sourceResponse = await githubJson(
         `/repos/${REPOSITORY}/contents/${encodedPath}?ref=${encodeURIComponent(headSha)}`,
@@ -379,7 +434,7 @@ async function fetchRunEvidence({
         expectedRunId: ledgerEvidence?.run_id,
         jobsRunId: runResponse.value?.id,
       });
-      return {
+      const result = {
         sourceResponse,
         sourceResult,
         runResponse,
@@ -390,12 +445,18 @@ async function fetchRunEvidence({
         checks,
         descriptorResult,
       };
+      entry.expiresAt = evidenceExpiry(
+        [sourceResponse, runResponse, allRunsResponse, jobsResponse, ...checkResponses],
+        state.now(),
+      );
+      return result;
     })();
-    state.runEvidenceCache.set(cacheKey, pending);
+    entry.pending = pending;
+    state.runEvidenceCache.set(cacheKey, entry);
   }
   let core;
   try {
-    core = await pending;
+    core = await entry.pending;
   } catch (error) {
     state.runEvidenceCache.delete(cacheKey);
     throw error;
@@ -465,15 +526,16 @@ async function fetchRunEvidence({
   };
 }
 
-function mergeMethod(pr, headCommit, mergeCommit, headToResult) {
+function mergeMethodEvidence(pr, mergeCommit, headToResult) {
   const parents = Array.isArray(mergeCommit?.parents) ? mergeCommit.parents.map((item) => item?.sha) : [];
-  const exactTree = SHA40.test(headCommit?.commit?.tree?.sha || '')
-    && headCommit.commit.tree.sha === mergeCommit?.commit?.tree?.sha;
   if (parents.includes(pr?.head?.sha)
-    && ['ahead', 'identical'].includes(headToResult?.status)) return 'merge';
-  if (parents.length === 1 && exactTree && parents[0] === pr?.base?.sha) return 'squash';
-  if (parents.length === 1 && exactTree) return 'rebase';
-  return null;
+    && ['ahead', 'identical'].includes(headToResult?.status)) {
+    return { method: 'merge', ambiguous: false, parents };
+  }
+  if (parents.length === 1) {
+    return { method: null, ambiguous: true, parents };
+  }
+  return { method: null, ambiguous: false, parents };
 }
 
 export async function fetchRecoveryCompletionCapability(
@@ -509,6 +571,7 @@ export async function fetchRecoveryCompletionCapability(
   const evidenceSession = session || createRecoveryEvidenceSession({ fetchImpl, token, now });
   try {
     const state = sessionState(evidenceSession);
+    expireSessionCaches(state);
     const capabilityKey = `${taskId}:${sha256(completionBinding(ledger, task))}`;
     const cachedCapability = state.capabilityCache.get(capabilityKey);
     if (cachedCapability && recoveryCompletionCapabilityMatches(cachedCapability, ledger, task)) {
@@ -592,26 +655,42 @@ export async function fetchRecoveryCompletionCapability(
       ));
     }
 
-    const observedMergeMethod = mergeMethod(
+    const observedMerge = mergeMethodEvidence(
       pr,
-      headResponse.value,
       mergeResponse.value,
       headToResultResponse.value,
     );
-    if (!observedMergeMethod
-      || observedMergeMethod !== completion.merge_method
+    if (observedMerge.ambiguous) {
+      diagnostics.push(diagnostic(
+        'RECOVERY_LEDGER_GITHUB_MERGE_METHOD_AMBIGUOUS',
+        taskPath + '/completion_evidence/merge_method',
+        {
+          authoritative_merge_receipt: true,
+          reviewed_head_sha: reviewedHead,
+          resulting_main_sha: resultingMain,
+          selected_method: completion.merge_method,
+        },
+        {
+          ledger_merge_method: completion.merge_method,
+          merge_commit_parents: observedMerge.parents,
+          github_merge_commit_sha: pr?.merge_commit_sha,
+        },
+        'A one-parent result cannot distinguish squash from rebase. Provide an immutable owner-controlled GitHub-backed merge receipt bound to the reviewed Head, selected method, and resulting commit.',
+      ));
+    } else if (!observedMerge.method
+      || observedMerge.method !== completion.merge_method
       || headResponse.value?.sha !== reviewedHead
       || mergeResponse.value?.sha !== resultingMain) {
       diagnostics.push(diagnostic(
         'RECOVERY_LEDGER_GITHUB_MERGE_METHOD_MISMATCH',
         taskPath + '/completion_evidence/merge_method',
-        observedMergeMethod || 'method-aware verified merge result',
+        observedMerge.method || 'method-aware verified merge result',
         {
           ledger_merge_method: completion.merge_method,
           head_commit_sha: headResponse.value?.sha,
           merge_commit_sha: mergeResponse.value?.sha,
         },
-        'Derive merge, squash, or rebase from fresh GitHub commit relationships and exact tree identity.',
+        'Use the exact ordinary merge graph or an immutable owner-controlled GitHub-backed receipt; ledger declarations and ambiguous one-parent graphs do not prove a method.',
       ));
     }
 
@@ -666,7 +745,8 @@ export async function fetchRecoveryCompletionCapability(
       ...exactHeadRun.responses,
       ...currentMainRun.responses,
     ];
-    diagnostics.push(...responseFreshnessDiagnostics(allResponses, state.now(), taskPath));
+    const observedAtMs = state.now();
+    diagnostics.push(...responseFreshnessDiagnostics(allResponses, observedAtMs, taskPath));
 
     const expectedRefs = {
       authoritative_owner_merge: `https://github.com/${REPOSITORY}/pull/${completion.pull_request}`,
@@ -698,16 +778,18 @@ export async function fetchRecoveryCompletionCapability(
       workflow_policy_id: descriptor.workflow_policy_id,
       reference: descriptor.workflow_source_reference,
     });
+    const expiresAt = evidenceExpiry(allResponses, observedAtMs);
     const capability = mintCapability(ledger, task, {
       pull_request: completion.pull_request,
       reviewed_head_sha: reviewedHead,
       resulting_main_sha: resultingMain,
+      merge_method: observedMerge.method,
       exact_head_run_id: exactHeadRun.descriptor.run_id,
       current_main_run_id: currentMainRun.descriptor.run_id,
       exact_head_workflow_source: workflowSourceReference(exactHeadRun.descriptor),
       current_main_workflow_source: workflowSourceReference(currentMainRun.descriptor),
-      observed_at: new Date(state.now()).toISOString(),
-    });
+      observed_at: new Date(observedAtMs).toISOString(),
+    }, state, expiresAt);
     state.capabilityCache.set(capabilityKey, capability);
     return { capability, diagnostics: [] };
   } catch (error) {

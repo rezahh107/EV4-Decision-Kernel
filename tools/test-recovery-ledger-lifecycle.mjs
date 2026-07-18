@@ -13,6 +13,7 @@ import {
   createRecoveryEvidenceSession,
   fetchRecoveryCompletionCapability,
   isRecoveryCompletionCapability,
+  recoveryCompletionCapabilityMatches,
 } from '../kernel/validator/recovery-completion-evidence.mjs';
 import {
   RECOVERY_AUTHORITATIVE_WORKFLOWS,
@@ -38,6 +39,7 @@ const MAIN_WORKFLOW_ID = 312952795;
 const TEST_TOKEN = 'test-recovery-installation-token';
 const OBSERVED_AT = '2026-07-18T10:30:00.000Z';
 const MERGED_AT = '2026-07-18T10:10:00.000Z';
+const MAX_RESPONSE_AGE_MS = 5 * 60 * 1000;
 const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
 const ledger = read('planning/recovery/recovery-ledger.v1.json');
 const program = read('planning/recovery/recovery-execution-program.v1.json');
@@ -236,7 +238,9 @@ function officialFetch(state, {
   authObservations = null,
 } = {}) {
   return async (input, init = {}) => {
-    if (unavailable) throw new Error('simulated GitHub API outage');
+    if (typeof unavailable === 'function' ? unavailable() : unavailable) {
+      throw new Error('simulated GitHub API outage');
+    }
     const url = new URL(input);
     const path = url.pathname;
     requests?.push(`${path}${url.search}`);
@@ -328,6 +332,33 @@ async function verifyScenario(name, mutateLedger, mutateState, expectedDiagnosti
   });
   record(name, !result.capability && has(result.diagnostics, expectedDiagnosticId), result.diagnostics);
   return result;
+}
+
+async function verifyExpiredMutation(name, mutateState, expectedDiagnosticId) {
+  const value = completedLedger();
+  const state = officialState();
+  const requests = [];
+  let nowMs = Date.parse(OBSERVED_AT);
+  const session = createRecoveryEvidenceSession({
+    fetchImpl: officialFetch(state, { requests }),
+    token: TEST_TOKEN,
+    now: () => nowMs,
+  });
+  const initial = await fetchRecoveryCompletionCapability(value, 'KREC-001', { session });
+  const initialRequestCount = requests.length;
+  nowMs += MAX_RESPONSE_AGE_MS + 1;
+  state.responseDate = new Date(nowMs).toISOString();
+  mutateState(state);
+  const refreshed = await fetchRecoveryCompletionCapability(value, 'KREC-001', { session });
+  record(
+    name,
+    Boolean(initial.capability)
+      && !isRecoveryCompletionCapability(initial.capability)
+      && !refreshed.capability
+      && has(refreshed.diagnostics, expectedDiagnosticId)
+      && requests.length > initialRequestCount,
+    [...initial.diagnostics, ...refreshed.diagnostics],
+  );
 }
 
 const canonicalDiagnostics = validateRecoveryLedgerDocument(ledger, program, schema);
@@ -648,11 +679,70 @@ await verifyScenario(
   'RECOVERY_LEDGER_GITHUB_MERGE_ACTOR_MISMATCH',
 );
 await verifyScenario(
-  'wrong Merge method cannot mint completion',
+  'ledger method differing from the authoritative ordinary merge graph is rejected',
   (value) => { value.tasks[0].completion_evidence.merge_method = 'squash'; },
   null,
   'RECOVERY_LEDGER_GITHUB_MERGE_METHOD_MISMATCH',
 );
+for (const [name, method, mutateState] of [
+  [
+    'one-commit squash-shaped one-parent result is explicitly ambiguous',
+    'squash',
+    (state) => {
+      state.mergeCommit.parents = [{ sha: BASE }];
+      state.mergeCommit.commit.tree.sha = TREE;
+    },
+  ],
+  [
+    'multi-commit squash-shaped one-parent result is explicitly ambiguous',
+    'squash',
+    (state) => {
+      state.headCommit.parents = [{ sha: '7777777777777777777777777777777777777777' }];
+      state.mergeCommit.parents = [{ sha: BASE }];
+      state.mergeCommit.commit.tree.sha = TREE;
+    },
+  ],
+  [
+    'single-commit rebase onto unchanged base is not misclassified as squash',
+    'rebase',
+    (state) => {
+      state.mergeCommit.parents = [{ sha: BASE }];
+      state.mergeCommit.commit.tree.sha = TREE;
+    },
+  ],
+  [
+    'multi-commit rebase-shaped one-parent result is explicitly ambiguous',
+    'rebase',
+    (state) => {
+      state.headCommit.parents = [{ sha: '7777777777777777777777777777777777777777' }];
+      state.mergeCommit.parents = [{ sha: '8888888888888888888888888888888888888888' }];
+      state.mergeCommit.commit.tree.sha = '9999999999999999999999999999999999999999';
+    },
+  ],
+  [
+    'squash after base advancement fails closed without an authoritative receipt',
+    'squash',
+    (state) => {
+      state.mergeCommit.parents = [{ sha: '8888888888888888888888888888888888888888' }];
+      state.mergeCommit.commit.tree.sha = '9999999999999999999999999999999999999999';
+    },
+  ],
+  [
+    'rebase after base advancement fails closed without an authoritative receipt',
+    'rebase',
+    (state) => {
+      state.mergeCommit.parents = [{ sha: '8888888888888888888888888888888888888888' }];
+      state.mergeCommit.commit.tree.sha = '9999999999999999999999999999999999999999';
+    },
+  ],
+]) {
+  await verifyScenario(
+    name,
+    (value) => { value.tasks[0].completion_evidence.merge_method = method; },
+    mutateState,
+    'RECOVERY_LEDGER_GITHUB_MERGE_METHOD_AMBIGUOUS',
+  );
+}
 await verifyScenario(
   'wrong resulting main SHA cannot mint completion',
   (value) => {
@@ -750,6 +840,142 @@ record(
   [...firstCached.diagnostics, ...secondCached.diagnostics],
 );
 
+const expiringState = officialState();
+const expiringRequests = [];
+let expiringNowMs = Date.parse(OBSERVED_AT);
+const expiringSession = createRecoveryEvidenceSession({
+  fetchImpl: officialFetch(expiringState, { requests: expiringRequests }),
+  token: TEST_TOKEN,
+  now: () => expiringNowMs,
+});
+const expiringLedger = completedLedger();
+const beforeExpiry = await fetchRecoveryCompletionCapability(expiringLedger, 'KREC-001', {
+  session: expiringSession,
+});
+const beforeExpiryRequestCount = expiringRequests.length;
+expiringNowMs += MAX_RESPONSE_AGE_MS + 1;
+expiringState.responseDate = new Date(expiringNowMs).toISOString();
+const expiredBeforeRefetch = !recoveryCompletionCapabilityMatches(
+  beforeExpiry.capability,
+  expiringLedger,
+  expiringLedger.tasks[0],
+);
+const afterExpiry = await fetchRecoveryCompletionCapability(expiringLedger, 'KREC-001', {
+  session: expiringSession,
+});
+record(
+  'capability request and run-evidence caches share one bounded expiry and refresh after five minutes',
+  Boolean(beforeExpiry.capability)
+    && Boolean(afterExpiry.capability)
+    && beforeExpiry.capability !== afterExpiry.capability
+    && expiredBeforeRefetch
+    && !isRecoveryCompletionCapability(beforeExpiry.capability)
+    && expiringRequests.length === beforeExpiryRequestCount * 2
+    && Date.parse(beforeExpiry.capability.expires_at) - Date.parse(beforeExpiry.capability.observed_at)
+      <= MAX_RESPONSE_AGE_MS,
+  [...beforeExpiry.diagnostics, ...afterExpiry.diagnostics],
+);
+
+for (const [name, mutateState, expectedDiagnosticId] of [
+  [
+    'expired repository evidence is fetched and re-evaluated',
+    (state) => { state.repository.id = 999; },
+    'RECOVERY_LEDGER_GITHUB_REPOSITORY_IDENTITY_MISMATCH',
+  ],
+  [
+    'expired PR evidence is fetched and re-evaluated',
+    (state) => { state.pullRequest.merged = false; },
+    'RECOVERY_LEDGER_GITHUB_PR_IDENTITY_MISMATCH',
+  ],
+  [
+    'expired workflow source is fetched and re-evaluated',
+    (state) => {
+      const sourcePath = RECOVERY_AUTHORITATIVE_WORKFLOWS.mvk.path;
+      state.workflowSources.set(sourcePath, Buffer.concat([
+        state.workflowSources.get(sourcePath),
+        Buffer.from('\n'),
+      ]));
+    },
+    'RECOVERY_LEDGER_WORKFLOW_SOURCE_UNVERIFIED',
+  ],
+  [
+    'expired job evidence is fetched and re-evaluated',
+    (state) => { state.jobs.get(EXACT_RUN)[0].conclusion = 'failure'; },
+    'RECOVERY_LEDGER_EXACT_HEAD_RUN_UNVERIFIED',
+  ],
+  [
+    'expired check evidence is fetched and re-evaluated',
+    (state) => {
+      state.checks.get(EXACT_JOB).app = {
+        id: 999,
+        slug: 'lookalike',
+        name: 'Lookalike Actions',
+        owner: { login: 'attacker' },
+      };
+    },
+    'RECOVERY_LEDGER_WORKFLOW_PRODUCER_MISMATCH',
+  ],
+]) {
+  await verifyExpiredMutation(name, mutateState, expectedDiagnosticId);
+}
+
+const outageAfterExpiryState = officialState();
+let outageAfterExpiryNowMs = Date.parse(OBSERVED_AT);
+let outageAfterExpiry = false;
+const outageAfterExpirySession = createRecoveryEvidenceSession({
+  fetchImpl: officialFetch(outageAfterExpiryState, { unavailable: () => outageAfterExpiry }),
+  token: TEST_TOKEN,
+  now: () => outageAfterExpiryNowMs,
+});
+const outageAfterExpiryLedger = completedLedger();
+const beforeOutage = await fetchRecoveryCompletionCapability(outageAfterExpiryLedger, 'KREC-001', {
+  session: outageAfterExpirySession,
+});
+outageAfterExpiryNowMs += MAX_RESPONSE_AGE_MS + 1;
+outageAfterExpiryState.responseDate = new Date(outageAfterExpiryNowMs).toISOString();
+outageAfterExpiry = true;
+const afterOutage = await fetchRecoveryCompletionCapability(outageAfterExpiryLedger, 'KREC-001', {
+  session: outageAfterExpirySession,
+});
+record(
+  'API outage after capability expiry fails closed instead of reusing stale authority',
+  Boolean(beforeOutage.capability)
+    && !isRecoveryCompletionCapability(beforeOutage.capability)
+    && !afterOutage.capability
+    && has(afterOutage.diagnostics, 'RECOVERY_LEDGER_GITHUB_EVIDENCE_UNAVAILABLE'),
+  [...beforeOutage.diagnostics, ...afterOutage.diagnostics],
+);
+
+const recoveringState = officialState();
+recoveringState.runs.get(EXACT_RUN).conclusion = 'failure';
+let recoveringNowMs = Date.parse(OBSERVED_AT);
+const recoveringRequests = [];
+const recoveringSession = createRecoveryEvidenceSession({
+  fetchImpl: officialFetch(recoveringState, { requests: recoveringRequests }),
+  token: TEST_TOKEN,
+  now: () => recoveringNowMs,
+});
+const recoveringLedger = completedLedger();
+const failedBeforeRefresh = await fetchRecoveryCompletionCapability(recoveringLedger, 'KREC-001', {
+  session: recoveringSession,
+});
+const failedRequestCount = recoveringRequests.length;
+recoveringNowMs += MAX_RESPONSE_AGE_MS + 1;
+recoveringState.responseDate = new Date(recoveringNowMs).toISOString();
+recoveringState.runs.get(EXACT_RUN).conclusion = 'success';
+const successfulAfterRefresh = await fetchRecoveryCompletionCapability(recoveringLedger, 'KREC-001', {
+  session: recoveringSession,
+});
+record(
+  'failed workflow payload expires and can refresh to success in the same session',
+  !failedBeforeRefresh.capability
+    && has(failedBeforeRefresh.diagnostics, 'RECOVERY_LEDGER_EXACT_HEAD_RUN_UNVERIFIED')
+    && Boolean(successfulAfterRefresh.capability)
+    && successfulAfterRefresh.diagnostics.length === 0
+    && recoveringRequests.length > failedRequestCount,
+  [...failedBeforeRefresh.diagnostics, ...successfulAfterRefresh.diagnostics],
+);
+
 const sharedLedger = completedLedger();
 sharedLedger.tasks[1].lifecycle_state = 'complete';
 sharedLedger.tasks[1].execution_eligibility = 'complete';
@@ -783,6 +1009,14 @@ locallyCoherent.tasks[0].completion_evidence.resulting_main_sha = '5b25e9e7f4307
 locallyCoherent.tasks[0].completion_evidence.exact_head_ci.head_sha = '5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a';
 locallyCoherent.tasks[0].completion_evidence.current_main_validation.head_sha = '5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a';
 const localDiagnostics = repositoryCompletionDiagnostics(locallyCoherent);
+const locallyAmbiguous = clone(locallyCoherent);
+locallyAmbiguous.tasks[0].completion_evidence.merge_method = 'squash';
+const locallyAmbiguousDiagnostics = repositoryCompletionDiagnostics(locallyAmbiguous);
+record(
+  'local same-commit and same-tree coherence cannot prove squash or rebase',
+  has(locallyAmbiguousDiagnostics, 'RECOVERY_LEDGER_MERGE_RESULT_UNVERIFIED'),
+  locallyAmbiguousDiagnostics,
+);
 const unavailableLocal = await fetchRecoveryCompletionCapability(locallyCoherent, 'KREC-001', {
   fetchImpl: officialFetch(officialState(), { unavailable: true }),
   token: TEST_TOKEN,

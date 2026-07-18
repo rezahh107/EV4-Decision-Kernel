@@ -662,7 +662,7 @@ function resolveMainRef() {
   return null;
 }
 
-export function repositoryCompletionDiagnostics(ledger) {
+export function repositoryCompletionDiagnostics(ledger, completionCapabilities = new Map()) {
   const diagnostics = [];
   const mainSha = resolveMainRef();
   for (const [index, task] of (Array.isArray(ledger?.tasks) ? ledger.tasks : []).entries()) {
@@ -693,12 +693,11 @@ export function repositoryCompletionDiagnostics(ledger) {
     if (completion.merge_method === 'merge') {
       methodAwareMerge = isAncestor(reviewedHead, resultingMain);
     } else if (['squash', 'rebase'].includes(completion.merge_method)) {
-      try {
-        methodAwareMerge = git(['rev-parse', reviewedHead + '^{tree}'])
-          === git(['rev-parse', resultingMain + '^{tree}']);
-      } catch {
-        methodAwareMerge = false;
-      }
+      const capability = completionCapabilities instanceof Map
+        ? completionCapabilities.get(task.task_id)
+        : null;
+      methodAwareMerge = recoveryCompletionCapabilityMatches(capability, ledger, task)
+        && capability.merge_method === completion.merge_method;
     }
     add(
       diagnostics,
@@ -711,7 +710,7 @@ export function repositoryCompletionDiagnostics(ledger) {
         reviewed_head_sha: reviewedHead,
         resulting_main_sha: resultingMain,
       },
-      'Resolve and verify the actual GitHub merge method and resulting commit.',
+      'Resolve the ordinary merge graph or require an opaque authoritative merge receipt for squash/rebase; tree equality alone is ambiguous.',
     );
     add(
       diagnostics,
@@ -835,7 +834,7 @@ async function run() {
     ...completionBoundaryDiagnostics,
     ...validateRecoveryLedgerDocument(ledger, program, schema, completionCapabilities),
     ...(previousLedger ? recoveryLedgerHistoryDiagnostics(previousLedger, ledger) : []),
-    ...repositoryCompletionDiagnostics(ledger),
+    ...repositoryCompletionDiagnostics(ledger, completionCapabilities),
   ]);
   if (fixtures.some((fixture) => !fixture.pass)) {
     diagnostics.push(diagnostic(
