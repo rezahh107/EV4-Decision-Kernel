@@ -58,12 +58,12 @@ function poison(functions = false) {
     objectKeys: Object.keys, objectFromEntries: Object.fromEntries,
     functionCall: Function.prototype.call, functionBind: Function.prototype.bind,
   };
-  WeakSet.prototype.add = function () { c.weakSetAdd += 1; return this; };
-  WeakSet.prototype.has = function () { c.weakSetHas += 1; return true; };
-  WeakSet.prototype.delete = function () { c.weakSetDelete += 1; return true; };
-  WeakMap.prototype.set = function () { c.weakMapSet += 1; return this; };
-  WeakMap.prototype.get = function () { c.weakMapGet += 1; return { expiresAt: Number.MAX_SAFE_INTEGER }; };
-  WeakMap.prototype.delete = function () { c.weakMapDelete += 1; return true; };
+  WeakSet.prototype.add = function poisonedWeakSetAdd() { c.weakSetAdd += 1; return this; };
+  WeakSet.prototype.has = function poisonedWeakSetHas() { c.weakSetHas += 1; return true; };
+  WeakSet.prototype.delete = function poisonedWeakSetDelete() { c.weakSetDelete += 1; return true; };
+  WeakMap.prototype.set = function poisonedWeakMapSet() { c.weakMapSet += 1; return this; };
+  WeakMap.prototype.get = function poisonedWeakMapGet() { c.weakMapGet += 1; return { expiresAt: Number.MAX_SAFE_INTEGER }; };
+  WeakMap.prototype.delete = function poisonedWeakMapDelete() { c.weakMapDelete += 1; return true; };
   Object.freeze = (value) => { c.objectFreeze += 1; return value; };
   JSON.parse = () => { c.jsonParse += 1; return { forged: true }; };
   JSON.stringify = () => { c.jsonStringify += 1; return '{"forged":true}'; };
@@ -73,8 +73,8 @@ function poison(functions = false) {
   Object.keys = () => { c.objectKeys += 1; return []; };
   Object.fromEntries = () => { c.objectFromEntries += 1; return {}; };
   if (functions) {
-    Function.prototype.call = function () { c.functionCall += 1; };
-    Function.prototype.bind = function () { c.functionBind += 1; return () => undefined; };
+    Function.prototype.call = function poisonedFunctionCall() { c.functionCall += 1; };
+    Function.prototype.bind = function poisonedFunctionBind() { c.functionBind += 1; return () => undefined; };
   }
   return {
     c,
