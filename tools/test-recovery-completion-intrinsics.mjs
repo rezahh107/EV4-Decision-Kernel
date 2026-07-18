@@ -1,49 +1,36 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
-import {
-  mkdtempSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const AUTHORITY_URL = pathToFileURL(
-  join(ROOT, 'kernel/validator/recovery-completion-evidence.mjs'),
-).href;
-const TASK_ID = 'KREC-INTRINSIC-HARDENING';
-const TEST_TOKEN = 'intrinsics-fixture-token';
+const AUTHORITY = pathToFileURL(join(ROOT, 'kernel/validator/recovery-completion-evidence.mjs')).href;
+const TASK = 'KREC-INTRINSIC-HARDENING';
+const TOKEN = 'intrinsics-fixture-token';
+const call = Function.prototype.call;
+const bind = Function.prototype.bind;
+const bi = call.bind(bind);
+const uncurry = (method) => bi(call, method);
+const stringify = bi(JSON.stringify, JSON);
+const keys = bi(Object.keys, Object);
+const frozen = bi(Object.isFrozen, Object);
+const reflectSet = bi(Reflect.set, Reflect);
+const mapGet = uncurry(Map.prototype.get);
+const mapSize = uncurry(Object.getOwnPropertyDescriptor(Map.prototype, 'size').get);
+const sleep = setTimeout;
 
-const functionCall = Function.prototype.call;
-const functionBind = Function.prototype.bind;
-const bindIntrinsic = functionCall.bind(functionBind);
-const uncurryThis = (method) => bindIntrinsic(functionCall, method);
-const safeJsonStringify = bindIntrinsic(JSON.stringify, JSON);
-const safeObjectKeys = bindIntrinsic(Object.keys, Object);
-const safeObjectIsFrozen = bindIntrinsic(Object.isFrozen, Object);
-const safeReflectSet = bindIntrinsic(Reflect.set, Reflect);
-const safeMapGet = uncurryThis(Map.prototype.get);
-const safeMapSize = uncurryThis(
-  Object.getOwnPropertyDescriptor(Map.prototype, 'size').get,
-);
-const safeSetTimeout = setTimeout;
-
-function completedLedger(expiryMs = 5 * 60 * 1000) {
+function ledger(expiry = 300_000) {
   return {
     repository: 'rezahh107/EV4-Decision-Kernel',
     default_branch: 'main',
     program_id: 'DCOV-COVERAGE-EXECUTION-PROGRAM',
     tasks: [{
-      task_id: TASK_ID,
+      task_id: TASK,
       lifecycle_state: 'complete',
-      test_expiry_ms: expiryMs,
-      candidate: {
-        branch: 'krec-001/recovery-ledger',
-        pull_request: 52,
-        pr_state: 'merged',
-      },
+      test_expiry_ms: expiry,
+      candidate: { branch: 'krec-001/recovery-ledger', pull_request: 52, pr_state: 'merged' },
       completion_evidence: {
         pull_request: 52,
         reviewed_head_sha: '2'.repeat(40),
@@ -56,519 +43,157 @@ function completedLedger(expiryMs = 5 * 60 * 1000) {
   };
 }
 
-function mutationHarness(includeFunctionIntrinsics) {
-  const counters = {
-    weakSetAdd: 0,
-    weakSetHas: 0,
-    weakSetDelete: 0,
-    weakMapSet: 0,
-    weakMapGet: 0,
-    weakMapDelete: 0,
-    objectFreeze: 0,
-    jsonParse: 0,
-    jsonStringify: 0,
-    url: 0,
-    buffer: 0,
-    arrayIsArray: 0,
-    objectKeys: 0,
-    objectFromEntries: 0,
-    functionCall: 0,
-    functionBind: 0,
+function poison(functions = false) {
+  const c = Object.fromEntries([
+    'weakSetAdd','weakSetHas','weakSetDelete','weakMapSet','weakMapGet','weakMapDelete',
+    'objectFreeze','jsonParse','jsonStringify','url','buffer','arrayIsArray','objectKeys',
+    'objectFromEntries','functionCall','functionBind',
+  ].map((name) => [name, 0]));
+  const o = {
+    weakSetAdd: WeakSet.prototype.add, weakSetHas: WeakSet.prototype.has,
+    weakSetDelete: WeakSet.prototype.delete, weakMapSet: WeakMap.prototype.set,
+    weakMapGet: WeakMap.prototype.get, weakMapDelete: WeakMap.prototype.delete,
+    objectFreeze: Object.freeze, jsonParse: JSON.parse, jsonStringify: JSON.stringify,
+    url: globalThis.URL, buffer: globalThis.Buffer, arrayIsArray: Array.isArray,
+    objectKeys: Object.keys, objectFromEntries: Object.fromEntries,
+    functionCall: Function.prototype.call, functionBind: Function.prototype.bind,
   };
-  const originals = {
-    weakSetAdd: WeakSet.prototype.add,
-    weakSetHas: WeakSet.prototype.has,
-    weakSetDelete: WeakSet.prototype.delete,
-    weakMapSet: WeakMap.prototype.set,
-    weakMapGet: WeakMap.prototype.get,
-    weakMapDelete: WeakMap.prototype.delete,
-    objectFreeze: Object.freeze,
-    jsonParse: JSON.parse,
-    jsonStringify: JSON.stringify,
-    url: globalThis.URL,
-    buffer: globalThis.Buffer,
-    arrayIsArray: Array.isArray,
-    objectKeys: Object.keys,
-    objectFromEntries: Object.fromEntries,
-    functionCall: Function.prototype.call,
-    functionBind: Function.prototype.bind,
-  };
-
-  WeakSet.prototype.add = function fakeWeakSetAdd() {
-    counters.weakSetAdd += 1;
-    return this;
-  };
-  WeakSet.prototype.has = function fakeWeakSetHas() {
-    counters.weakSetHas += 1;
-    return true;
-  };
-  WeakSet.prototype.delete = function fakeWeakSetDelete() {
-    counters.weakSetDelete += 1;
-    return true;
-  };
-  WeakMap.prototype.set = function fakeWeakMapSet() {
-    counters.weakMapSet += 1;
-    return this;
-  };
-  WeakMap.prototype.get = function fakeWeakMapGet() {
-    counters.weakMapGet += 1;
-    return { expiresAt: Number.MAX_SAFE_INTEGER };
-  };
-  WeakMap.prototype.delete = function fakeWeakMapDelete() {
-    counters.weakMapDelete += 1;
-    return true;
-  };
-  Object.freeze = (value) => {
-    counters.objectFreeze += 1;
-    return value;
-  };
-  JSON.parse = () => {
-    counters.jsonParse += 1;
-    return { trusted: false, substituted: true };
-  };
-  JSON.stringify = () => {
-    counters.jsonStringify += 1;
-    return '{"forged":true}';
-  };
-  globalThis.URL = class FakeURL {
-    constructor() {
-      counters.url += 1;
-      throw new Error('mutable global URL used');
-    }
-  };
-  globalThis.Buffer = {
-    concat() {
-      counters.buffer += 1;
-      throw new Error('mutable global Buffer used');
-    },
-  };
-  Array.isArray = () => {
-    counters.arrayIsArray += 1;
-    return false;
-  };
-  Object.keys = () => {
-    counters.objectKeys += 1;
-    return [];
-  };
-  Object.fromEntries = () => {
-    counters.objectFromEntries += 1;
-    return {};
-  };
-  if (includeFunctionIntrinsics) {
-    Function.prototype.call = function fakeFunctionCall() {
-      counters.functionCall += 1;
-      return undefined;
-    };
-    Function.prototype.bind = function fakeFunctionBind() {
-      counters.functionBind += 1;
-      return () => undefined;
-    };
+  WeakSet.prototype.add = function () { c.weakSetAdd += 1; return this; };
+  WeakSet.prototype.has = function () { c.weakSetHas += 1; return true; };
+  WeakSet.prototype.delete = function () { c.weakSetDelete += 1; return true; };
+  WeakMap.prototype.set = function () { c.weakMapSet += 1; return this; };
+  WeakMap.prototype.get = function () { c.weakMapGet += 1; return { expiresAt: Number.MAX_SAFE_INTEGER }; };
+  WeakMap.prototype.delete = function () { c.weakMapDelete += 1; return true; };
+  Object.freeze = (value) => { c.objectFreeze += 1; return value; };
+  JSON.parse = () => { c.jsonParse += 1; return { forged: true }; };
+  JSON.stringify = () => { c.jsonStringify += 1; return '{"forged":true}'; };
+  globalThis.URL = class { constructor() { c.url += 1; throw new Error('mutable URL'); } };
+  globalThis.Buffer = { concat() { c.buffer += 1; throw new Error('mutable Buffer'); } };
+  Array.isArray = () => { c.arrayIsArray += 1; return false; };
+  Object.keys = () => { c.objectKeys += 1; return []; };
+  Object.fromEntries = () => { c.objectFromEntries += 1; return {}; };
+  if (functions) {
+    Function.prototype.call = function () { c.functionCall += 1; };
+    Function.prototype.bind = function () { c.functionBind += 1; return () => undefined; };
   }
-
   return {
-    counters,
+    c,
     restore() {
-      Function.prototype.call = originals.functionCall;
-      Function.prototype.bind = originals.functionBind;
-      WeakSet.prototype.add = originals.weakSetAdd;
-      WeakSet.prototype.has = originals.weakSetHas;
-      WeakSet.prototype.delete = originals.weakSetDelete;
-      WeakMap.prototype.set = originals.weakMapSet;
-      WeakMap.prototype.get = originals.weakMapGet;
-      WeakMap.prototype.delete = originals.weakMapDelete;
-      Object.freeze = originals.objectFreeze;
-      JSON.parse = originals.jsonParse;
-      JSON.stringify = originals.jsonStringify;
-      globalThis.URL = originals.url;
-      globalThis.Buffer = originals.buffer;
-      Array.isArray = originals.arrayIsArray;
-      Object.keys = originals.objectKeys;
-      Object.fromEntries = originals.objectFromEntries;
+      WeakSet.prototype.add=o.weakSetAdd; WeakSet.prototype.has=o.weakSetHas;
+      WeakSet.prototype.delete=o.weakSetDelete; WeakMap.prototype.set=o.weakMapSet;
+      WeakMap.prototype.get=o.weakMapGet; WeakMap.prototype.delete=o.weakMapDelete;
+      Object.freeze=o.objectFreeze; JSON.parse=o.jsonParse; JSON.stringify=o.jsonStringify;
+      globalThis.URL=o.url; globalThis.Buffer=o.buffer; Array.isArray=o.arrayIsArray;
+      Object.keys=o.objectKeys; Object.fromEntries=o.objectFromEntries;
+      Function.prototype.call=o.functionCall; Function.prototype.bind=o.functionBind;
     },
   };
 }
+const zero = (c) => Object.values(c).every((value) => value === 0);
 
-function allCountersZero(counters) {
-  return counters.weakSetAdd === 0
-    && counters.weakSetHas === 0
-    && counters.weakSetDelete === 0
-    && counters.weakMapSet === 0
-    && counters.weakMapGet === 0
-    && counters.weakMapDelete === 0
-    && counters.objectFreeze === 0
-    && counters.jsonParse === 0
-    && counters.jsonStringify === 0
-    && counters.url === 0
-    && counters.buffer === 0
-    && counters.arrayIsArray === 0
-    && counters.objectKeys === 0
-    && counters.objectFromEntries === 0
-    && counters.functionCall === 0
-    && counters.functionBind === 0;
-}
-
-async function childMain() {
-  const authority = await import(AUTHORITY_URL);
+async function child() {
+  const a = await import(AUTHORITY);
   const scenario = process.env.RECOVERY_INTRINSICS_SCENARIO;
-  const ledger = completedLedger(scenario === 'expiry' ? 25 : undefined);
-  const task = ledger.tasks[0];
-
-  if (scenario === 'pre-mint') {
-    const mutations = mutationHarness(false);
-    let result;
-    let capability;
-    let output;
+  const l = ledger(scenario === 'expiry' ? 25 : 300_000);
+  const task = l.tasks[0];
+  if (scenario === 'pre') {
+    const m = poison(); let out;
     try {
-      result = await authority.fetchRecoveryCompletionCapabilities(ledger);
-      capability = safeMapGet(result.capabilities, TASK_ID);
-      const fabricated = {
-        repository: ledger.repository,
-        repository_id: 1292378784,
-        default_branch: ledger.default_branch,
-        task_id: TASK_ID,
-        pull_request: 52,
-        reviewed_head_sha: task.completion_evidence.reviewed_head_sha,
-        resulting_main_sha: task.completion_evidence.resulting_main_sha,
-        exact_head_run_id: 1001,
-        current_main_run_id: 1002,
-        merge_method: 'merge',
+      const r = await a.fetchRecoveryCompletionCapabilities(l);
+      const cap = mapGet(r.capabilities, TASK);
+      const fake = {};
+      out = {
+        minted: mapSize(r.capabilities) === 1 && Boolean(cap), diagnostics: r.diagnostics.length,
+        recognized: a.isRecoveryCompletionCapability(cap),
+        matches: a.recoveryCompletionCapabilityMatches(cap, l, task),
+        fakeRejected: !a.isRecoveryCompletionCapability(fake),
+        fakeMatchRejected: !a.recoveryCompletionCapabilityMatches(fake, l, task),
+        frozen: frozen(cap), keys: keys(cap).length,
+        secretAbsent: !stringify(cap).includes(TOKEN),
+        publicAbsent: a.mintCapability === undefined && a.registerRecoveryCompletionCapability === undefined,
+        untouched: zero(m.c), counters: m.c,
       };
-      output = {
-        scenario,
-        minted: safeMapSize(result.capabilities) === 1 && Boolean(capability),
-        diagnosticsEmpty: result.diagnostics.length === 0,
-        genuineRecognized: authority.isRecoveryCompletionCapability(capability),
-        genuineMatches: authority.recoveryCompletionCapabilityMatches(capability, ledger, task),
-        fabricatedRejected: !authority.isRecoveryCompletionCapability(fabricated),
-        fabricatedMatchRejected: !authority.recoveryCompletionCapabilityMatches(
-          fabricated,
-          ledger,
-          task,
-        ),
-        tokenFrozen: safeObjectIsFrozen(capability),
-        tokenKeyCount: safeObjectKeys(capability).length,
-        secretAbsent: !safeJsonStringify(capability).includes(TEST_TOKEN),
-        publicMintAbsent: authority.mintCapability === undefined
-          && authority.registerRecoveryCompletionCapability === undefined,
-        mutatedIntrinsicsUnused: allCountersZero(mutations.counters),
-        counters: mutations.counters,
-      };
-    } finally {
-      mutations.restore();
-    }
-    process.stdout.write(safeJsonStringify(output));
-    return;
+    } finally { m.restore(); }
+    process.stdout.write(stringify(out)); return;
   }
-
-  if (scenario === 'post-mint') {
-    const result = await authority.fetchRecoveryCompletionCapabilities(ledger);
-    const capability = safeMapGet(result.capabilities, TASK_ID);
-    const before = authority.recoveryCompletionCapabilityMatches(capability, ledger, task);
-    const mutations = mutationHarness(true);
-    let output;
+  if (scenario === 'post') {
+    const r = await a.fetchRecoveryCompletionCapabilities(l); const cap = mapGet(r.capabilities, TASK);
+    const before = a.recoveryCompletionCapabilityMatches(cap, l, task); const m = poison(true); let out;
     try {
-      const fabricated = {};
-      const stillRecognized = authority.isRecoveryCompletionCapability(capability);
-      const stillMatches = authority.recoveryCompletionCapabilityMatches(capability, ledger, task);
-      const tokenRebound = safeReflectSet(capability, 'task_id', 'FORGED');
+      const fake = {}; const recognized = a.isRecoveryCompletionCapability(cap);
+      const matches = a.recoveryCompletionCapabilityMatches(cap, l, task);
+      const rebound = reflectSet(cap, 'task_id', 'FORGED');
       task.completion_evidence.current_main_validation.run_id = 9002;
-      const reboundRejected = !authority.recoveryCompletionCapabilityMatches(
-        capability,
-        ledger,
-        task,
-      );
+      const rejected = !a.recoveryCompletionCapabilityMatches(cap, l, task);
       task.completion_evidence.current_main_validation.run_id = 1002;
-      const originalBindingRestored = authority.recoveryCompletionCapabilityMatches(
-        capability,
-        ledger,
-        task,
-      );
-      output = {
-        scenario,
-        before,
-        stillRecognized,
-        stillMatches,
-        tokenRebound,
-        reboundRejected,
-        originalBindingRestored,
-        fabricatedRejected: !authority.isRecoveryCompletionCapability(fabricated),
-        fabricatedMatchRejected: !authority.recoveryCompletionCapabilityMatches(
-          fabricated,
-          ledger,
-          task,
-        ),
-        mutatedIntrinsicsUnused: allCountersZero(mutations.counters),
-        counters: mutations.counters,
-      };
-    } finally {
-      mutations.restore();
-    }
-    process.stdout.write(safeJsonStringify(output));
-    return;
+      out = { before, recognized, matches, rebound, rejected,
+        restored: a.recoveryCompletionCapabilityMatches(cap, l, task),
+        fakeRejected: !a.isRecoveryCompletionCapability(fake),
+        fakeMatchRejected: !a.recoveryCompletionCapabilityMatches(fake, l, task),
+        untouched: zero(m.c), counters: m.c };
+    } finally { m.restore(); }
+    process.stdout.write(stringify(out)); return;
   }
-
-  if (scenario === 'expiry') {
-    const result = await authority.fetchRecoveryCompletionCapabilities(ledger);
-    const capability = safeMapGet(result.capabilities, TASK_ID);
-    const initiallyRecognized = authority.isRecoveryCompletionCapability(capability);
-    const mutations = mutationHarness(false);
-    let output;
-    try {
-      await new Promise((resolve) => safeSetTimeout(resolve, 75));
-      output = {
-        scenario,
-        initiallyRecognized,
-        expiredRejected: !authority.isRecoveryCompletionCapability(capability),
-        deleteHooksUnused: mutations.counters.weakSetDelete === 0
-          && mutations.counters.weakMapDelete === 0,
-        registryHooksUnused: mutations.counters.weakSetHas === 0
-          && mutations.counters.weakMapGet === 0,
-        counters: mutations.counters,
-      };
-    } finally {
-      mutations.restore();
-    }
-    process.stdout.write(safeJsonStringify(output));
-    return;
-  }
-
-  throw new Error(`Unknown intrinsic-hardening scenario: ${scenario}`);
+  const r = await a.fetchRecoveryCompletionCapabilities(l); const cap = mapGet(r.capabilities, TASK);
+  const initial = a.isRecoveryCompletionCapability(cap); const m = poison(); let out;
+  try { await new Promise((resolve) => sleep(resolve, 75)); out = { initial,
+    expired: !a.isRecoveryCompletionCapability(cap),
+    deletes: m.c.weakSetDelete === 0 && m.c.weakMapDelete === 0,
+    registry: m.c.weakSetHas === 0 && m.c.weakMapGet === 0, counters: m.c }; }
+  finally { m.restore(); }
+  process.stdout.write(stringify(out));
 }
 
-function fixtureModules(directory) {
-  const verifierPath = join(directory, 'mock-recovery-completion-verifier.mjs');
-  const httpsPath = join(directory, 'mock-node-https.mjs');
-  const loaderPath = join(directory, 'loader.mjs');
-
-  writeFileSync(verifierPath, `
+function fixtures(dir) {
+  const verifier = join(dir, 'verifier.mjs'); const http = join(dir, 'http.mjs');
+  const https = join(dir, 'https.mjs'); const loader = join(dir, 'loader.mjs');
+  writeFileSync(verifier, `
     import { createHash } from 'node:crypto';
-    const call = Function.prototype.call;
-    const bind = Function.prototype.bind;
-    const bindIntrinsic = call.bind(bind);
-    const uncurry = (method) => bindIntrinsic(call, method);
-    const arrayIsArray = bindIntrinsic(Array.isArray, Array);
-    const arrayMap = uncurry(Array.prototype.map);
-    const arraySort = uncurry(Array.prototype.sort);
-    const objectKeys = bindIntrinsic(Object.keys, Object);
-    const objectFromEntries = bindIntrinsic(Object.fromEntries, Object);
-    const jsonStringify = bindIntrinsic(JSON.stringify, JSON);
-    const dateParse = bindIntrinsic(Date.parse, Date);
-    const numberIsFinite = bindIntrinsic(Number.isFinite, Number);
-    const NativeDate = Date;
-
-    const canonical = (value) => {
-      if (arrayIsArray(value)) return arrayMap(value, canonical);
-      if (value && typeof value === 'object') {
-        const keys = objectKeys(value);
-        arraySort(keys);
-        return objectFromEntries(arrayMap(keys, (key) => [key, canonical(value[key])]))
-      }
-      return value;
-    };
-    export function recoveryCompletionBinding(ledger, task) {
-      return {
-        repository: ledger?.repository,
-        default_branch: ledger?.default_branch,
-        program_id: ledger?.program_id,
-        task_id: task?.task_id,
-        candidate: task?.candidate,
-        completion_evidence: task?.completion_evidence,
-      };
-    }
-    const bindingSha = (ledger, task) => createHash('sha256')
-      .update(jsonStringify(canonical(recoveryCompletionBinding(ledger, task))))
-      .digest('hex');
-    export function createRecoveryCompletionVerifier({ fetchImpl, token, now }) {
-      return { fetchImpl, token, now };
-    }
-    export function recoveryVerifiedEvidenceMatches(value, ledger, task, nowMs) {
-      const completion = task?.completion_evidence;
-      const expiresAt = dateParse(value?.expires_at || '');
-      return value?.evidence_type === 'recovery-completion-verification.v1'
-        && numberIsFinite(expiresAt)
-        && numberIsFinite(nowMs)
-        && nowMs < expiresAt
-        && value.repository === 'rezahh107/EV4-Decision-Kernel'
-        && value.repository_id === 1292378784
-        && value.default_branch === 'main'
-        && value.task_id === task?.task_id
-        && value.pull_request === completion?.pull_request
-        && value.reviewed_head_sha === completion?.reviewed_head_sha
-        && value.resulting_main_sha === completion?.resulting_main_sha
-        && value.exact_head_run_id === completion?.exact_head_ci?.run_id
-        && value.current_main_run_id === completion?.current_main_validation?.run_id
-        && value.merge_method === completion?.merge_method
-        && value.binding_sha256 === bindingSha(ledger, task);
-    }
-    export async function verifyRecoveryCompletionEvidence(ledger, taskId, { session }) {
-      let task = null;
-      for (let index = 0; index < ledger.tasks.length; index += 1) {
-        if (ledger.tasks[index]?.task_id === taskId) task = ledger.tasks[index];
-      }
-      const response = await session.fetchImpl(
-        'https://api.github.com/repos/rezahh107/EV4-Decision-Kernel/authority-probe',
-        { headers: { Authorization: 'Bearer ' + session.token } },
-      );
-      const payload = await response.json();
-      if (!response.ok || payload?.trusted !== true) {
-        return { evidence: null, diagnostics: [{ diagnostic_id: 'MOCK_TRANSPORT_REJECTED' }] };
-      }
-      const nowMs = session.now();
-      const completion = task.completion_evidence;
-      return {
-        diagnostics: [],
-        evidence: {
-          evidence_type: 'recovery-completion-verification.v1',
-          repository: 'rezahh107/EV4-Decision-Kernel',
-          repository_id: 1292378784,
-          default_branch: 'main',
-          task_id: task.task_id,
-          pull_request: completion.pull_request,
-          reviewed_head_sha: completion.reviewed_head_sha,
-          resulting_main_sha: completion.resulting_main_sha,
-          exact_head_run_id: completion.exact_head_ci.run_id,
-          current_main_run_id: completion.current_main_validation.run_id,
-          exact_head_workflow_source: {
-            workflow_id: 309028718,
-            workflow_commit_sha: completion.reviewed_head_sha,
-            workflow_blob_sha: 'a'.repeat(40),
-            workflow_final_byte_sha256: 'b'.repeat(64),
-            workflow_policy_id: 'recovery-workflow-source.mvk.v1',
-            reference: 'https://api.github.com/mock/mvk',
-          },
-          current_main_workflow_source: {
-            workflow_id: 312952795,
-            workflow_commit_sha: completion.resulting_main_sha,
-            workflow_blob_sha: 'c'.repeat(40),
-            workflow_final_byte_sha256: 'd'.repeat(64),
-            workflow_policy_id: 'recovery-workflow-source.main.v1',
-            reference: 'https://api.github.com/mock/main',
-          },
-          observed_at: new NativeDate(nowMs).toISOString(),
-          expires_at: new NativeDate(nowMs + task.test_expiry_ms).toISOString(),
-          merge_method: completion.merge_method,
-          binding_sha256: bindingSha(ledger, task),
-        },
-      };
-    }
+    const call=Function.prototype.call, bind=Function.prototype.bind, bi=call.bind(bind);
+    const uncurry=(m)=>bi(call,m), isArray=bi(Array.isArray,Array), map=uncurry(Array.prototype.map),
+      sort=uncurry(Array.prototype.sort), keys=bi(Object.keys,Object), fromEntries=bi(Object.fromEntries,Object),
+      stringify=bi(JSON.stringify,JSON), parse=bi(Date.parse,Date), finite=bi(Number.isFinite,Number), D=Date;
+    const canonical=(v)=>{if(isArray(v))return map(v,canonical);if(v&&typeof v==='object'){const k=keys(v);sort(k);return fromEntries(map(k,x=>[x,canonical(v[x])]))}return v};
+    export const recoveryCompletionBinding=(l,t)=>({repository:l?.repository,default_branch:l?.default_branch,program_id:l?.program_id,task_id:t?.task_id,candidate:t?.candidate,completion_evidence:t?.completion_evidence});
+    const sha=(l,t)=>createHash('sha256').update(stringify(canonical(recoveryCompletionBinding(l,t)))).digest('hex');
+    export const createRecoveryCompletionVerifier=(x)=>x;
+    export const recoveryVerifiedEvidenceMatches=(v,l,t,n)=>{const c=t?.completion_evidence,e=parse(v?.expires_at||'');return v?.evidence_type==='recovery-completion-verification.v1'&&finite(e)&&finite(n)&&n<e&&v.repository==='rezahh107/EV4-Decision-Kernel'&&v.repository_id===1292378784&&v.default_branch==='main'&&v.task_id===t?.task_id&&v.pull_request===c?.pull_request&&v.reviewed_head_sha===c?.reviewed_head_sha&&v.resulting_main_sha===c?.resulting_main_sha&&v.exact_head_run_id===c?.exact_head_ci?.run_id&&v.current_main_run_id===c?.current_main_validation?.run_id&&v.merge_method===c?.merge_method&&v.binding_sha256===sha(l,t)};
+    export async function verifyRecoveryCompletionEvidence(l,id,{session}){const t=l.tasks.find(x=>x.task_id===id),c=t.completion_evidence,r=await session.fetchImpl('https://api.github.com/repos/rezahh107/EV4-Decision-Kernel/authority-probe',{headers:{Authorization:'Bearer '+session.token}}),q=await r.json();if(!r.ok||q?.trusted!==true)return{evidence:null,diagnostics:[{diagnostic_id:'MOCK_TRANSPORT_REJECTED'}]};const n=session.now();return{diagnostics:[],evidence:{evidence_type:'recovery-completion-verification.v1',repository:'rezahh107/EV4-Decision-Kernel',repository_id:1292378784,default_branch:'main',task_id:t.task_id,pull_request:c.pull_request,reviewed_head_sha:c.reviewed_head_sha,resulting_main_sha:c.resulting_main_sha,exact_head_run_id:c.exact_head_ci.run_id,current_main_run_id:c.current_main_validation.run_id,exact_head_workflow_source:{},current_main_workflow_source:{},observed_at:new D(n).toISOString(),expires_at:new D(n+t.test_expiry_ms).toISOString(),merge_method:c.merge_method,binding_sha256:sha(l,t)}}}
   `);
-
-  writeFileSync(httpsPath, `
-    import { Buffer as NodeBuffer } from 'node:buffer';
-    import { EventEmitter } from 'node:events';
-    const stringify = JSON.stringify.bind(JSON);
-    const NativeDate = Date;
-    export class Agent {
-      constructor(options = {}) { this.options = options; }
-    }
-    export function request(url, options, callback) {
-      const requestValue = new EventEmitter();
-      requestValue.setTimeout = () => requestValue;
-      requestValue.destroy = (error) => {
-        queueMicrotask(() => requestValue.emit('error', error));
-      };
-      requestValue.end = () => {
-        queueMicrotask(() => {
-          const response = new EventEmitter();
-          response.statusCode = 200;
-          response.headers = { date: new NativeDate().toUTCString() };
-          callback(response);
-          queueMicrotask(() => {
-            const authorized = options?.headers?.Authorization === 'Bearer ${TEST_TOKEN}';
-            response.emit('data', NodeBuffer.from(stringify({ trusted: authorized })));
-            response.emit('end');
-          });
-        });
-      };
-      return requestValue;
-    }
+  writeFileSync(http, `
+    import { Buffer as B } from 'node:buffer'; import { EventEmitter } from 'node:events';
+    const stringify=JSON.stringify.bind(JSON);
+    export class IncomingMessage extends EventEmitter{constructor(s,h,b){super();this.statusCode=s;this.headers=h;this.body=b}}
+    export class ClientRequest extends EventEmitter{constructor(u,o,c){super();this.options=o;this.callback=c;this.destroyed=false}setTimeout(){return this}destroy(e){this.destroyed=true;if(e)queueMicrotask(()=>this.emit('error',e));return this}end(){queueMicrotask(()=>{if(this.destroyed)return;const ok=this.options?.headers?.Authorization==='Bearer ${TOKEN}',body=B.from(stringify({trusted:ok})),r=new IncomingMessage(200,{date:new Date().toUTCString()},body);this.callback(r);queueMicrotask(()=>{r.emit('data',body);r.emit('end')})});return this}}
   `);
-
-  writeFileSync(loaderPath, `
-    import { pathToFileURL } from 'node:url';
-    const verifierUrl = pathToFileURL(process.env.RECOVERY_INTRINSICS_VERIFIER).href;
-    const httpsUrl = pathToFileURL(process.env.RECOVERY_INTRINSICS_HTTPS).href;
-    export async function resolve(specifier, context, nextResolve) {
-      const authorityParent = context.parentURL?.endsWith('/recovery-completion-evidence.mjs');
-      if (authorityParent && specifier === './recovery-completion-verifier.mjs') {
-        return { url: verifierUrl, shortCircuit: true };
-      }
-      if (authorityParent && specifier === 'node:https') {
-        return { url: httpsUrl, shortCircuit: true };
-      }
-      return nextResolve(specifier, context);
-    }
+  writeFileSync(https, `import {ClientRequest} from ${JSON.stringify(pathToFileURL(http).href)};export class Agent{constructor(o={}){this.options=o}}export const request=(u,o,c)=>new ClientRequest(u,o,c);`);
+  writeFileSync(loader, `
+    import {pathToFileURL} from 'node:url';const v=pathToFileURL(process.env.RI_V).href,h=pathToFileURL(process.env.RI_H).href,s=pathToFileURL(process.env.RI_S).href;
+    export async function resolve(x,c,n){if(c.parentURL?.endsWith('/recovery-completion-evidence.mjs')&&x==='./recovery-completion-verifier.mjs')return{url:v,shortCircuit:true};if(x==='node:http')return{url:h,shortCircuit:true};if(x==='node:https')return{url:s,shortCircuit:true};return n(x,c)}
   `);
-
-  return { verifierPath, httpsPath, loaderPath };
+  return { verifier, http, https, loader };
 }
-
-function runChild(scenario, modules) {
-  const result = spawnSync(
-    process.execPath,
-    ['--no-warnings', `--experimental-loader=${modules.loaderPath}`, fileURLToPath(import.meta.url)],
-    {
-      cwd: ROOT,
-      encoding: 'utf8',
-      env: {
-        ...process.env,
-        RECOVERY_GITHUB_TOKEN: TEST_TOKEN,
-        RECOVERY_INTRINSICS_CHILD: '1',
-        RECOVERY_INTRINSICS_SCENARIO: scenario,
-        RECOVERY_INTRINSICS_VERIFIER: modules.verifierPath,
-        RECOVERY_INTRINSICS_HTTPS: modules.httpsPath,
-      },
-    },
-  );
-  let output = null;
-  try {
-    output = JSON.parse(result.stdout);
-  } catch {
-    output = null;
-  }
-  return { result, output };
+function run(s, f) {
+  const r = spawnSync(process.execPath, ['--no-warnings', `--experimental-loader=${f.loader}`, fileURLToPath(import.meta.url)], { cwd: ROOT, encoding: 'utf8', env: { ...process.env, RECOVERY_GITHUB_TOKEN: TOKEN, RI_CHILD: '1', RECOVERY_INTRINSICS_SCENARIO: s, RI_V: f.verifier, RI_H: f.http, RI_S: f.https } });
+  let out=null; try{out=JSON.parse(r.stdout)}catch{} return {r,out};
 }
-
-if (process.env.RECOVERY_INTRINSICS_CHILD === '1') {
-  await childMain();
-} else {
-  const directory = mkdtempSync(join(tmpdir(), 'recovery-intrinsics-'));
-  const cases = [];
-  const record = (name, pass, detail = null) => cases.push({ name, pass: Boolean(pass), detail });
+if (process.env.RI_CHILD === '1') await child();
+else {
+  const dir=mkdtempSync(join(tmpdir(),'recovery-intrinsics-')), cases=[], rec=(name,pass,detail=null)=>cases.push({name,pass:Boolean(pass),detail});
   try {
-    const modules = fixtureModules(directory);
-    const preMint = runChild('pre-mint', modules);
-    record('isolated pre-mint mutation subprocess exits cleanly', preMint.result.status === 0, preMint.result.stderr);
-    record('captured transport and canonical intrinsics still mint one capability', preMint.output?.minted && preMint.output?.diagnosticsEmpty, preMint.output);
-    record('genuine capability remains recognized and exact-bound', preMint.output?.genuineRecognized && preMint.output?.genuineMatches, preMint.output);
-    record('ordinary fabricated object cannot manufacture registry membership', preMint.output?.fabricatedRejected, preMint.output);
-    record('ordinary fabricated object cannot pass capability matching', preMint.output?.fabricatedMatchRejected, preMint.output);
-    record('registered authority token is zero-data and frozen', preMint.output?.tokenFrozen && preMint.output?.tokenKeyCount === 0, preMint.output);
-    record('registered authority token exposes no workflow credential', preMint.output?.secretAbsent, preMint.output);
-    record('production module exposes no public mint or registration function', preMint.output?.publicMintAbsent, preMint.output);
-    record('pre-mint substitutions never invoke mutable intrinsic surfaces', preMint.output?.mutatedIntrinsicsUnused, preMint.output?.counters);
-
-    const postMint = runChild('post-mint', modules);
-    record('isolated post-mint mutation subprocess exits cleanly', postMint.result.status === 0, postMint.result.stderr);
-    record('registered capability survives Function.prototype.call and bind substitution', postMint.output?.before && postMint.output?.stillRecognized && postMint.output?.stillMatches, postMint.output);
-    record('frozen token cannot be rebound through caller-visible fields', postMint.output?.tokenRebound === false, postMint.output);
-    record('private registration snapshot rejects another evidence binding', postMint.output?.reboundRejected, postMint.output);
-    record('original private binding remains valid after rejected rebind', postMint.output?.originalBindingRestored, postMint.output);
-    record('post-mint prototype substitution cannot forge membership or matching', postMint.output?.fabricatedRejected && postMint.output?.fabricatedMatchRejected, postMint.output);
-    record('post-mint authority checks bypass every mutated intrinsic', postMint.output?.mutatedIntrinsicsUnused, postMint.output?.counters);
-
-    const expiry = runChild('expiry', modules);
-    record('isolated expiry mutation subprocess exits cleanly', expiry.result.status === 0, expiry.result.stderr);
-    record('expired private registration fails closed', expiry.output?.initiallyRecognized && expiry.output?.expiredRejected, expiry.output);
-    record('expiry cleanup uses captured WeakSet and WeakMap delete operations', expiry.output?.deleteHooksUnused && expiry.output?.registryHooksUnused, expiry.output?.counters);
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
-  }
-
-  const failed = cases.filter((item) => !item.pass);
-  process.stdout.write(`Recovery intrinsic hardening: ${cases.length - failed.length}/${cases.length} cases passed.\n`);
-  if (failed.length) {
-    process.stderr.write(`${JSON.stringify(failed, null, 2)}\n`);
-    process.exitCode = 1;
-  }
+    const f=fixtures(dir), pre=run('pre',f);
+    rec('pre subprocess',pre.r.status===0,pre.r.stderr); rec('mint',pre.out?.minted&&pre.out?.diagnostics===0,pre.out);
+    rec('recognized',pre.out?.recognized&&pre.out?.matches,pre.out); rec('fake membership',pre.out?.fakeRejected,pre.out);
+    rec('fake match',pre.out?.fakeMatchRejected,pre.out); rec('zero frozen token',pre.out?.frozen&&pre.out?.keys===0,pre.out);
+    rec('secret absent',pre.out?.secretAbsent,pre.out); rec('public mint absent',pre.out?.publicAbsent,pre.out);
+    rec('pre intrinsics',pre.out?.untouched,pre.out?.counters);
+    const post=run('post',f); rec('post subprocess',post.r.status===0,post.r.stderr);
+    rec('function mutation safe',post.out?.before&&post.out?.recognized&&post.out?.matches,post.out);
+    rec('token immutable',post.out?.rebound===false,post.out); rec('rebind rejected',post.out?.rejected,post.out);
+    rec('binding restored',post.out?.restored,post.out); rec('post fake rejected',post.out?.fakeRejected&&post.out?.fakeMatchRejected,post.out);
+    rec('post intrinsics',post.out?.untouched,post.out?.counters);
+    const exp=run('expiry',f); rec('expiry subprocess',exp.r.status===0,exp.r.stderr);
+    rec('expiry closed',exp.out?.initial&&exp.out?.expired,exp.out); rec('expiry captured registry',exp.out?.deletes&&exp.out?.registry,exp.out?.counters);
+  } finally { rmSync(dir,{recursive:true,force:true}); }
+  const failed=cases.filter(x=>!x.pass); process.stdout.write(`Recovery intrinsic hardening: ${cases.length-failed.length}/${cases.length} cases passed.\n`); if(failed.length){process.stderr.write(`${JSON.stringify(failed,null,2)}\n`);process.exitCode=1}
 }
