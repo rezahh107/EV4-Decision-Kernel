@@ -39,7 +39,7 @@
   "known_gaps": [
     "External project-owner Coverage governance promotion remains pending and still requires independent_review_passed.",
     "Element and Question denominators remain unresolved and every Coverage percentage remains null.",
-    "KREC-001 is checks_pending in Draft PR #52 and is not complete; KREC-002 and KREC-004 remain dependency-blocked.",
+    "KREC-001 is checks_pending in open PR #52 and is not complete; KREC-002 and KREC-004 remain dependency-blocked.",
     "KROAD-012 remains not superseded; KROAD-013 through KROAD-018 remain not_started; KROAD-012R remains historical_non_authoritative."
   ],
   "zero_delta": true,

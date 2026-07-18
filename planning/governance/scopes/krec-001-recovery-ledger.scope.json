@@ -8,7 +8,7 @@
   "base_sha": "5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a",
   "head_binding": "derived_at_runtime",
   "change_class": "L3",
-  "scope_revision": "sha256:e88052c7233080d5a74752d0afac98c35b7343afac556b4c5916951bf2e56911",
+  "scope_revision": "sha256:48cb5bad4b21c89d553bb814be09bd6babee07f7b5a302155a90ef8dede02fc9",
   "committed": [
     ".github/workflows/validate-main.yml",
     ".github/workflows/validate-mvk.yml",
@@ -50,7 +50,7 @@
     "KREC-001 declared dependency set is empty",
     "exact base main commit 5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a",
     "bounded candidate branch krec-001/recovery-ledger",
-    "Draft PR #52"
+    "Open PR #52"
   ],
   "completion_evidence": [
     "schema and cross-carrier semantic validation",
@@ -66,7 +66,7 @@
     "create the canonical Recovery ledger for KREC-001",
     "add its schema validator fixtures and lifecycle tests",
     "integrate validation into exact-head and current-main workflows",
-    "record branch and Draft PR candidate state without completion",
+    "record branch and open PR candidate state without completion",
     "update bounded Recovery planning memory and zero-delta Coverage impact",
     "prepare one focused KREC-001 PR"
   ],

@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-PR #50 is merged at `435add8ee3f3274f781b6e391f11e3262e380c4e`. AIGOV Batch B remains closed under the owner-approved sequence. The Recovery Program is active, and Draft PR #52 is the bounded `KREC-001` candidate with checks pending and no completion, Coverage, readiness, product, external-repository or KROAD supersession effects.
+PR #50 is merged at `435add8ee3f3274f781b6e391f11e3262e380c4e`. AIGOV Batch B remains closed under the owner-approved sequence. The Recovery Program is active, and open PR #52 is the bounded `KREC-001` candidate with checks pending and no completion, Coverage, readiness, product, external-repository or KROAD supersession effects.
 
 ## Status Authority
 
@@ -78,7 +78,7 @@ kroad_supersession_effect: none
 
 current_work_package_id: KREC-001
 
-`KREC-001` uses `create_new_candidate` on `krec-001/recovery-ledger`. Draft PR #52 targets exact base `5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a`; exact-head CI, owner Merge and completion evidence remain pending.
+`KREC-001` uses `create_new_candidate` on `krec-001/recovery-ledger`. Open PR #52 targets exact base `5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a`; exact-head CI, owner Merge and completion evidence remain pending.
 
 - [ ] `DCOV-EXEC-001` — Coverage Guarantee proposal and validation foundation
   - `implementation_eligibility`: `blocked_pending_external_governance_approval`
