@@ -1,10 +1,12 @@
 import { createHash } from 'node:crypto';
 import {
-  AUTHORITATIVE_WORKFLOWS,
   GITHUB_ACTIONS_APP_ID,
   GITHUB_ACTIONS_APP_SLUG,
+  RECOVERY_AUTHORITATIVE_WORKFLOWS,
   isVerifiedAuthoritativeRun,
-  verifyWorkflowDescriptorPayloads,
+  isVerifiedRecoveryWorkflowSource,
+  verifyRecoveryWorkflowDescriptorPayloads,
+  verifyRecoveryWorkflowSourcePayload,
 } from '../../tools/lib/aigov-ci-descriptor.mjs';
 
 const API = 'https://api.github.com';
@@ -15,6 +17,7 @@ const OWNER = 'rezahh107';
 const MAX_RESPONSE_AGE_MS = 5 * 60 * 1000;
 const SHA40 = /^[0-9a-f]{40}$/;
 const VERIFIED_COMPLETIONS = new WeakSet();
+const SESSION_STATE = new WeakMap();
 
 const normalized = (value) => value === undefined ? null : value;
 const canonical = (value) => {
@@ -84,6 +87,8 @@ function mintCapability(ledger, task, evidence) {
     resulting_main_sha: evidence.resulting_main_sha,
     exact_head_run_id: evidence.exact_head_run_id,
     current_main_run_id: evidence.current_main_run_id,
+    exact_head_workflow_source: evidence.exact_head_workflow_source,
+    current_main_workflow_source: evidence.current_main_workflow_source,
     observed_at: evidence.observed_at,
     binding_sha256: sha256(completionBinding(ledger, task)),
   });
@@ -91,33 +96,70 @@ function mintCapability(ledger, task, evidence) {
   return capability;
 }
 
-function githubHeaders() {
-  const headers = {
+export function createRecoveryEvidenceSession({
+  fetchImpl = globalThis.fetch,
+  token = process.env.RECOVERY_GITHUB_TOKEN || null,
+  now = () => Date.now(),
+} = {}) {
+  const session = Object.freeze({ session_type: 'recovery-evidence-session.v1' });
+  SESSION_STATE.set(session, {
+    fetchImpl,
+    token,
+    now,
+    requestCache: new Map(),
+    runEvidenceCache: new Map(),
+    capabilityCache: new Map(),
+  });
+  return session;
+}
+
+function sessionState(session) {
+  const state = SESSION_STATE.get(session);
+  if (!state) throw new Error('Recovery evidence session capability required');
+  if (typeof state.fetchImpl !== 'function') throw new Error('GitHub evidence transport unavailable');
+  if (typeof state.token !== 'string' || state.token.length === 0) {
+    throw new Error('RECOVERY_GITHUB_TOKEN unavailable');
+  }
+  return state;
+}
+
+function githubHeaders(token) {
+  return {
     Accept: 'application/vnd.github+json',
     'User-Agent': 'ev4-recovery-completion-boundary',
     'X-GitHub-Api-Version': '2022-11-28',
+    Authorization: `Bearer ${token}`,
   };
-  const token = process.env.RECOVERY_GITHUB_TOKEN || process.env.GITHUB_TOKEN;
-  if (token) headers.Authorization = `Bearer ${token}`;
-  return headers;
 }
 
-async function githubJson(apiPath, fetchImpl) {
+async function githubJson(apiPath, session) {
+  const state = sessionState(session);
+  if (state.requestCache.has(apiPath)) return state.requestCache.get(apiPath);
   const url = API + apiPath;
-  const response = await fetchImpl(url, {
-    headers: githubHeaders(),
-    redirect: 'error',
-    cache: 'no-store',
-  });
-  if (!response || typeof response.json !== 'function' || response.ok !== true) {
-    throw new Error(`GitHub API ${response?.status ?? 'unavailable'}: ${apiPath}`);
+  const pending = (async () => {
+    const response = await state.fetchImpl(url, {
+      headers: githubHeaders(state.token),
+      redirect: 'error',
+      cache: 'no-store',
+    });
+    if (!response || typeof response.json !== 'function' || response.ok !== true) {
+      const status = response?.status ?? 'unavailable';
+      throw new Error(`GitHub API ${status}: ${apiPath}`);
+    }
+    const responseDate = response.headers?.get?.('date') || null;
+    return {
+      value: await response.json(),
+      url,
+      response_date: responseDate,
+    };
+  })();
+  state.requestCache.set(apiPath, pending);
+  try {
+    return await pending;
+  } catch (error) {
+    state.requestCache.delete(apiPath);
+    throw error;
   }
-  const responseDate = response.headers?.get?.('date') || null;
-  return {
-    value: await response.json(),
-    url,
-    response_date: responseDate,
-  };
 }
 
 function responseFreshnessDiagnostics(responses, nowMs, taskPath) {
@@ -154,7 +196,7 @@ function runDiagnostics({
   mergedAt,
 }) {
   const diagnostics = [];
-  const prefix = expected.path === AUTHORITATIVE_WORKFLOWS.mvk.path
+  const prefix = expected.path === RECOVERY_AUTHORITATIVE_WORKFLOWS.mvk.path
     ? 'RECOVERY_LEDGER_EXACT_HEAD_RUN'
     : 'RECOVERY_LEDGER_CURRENT_MAIN_RUN';
   if (descriptorResult.diagnostics.length || !isVerifiedAuthoritativeRun(descriptorResult.evidence)) {
@@ -285,61 +327,141 @@ async function fetchRunEvidence({
   prNumber,
   taskPath,
   mergedAt,
-  fetchImpl,
+  session,
 }) {
-  const workflowResponse = await githubJson(
-    `/repos/${REPOSITORY}/actions/workflows/${encodeURIComponent(expected.path.split('/').at(-1))}`,
-    fetchImpl,
-  );
-  const runResponse = await githubJson(
-    `/repos/${REPOSITORY}/actions/runs/${ledgerEvidence?.run_id}`,
-    fetchImpl,
-  );
-  const allRunsResponse = await githubJson(
-    `/repos/${REPOSITORY}/actions/runs?head_sha=${encodeURIComponent(headSha)}&event=${event}&per_page=100`,
-    fetchImpl,
-  );
-  const jobsResponse = await githubJson(
-    `/repos/${REPOSITORY}/actions/runs/${ledgerEvidence?.run_id}/jobs?filter=latest&per_page=100`,
-    fetchImpl,
-  );
-  const jobs = Array.isArray(jobsResponse.value?.jobs) ? jobsResponse.value.jobs : [];
-  const checkResponses = await Promise.all(jobs.map(
-    (job) => githubJson(`/repos/${REPOSITORY}/check-runs/${job.id}`, fetchImpl),
-  ));
-  const checks = checkResponses.map((item) => item.value);
-  const descriptorResult = verifyWorkflowDescriptorPayloads({
-    repository: REPOSITORY,
-    repositoryId,
-    exactHeadSha: headSha,
-    event,
-    expected,
-    workflow: workflowResponse.value,
-    runs: [runResponse.value],
-    allRepositoryRuns: allRunsResponse.value?.workflow_runs,
+  const state = sessionState(session);
+  const cacheKey = `${expected.policyId}:${ledgerEvidence?.run_id}:${headSha}:${event}`;
+  let pending = state.runEvidenceCache.get(cacheKey);
+  if (!pending) {
+    pending = (async () => {
+      const encodedPath = expected.path.split('/').map(encodeURIComponent).join('/');
+      const sourceResponse = await githubJson(
+        `/repos/${REPOSITORY}/contents/${encodedPath}?ref=${encodeURIComponent(headSha)}`,
+        session,
+      );
+      const sourceResult = verifyRecoveryWorkflowSourcePayload({
+        repository: REPOSITORY,
+        repositoryId,
+        commitSha: headSha,
+        expected,
+        contentPayload: sourceResponse.value,
+        sourceApiUrl: sourceResponse.url,
+      });
+      const runResponse = await githubJson(
+        `/repos/${REPOSITORY}/actions/runs/${ledgerEvidence?.run_id}`,
+        session,
+      );
+      const allRunsResponse = await githubJson(
+        `/repos/${REPOSITORY}/actions/runs?head_sha=${encodeURIComponent(headSha)}&event=${event}&per_page=100`,
+        session,
+      );
+      const jobsResponse = await githubJson(
+        `/repos/${REPOSITORY}/actions/runs/${ledgerEvidence?.run_id}/jobs?filter=latest&per_page=100`,
+        session,
+      );
+      const jobs = Array.isArray(jobsResponse.value?.jobs) ? jobsResponse.value.jobs : [];
+      const matchingJobs = jobs.filter((job) => job?.name === expected.checkName);
+      const checkResponses = await Promise.all(matchingJobs.map(
+        (job) => githubJson(`/repos/${REPOSITORY}/check-runs/${job.id}`, session),
+      ));
+      const checks = checkResponses.map((item) => item.value);
+      const descriptorResult = verifyRecoveryWorkflowDescriptorPayloads({
+        source: sourceResult.evidence,
+        repository: REPOSITORY,
+        repositoryId,
+        exactHeadSha: headSha,
+        event,
+        expected,
+        runs: [runResponse.value],
+        allRepositoryRuns: allRunsResponse.value?.workflow_runs,
+        jobs,
+        checkRuns: checks,
+        expectedRunId: ledgerEvidence?.run_id,
+        jobsRunId: runResponse.value?.id,
+      });
+      return {
+        sourceResponse,
+        sourceResult,
+        runResponse,
+        allRunsResponse,
+        jobsResponse,
+        jobs,
+        checkResponses,
+        checks,
+        descriptorResult,
+      };
+    })();
+    state.runEvidenceCache.set(cacheKey, pending);
+  }
+  let core;
+  try {
+    core = await pending;
+  } catch (error) {
+    state.runEvidenceCache.delete(cacheKey);
+    throw error;
+  }
+  const {
+    sourceResponse,
+    sourceResult,
+    runResponse,
+    allRunsResponse,
+    jobsResponse,
     jobs,
-    checkRuns: checks,
-    expectedRunId: ledgerEvidence?.run_id,
-    jobsRunId: runResponse.value?.id,
-  });
-  return {
-    diagnostics: runDiagnostics({
-      ledgerEvidence,
-      expected,
-      descriptorResult,
-      workflow: workflowResponse.value,
-      run: runResponse.value,
-      jobs,
-      checks,
-      repositoryId,
-      prNumber,
-      headSha,
-      event,
+    checkResponses,
+    checks,
+    descriptorResult,
+  } = core;
+  const diagnostics = [];
+  if (sourceResult.diagnostics.length
+    || !isVerifiedRecoveryWorkflowSource(sourceResult.evidence)) {
+    diagnostics.push(diagnostic(
+      'RECOVERY_LEDGER_WORKFLOW_SOURCE_UNVERIFIED',
       taskPath,
-      mergedAt,
-    }),
+      {
+        repository: REPOSITORY,
+        repository_id: repositoryId,
+        workflow_id: expected.workflowId,
+        workflow_path: expected.path,
+        workflow_commit_sha: headSha,
+        accepted_sources: expected.acceptedSources,
+        validator_command: expected.validatorCommand,
+        required_job: expected.checkName,
+        required_needs: expected.requiredNeeds,
+      },
+      {
+        workflow_id: runResponse.value?.workflow_id,
+        workflow_path: runResponse.value?.path,
+        workflow_commit_sha: headSha,
+        workflow_blob_sha: sourceResponse.value?.sha,
+        verifier_diagnostics: sourceResult.diagnostics,
+      },
+      'Use the accepted immutable workflow bytes from the exact executed commit with the required job, command, dependency graph, token and read permissions.',
+    ));
+  }
+  diagnostics.push(...runDiagnostics({
+    ledgerEvidence,
+    expected,
+    descriptorResult,
+    workflow: {
+      id: runResponse.value?.workflow_id,
+      name: runResponse.value?.name,
+      path: runResponse.value?.path,
+    },
+    run: runResponse.value,
+    jobs,
+    checks,
+    repositoryId,
+    prNumber,
+    headSha,
+    event,
+    taskPath,
+    mergedAt,
+  }));
+  return {
+    diagnostics,
     descriptor: descriptorResult.evidence,
-    responses: [workflowResponse, runResponse, allRunsResponse, jobsResponse, ...checkResponses],
+    source: sourceResult.evidence,
+    responses: [sourceResponse, runResponse, allRunsResponse, jobsResponse, ...checkResponses],
   };
 }
 
@@ -357,7 +479,12 @@ function mergeMethod(pr, headCommit, mergeCommit, headToResult) {
 export async function fetchRecoveryCompletionCapability(
   ledger,
   taskId,
-  { fetchImpl = globalThis.fetch, now = () => Date.now() } = {},
+  {
+    session = null,
+    fetchImpl = globalThis.fetch,
+    token = process.env.RECOVERY_GITHUB_TOKEN || null,
+    now = () => Date.now(),
+  } = {},
 ) {
   const taskIndex = Array.isArray(ledger?.tasks)
     ? ledger.tasks.findIndex((item) => item?.task_id === taskId)
@@ -379,34 +506,28 @@ export async function fetchRecoveryCompletionCapability(
     };
   }
 
-  if (typeof fetchImpl !== 'function') {
-    return {
-      capability: null,
-      diagnostics: [diagnostic(
-        'RECOVERY_LEDGER_GITHUB_EVIDENCE_UNAVAILABLE',
-        taskPath + '/completion_evidence',
-        'HTTPS GitHub evidence transport',
-        null,
-        'Provide network access to the official GitHub REST API; do not substitute serialized evidence.',
-      )],
-    };
-  }
-
+  const evidenceSession = session || createRecoveryEvidenceSession({ fetchImpl, token, now });
   try {
-    const repositoryResponse = await githubJson(`/repos/${REPOSITORY}`, fetchImpl);
+    const state = sessionState(evidenceSession);
+    const capabilityKey = `${taskId}:${sha256(completionBinding(ledger, task))}`;
+    const cachedCapability = state.capabilityCache.get(capabilityKey);
+    if (cachedCapability && recoveryCompletionCapabilityMatches(cachedCapability, ledger, task)) {
+      return { capability: cachedCapability, diagnostics: [] };
+    }
+    const repositoryResponse = await githubJson(`/repos/${REPOSITORY}`, evidenceSession);
     const pullResponse = await githubJson(
       `/repos/${REPOSITORY}/pulls/${completion.pull_request}`,
-      fetchImpl,
+      evidenceSession,
     );
     const pr = pullResponse.value;
     const reviewedHead = completion.reviewed_head_sha;
     const resultingMain = completion.resulting_main_sha;
     const [headResponse, mergeResponse, branchResponse, headToResultResponse, resultToMainResponse] = await Promise.all([
-      githubJson(`/repos/${REPOSITORY}/commits/${reviewedHead}`, fetchImpl),
-      githubJson(`/repos/${REPOSITORY}/commits/${resultingMain}`, fetchImpl),
-      githubJson(`/repos/${REPOSITORY}/branches/${DEFAULT_BRANCH}`, fetchImpl),
-      githubJson(`/repos/${REPOSITORY}/compare/${reviewedHead}...${resultingMain}`, fetchImpl),
-      githubJson(`/repos/${REPOSITORY}/compare/${resultingMain}...${DEFAULT_BRANCH}`, fetchImpl),
+      githubJson(`/repos/${REPOSITORY}/commits/${reviewedHead}`, evidenceSession),
+      githubJson(`/repos/${REPOSITORY}/commits/${resultingMain}`, evidenceSession),
+      githubJson(`/repos/${REPOSITORY}/branches/${DEFAULT_BRANCH}`, evidenceSession),
+      githubJson(`/repos/${REPOSITORY}/compare/${reviewedHead}...${resultingMain}`, evidenceSession),
+      githubJson(`/repos/${REPOSITORY}/compare/${resultingMain}...${DEFAULT_BRANCH}`, evidenceSession),
     ]);
 
     const repository = repositoryResponse.value;
@@ -512,25 +633,25 @@ export async function fetchRecoveryCompletionCapability(
 
     const exactHeadRun = await fetchRunEvidence({
       ledgerEvidence: completion.exact_head_ci,
-      expected: AUTHORITATIVE_WORKFLOWS.mvk,
+      expected: RECOVERY_AUTHORITATIVE_WORKFLOWS.mvk,
       event: 'pull_request',
       headSha: reviewedHead,
       repositoryId: REPOSITORY_ID,
       prNumber: completion.pull_request,
       taskPath: taskPath + '/completion_evidence/exact_head_ci',
       mergedAt: pr?.merged_at,
-      fetchImpl,
+      session: evidenceSession,
     });
     const currentMainRun = await fetchRunEvidence({
       ledgerEvidence: completion.current_main_validation,
-      expected: AUTHORITATIVE_WORKFLOWS.main,
+      expected: RECOVERY_AUTHORITATIVE_WORKFLOWS.main,
       event: 'push',
       headSha: resultingMain,
       repositoryId: REPOSITORY_ID,
       prNumber: completion.pull_request,
       taskPath: taskPath + '/completion_evidence/current_main_validation',
       mergedAt: pr?.merged_at,
-      fetchImpl,
+      session: evidenceSession,
     });
     diagnostics.push(...exactHeadRun.diagnostics, ...currentMainRun.diagnostics);
 
@@ -545,7 +666,7 @@ export async function fetchRecoveryCompletionCapability(
       ...exactHeadRun.responses,
       ...currentMainRun.responses,
     ];
-    diagnostics.push(...responseFreshnessDiagnostics(allResponses, now(), taskPath));
+    diagnostics.push(...responseFreshnessDiagnostics(allResponses, state.now(), taskPath));
 
     const expectedRefs = {
       authoritative_owner_merge: `https://github.com/${REPOSITORY}/pull/${completion.pull_request}`,
@@ -569,17 +690,26 @@ export async function fetchRecoveryCompletionCapability(
 
     const unique = uniqueDiagnostics(diagnostics);
     if (unique.length) return { capability: null, diagnostics: unique };
-    return {
-      capability: mintCapability(ledger, task, {
-        pull_request: completion.pull_request,
-        reviewed_head_sha: reviewedHead,
-        resulting_main_sha: resultingMain,
-        exact_head_run_id: exactHeadRun.descriptor.run_id,
-        current_main_run_id: currentMainRun.descriptor.run_id,
-        observed_at: new Date(now()).toISOString(),
-      }),
-      diagnostics: [],
-    };
+    const workflowSourceReference = (descriptor) => Object.freeze({
+      workflow_id: descriptor.workflow_id,
+      workflow_commit_sha: descriptor.workflow_source_commit_sha,
+      workflow_blob_sha: descriptor.workflow_blob_sha,
+      workflow_final_byte_sha256: descriptor.workflow_final_byte_sha256,
+      workflow_policy_id: descriptor.workflow_policy_id,
+      reference: descriptor.workflow_source_reference,
+    });
+    const capability = mintCapability(ledger, task, {
+      pull_request: completion.pull_request,
+      reviewed_head_sha: reviewedHead,
+      resulting_main_sha: resultingMain,
+      exact_head_run_id: exactHeadRun.descriptor.run_id,
+      current_main_run_id: currentMainRun.descriptor.run_id,
+      exact_head_workflow_source: workflowSourceReference(exactHeadRun.descriptor),
+      current_main_workflow_source: workflowSourceReference(currentMainRun.descriptor),
+      observed_at: new Date(state.now()).toISOString(),
+    });
+    state.capabilityCache.set(capabilityKey, capability);
+    return { capability, diagnostics: [] };
   } catch (error) {
     return {
       capability: null,

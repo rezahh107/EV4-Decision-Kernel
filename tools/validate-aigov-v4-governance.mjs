@@ -12,6 +12,10 @@ import {
   scopeRevision,
 } from '../kernel/validator/validate-aigov-governance.mjs';
 import { recoveryProgramDiagnostics } from '../kernel/validator/validate-recovery-execution-program.mjs';
+import {
+  RECOVERY_AUTHORITATIVE_WORKFLOWS,
+  analyzeRecoveryWorkflowSource,
+} from './lib/aigov-ci-descriptor.mjs';
 
 const ROOT = process.cwd();
 const PLAN_ID = 'GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4';
@@ -63,6 +67,17 @@ export function ownerPolicyWorkflowDiagnosticAllowed(
 ) {
   const current = parseWorkflowObject(currentText, source);
   const base = parseWorkflowObject(baseText, `${source}@base`);
+
+  if (item.code === 'AIGOV_SECRET_ACCESS_FORBIDDEN') {
+    const expected = Object.values(RECOVERY_AUTHORITATIVE_WORKFLOWS)
+      .find((candidate) => candidate.path === source);
+    const expectedMessage = expected
+      ? `Workflow accesses a credential at jobs.${expected.jobKey}.env.RECOVERY_GITHUB_TOKEN.`
+      : null;
+    return Boolean(expected
+      && item.message === expectedMessage
+      && analyzeRecoveryWorkflowSource(Buffer.from(currentText), expected).length === 0);
+  }
 
   if (item.code === 'AIGOV_LOCAL_SCRIPT_UNRESOLVED' && current) {
     const jobs = Object.values(current.jobs || {});

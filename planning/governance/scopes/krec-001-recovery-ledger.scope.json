@@ -8,7 +8,7 @@
   "base_sha": "5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a",
   "head_binding": "derived_at_runtime",
   "change_class": "L3",
-  "scope_revision": "sha256:4820a2350c7ab9e8c57f1f03b7a04989900d406b128743682639e16bc5af1b94",
+  "scope_revision": "sha256:bc060a668c62d5b8d1b2f660ce1539f15b16915d8c78e6ad4dc90a4aec00009b",
   "committed": [
     ".github/workflows/validate-main.yml",
     ".github/workflows/validate-mvk.yml",
@@ -24,8 +24,11 @@
     "planning/coverage/impacts/krec-001.pr52-recovery-ledger.json",
     "planning/governance/scopes/krec-001-recovery-ledger.scope.json",
     "planning/recovery/recovery-ledger.v1.json",
+    "tools/lib/aigov-ci-descriptor.mjs",
+    "tools/test-aigov-v4-hardening.mjs",
     "tools/test-coverage-impact-governance.mjs",
     "tools/test-recovery-ledger-lifecycle.mjs",
+    "tools/validate-aigov-v4-governance.mjs",
     "tools/validate-roadmap-memory-v4-owner-policy.mjs"
   ],
   "excluded": [
@@ -55,11 +58,11 @@
   ],
   "completion_evidence": [
     "schema and cross-carrier semantic validation",
-    "23 deterministic patch fixtures plus 27 focused lifecycle cases",
+    "23 deterministic patch fixtures plus 49 focused lifecycle and workflow-authority cases",
     "focused Recovery ledger lifecycle regression test",
     "exact KREC-001 scope disclosure",
     "Coverage impact preserves null percentages and zero credit",
-    "reviewed Head 935907ade84cd653562129e36446fa4406eb9005 exact-head PR CI succeeded",
+    "reviewed Head 240fa2094005f5494e4823f23c59cdcd9b4ba5ff exact-head PR CI succeeded",
     "owner Merge and current-main validation pending",
     "KREC-001 completion remains unclaimed"
   ],

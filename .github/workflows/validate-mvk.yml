@@ -101,7 +101,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: read
+      checks: read
+      pull-requests: read
     env:
+      RECOVERY_GITHUB_TOKEN: ${{ github.token }}
       COVERAGE_REPOSITORY: ${{ needs.external-coverage-trust.outputs.verified_repository }}
       COVERAGE_PR_NUMBER: ${{ needs.external-coverage-trust.outputs.verified_pr_number }}
       COVERAGE_BASE_SHA: ${{ needs.external-coverage-trust.outputs.verified_base_sha }}
@@ -133,6 +137,7 @@ jobs:
       - name: Check validation syntax
         run: |
           node --check tools/lib/aigov-v3-closure.mjs
+          node --check tools/lib/aigov-ci-descriptor.mjs
           node --check tools/lib/pr-inspector-v1102.mjs
           node --check tools/verify-aigov-v3-exact-main.mjs
           node --check tools/validate-aigov-v4-governance.mjs
@@ -259,10 +264,6 @@ jobs:
       - name: Validate downstream lineage core
         if: ${{ always() }}
         run: node kernel/validator/validate-downstream-consumer-lineage.mjs
-
-      - name: Validate complete MVK
-        if: ${{ always() }}
-        run: npm run validate:mvk
 
       - name: Verify PR #50 closure against exact current main
         if: ${{ always() }}

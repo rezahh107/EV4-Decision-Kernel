@@ -23,9 +23,9 @@ function recoveryCandidateMemoryDiagnostics(value) {
     || !value.includes('open non-Draft PR #52')) {
     diagnostics.push('ROADMAP_RECOVERY_NON_DRAFT_STATE_MISSING');
   }
-  if (!value.includes('KREC-001_reviewed_head_sha: 935907ade84cd653562129e36446fa4406eb9005')
+  if (!value.includes('KREC-001_reviewed_head_sha: 240fa2094005f5494e4823f23c59cdcd9b4ba5ff')
     || !value.includes('KREC-001_reviewed_head_exact_head_ci: green')
-    || !value.includes('Exact-head CI succeeded on reviewed Head `935907ade84cd653562129e36446fa4406eb9005`')) {
+    || !value.includes('Exact-head CI succeeded on reviewed Head `240fa2094005f5494e4823f23c59cdcd9b4ba5ff`')) {
     diagnostics.push('ROADMAP_RECOVERY_REVIEWED_HEAD_CI_MISSING');
   }
   if (value.includes('exact-head CI, owner Merge and completion evidence remain pending')) {

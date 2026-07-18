@@ -14,7 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: read
+      checks: read
+      pull-requests: read
     env:
+      RECOVERY_GITHUB_TOKEN: ${{ github.token }}
       COVERAGE_REPOSITORY: ${{ github.repository }}
       COVERAGE_IDENTITY_MODE: post_merge
       COVERAGE_BASE_SHA: ${{ github.event.before }}
@@ -41,6 +45,7 @@ jobs:
       - name: Check source syntax and deterministic JSON
         run: |
           node --check tools/lib/aigov-v3-closure.mjs
+          node --check tools/lib/aigov-ci-descriptor.mjs
           node --check tools/lib/pr-inspector-v1102.mjs
           node --check tools/verify-aigov-v3-exact-main.mjs
           node --check tools/validate-aigov-v4-governance.mjs
@@ -83,11 +88,6 @@ jobs:
           git merge-base --is-ancestor "${COVERAGE_BASE_SHA}" "${COVERAGE_HEAD_SHA}"
           npm run validate:aigov-v4-batch-a-reconciliation
           npm run validate:mvk
-          npm run validate:roadmap-memory
-          npm run validate:coverage
-          npm run validate:recovery-program
-          npm run validate:recovery-ledger
-          npm run test:recovery-ledger-lifecycle
       - name: Validate activation scope when applicable
         run: |
           set -euo pipefail

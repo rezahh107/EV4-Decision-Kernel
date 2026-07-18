@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import {
   applyFixturePatch,
   fixtureExpectationPass,
@@ -9,9 +10,18 @@ import {
   validateRecoveryLedgerDocument,
 } from '../kernel/validator/validate-recovery-ledger.mjs';
 import {
+  createRecoveryEvidenceSession,
   fetchRecoveryCompletionCapability,
   isRecoveryCompletionCapability,
 } from '../kernel/validator/recovery-completion-evidence.mjs';
+import {
+  RECOVERY_AUTHORITATIVE_WORKFLOWS,
+  analyzeRecoveryWorkflowSource,
+  isVerifiedRecoveryWorkflowSource,
+  verifyRecoveryWorkflowDescriptorPayloads,
+  verifyRecoveryWorkflowSourcePayload,
+  workflowSourceIdentity,
+} from './lib/aigov-ci-descriptor.mjs';
 
 const REPOSITORY = 'rezahh107/EV4-Decision-Kernel';
 const REPOSITORY_ID = 1292378784;
@@ -23,6 +33,9 @@ const EXACT_RUN = 1001;
 const MAIN_RUN = 1002;
 const EXACT_JOB = 2001;
 const MAIN_JOB = 2002;
+const MVK_WORKFLOW_ID = 309028718;
+const MAIN_WORKFLOW_ID = 312952795;
+const TEST_TOKEN = 'test-recovery-installation-token';
 const OBSERVED_AT = '2026-07-18T10:30:00.000Z';
 const MERGED_AT = '2026-07-18T10:10:00.000Z';
 const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
@@ -30,6 +43,10 @@ const ledger = read('planning/recovery/recovery-ledger.v1.json');
 const program = read('planning/recovery/recovery-execution-program.v1.json');
 const schema = read('kernel/schemas/recovery-ledger.v1.schema.json');
 const validFixtures = read('kernel/fixtures/recovery-ledger/valid/cases.json');
+const workflowSources = Object.freeze({
+  '.github/workflows/validate-mvk.yml': readFileSync('.github/workflows/validate-mvk.yml'),
+  '.github/workflows/validate-main.yml': readFileSync('.github/workflows/validate-main.yml'),
+});
 const clone = (value) => structuredClone(value);
 const cases = [];
 const record = (name, pass, diagnostics = []) => cases.push({
@@ -113,7 +130,7 @@ function actionRun({ id, workflowId, name, path, event, headSha, completedAt, jo
 function officialState() {
   const exactRun = actionRun({
     id: EXACT_RUN,
-    workflowId: 501,
+    workflowId: MVK_WORKFLOW_ID,
     name: 'Validate MVK',
     path: '.github/workflows/validate-mvk.yml',
     event: 'pull_request',
@@ -123,7 +140,7 @@ function officialState() {
   });
   const mainRun = actionRun({
     id: MAIN_RUN,
-    workflowId: 502,
+    workflowId: MAIN_WORKFLOW_ID,
     name: 'Validate Main',
     path: '.github/workflows/validate-main.yml',
     event: 'push',
@@ -176,17 +193,14 @@ function officialState() {
     branch: { name: 'main', commit: { sha: MAIN } },
     headToResult: { status: 'ahead' },
     resultToMain: { status: 'identical' },
-    workflows: {
-      'validate-mvk.yml': { id: 501, name: 'Validate MVK', path: '.github/workflows/validate-mvk.yml' },
-      'validate-main.yml': { id: 502, name: 'Validate Main', path: '.github/workflows/validate-main.yml' },
-    },
+    workflowSources: new Map(Object.entries(workflowSources).map(([sourcePath, raw]) => [sourcePath, Buffer.from(raw)])),
     runs: new Map([[EXACT_RUN, exactRun], [MAIN_RUN, mainRun]]),
     jobs: new Map([
-      [EXACT_RUN, [job(exactRun, 'Validate MVK')]],
+      [EXACT_RUN, [job(exactRun, 'MVK and roadmap regressions')]],
       [MAIN_RUN, [job(mainRun, 'Validate Main')]],
     ]),
     checks: new Map([
-      [EXACT_JOB, check(exactRun, 'Validate MVK')],
+      [EXACT_JOB, check(exactRun, 'MVK and roadmap regressions')],
       [MAIN_JOB, check(mainRun, 'Validate Main')],
     ]),
   };
@@ -201,11 +215,36 @@ function response(value, state, status = 200) {
   };
 }
 
-function officialFetch(state, { unavailable = false, nonexistentRun = null } = {}) {
-  return async (input) => {
+function workflowContentPayload(sourcePath, raw) {
+  const identity = workflowSourceIdentity(raw);
+  return {
+    type: 'file',
+    encoding: 'base64',
+    path: sourcePath,
+    name: sourcePath.split('/').at(-1),
+    size: identity.size,
+    sha: identity.blob_sha,
+    content: Buffer.from(raw).toString('base64'),
+  };
+}
+
+function officialFetch(state, {
+  unavailable = false,
+  nonexistentRun = null,
+  statusForPath = null,
+  requests = null,
+  authObservations = null,
+} = {}) {
+  return async (input, init = {}) => {
     if (unavailable) throw new Error('simulated GitHub API outage');
     const url = new URL(input);
     const path = url.pathname;
+    requests?.push(`${path}${url.search}`);
+    const authenticated = init?.headers?.Authorization === `Bearer ${TEST_TOKEN}`;
+    authObservations?.push(authenticated);
+    if (!authenticated) return response({}, state, 401);
+    const forcedStatus = typeof statusForPath === 'function' ? statusForPath(url) : null;
+    if (Number.isInteger(forcedStatus)) return response({}, state, forcedStatus);
     if (path === `/repos/${REPOSITORY}`) return response(state.repository, state);
     if (/\/pulls\/\d+$/.test(path)) return response(state.pullRequest, state);
     if (path.endsWith(`/commits/${HEAD}`)) return response(state.headCommit, state);
@@ -221,8 +260,13 @@ function officialFetch(state, { unavailable = false, nonexistentRun = null } = {
       return response(state.headToResult, state);
     }
     if (/\/compare\/[0-9a-f]{40}\.\.\.main$/.test(path)) return response(state.resultToMain, state);
-    const workflowMatch = path.match(/\/actions\/workflows\/([^/]+)$/);
-    if (workflowMatch) return response(state.workflows[decodeURIComponent(workflowMatch[1])], state);
+    const sourceMatch = path.match(/\/contents\/(.+)$/);
+    if (sourceMatch) {
+      const sourcePath = sourceMatch[1].split('/').map(decodeURIComponent).join('/');
+      const raw = state.workflowSources.get(sourcePath);
+      if (!raw) return response({}, state, 404);
+      return response(workflowContentPayload(sourcePath, raw), state);
+    }
     if (path.endsWith('/actions/runs')) {
       const event = url.searchParams.get('event');
       return response({
@@ -243,6 +287,35 @@ function officialFetch(state, { unavailable = false, nonexistentRun = null } = {
   };
 }
 
+function mutatedWorkflow(key, mutate) {
+  const expected = RECOVERY_AUTHORITATIVE_WORKFLOWS[key];
+  const document = parseYaml(workflowSources[expected.path].toString('utf8'));
+  mutate(document, expected);
+  return Buffer.from(stringifyYaml(document));
+}
+
+function workflowCommandCount(key, command) {
+  const expected = RECOVERY_AUTHORITATIVE_WORKFLOWS[key];
+  const document = parseYaml(workflowSources[expected.path].toString('utf8'));
+  const job = document.jobs?.[expected.jobKey];
+  return (job?.steps || [])
+    .flatMap((step) => String(step?.run || '').replaceAll('\r\n', '\n').split('\n'))
+    .filter((line) => line.trim() === command).length;
+}
+
+function verifiedSourceFor(key, commitSha) {
+  const expected = RECOVERY_AUTHORITATIVE_WORKFLOWS[key];
+  const payload = workflowContentPayload(expected.path, workflowSources[expected.path]);
+  return verifyRecoveryWorkflowSourcePayload({
+    repository: REPOSITORY,
+    repositoryId: REPOSITORY_ID,
+    commitSha,
+    expected,
+    contentPayload: payload,
+    sourceApiUrl: `https://api.github.com/repos/${REPOSITORY}/contents/${expected.path}?ref=${commitSha}`,
+  });
+}
+
 async function verifyScenario(name, mutateLedger, mutateState, expectedDiagnosticId, options = {}) {
   const value = completedLedger();
   const state = officialState();
@@ -250,6 +323,7 @@ async function verifyScenario(name, mutateLedger, mutateState, expectedDiagnosti
   mutateState?.(state, value);
   const result = await fetchRecoveryCompletionCapability(value, 'KREC-001', {
     fetchImpl: officialFetch(state, options),
+    token: TEST_TOKEN,
     now: () => Date.parse(OBSERVED_AT),
   });
   record(name, !result.capability && has(result.diagnostics, expectedDiagnosticId), result.diagnostics);
@@ -317,6 +391,7 @@ const complete = completedLedger();
 const official = officialState();
 const verified = await fetchRecoveryCompletionCapability(complete, 'KREC-001', {
   fetchImpl: officialFetch(official),
+  token: TEST_TOKEN,
   now: () => Date.parse(OBSERVED_AT),
 });
 const capabilities = new Map([['KREC-001', verified.capability]]);
@@ -357,6 +432,112 @@ record(
   reboundDiagnostics,
 );
 
+for (const [name, key, mutate, expectedDiagnostic] of [
+  [
+    'same workflow metadata with Recovery validator command removed is rejected structurally',
+    'mvk',
+    (document) => {
+      const step = document.jobs['regression-validation'].steps
+        .find((item) => item.name === 'Validate Recovery lifecycle');
+      step.run = step.run.replace('npm run validate:recovery-ledger\n', '');
+    },
+    'AIGOV_RECOVERY_WORKFLOW_VALIDATOR_COMMAND_MISMATCH',
+  ],
+  [
+    'same workflow metadata with Recovery validator command replaced by true is rejected',
+    'mvk',
+    (document) => {
+      const step = document.jobs['regression-validation'].steps
+        .find((item) => item.name === 'Validate Recovery lifecycle');
+      step.run = step.run.replace('npm run validate:recovery-ledger', 'true');
+    },
+    'AIGOV_RECOVERY_WORKFLOW_VALIDATOR_COMMAND_MISMATCH',
+  ],
+  [
+    'external trust dependency removal is rejected structurally',
+    'mvk',
+    (document) => { document.jobs['regression-validation'].needs = ['validate-mvk']; },
+    'AIGOV_RECOVERY_WORKFLOW_JOB_DEPENDENCY_MISMATCH',
+  ],
+  [
+    'expected Recovery job replaced by a no-op job is rejected',
+    'mvk',
+    (document) => {
+      document.jobs['regression-validation'].steps = [{
+        name: 'Validate Recovery lifecycle',
+        run: 'true',
+      }];
+    },
+    'AIGOV_RECOVERY_WORKFLOW_VALIDATOR_COMMAND_MISMATCH',
+  ],
+]) {
+  const diagnostics = analyzeRecoveryWorkflowSource(
+    mutatedWorkflow(key, mutate),
+    RECOVERY_AUTHORITATIVE_WORKFLOWS[key],
+  );
+  record(name, diagnostics.includes(expectedDiagnostic));
+}
+
+for (const key of ['mvk', 'main']) {
+  const tokenDiagnostics = analyzeRecoveryWorkflowSource(
+    mutatedWorkflow(key, (document, expected) => {
+      delete document.jobs[expected.jobKey].env.RECOVERY_GITHUB_TOKEN;
+    }),
+    RECOVERY_AUTHORITATIVE_WORKFLOWS[key],
+  );
+  record(
+    `${key} workflow without RECOVERY_GITHUB_TOKEN wiring is rejected`,
+    tokenDiagnostics.includes('AIGOV_RECOVERY_WORKFLOW_TOKEN_WIRING_MISSING'),
+  );
+  for (const permission of ['actions', 'checks', 'pull-requests']) {
+    const permissionDiagnostics = analyzeRecoveryWorkflowSource(
+      mutatedWorkflow(key, (document, expected) => {
+        delete document.jobs[expected.jobKey].permissions[permission];
+      }),
+      RECOVERY_AUTHORITATIVE_WORKFLOWS[key],
+    );
+    record(
+      `${key} workflow without ${permission}: read is rejected`,
+      permissionDiagnostics.includes('AIGOV_RECOVERY_WORKFLOW_API_PERMISSIONS_MISMATCH'),
+    );
+  }
+}
+
+record(
+  'workflow command graph performs each Recovery live-validation path once',
+  workflowCommandCount('mvk', 'npm run validate:recovery-ledger') === 1
+    && workflowCommandCount('mvk', 'npm run validate:mvk') === 0
+    && workflowCommandCount('main', 'npm run validate:mvk') === 1
+    && workflowCommandCount('main', 'npm run validate:recovery-ledger') === 0,
+);
+
+const sourceCapability = verifiedSourceFor('mvk', HEAD);
+const sourceState = officialState();
+const serializedSource = JSON.parse(JSON.stringify(sourceCapability.evidence));
+const serializedSourceDescriptor = verifyRecoveryWorkflowDescriptorPayloads({
+  source: serializedSource,
+  repository: REPOSITORY,
+  repositoryId: REPOSITORY_ID,
+  exactHeadSha: HEAD,
+  event: 'pull_request',
+  expected: RECOVERY_AUTHORITATIVE_WORKFLOWS.mvk,
+  runs: [sourceState.runs.get(EXACT_RUN)],
+  allRepositoryRuns: [sourceState.runs.get(EXACT_RUN)],
+  jobs: sourceState.jobs.get(EXACT_RUN),
+  checkRuns: [sourceState.checks.get(EXACT_JOB)],
+  expectedRunId: EXACT_RUN,
+  jobsRunId: EXACT_RUN,
+});
+record(
+  'serialized workflow-source capability lookalike cannot verify a run',
+  sourceCapability.diagnostics.length === 0
+    && isVerifiedRecoveryWorkflowSource(sourceCapability.evidence)
+    && serializedSourceDescriptor.evidence === null
+    && serializedSourceDescriptor.diagnostics.includes(
+      'AIGOV_RECOVERY_WORKFLOW_SOURCE_CAPABILITY_REQUIRED',
+    ),
+);
+
 await verifyScenario(
   'correctly shaped nonexistent Actions URL is unavailable',
   (value) => {
@@ -394,6 +575,29 @@ await verifyScenario(
     run.path = '.github/workflows/lookalike.yml';
   },
   'RECOVERY_LEDGER_EXACT_HEAD_RUN_UNVERIFIED',
+);
+await verifyScenario(
+  'workflow content change with identical path name and App cannot mint completion',
+  null,
+  (state) => {
+    const sourcePath = RECOVERY_AUTHORITATIVE_WORKFLOWS.mvk.path;
+    state.workflowSources.set(sourcePath, Buffer.concat([
+      state.workflowSources.get(sourcePath),
+      Buffer.from('\n'),
+    ]));
+  },
+  'RECOVERY_LEDGER_WORKFLOW_SOURCE_UNVERIFIED',
+);
+await verifyScenario(
+  'workflow digest from another commit or repository source cannot mint completion',
+  null,
+  (state) => {
+    state.workflowSources.set(
+      RECOVERY_AUTHORITATIVE_WORKFLOWS.mvk.path,
+      state.workflowSources.get(RECOVERY_AUTHORITATIVE_WORKFLOWS.main.path),
+    );
+  },
+  'RECOVERY_LEDGER_WORKFLOW_SOURCE_UNVERIFIED',
 );
 await verifyScenario(
   'wrong GitHub App producer cannot mint completion',
@@ -467,6 +671,112 @@ await verifyScenario(
   { unavailable: true },
 );
 
+for (const status of [403, 429]) {
+  await verifyScenario(
+    `authenticated GitHub API ${status} response fails closed`,
+    null,
+    null,
+    'RECOVERY_LEDGER_GITHUB_EVIDENCE_UNAVAILABLE',
+    { statusForPath: () => status },
+  );
+}
+
+const missingTokenRequests = [];
+const missingTokenResult = await fetchRecoveryCompletionCapability(completedLedger(), 'KREC-001', {
+  fetchImpl: officialFetch(officialState(), { requests: missingTokenRequests }),
+  token: null,
+  now: () => Date.parse(OBSERVED_AT),
+});
+record(
+  'missing RECOVERY_GITHUB_TOKEN fails closed before an unauthenticated request',
+  !missingTokenResult.capability
+    && has(missingTokenResult.diagnostics, 'RECOVERY_LEDGER_GITHUB_EVIDENCE_UNAVAILABLE')
+    && missingTokenRequests.length === 0,
+  missingTokenResult.diagnostics,
+);
+
+const historicalRequests = [];
+const historicalState = officialState();
+const historicalSession = createRecoveryEvidenceSession({
+  fetchImpl: officialFetch(historicalState, { requests: historicalRequests }),
+  token: TEST_TOKEN,
+  now: () => Date.parse(OBSERVED_AT),
+});
+const historicalResult = await fetchRecoveryCompletionCapability(completedLedger(), 'KREC-001', {
+  session: historicalSession,
+});
+record(
+  'historical completion revalidation does not depend on mutable current workflow metadata',
+  Boolean(historicalResult.capability)
+    && historicalResult.diagnostics.length === 0
+    && historicalRequests.every((requestPath) => !requestPath.includes('/actions/workflows/'))
+    && historicalRequests.some((requestPath) => requestPath.includes(`/contents/${RECOVERY_AUTHORITATIVE_WORKFLOWS.mvk.path}?ref=${HEAD}`))
+    && historicalRequests.some((requestPath) => requestPath.includes(`/contents/${RECOVERY_AUTHORITATIVE_WORKFLOWS.main.path}?ref=${MAIN}`)),
+  historicalResult.diagnostics,
+);
+
+const cachedRequests = [];
+const authObservations = [];
+const cachedFetch = officialFetch(officialState(), {
+  requests: cachedRequests,
+  authObservations,
+});
+const cachedSession = createRecoveryEvidenceSession({
+  fetchImpl: cachedFetch,
+  token: TEST_TOKEN,
+  now: () => Date.parse(OBSERVED_AT),
+});
+const cachedLedger = completedLedger();
+const firstCached = await fetchRecoveryCompletionCapability(cachedLedger, 'KREC-001', {
+  session: cachedSession,
+});
+const firstRequestCount = cachedRequests.length;
+const secondCached = await fetchRecoveryCompletionCapability(cachedLedger, 'KREC-001', {
+  session: cachedSession,
+});
+const serializedCacheSurface = JSON.stringify({
+  session: cachedSession,
+  capability: secondCached.capability,
+  diagnostics: secondCached.diagnostics,
+});
+record(
+  'repeated invocation reuses exact-bound sealed evidence without exposing the token',
+  Boolean(firstCached.capability)
+    && firstCached.capability === secondCached.capability
+    && cachedRequests.length === firstRequestCount
+    && authObservations.length > 0
+    && authObservations.every(Boolean)
+    && !serializedCacheSurface.includes(TEST_TOKEN),
+  [...firstCached.diagnostics, ...secondCached.diagnostics],
+);
+
+const sharedLedger = completedLedger();
+sharedLedger.tasks[1].lifecycle_state = 'complete';
+sharedLedger.tasks[1].execution_eligibility = 'complete';
+sharedLedger.tasks[1].candidate = clone(sharedLedger.tasks[0].candidate);
+sharedLedger.tasks[1].completion_evidence = clone(sharedLedger.tasks[0].completion_evidence);
+const sharedRequests = [];
+const sharedSession = createRecoveryEvidenceSession({
+  fetchImpl: officialFetch(officialState(), { requests: sharedRequests }),
+  token: TEST_TOKEN,
+  now: () => Date.parse(OBSERVED_AT),
+});
+const sharedFirst = await fetchRecoveryCompletionCapability(sharedLedger, 'KREC-001', {
+  session: sharedSession,
+});
+const sharedCount = sharedRequests.length;
+const sharedSecond = await fetchRecoveryCompletionCapability(sharedLedger, 'KREC-002', {
+  session: sharedSession,
+});
+record(
+  'two complete tasks sharing runs do not duplicate repository workflow run job or check retrieval',
+  Boolean(sharedFirst.capability)
+    && Boolean(sharedSecond.capability)
+    && sharedRequests.length === sharedCount
+    && new Set(sharedRequests).size === sharedRequests.length,
+  [...sharedFirst.diagnostics, ...sharedSecond.diagnostics],
+);
+
 const locallyCoherent = completedLedger();
 locallyCoherent.tasks[0].completion_evidence.reviewed_head_sha = '5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a';
 locallyCoherent.tasks[0].completion_evidence.resulting_main_sha = '5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a';
@@ -475,6 +785,7 @@ locallyCoherent.tasks[0].completion_evidence.current_main_validation.head_sha = 
 const localDiagnostics = repositoryCompletionDiagnostics(locallyCoherent);
 const unavailableLocal = await fetchRecoveryCompletionCapability(locallyCoherent, 'KREC-001', {
   fetchImpl: officialFetch(officialState(), { unavailable: true }),
+  token: TEST_TOKEN,
   now: () => Date.parse(OBSERVED_AT),
 });
 record(
