@@ -8,6 +8,7 @@ const intrinsicCall = Function.prototype.call;
 const intrinsicBind = Function.prototype.bind;
 const bindIntrinsic = intrinsicCall.bind(intrinsicBind);
 const uncurryThis = (method) => bindIntrinsic(intrinsicCall, method);
+const functionHasInstance = uncurryThis(Function.prototype[Symbol.hasInstance]);
 
 const reflectApply = bindIntrinsic(Reflect.apply, Reflect);
 const objectFreeze = bindIntrinsic(Object.freeze, Object);
@@ -78,7 +79,10 @@ const bufferToString = uncurryThis(NodeBuffer.prototype.toString);
 const eventEmitMethod = EventEmitter.prototype.emit;
 const eventEmit = uncurryThis(eventEmitMethod);
 const eventOn = uncurryThis(EventEmitter.prototype.on);
-const readableOn = uncurryThis(Readable.prototype.on);
+const readableOnMethod = uncurryThis(Readable.prototype.on);
+const readableOn = (instance, event, listener) => functionHasInstance(Readable, instance)
+  ? readableOnMethod(instance, event, listener)
+  : eventOn(instance, event, listener);
 const clientRequestSetTimeout = uncurryThis(ClientRequest.prototype.setTimeout);
 const clientRequestEnd = uncurryThis(ClientRequest.prototype.end);
 const clientRequestDestroy = uncurryThis(ClientRequest.prototype.destroy);
@@ -168,6 +172,7 @@ export const recoveryPrimordials = objectFreeze({
   intrinsicBind,
   bindIntrinsic,
   uncurryThis,
+  functionHasInstance,
   reflectApply,
   objectFreeze,
   objectCreate,

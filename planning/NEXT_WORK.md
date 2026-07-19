@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-PR #50 is merged at `435add8ee3f3274f781b6e391f11e3262e380c4e`. AIGOV Batch B remains closed under the owner-approved sequence. The Recovery Program is active, and open non-Draft PR #52 is the bounded `KREC-001` candidate. Security repairs for `PRF-052-010` and `PRF-052-011` are implemented on the candidate branch and require fresh exact-head CI plus fresh advisory rereview; this remains candidate evidence and creates no completion, Coverage, readiness, product, external-repository or KROAD supersession effects.
+PR #50 is merged at `435add8ee3f3274f781b6e391f11e3262e380c4e`. AIGOV Batch B remains closed under the owner-approved sequence. The Recovery Program is active, and open non-Draft PR #52 is the bounded `KREC-001` candidate. Exact-head CI succeeded on reviewed Head `240fa2094005f5494e4823f23c59cdcd9b4ba5ff`; this remains candidate evidence and creates no completion, Coverage, readiness, product, external-repository or KROAD supersession effects.
 
 ## Status Authority
 
@@ -57,8 +57,8 @@ recovery:
   KREC-001_candidate_branch: krec-001/recovery-ledger
   KREC-001_candidate_pr: 52
   KREC-001_candidate_pr_state: non_draft_open
-  KREC-001_reviewed_head_sha: pending_fresh_exact_head_resolution
-  KREC-001_reviewed_head_exact_head_ci: pending_after_prf_052_010_011_repair
+  KREC-001_reviewed_head_sha: 240fa2094005f5494e4823f23c59cdcd9b4ba5ff
+  KREC-001_reviewed_head_exact_head_ci: green
   KREC-001_completion_evidence: null
   KREC-002_execution_eligibility: dependency_blocked
   KREC-004_execution_eligibility: dependency_blocked
@@ -81,7 +81,7 @@ kroad_supersession_effect: none
 
 current_work_package_id: KREC-001
 
-`KREC-001` uses `create_new_candidate` on `krec-001/recovery-ledger`. Open non-Draft PR #52 targets exact base `5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a`. Repairs for `PRF-052-010` and `PRF-052-011` are present on the candidate branch; final exact Head, exact-head CI, owner Merge, method-aware resulting-main proof and current-main validation remain pending.
+`KREC-001` uses `create_new_candidate` on `krec-001/recovery-ledger`. Open non-Draft PR #52 targets exact base `5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a`. Exact-head CI succeeded on reviewed Head `240fa2094005f5494e4823f23c59cdcd9b4ba5ff`; owner Merge, method-aware resulting-main proof, and current-main validation remain pending.
 
 - [ ] `DCOV-EXEC-001` — Coverage Guarantee proposal and validation foundation
   - `implementation_eligibility`: `blocked_pending_external_governance_approval`
