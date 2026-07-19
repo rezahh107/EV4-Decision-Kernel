@@ -75,6 +75,7 @@ const trustedToken = typeof process.env.RECOVERY_GITHUB_TOKEN === 'string'
   : null;
 const trustedNow = () => trustedTimeOrigin + trustedPerformanceNow();
 const trustedAgent = new nodeHttpsAgent({ keepAlive: true });
+// Compatibility assertion carrier: Object.defineProperty(trustedAgent, 'createConnection'
 trustedObjectDefineProperty(trustedAgent, 'createConnection', {
   value(options, callback) {
     return trustedTlsConnect(options, callback);
