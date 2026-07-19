@@ -35,7 +35,7 @@
     "validate:behavioral-coverage:strict": "node tools/audit-behavioral-coverage.mjs --mode strict",
     "validate:behavioral-coverage:aigov": "node tools/audit-behavioral-coverage.mjs --mode advisory --rule-prefix AIGOV- --no-write",
     "test:coverage-impact-governance": "node tools/test-coverage-impact-governance.mjs",
-    "test:recovery-node-security": "node tools/test-recovery-completion-node-transport-and-hash.mjs && node tools/test-recovery-completion-readable-dependencies.mjs && node tools/test-recovery-completion-isolation-boundary.mjs"
+    "test:recovery-node-security": "report=\"$RUNNER_TEMP/aigov-owner-policy-report.json\"; : > \"$report\"; final=0; for test in tools/test-recovery-completion-node-transport-and-hash.mjs tools/test-recovery-completion-readable-dependencies.mjs tools/test-recovery-completion-isolation-boundary.mjs; do printf '=== %s ===\\n' \"$test\" >> \"$report\"; if node \"$test\" >> \"$report\" 2>&1; then status=0; else status=$?; final=1; fi; printf 'status=%s\\n' \"$status\" >> \"$report\"; done; exit \"$final\""
   },
   "dependencies": {
     "ajv": "8.17.1",
