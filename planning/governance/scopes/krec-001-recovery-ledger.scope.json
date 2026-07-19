@@ -8,7 +8,7 @@
   "base_sha": "5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a",
   "head_binding": "derived_at_runtime",
   "change_class": "L3",
-  "scope_revision": "sha256:57c2b57527988ebb40205872d07440f0c8d22d81436069851cb27ca9b512a199",
+  "scope_revision": "sha256:57159b202121b1f8938d3b3789d0c2afd1d1e74ff9ae93f779345cb5eb853bd0",
   "committed": [
     ".github/workflows/validate-main.yml",
     ".github/workflows/validate-mvk.yml",
@@ -33,6 +33,7 @@
     "tools/test-coverage-impact-governance.mjs",
     "tools/test-recovery-completion-intrinsics.mjs",
     "tools/test-recovery-completion-node-transport-and-hash.mjs",
+    "tools/test-recovery-completion-readable-dependencies.mjs",
     "tools/test-recovery-completion-transitive-intrinsics.mjs",
     "tools/test-recovery-ledger-lifecycle.mjs",
     "tools/validate-aigov-v4-governance.mjs",
@@ -66,7 +67,7 @@
   ],
   "completion_evidence": [
     "schema and cross-carrier semantic validation",
-    "23 deterministic patch fixtures plus 68 focused lifecycle and workflow-authority cases plus 19 direct authority intrinsic cases using a compatible lower transport fixture plus 34 combined real production-graph transitive, real Node transport and hash-substitution cases",
+    "23 deterministic patch fixtures plus 68 focused lifecycle and workflow-authority cases plus 19 direct authority intrinsic cases using a compatible lower transport fixture plus 24 real production-graph transitive cases plus 19 real Node transport, readable-dependency and hash-substitution cases",
     "focused Recovery ledger lifecycle regression test",
     "exact KREC-001 scope disclosure",
     "Coverage impact preserves null percentages and zero credit",
