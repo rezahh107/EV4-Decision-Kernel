@@ -80,13 +80,6 @@ const eventEmitMethod = EventEmitter.prototype.emit;
 const eventEmit = uncurryThis(eventEmitMethod);
 const eventOn = uncurryThis(EventEmitter.prototype.on);
 const eventListenerCount = uncurryThis(EventEmitter.prototype.listenerCount);
-const readableOnMethod = Readable.prototype.on;
-objectDefineProperty(Readable.prototype, 'on', {
-  get() { return readableOnMethod; },
-  set() { /* authority initialization seals the transitive listener entrypoint */ },
-  configurable: false,
-  enumerable: false,
-});
 const readableResumeMethod = Readable.prototype.resume;
 const readableResume = uncurryThis(readableResumeMethod);
 const clientRequestSetTimeout = uncurryThis(ClientRequest.prototype.setTimeout);
