@@ -23,7 +23,7 @@
     "validate:recovery-program": "node kernel/validator/validate-recovery-execution-program.mjs",
     "test:recovery-lifecycle": "node tools/test-recovery-program-lifecycle.mjs",
     "validate:recovery-ledger": "node kernel/validator/validate-recovery-ledger.mjs",
-    "test:recovery-ledger-lifecycle": "node tools/test-recovery-ledger-lifecycle.mjs && node tools/test-recovery-completion-intrinsics.mjs && node tools/test-recovery-completion-transitive-intrinsics.mjs && npm run test:recovery-node-security",
+    "test:recovery-ledger-lifecycle": "sh -c 'report=\"$RUNNER_TEMP/aigov-owner-policy-report.json\"; : > \"$report\"; rc=0; for f in tools/test-recovery-ledger-lifecycle.mjs tools/test-recovery-completion-intrinsics.mjs tools/test-recovery-completion-transitive-intrinsics.mjs tools/test-recovery-completion-node-transport-and-hash.mjs tools/test-recovery-completion-readable-dependencies.mjs; do echo \"=== $f ===\" >> \"$report\"; node \"$f\" >> \"$report\" 2>&1; status=$?; echo \"status=$status\" >> \"$report\"; if [ $status -ne 0 ]; then rc=1; fi; done; cat \"$report\"; exit $rc'",
     "aigov:scope-disclosure:batch-b": "node tools/generate-aigov-v3-batch-b-scope.mjs",
     "verify:aigov-main": "node tools/verify-aigov-v3-exact-main.mjs",
     "validate:aigov-v4-batch-a-reconciliation": "node tools/verify-aigov-v3-exact-main.mjs --mode batch-a-v4-reconcile --exception-plan-id GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4 --pr-number 49 --base-sha 5ff5d7b20db11af36ab787eb8ac2d1127ea74644 --head-sha c141923bf411f802f1673acf06dc92a77b415593 --merge-commit-sha 86e25a9073df7e257ca7df799de85baf9b3fafb0",
