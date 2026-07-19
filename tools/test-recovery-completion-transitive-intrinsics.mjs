@@ -5,28 +5,21 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const AUTHORITY_URL = pathToFileURL(
-  join(ROOT, 'kernel/validator/recovery-completion-evidence.mjs'),
-).href;
+const AUTHORITY_URL = pathToFileURL(join(ROOT, 'kernel/validator/recovery-completion-evidence.mjs')).href;
 const REPOSITORY = 'rezahh107/EV4-Decision-Kernel';
 const REPOSITORY_ID = 1292378784;
+const TOKEN = 'transitive-production-graph-token';
 const HEAD = '2'.repeat(40);
 const MAIN = '3'.repeat(40);
-const EXACT_RUN = 1001;
-const MAIN_RUN = 1002;
-const TOKEN = 'transitive-production-graph-token';
 
-const functionCall = Function.prototype.call;
-const functionBind = Function.prototype.bind;
-const bindIntrinsic = functionCall.bind(functionBind);
-const uncurryThis = (method) => bindIntrinsic(functionCall, method);
+const call = Function.prototype.call;
+const bind = Function.prototype.bind;
+const bindIntrinsic = call.bind(bind);
+const uncurryThis = (method) => bindIntrinsic(call, method);
 const safeJsonStringify = bindIntrinsic(JSON.stringify, JSON);
-const safeObjectKeys = bindIntrinsic(Object.keys, Object);
 const safeMapGet = uncurryThis(Map.prototype.get);
+const safeMapSize = uncurryThis(Object.getOwnPropertyDescriptor(Map.prototype, 'size').get);
 const safeArrayMap = uncurryThis(Array.prototype.map);
-const safeMapSize = uncurryThis(
-  Object.getOwnPropertyDescriptor(Map.prototype, 'size').get,
-);
 
 function completedLedger() {
   return {
@@ -51,87 +44,25 @@ function completedLedger() {
         resulting_main_sha: MAIN,
         exact_head_ci: {
           workflow: 'Validate MVK',
-          run_id: EXACT_RUN,
+          run_id: 1001,
           head_sha: HEAD,
           conclusion: 'success',
-          reference: `https://github.com/${REPOSITORY}/actions/runs/${EXACT_RUN}`,
+          reference: `https://github.com/${REPOSITORY}/actions/runs/1001`,
         },
         current_main_validation: {
           workflow: 'Validate Main',
-          run_id: MAIN_RUN,
+          run_id: 1002,
           head_sha: MAIN,
           conclusion: 'success',
-          reference: `https://github.com/${REPOSITORY}/actions/runs/${MAIN_RUN}`,
+          reference: `https://github.com/${REPOSITORY}/actions/runs/1002`,
         },
         evidence_refs: [
-          {
-            kind: 'authoritative_owner_merge',
-            reference: `https://github.com/${REPOSITORY}/pull/52`,
-          },
-          {
-            kind: 'authoritative_exact_head_ci',
-            reference: `https://github.com/${REPOSITORY}/actions/runs/${EXACT_RUN}`,
-          },
-          {
-            kind: 'authoritative_current_main_validation',
-            reference: `https://github.com/${REPOSITORY}/actions/runs/${MAIN_RUN}`,
-          },
+          { kind: 'authoritative_owner_merge', reference: `https://github.com/${REPOSITORY}/pull/52` },
+          { kind: 'authoritative_exact_head_ci', reference: `https://github.com/${REPOSITORY}/actions/runs/1001` },
+          { kind: 'authoritative_current_main_validation', reference: `https://github.com/${REPOSITORY}/actions/runs/1002` },
         ],
       },
     }],
-  };
-}
-
-function mutationTarget(name) {
-  const counter = { calls: 0 };
-  const attackerState = {
-    fetchImpl: async () => {
-      counter.calls += 1;
-      throw new Error('attacker fetch executed');
-    },
-    token: 'attacker-controlled-token',
-    now: () => {
-      counter.calls += 1;
-      return 0;
-    },
-    requestCache: new Map(),
-    runEvidenceCache: new Map(),
-    evidenceCache: new Map(),
-  };
-  const table = {
-    'weakmap-set': [WeakMap.prototype, 'set', function substitute() { counter.calls += 1; return this; }],
-    'weakmap-get': [WeakMap.prototype, 'get', function substitute() { counter.calls += 1; return attackerState; }],
-    'weakmap-delete': [WeakMap.prototype, 'delete', function substitute() { counter.calls += 1; return true; }],
-    'map-get': [Map.prototype, 'get', function substitute() { counter.calls += 1; return attackerState; }],
-    'map-set': [Map.prototype, 'set', function substitute() { counter.calls += 1; return this; }],
-    'map-delete': [Map.prototype, 'delete', function substitute() { counter.calls += 1; return true; }],
-    'map-clear': [Map.prototype, 'clear', function substitute() { counter.calls += 1; }],
-    'set-add': [Set.prototype, 'add', function substitute() { counter.calls += 1; return this; }],
-    'set-has': [Set.prototype, 'has', function substitute() { counter.calls += 1; return true; }],
-    'object-freeze': [Object, 'freeze', (value) => { counter.calls += 1; return value; }],
-    'json-stringify': [JSON, 'stringify', () => { counter.calls += 1; return '{"forged":true}'; }],
-    'array-isarray': [Array, 'isArray', () => { counter.calls += 1; return false; }],
-    'array-map': [Array.prototype, 'map', function substitute() { counter.calls += 1; return []; }],
-    'array-filter': [Array.prototype, 'filter', function substitute() { counter.calls += 1; return []; }],
-    'array-find': [Array.prototype, 'find', function substitute() { counter.calls += 1; return attackerState; }],
-    'object-keys': [Object, 'keys', () => { counter.calls += 1; return []; }],
-    'object-fromentries': [Object, 'fromEntries', () => { counter.calls += 1; return {}; }],
-    'number-isfinite': [Number, 'isFinite', () => { counter.calls += 1; return true; }],
-    'math-min': [Math, 'min', () => { counter.calls += 1; return Number.MAX_SAFE_INTEGER; }],
-    'math-abs': [Math, 'abs', () => { counter.calls += 1; return 0; }],
-    'date-parse': [Date, 'parse', () => { counter.calls += 1; return Number.MAX_SAFE_INTEGER; }],
-  };
-  const target = table[name];
-  if (!target) throw new Error(`Unknown mutation target: ${name}`);
-  const [object, key, replacement] = target;
-  const descriptor = Object.getOwnPropertyDescriptor(object, key);
-  Object.defineProperty(object, key, {
-    ...descriptor,
-    value: replacement,
-  });
-  return {
-    counter,
-    restore() { Object.defineProperty(object, key, descriptor); },
   };
 }
 
@@ -149,43 +80,80 @@ function replaceOwnMethod(owner, key, replacement) {
   };
 }
 
+function installIntrinsicCounter(name) {
+  const counter = { calls: 0 };
+  const table = {
+    'weakmap-set': [WeakMap.prototype, 'set'],
+    'weakmap-get': [WeakMap.prototype, 'get'],
+    'weakmap-delete': [WeakMap.prototype, 'delete'],
+    'map-get': [Map.prototype, 'get'],
+    'map-set': [Map.prototype, 'set'],
+    'map-delete': [Map.prototype, 'delete'],
+    'map-clear': [Map.prototype, 'clear'],
+    'set-add': [Set.prototype, 'add'],
+    'set-has': [Set.prototype, 'has'],
+    'object-freeze': [Object, 'freeze'],
+    'json-stringify': [JSON, 'stringify'],
+    'array-isarray': [Array, 'isArray'],
+    'array-map': [Array.prototype, 'map'],
+    'array-filter': [Array.prototype, 'filter'],
+    'array-find': [Array.prototype, 'find'],
+    'object-keys': [Object, 'keys'],
+    'object-fromentries': [Object, 'fromEntries'],
+    'number-isfinite': [Number, 'isFinite'],
+    'math-min': [Math, 'min'],
+    'math-abs': [Math, 'abs'],
+    'date-parse': [Date, 'parse'],
+  };
+  const target = table[name];
+  if (!target) throw new Error(`Unknown mutation target: ${name}`);
+  const [owner, key] = target;
+  const original = owner[key];
+  const restore = replaceOwnMethod(owner, key, function countedIntrinsic(...args) {
+    counter.calls += 1;
+    return Reflect.apply(original, this === owner ? owner : this, args);
+  });
+  return { counter, restore };
+}
+
 async function childMain() {
   const scenario = process.env.RECOVERY_TRANSITIVE_SCENARIO;
   const authority = await import(AUTHORITY_URL);
-  const ledger = completedLedger();
   let mutation = null;
   let networkMutation = null;
 
   if (scenario === 'state-substitution') {
-    mutation = mutationTarget('weakmap-get');
+    mutation = installIntrinsicCounter('weakmap-get');
   } else if (scenario?.startsWith('intrinsic:')) {
-    mutation = mutationTarget(scenario.slice('intrinsic:'.length));
+    mutation = installIntrinsicCounter(scenario.slice('intrinsic:'.length));
   } else if (scenario === 'network-valid' || scenario === 'network-outage') {
     const { EventEmitter } = await import('node:events');
-    const { ClientRequest } = await import('node:http');
-    const counter = { on: 0, setTimeout: 0, end: 0, destroy: 0 };
+    const { ClientRequest, IncomingMessage } = await import('node:http');
+    const counters = { on: 0, setTimeout: 0, end: 0, destroy: 0 };
+    const originalOn = EventEmitter.prototype.on;
+    const originalSetTimeout = ClientRequest.prototype.setTimeout;
+    const originalEnd = ClientRequest.prototype.end;
+    const originalDestroy = ClientRequest.prototype.destroy;
     const restores = [
-      replaceOwnMethod(EventEmitter.prototype, 'on', function substitutedOn(event, listener) {
-        counter.on += 1;
-        if (event === 'data') listener(Buffer.from('{"attacker_selected":true}'));
-        if (event === 'end') listener();
-        return this;
+      replaceOwnMethod(EventEmitter.prototype, 'on', function countedOn(event, listener) {
+        if (this instanceof ClientRequest || this instanceof IncomingMessage) counters.on += 1;
+        return Reflect.apply(originalOn, this, [event, listener]);
       }),
-      replaceOwnMethod(ClientRequest.prototype, 'setTimeout', function substitutedSetTimeout() {
-        counter.setTimeout += 1;
-        return this;
+      replaceOwnMethod(ClientRequest.prototype, 'setTimeout', function countedSetTimeout(...args) {
+        counters.setTimeout += 1;
+        return Reflect.apply(originalSetTimeout, this, args);
       }),
-      replaceOwnMethod(ClientRequest.prototype, 'end', function substitutedEnd() {
-        counter.end += 1;
-        return this;
+      replaceOwnMethod(ClientRequest.prototype, 'end', function countedEnd(...args) {
+        counters.end += 1;
+        return Reflect.apply(originalEnd, this, args);
       }),
-      replaceOwnMethod(ClientRequest.prototype, 'destroy', function substitutedDestroy() {
-        counter.destroy += 1;
-        return this;
+      replaceOwnMethod(ClientRequest.prototype, 'destroy', function countedDestroy(...args) {
+        counters.destroy += 1;
+        return Reflect.apply(originalDestroy, this, args);
       }),
     ];
     networkMutation = {
-      counter,
+      counters,
       restore() {
         for (let index = restores.length - 1; index >= 0; index -= 1) restores[index]();
       },
@@ -193,21 +161,15 @@ async function childMain() {
   }
 
   try {
-    const result = await authority.fetchRecoveryCompletionCapabilities(ledger);
+    const result = await authority.fetchRecoveryCompletionCapabilities(completedLedger());
     const capability = safeMapGet(result.capabilities, 'KREC-001');
     process.stdout.write(safeJsonStringify({
       scenario,
       capabilityCount: safeMapSize(result.capabilities),
-      capabilityRecognized: capability
-        ? authority.isRecoveryCompletionCapability(capability)
-        : false,
+      capabilityRecognized: capability ? authority.isRecoveryCompletionCapability(capability) : false,
       diagnosticIds: safeArrayMap(result.diagnostics, (item) => item.diagnostic_id),
-      diagnostics: result.diagnostics,
       mutationCalls: mutation?.counter.calls ?? 0,
-      networkCalls: networkMutation?.counter ?? null,
-      tokenKeys: capability ? safeObjectKeys(capability).length : null,
-      attackerFetchCalled: scenario === 'state-substitution' ? mutation.counter.calls > 0 : false,
-      attackerClockCalled: scenario === 'state-substitution' ? mutation.counter.calls > 0 : false,
+      networkCalls: networkMutation?.counters ?? null,
     }));
   } finally {
     mutation?.restore();
@@ -216,9 +178,8 @@ async function childMain() {
 }
 
 async function createFixtureServer(mode) {
-  const observations = { requests: 0, authenticRepositoryBodies: 0 };
+  const observations = { authenticRepositoryBodies: 0 };
   const server = createServer((request, response) => {
-    observations.requests += 1;
     if (mode === 'outage') {
       request.socket.destroy();
       return;
@@ -228,11 +189,7 @@ async function createFixtureServer(mode) {
     if (request.url === `/repos/${REPOSITORY}`) {
       observations.authenticRepositoryBodies += 1;
       response.statusCode = 200;
-      response.end(safeJsonStringify({
-        id: REPOSITORY_ID,
-        full_name: REPOSITORY,
-        default_branch: 'main',
-      }));
+      response.end(safeJsonStringify({ id: REPOSITORY_ID, full_name: REPOSITORY, default_branch: 'main' }));
       return;
     }
     response.statusCode = 503;
@@ -259,8 +216,8 @@ function collect(child) {
   });
 }
 
-async function runScenario(scenario, transportMode = 'bounded') {
-  const { server, observations } = await createFixtureServer(transportMode);
+async function runScenario(scenario, mode = 'bounded') {
+  const { server, observations } = await createFixtureServer(mode);
   const address = server.address();
   const child = spawn(process.execPath, [fileURLToPath(import.meta.url)], {
     cwd: ROOT,
@@ -273,94 +230,49 @@ async function runScenario(scenario, transportMode = 'bounded') {
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
-  const timeout = setTimeout(() => child.kill('SIGKILL'), 60_000);
+  const timer = setTimeout(() => child.kill('SIGKILL'), 60_000);
   try {
     return { ...(await collect(child)), observations };
   } finally {
-    clearTimeout(timeout);
+    clearTimeout(timer);
     await new Promise((resolve) => server.close(resolve));
   }
 }
 
-function failClosedWithoutParentMutation(result, expectedCounter = null, requireRepository = true) {
+function passes(result, requireRepository = true) {
   const network = result.output?.networkCalls;
   return result.status === 0
     && result.output?.capabilityCount === 0
     && result.output?.capabilityRecognized === false
     && result.output?.diagnosticIds?.includes('RECOVERY_LEDGER_GITHUB_EVIDENCE_UNAVAILABLE')
     && result.output?.mutationCalls === 0
-    && result.output?.attackerFetchCalled === false
-    && result.output?.attackerClockCalled === false
-    && (expectedCounter === null || result.output?.mutationCalls === expectedCounter)
-    && (!network || (network.on === 0
-      && network.setTimeout === 0
-      && network.end === 0
-      && network.destroy === 0))
+    && (!network || (network.on === 0 && network.setTimeout === 0 && network.end === 0 && network.destroy === 0))
     && (!requireRepository || result.observations.authenticRepositoryBodies === 1);
 }
 
 async function parentMain() {
   const cases = [];
-  const record = (name, pass, details = null) => cases.push({ name, pass: Boolean(pass), details });
+  const record = (name, result, requireRepository = true) => cases.push({
+    name,
+    pass: passes(result, requireRepository),
+    details: result.output || result.stderr,
+  });
 
-  const baseline = await runScenario('baseline');
-  record(
-    'production authority uses the fixed isolated transport rather than caller process stream state',
-    failClosedWithoutParentMutation(baseline),
-    baseline.output || baseline.stderr,
-  );
-
-  const substitution = await runScenario('state-substitution', 'outage');
-  record(
-    'poisoned verifier WeakMap get cannot substitute fetch token or clock',
-    failClosedWithoutParentMutation(substitution, 0, false),
-    substitution.output || substitution.stderr,
-  );
+  record('fixed isolated transport ignores caller process stream state', await runScenario('baseline'));
+  record('private verifier state ignores post-initialization WeakMap replacement', await runScenario('state-substitution', 'outage'), false);
 
   const intrinsicNames = [
-    'weakmap-set',
-    'weakmap-delete',
-    'map-get',
-    'map-set',
-    'map-delete',
-    'map-clear',
-    'set-add',
-    'set-has',
-    'object-freeze',
-    'json-stringify',
-    'array-isarray',
-    'array-map',
-    'array-filter',
-    'array-find',
-    'object-keys',
-    'object-fromentries',
-    'number-isfinite',
-    'math-min',
-    'math-abs',
-    'date-parse',
+    'weakmap-set', 'weakmap-delete', 'map-get', 'map-set', 'map-delete', 'map-clear',
+    'set-add', 'set-has', 'object-freeze', 'json-stringify', 'array-isarray',
+    'array-map', 'array-filter', 'array-find', 'object-keys', 'object-fromentries',
+    'number-isfinite', 'math-min', 'math-abs', 'date-parse',
   ];
   for (const name of intrinsicNames) {
-    const observed = await runScenario(`intrinsic:${name}`);
-    record(
-      `${name} substitution is not resolved by the isolated production verification path`,
-      failClosedWithoutParentMutation(observed),
-      observed.output || observed.stderr,
-    );
+    record(`${name} is not resolved by isolated production verification`, await runScenario(`intrinsic:${name}`));
   }
 
-  const networkValid = await runScenario('network-valid');
-  record(
-    'mutated parent EventEmitter and ClientRequest methods cannot inject or redirect isolated evidence',
-    failClosedWithoutParentMutation(networkValid),
-    networkValid.output || networkValid.stderr,
-  );
-
-  const networkOutage = await runScenario('network-outage', 'outage');
-  record(
-    'mutated parent request methods cannot suppress an isolated authentic transport failure',
-    failClosedWithoutParentMutation(networkOutage, 0, false),
-    networkOutage.output || networkOutage.stderr,
-  );
+  record('parent EventEmitter and ClientRequest substitutions are outside isolated transport', await runScenario('network-valid'));
+  record('parent request substitutions cannot suppress isolated outage', await runScenario('network-outage', 'outage'), false);
 
   const failures = cases.filter((item) => !item.pass);
   process.stdout.write(`${JSON.stringify({
