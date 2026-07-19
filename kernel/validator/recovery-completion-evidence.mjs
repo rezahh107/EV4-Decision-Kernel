@@ -1,5 +1,4 @@
 import { Buffer as NodeBuffer } from 'node:buffer';
-import { createHash as nodeCreateHash } from 'node:crypto';
 import { Agent as nodeHttpsAgent, request as nodeHttpsRequest } from 'node:https';
 import { performance as nodePerformance } from 'node:perf_hooks';
 import { connect as nodeTlsConnect } from 'node:tls';
@@ -63,11 +62,11 @@ const VERIFIED_COMPLETIONS = new WeakSet();
 const COMPLETION_STATE = new WeakMap();
 
 // Capture production authorities once. Later mutation of globals or environment
-// cannot redirect transport, freeze time, or replace the workflow credential.
+// cannot redirect transport, freeze time, replace the workflow credential, or
+// alter authority-owned request/response event dispatch.
 const trustedDateParse = globalThis.Date.parse.bind(globalThis.Date);
 const trustedHttpsRequest = nodeHttpsRequest;
 const trustedTlsConnect = nodeTlsConnect;
-const trustedCreateHash = nodeCreateHash;
 const trustedPerformanceNow = bindIntrinsic(nodePerformance.now, nodePerformance);
 const trustedTimeOrigin = nodePerformance.timeOrigin;
 const trustedToken = typeof process.env.RECOVERY_GITHUB_TOKEN === 'string'
@@ -76,7 +75,7 @@ const trustedToken = typeof process.env.RECOVERY_GITHUB_TOKEN === 'string'
   : null;
 const trustedNow = () => trustedTimeOrigin + trustedPerformanceNow();
 const trustedAgent = new nodeHttpsAgent({ keepAlive: true });
-Object.defineProperty(trustedAgent, 'createConnection', {
+trustedObjectDefineProperty(trustedAgent, 'createConnection', {
   value(options, callback) {
     return trustedTlsConnect(options, callback);
   },
@@ -96,9 +95,9 @@ const canonical = (value) => {
   }
   return value;
 };
-const bindingSha = (ledger, task) => trustedCreateHash('sha256')
-  .update(trustedJsonStringify(canonical(recoveryCompletionBinding(ledger, task))))
-  .digest('hex');
+const bindingSha = (ledger, task) => p.hashHex('sha256', [
+  trustedJsonStringify(canonical(recoveryCompletionBinding(ledger, task))),
+]);
 
 function trustedGithubFetch(input, init = {}) {
   return new TrustedPromise((resolve, reject) => {
@@ -111,56 +110,75 @@ function trustedGithubFetch(input, init = {}) {
       reject(new TrustedError('GitHub evidence endpoint outside trusted repository boundary'));
       return;
     }
-    const request = trustedHttpsRequest(url, {
-      method: 'GET',
-      headers: init.headers,
-      setHost: true,
-      agent: trustedAgent,
-    }, (response) => {
-      const chunks = [];
-      let size = 0;
-      p.eventOn(response, 'data', (chunk) => {
-        size += chunk.length;
-        if (size > MAX_RESPONSE_BYTES) {
-          p.clientRequestDestroy(
-            request,
-            new TrustedError('GitHub evidence response exceeds bounded capacity'),
-          );
-          return;
-        }
-        trustedArrayPush(chunks, chunk);
-      });
-      p.eventOn(response, 'end', () => {
-        const status = response.statusCode ?? 0;
-        const body = trustedBufferToString(trustedBufferConcat(chunks), 'utf8');
-        let payload = null;
+    let request;
+    const failClosed = (error) => {
+      reject(error instanceof TrustedError ? error : new TrustedError(TrustedString(error)));
+    };
+    try {
+      request = trustedHttpsRequest(url, {
+        method: 'GET',
+        headers: init.headers,
+        setHost: true,
+        agent: trustedAgent,
+      }, (response) => {
         try {
-          payload = body ? trustedJsonParse(body) : null;
-        } catch {
-          reject(new TrustedError(`GitHub API ${status}: invalid JSON response`));
+          p.sealEmitter(response);
+        } catch (error) {
+          p.clientRequestDestroy(request, error);
+          failClosed(error);
           return;
         }
-        resolve({
-          ok: status >= 200 && status < 300,
-          status,
-          headers: {
-            get(name) {
-              if (trustedStringToLowerCase(TrustedString(name)) !== 'date') return null;
-              const value = response.headers.date;
-              return trustedArrayIsArray(value) ? value[0] || null : value || null;
+        const chunks = [];
+        let size = 0;
+        p.readableOn(response, 'data', (chunk) => {
+          size += chunk.length;
+          if (size > MAX_RESPONSE_BYTES) {
+            p.clientRequestDestroy(
+              request,
+              new TrustedError('GitHub evidence response exceeds bounded capacity'),
+            );
+            return;
+          }
+          trustedArrayPush(chunks, chunk);
+        });
+        p.readableOn(response, 'end', () => {
+          const status = response.statusCode ?? 0;
+          const body = trustedBufferToString(trustedBufferConcat(chunks), 'utf8');
+          let payload = null;
+          try {
+            payload = body ? trustedJsonParse(body) : null;
+          } catch {
+            reject(new TrustedError(`GitHub API ${status}: invalid JSON response`));
+            return;
+          }
+          resolve({
+            ok: status >= 200 && status < 300,
+            status,
+            headers: {
+              get(name) {
+                if (trustedStringToLowerCase(TrustedString(name)) !== 'date') return null;
+                const value = response.headers.date;
+                return trustedArrayIsArray(value) ? value[0] || null : value || null;
+              },
             },
-          },
-          json: async () => payload,
+            json: async () => payload,
+          });
         });
       });
-    });
-    p.clientRequestSetTimeout(
-      request,
-      15_000,
-      () => p.clientRequestDestroy(request, new TrustedError('GitHub evidence request timed out')),
-    );
-    p.eventOn(request, 'error', reject);
-    p.clientRequestEnd(request);
+      p.sealEmitter(request);
+      p.clientRequestSetTimeout(
+        request,
+        15_000,
+        () => p.clientRequestDestroy(request, new TrustedError('GitHub evidence request timed out')),
+      );
+      p.eventOn(request, 'error', failClosed);
+      p.clientRequestEnd(request);
+    } catch (error) {
+      if (request) {
+        try { p.clientRequestDestroy(request, error); } catch { /* fail closed below */ }
+      }
+      failClosed(error);
+    }
   });
 }
 

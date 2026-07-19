@@ -1,13 +1,15 @@
 import { Buffer as NodeBuffer } from 'node:buffer';
 import { createHash as nodeCreateHash } from 'node:crypto';
 import { EventEmitter } from 'node:events';
-import { ClientRequest } from 'node:http';
+import { ClientRequest, IncomingMessage } from 'node:http';
+import { Readable } from 'node:stream';
 
 const intrinsicCall = Function.prototype.call;
 const intrinsicBind = Function.prototype.bind;
 const bindIntrinsic = intrinsicCall.bind(intrinsicBind);
 const uncurryThis = (method) => bindIntrinsic(intrinsicCall, method);
 
+const reflectApply = bindIntrinsic(Reflect.apply, Reflect);
 const objectFreeze = bindIntrinsic(Object.freeze, Object);
 const objectCreate = bindIntrinsic(Object.create, Object);
 const objectDefineProperty = bindIntrinsic(Object.defineProperty, Object);
@@ -16,6 +18,7 @@ const objectValues = bindIntrinsic(Object.values, Object);
 const objectFromEntries = bindIntrinsic(Object.fromEntries, Object);
 const objectHasOwn = bindIntrinsic(Object.hasOwn, Object);
 const objectGetOwnPropertyDescriptor = bindIntrinsic(Object.getOwnPropertyDescriptor, Object);
+const objectGetPrototypeOf = bindIntrinsic(Object.getPrototypeOf, Object);
 const jsonParse = bindIntrinsic(JSON.parse, JSON);
 const jsonStringify = bindIntrinsic(JSON.stringify, JSON);
 const arrayIsArray = bindIntrinsic(Array.isArray, Array);
@@ -71,10 +74,63 @@ const bufferIsBuffer = bindIntrinsic(NodeBuffer.isBuffer, NodeBuffer);
 const bufferFrom = bindIntrinsic(NodeBuffer.from, NodeBuffer);
 const bufferConcat = bindIntrinsic(NodeBuffer.concat, NodeBuffer);
 const bufferToString = uncurryThis(NodeBuffer.prototype.toString);
+
+const eventEmitMethod = EventEmitter.prototype.emit;
+const eventEmit = uncurryThis(eventEmitMethod);
 const eventOn = uncurryThis(EventEmitter.prototype.on);
+const readableOn = uncurryThis(Readable.prototype.on);
 const clientRequestSetTimeout = uncurryThis(ClientRequest.prototype.setTimeout);
 const clientRequestEnd = uncurryThis(ClientRequest.prototype.end);
 const clientRequestDestroy = uncurryThis(ClientRequest.prototype.destroy);
+
+function sealEmitter(instance) {
+  objectDefineProperty(instance, 'emit', {
+    value: function sealedAuthorityEmit() {
+      return reflectApply(eventEmitMethod, instance, arguments);
+    },
+    writable: false,
+    configurable: false,
+    enumerable: false,
+  });
+  return instance;
+}
+
+const initializationHash = nodeCreateHash('sha256');
+const hashPrototype = objectGetPrototypeOf(initializationHash);
+const hashUpdate = uncurryThis(hashPrototype.update);
+const hashDigest = uncurryThis(hashPrototype.digest);
+
+function createTrustedHash(algorithm) {
+  const hash = nodeCreateHash(algorithm);
+  const facade = objectCreate(null);
+  objectDefineProperty(facade, 'update', {
+    value(chunk, encoding) {
+      if (encoding === undefined) hashUpdate(hash, chunk);
+      else hashUpdate(hash, chunk, encoding);
+      return facade;
+    },
+    writable: false,
+    configurable: false,
+    enumerable: false,
+  });
+  objectDefineProperty(facade, 'digest', {
+    value(encoding) {
+      return encoding === undefined ? hashDigest(hash) : hashDigest(hash, encoding);
+    },
+    writable: false,
+    configurable: false,
+    enumerable: false,
+  });
+  return objectFreeze(facade);
+}
+
+function hashHex(algorithm, chunks) {
+  const hash = nodeCreateHash(algorithm);
+  for (let index = 0; index < chunks.length; index += 1) {
+    hashUpdate(hash, chunks[index]);
+  }
+  return hashDigest(hash, 'hex');
+}
 
 const NativeDate = globalThis.Date;
 const dateParse = bindIntrinsic(NativeDate.parse, NativeDate);
@@ -90,6 +146,9 @@ const TrustedWeakMap = WeakMap;
 const TrustedWeakSet = WeakSet;
 const TrustedPromise = Promise;
 const TrustedRegExp = RegExp;
+const TrustedClientRequest = ClientRequest;
+const TrustedIncomingMessage = IncomingMessage;
+const TrustedReadable = Readable;
 const trustedEncodeURIComponent = encodeURIComponent;
 
 const canonical = (value) => {
@@ -102,15 +161,14 @@ const canonical = (value) => {
   return value;
 };
 
-const canonicalSha256 = (value) => nodeCreateHash('sha256')
-  .update(jsonStringify(canonical(value)))
-  .digest('hex');
+const canonicalSha256 = (value) => hashHex('sha256', [jsonStringify(canonical(value))]);
 
 export const recoveryPrimordials = objectFreeze({
   intrinsicCall,
   intrinsicBind,
   bindIntrinsic,
   uncurryThis,
+  reflectApply,
   objectFreeze,
   objectCreate,
   objectDefineProperty,
@@ -118,6 +176,7 @@ export const recoveryPrimordials = objectFreeze({
   objectValues,
   objectFromEntries,
   objectHasOwn,
+  objectGetPrototypeOf,
   jsonParse,
   jsonStringify,
   arrayIsArray,
@@ -169,10 +228,16 @@ export const recoveryPrimordials = objectFreeze({
   bufferFrom,
   bufferConcat,
   bufferToString,
+  eventEmit,
   eventOn,
+  readableOn,
+  sealEmitter,
   clientRequestSetTimeout,
   clientRequestEnd,
   clientRequestDestroy,
+  hashUpdate,
+  hashDigest,
+  hashHex,
   NativeDate,
   dateParse,
   dateNow,
@@ -187,8 +252,11 @@ export const recoveryPrimordials = objectFreeze({
   TrustedWeakSet,
   TrustedPromise,
   TrustedRegExp,
+  TrustedClientRequest,
+  TrustedIncomingMessage,
+  TrustedReadable,
   trustedEncodeURIComponent,
   canonical,
   canonicalSha256,
-  createHash: nodeCreateHash,
+  createHash: createTrustedHash,
 });
