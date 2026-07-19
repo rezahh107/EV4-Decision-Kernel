@@ -189,11 +189,13 @@ jobs:
 
       - name: Validate Recovery lifecycle
         if: ${{ always() }}
+        shell: bash
         run: |
-          npm run validate:recovery-program
-          npm run test:recovery-lifecycle
-          npm run validate:recovery-ledger
-          npm run test:recovery-ledger-lifecycle
+          set -o pipefail
+          npm run validate:recovery-program 2>&1 | tee "${RUNNER_TEMP}/recovery-lifecycle.log"
+          npm run test:recovery-lifecycle 2>&1 | tee -a "${RUNNER_TEMP}/recovery-lifecycle.log"
+          npm run validate:recovery-ledger 2>&1 | tee -a "${RUNNER_TEMP}/recovery-lifecycle.log"
+          npm run test:recovery-ledger-lifecycle 2>&1 | tee -a "${RUNNER_TEMP}/recovery-lifecycle.log"
 
       - name: Validate roadmap memory
         if: ${{ always() }}
@@ -282,5 +284,6 @@ jobs:
             ${{ runner.temp }}/krec-001-recovery-ledger-scope.json
             ${{ runner.temp }}/aigov-owner-policy-report.json
             ${{ runner.temp }}/aigov-v4-batch-b-owner-policy-preview.json
+            ${{ runner.temp }}/recovery-lifecycle.log
           if-no-files-found: error
           retention-days: 30
