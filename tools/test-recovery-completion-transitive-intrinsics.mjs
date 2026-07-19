@@ -135,6 +135,20 @@ function mutationTarget(name) {
   };
 }
 
+function replaceOwnMethod(owner, key, replacement) {
+  const descriptor = Object.getOwnPropertyDescriptor(owner, key);
+  Object.defineProperty(owner, key, {
+    configurable: true,
+    enumerable: descriptor?.enumerable ?? false,
+    writable: true,
+    value: replacement,
+  });
+  return () => {
+    if (descriptor) Object.defineProperty(owner, key, descriptor);
+    else delete owner[key];
+  };
+}
+
 async function childMain() {
   const scenario = process.env.RECOVERY_TRANSITIVE_SCENARIO;
   const authority = await import(AUTHORITY_URL);
@@ -150,40 +164,30 @@ async function childMain() {
     const { EventEmitter } = await import('node:events');
     const { ClientRequest } = await import('node:http');
     const counter = { on: 0, setTimeout: 0, end: 0, destroy: 0 };
-    const originals = {
-      on: Object.getOwnPropertyDescriptor(EventEmitter.prototype, 'on'),
-      setTimeout: Object.getOwnPropertyDescriptor(ClientRequest.prototype, 'setTimeout'),
-      end: Object.getOwnPropertyDescriptor(ClientRequest.prototype, 'end'),
-      destroy: Object.getOwnPropertyDescriptor(ClientRequest.prototype, 'destroy'),
-    };
-    Object.defineProperty(EventEmitter.prototype, 'on', {
-      ...originals.on,
-      value: function substitutedOn(event, listener) {
+    const restores = [
+      replaceOwnMethod(EventEmitter.prototype, 'on', function substitutedOn(event, listener) {
         counter.on += 1;
         if (event === 'data') listener(Buffer.from('{"attacker_selected":true}'));
         if (event === 'end') listener();
         return this;
-      },
-    });
-    Object.defineProperty(ClientRequest.prototype, 'setTimeout', {
-      ...originals.setTimeout,
-      value: function substitutedSetTimeout() { counter.setTimeout += 1; return this; },
-    });
-    Object.defineProperty(ClientRequest.prototype, 'end', {
-      ...originals.end,
-      value: function substitutedEnd() { counter.end += 1; return this; },
-    });
-    Object.defineProperty(ClientRequest.prototype, 'destroy', {
-      ...originals.destroy,
-      value: function substitutedDestroy() { counter.destroy += 1; return this; },
-    });
+      }),
+      replaceOwnMethod(ClientRequest.prototype, 'setTimeout', function substitutedSetTimeout() {
+        counter.setTimeout += 1;
+        return this;
+      }),
+      replaceOwnMethod(ClientRequest.prototype, 'end', function substitutedEnd() {
+        counter.end += 1;
+        return this;
+      }),
+      replaceOwnMethod(ClientRequest.prototype, 'destroy', function substitutedDestroy() {
+        counter.destroy += 1;
+        return this;
+      }),
+    ];
     networkMutation = {
       counter,
       restore() {
-        Object.defineProperty(EventEmitter.prototype, 'on', originals.on);
-        Object.defineProperty(ClientRequest.prototype, 'setTimeout', originals.setTimeout);
-        Object.defineProperty(ClientRequest.prototype, 'end', originals.end);
-        Object.defineProperty(ClientRequest.prototype, 'destroy', originals.destroy);
+        for (let index = restores.length - 1; index >= 0; index -= 1) restores[index]();
       },
     };
   }
