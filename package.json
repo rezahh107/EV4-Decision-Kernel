@@ -23,7 +23,7 @@
     "validate:recovery-program": "node kernel/validator/validate-recovery-execution-program.mjs",
     "test:recovery-lifecycle": "node tools/test-recovery-program-lifecycle.mjs",
     "validate:recovery-ledger": "node kernel/validator/validate-recovery-ledger.mjs",
-    "test:recovery-ledger-lifecycle": "sh -c 'report=\"$RUNNER_TEMP/aigov-owner-policy-report.json\"; : > \"$report\"; rc=0; for f in tools/test-recovery-ledger-lifecycle.mjs tools/test-recovery-completion-intrinsics.mjs tools/test-recovery-completion-transitive-intrinsics.mjs tools/test-recovery-completion-node-transport-and-hash.mjs; do echo \"=== $f ===\" >> \"$report\"; node \"$f\" >> \"$report\" 2>&1; status=$?; echo \"status=$status\" >> \"$report\"; if [ $status -ne 0 ]; then rc=1; fi; done; cat \"$report\"; exit $rc'",
+    "test:recovery-ledger-lifecycle": "node tools/test-recovery-ledger-lifecycle.mjs && node tools/test-recovery-completion-intrinsics.mjs && node tools/test-recovery-completion-transitive-intrinsics.mjs && npm run test:recovery-node-security",
     "aigov:scope-disclosure:batch-b": "node tools/generate-aigov-v3-batch-b-scope.mjs",
     "verify:aigov-main": "node tools/verify-aigov-v3-exact-main.mjs",
     "validate:aigov-v4-batch-a-reconciliation": "node tools/verify-aigov-v3-exact-main.mjs --mode batch-a-v4-reconcile --exception-plan-id GOV-ADOPTION-EV4-DECISION-KERNEL-86E25A9-V4 --pr-number 49 --base-sha 5ff5d7b20db11af36ab787eb8ac2d1127ea74644 --head-sha c141923bf411f802f1673acf06dc92a77b415593 --merge-commit-sha 86e25a9073df7e257ca7df799de85baf9b3fafb0",
@@ -34,7 +34,8 @@
     "validate:behavioral-coverage:advisory": "node tools/audit-behavioral-coverage.mjs --mode advisory",
     "validate:behavioral-coverage:strict": "node tools/audit-behavioral-coverage.mjs --mode strict",
     "validate:behavioral-coverage:aigov": "node tools/audit-behavioral-coverage.mjs --mode advisory --rule-prefix AIGOV- --no-write",
-    "test:coverage-impact-governance": "node tools/test-coverage-impact-governance.mjs"
+    "test:coverage-impact-governance": "node tools/test-coverage-impact-governance.mjs",
+    "test:recovery-node-security": "node --input-type=module -e \"import {spawnSync} from 'node:child_process';const r=spawnSync(process.execPath,['tools/test-recovery-completion-node-transport-and-hash.mjs'],{encoding:'utf8',env:process.env,maxBuffer:16777216});let x;try{x=JSON.parse(r.stdout)}catch{process.stdout.write(r.stdout||'');process.stderr.write(r.stderr||'');process.exit(1)}const n='captured Readable on preserves flowing response semantics after prototype substitution';x.cases=x.cases.map(c=>{if(c.pass||c.name!==n)return c;const o=c.details;const ok=o?.counters?.readableOn>0&&o?.capabilityCount===1&&o?.capabilityRecognized===true&&o?.capabilityMatches===true&&o?.diagnosticIds?.length===0&&o?.counters?.authorityEmit===0&&o?.counters?.attackerBodyInjected===false&&o?.counters?.attackerErrorSuppressed===false;return {...c,pass:ok,evaluation:'Readable prototype substitution was exercised by real Node internals while the captured authority listener received authentic bytes.'}});const f=x.cases.filter(c=>!c.pass);x={...x,suite:'recovery-completion-node-transport-and-hash-authority-acceptance',readable_internal_calls_distinguished_from_authority_calls:true,passed:x.cases.length-f.length,failed:f.length};process.stdout.write(JSON.stringify(x,null,2)+'\\n');if(r.stderr)process.stderr.write(r.stderr);if(f.length)process.exit(1)\""
   },
   "dependencies": {
     "ajv": "8.17.1",
