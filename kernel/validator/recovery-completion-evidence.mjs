@@ -112,8 +112,16 @@ function trustedGithubFetch(input, init = {}) {
       return;
     }
     let request;
+    let settled = false;
     const failClosed = (error) => {
+      if (settled) return;
+      settled = true;
       reject(error instanceof TrustedError ? error : new TrustedError(TrustedString(error)));
+    };
+    const resolveTrusted = (value) => {
+      if (settled) return;
+      settled = true;
+      resolve(value);
     };
     try {
       request = trustedHttpsRequest(url, {
@@ -123,7 +131,7 @@ function trustedGithubFetch(input, init = {}) {
         agent: trustedAgent,
       }, (response) => {
         try {
-          p.sealEmitter(response);
+          p.sealReadable(response);
         } catch (error) {
           p.clientRequestDestroy(request, error);
           failClosed(error);
@@ -131,7 +139,18 @@ function trustedGithubFetch(input, init = {}) {
         }
         const chunks = [];
         let size = 0;
-        p.readableOn(response, 'data', (chunk) => {
+        let responseEnded = false;
+        p.eventOn(response, 'error', failClosed);
+        p.eventOn(response, 'aborted', () => {
+          failClosed(new TrustedError('GitHub evidence response aborted before completion'));
+        });
+        p.eventOn(response, 'close', () => {
+          if (!responseEnded) {
+            failClosed(new TrustedError('GitHub evidence response closed before completion'));
+          }
+        });
+        p.eventOn(response, 'data', (chunk) => {
+          if (settled) return;
           size += chunk.length;
           if (size > MAX_RESPONSE_BYTES) {
             p.clientRequestDestroy(
@@ -142,17 +161,24 @@ function trustedGithubFetch(input, init = {}) {
           }
           trustedArrayPush(chunks, chunk);
         });
-        p.readableOn(response, 'end', () => {
+        p.eventOn(response, 'end', () => {
+          if (settled) return;
+          if (p.functionHasInstance(p.TrustedIncomingMessage, response)
+            && response.complete !== true) {
+            failClosed(new TrustedError('GitHub evidence response ended before HTTP completion'));
+            return;
+          }
+          responseEnded = true;
           const status = response.statusCode ?? 0;
           const body = trustedBufferToString(trustedBufferConcat(chunks), 'utf8');
           let payload = null;
           try {
             payload = body ? trustedJsonParse(body) : null;
           } catch {
-            reject(new TrustedError(`GitHub API ${status}: invalid JSON response`));
+            failClosed(new TrustedError(`GitHub API ${status}: invalid JSON response`));
             return;
           }
-          resolve({
+          resolveTrusted({
             ok: status >= 200 && status < 300,
             status,
             headers: {
@@ -165,6 +191,7 @@ function trustedGithubFetch(input, init = {}) {
             json: async () => payload,
           });
         });
+        p.startReadableFlow(response);
       });
       p.sealEmitter(request);
       p.clientRequestSetTimeout(
