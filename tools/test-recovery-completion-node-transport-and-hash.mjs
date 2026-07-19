@@ -394,8 +394,11 @@ async function childMain() {
 
   function installReadableMutation() {
     Readable.prototype.on = function substitutedReadableOn(event, listener) {
-      if (this instanceof IncomingMessage) counters.readableOn += 1;
-      return Reflect.apply(EventEmitter.prototype.on, this, [event, listener]);
+      if (this instanceof IncomingMessage) {
+        counters.readableOn += 1;
+        return Reflect.apply(EventEmitter.prototype.on, this, [event, listener]);
+      }
+      return Reflect.apply(originals.readableOn, this, [event, listener]);
     };
   }
 
