@@ -79,10 +79,9 @@ const bufferToString = uncurryThis(NodeBuffer.prototype.toString);
 const eventEmitMethod = EventEmitter.prototype.emit;
 const eventEmit = uncurryThis(eventEmitMethod);
 const eventOn = uncurryThis(EventEmitter.prototype.on);
-const readableOnMethod = uncurryThis(Readable.prototype.on);
-const readableOn = (instance, event, listener) => functionHasInstance(Readable, instance)
-  ? readableOnMethod(instance, event, listener)
-  : eventOn(instance, event, listener);
+const eventListenerCount = uncurryThis(EventEmitter.prototype.listenerCount);
+const readableResumeMethod = Readable.prototype.resume;
+const readableResume = uncurryThis(readableResumeMethod);
 const clientRequestSetTimeout = uncurryThis(ClientRequest.prototype.setTimeout);
 const clientRequestEnd = uncurryThis(ClientRequest.prototype.end);
 const clientRequestDestroy = uncurryThis(ClientRequest.prototype.destroy);
@@ -96,6 +95,36 @@ function sealEmitter(instance) {
     configurable: false,
     enumerable: false,
   });
+  return instance;
+}
+
+function sealReadable(instance) {
+  sealEmitter(instance);
+  if (!functionHasInstance(Readable, instance)) return false;
+  objectDefineProperty(instance, 'resume', {
+    value: function sealedAuthorityResume() {
+      readableResume(instance);
+      return instance;
+    },
+    writable: false,
+    configurable: false,
+    enumerable: false,
+  });
+  objectDefineProperty(instance, 'listenerCount', {
+    value: function sealedAuthorityListenerCount(event, listener) {
+      return listener === undefined
+        ? eventListenerCount(instance, event)
+        : eventListenerCount(instance, event, listener);
+    },
+    writable: false,
+    configurable: false,
+    enumerable: false,
+  });
+  return true;
+}
+
+function startReadableFlow(instance) {
+  if (functionHasInstance(Readable, instance)) readableResume(instance);
   return instance;
 }
 
@@ -235,8 +264,11 @@ export const recoveryPrimordials = objectFreeze({
   bufferToString,
   eventEmit,
   eventOn,
-  readableOn,
+  eventListenerCount,
+  readableResume,
   sealEmitter,
+  sealReadable,
+  startReadableFlow,
   clientRequestSetTimeout,
   clientRequestEnd,
   clientRequestDestroy,
