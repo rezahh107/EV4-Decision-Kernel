@@ -23,13 +23,15 @@ const TRUSTED_SYSTEM_ROOT = typeof process.env.SystemRoot === 'string'
   ? process.env.SystemRoot
   : null;
 const TEST_ENTRYPOINTS = new p.TrustedSet([
+  'test-recovery-completion-transitive-intrinsics.mjs',
   'test-recovery-completion-node-transport-and-hash.mjs',
   'test-recovery-completion-readable-dependencies.mjs',
   'test-recovery-completion-isolation-boundary.mjs',
 ]);
 const currentEntrypoint = typeof process.argv[1] === 'string' ? basename(process.argv[1]) : '';
 const declaredTestPort = Number.parseInt(process.env.RECOVERY_LOCAL_SERVER_PORT || '', 10);
-const fixtureModeRequested = (process.env.RECOVERY_NODE_SECURITY_CHILD === '1'
+const fixtureModeRequested = (process.env.RECOVERY_TRANSITIVE_CHILD === '1'
+    || process.env.RECOVERY_NODE_SECURITY_CHILD === '1'
     || process.env.RECOVERY_READABLE_DEPENDENCY_CHILD === '1'
     || process.env.RECOVERY_ISOLATION_BOUNDARY_CHILD === '1')
   && p.setHas(TEST_ENTRYPOINTS, currentEntrypoint)
