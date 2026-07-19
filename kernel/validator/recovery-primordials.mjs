@@ -100,6 +100,24 @@ function sealEmitter(instance) {
 
 function sealReadable(instance) {
   sealEmitter(instance);
+  objectDefineProperty(instance, 'on', {
+    value: function sealedAuthorityOn(event, listener) {
+      eventOn(instance, event, listener);
+      return instance;
+    },
+    writable: false,
+    configurable: false,
+    enumerable: false,
+  });
+  if (functionHasInstance(IncomingMessage, instance)
+    && typeof instance.complete !== 'boolean') {
+    objectDefineProperty(instance, 'complete', {
+      value: true,
+      writable: false,
+      configurable: false,
+      enumerable: false,
+    });
+  }
   if (!functionHasInstance(Readable, instance)) return false;
   objectDefineProperty(instance, 'resume', {
     value: function sealedAuthorityResume() {
