@@ -8,7 +8,7 @@
   "base_sha": "5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a",
   "head_binding": "derived_at_runtime",
   "change_class": "L3",
-  "scope_revision": "sha256:57159b202121b1f8938d3b3789d0c2afd1d1e74ff9ae93f779345cb5eb853bd0",
+  "scope_revision": "sha256:47d6f7e17d9802bd31e7bf73b7317bd66751515d0d7437d57f3cfb665a82a82d",
   "committed": [
     ".github/workflows/validate-main.yml",
     ".github/workflows/validate-mvk.yml",
