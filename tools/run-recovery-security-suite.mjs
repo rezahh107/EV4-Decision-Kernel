@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,6 +26,7 @@ const suites = [
 
 writeFileSync(logPath, '', 'utf8');
 const failures = [];
+const diagnostics = [];
 for (const suite of suites) {
   const heading = `\n=== ${suite.name} ===\n`;
   process.stdout.write(heading);
@@ -50,14 +51,16 @@ for (const suite of suites) {
   const statusLine = `\nSTATUS ${suite.name}: ${status}\n`;
   process.stdout.write(statusLine);
   appendFileSync(logPath, statusLine, 'utf8');
-  if (status !== 0) {
-    failures.push({
-      name: suite.name,
-      status,
-      signal: execution.signal || null,
-      error: execution.error?.message || null,
-    });
-  }
+  const record = {
+    name: suite.name,
+    status,
+    signal: execution.signal || null,
+    error: execution.error?.message || null,
+    stdout_tail: (execution.stdout || '').slice(-6000),
+    stderr_tail: (execution.stderr || '').slice(-6000),
+  };
+  diagnostics.push(record);
+  if (status !== 0) failures.push(record);
 }
 const summary = {
   suite: 'recovery-security-suite',
@@ -69,4 +72,15 @@ const summary = {
 };
 process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
 appendFileSync(logPath, `${JSON.stringify(summary, null, 2)}\n`, 'utf8');
+
+const runnerTemp = process.env.RUNNER_TEMP;
+if (runnerTemp) {
+  const reportPath = join(runnerTemp, 'aigov-owner-policy-report.json');
+  if (existsSync(reportPath)) {
+    const report = JSON.parse(readFileSync(reportPath, 'utf8'));
+    report.temporary_recovery_suite_diagnostics = diagnostics;
+    writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+  }
+}
+
 if (failures.length) process.exitCode = 1;
