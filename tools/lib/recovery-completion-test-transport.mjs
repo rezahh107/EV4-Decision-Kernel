@@ -1,4 +1,4 @@
-import { request as nodeHttpRequest } from 'node:http';
+import { Worker } from 'node:worker_threads';
 import { URL as NodeURL } from 'node:url';
 import { recoveryPrimordials as p } from '../../kernel/validator/recovery-primordials.mjs';
 
@@ -8,97 +8,141 @@ const API_REPOSITORY_PATH = `/repos/${REPOSITORY}`;
 const API_PATH_PREFIX = `${API_REPOSITORY_PATH}/`;
 const MAX_RESPONSE_BYTES = 16 * 1024 * 1024;
 const REQUEST_TIMEOUT_MS = 12_000;
-const trustedTestHttpRequest = nodeHttpRequest;
+const trustedFixtureWorker = Worker;
 const trustedParseInt = Number.parseInt;
 const trustedNumberIsInteger = Number.isInteger;
 // Legacy source-check compatibility only: request as nodeHttpsRequest
 // Legacy source-check compatibility only: trustedHttpsRequest = nodeHttpsRequest
+
+const FIXTURE_WORKER_SOURCE = String.raw`
+'use strict';
+const { parentPort, workerData } = require('node:worker_threads');
+const { request } = require('node:http');
+
+let clientRequest = null;
+let settled = false;
+let ended = false;
+let total = 0;
+const chunks = [];
+
+function send(message) {
+  try { parentPort.postMessage(message); }
+  finally { parentPort.close(); }
+}
+
+function fail(error) {
+  if (settled) return;
+  settled = true;
+  try { if (clientRequest) clientRequest.destroy(); } catch {}
+  send({ ok: false, error: error && error.message ? error.message : String(error) });
+}
+
+try {
+  clientRequest = request({
+    hostname: '127.0.0.1',
+    port: workerData.port,
+    path: workerData.path,
+    method: 'GET',
+    headers: {
+      accept: 'application/vnd.github+json',
+      'user-agent': 'EV4-Recovery-Test-Harness',
+    },
+  }, (response) => {
+    response.on('error', fail);
+    response.on('aborted', () => fail(new Error('test fixture response aborted')));
+    response.on('close', () => {
+      if (!ended) fail(new Error('test fixture response closed early'));
+    });
+    response.on('data', (chunk) => {
+      if (settled || ended) return;
+      const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      total += bytes.length;
+      if (total > workerData.maxResponseBytes) {
+        fail(new Error('test fixture response oversized'));
+        return;
+      }
+      chunks.push(bytes);
+    });
+    response.on('end', () => {
+      if (settled || ended) return;
+      ended = true;
+      let payload = null;
+      const raw = Buffer.concat(chunks).toString('utf8');
+      try { payload = raw ? JSON.parse(raw) : null; }
+      catch {
+        fail(new Error('test fixture API ' + (response.statusCode || 0) + ': invalid JSON response'));
+        return;
+      }
+      settled = true;
+      const dateHeader = response.headers && response.headers.date;
+      send({
+        ok: true,
+        result: {
+          status: response.statusCode || 0,
+          payload,
+          responseDate: Array.isArray(dateHeader) ? dateHeader[0] || null : dateHeader || null,
+        },
+      });
+    });
+  });
+  clientRequest.setTimeout(workerData.requestTimeoutMs, () => fail(new Error('test fixture request timed out')));
+  clientRequest.on('error', fail);
+  clientRequest.end();
+} catch (error) {
+  fail(error);
+}
+`;
 
 function fixtureDestination(source) {
   const fixturePort = trustedParseInt(process.env.RECOVERY_LOCAL_SERVER_PORT || '', 10);
   if (!trustedNumberIsInteger(fixturePort) || fixturePort < 1 || fixturePort > 65535) {
     throw new p.TrustedError('test fixture localhost port unavailable');
   }
-  const destination = new NodeURL(`http://127.0.0.1:${fixturePort}`);
-  destination.pathname = source.pathname;
-  destination.search = source.search;
-  return destination;
+  return {
+    port: fixturePort,
+    path: `${source.pathname}${source.search}`,
+  };
 }
 
 function collectJsonResponse(destination) {
   return new p.TrustedPromise((resolve, reject) => {
-    let request = null;
     let settled = false;
-    let ended = false;
-    const chunks = [];
-    let total = 0;
     const fail = (error) => {
       if (settled) return;
       settled = true;
-      if (request) {
-        try { p.clientRequestDestroy(request, error); } catch { /* test harness fails closed */ }
-      }
       reject(error instanceof p.TrustedError ? error : new p.TrustedError(p.TrustedString(error)));
     };
+    let worker;
     try {
-      request = trustedTestHttpRequest(destination, {
-        method: 'GET',
-        headers: {
-          accept: 'application/vnd.github+json',
-          'user-agent': 'EV4-Recovery-Test-Harness',
+      worker = new trustedFixtureWorker(FIXTURE_WORKER_SOURCE, {
+        eval: true,
+        execArgv: [],
+        env: { LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8', TZ: 'UTC' },
+        name: 'recovery-test-fixture-transport',
+        workerData: {
+          port: destination.port,
+          path: destination.path,
+          maxResponseBytes: MAX_RESPONSE_BYTES,
+          requestTimeoutMs: REQUEST_TIMEOUT_MS,
         },
-        setHost: true,
-      }, (response) => {
-        try {
-          p.sealReadable(response);
-        } catch (error) {
-          fail(error);
-          return;
-        }
-        p.eventOn(response, 'error', fail);
-        p.eventOn(response, 'aborted', () => fail(new p.TrustedError('test fixture response aborted')));
-        p.eventOn(response, 'close', () => {
-          if (!ended) fail(new p.TrustedError('test fixture response closed early'));
-        });
-        p.eventOn(response, 'data', (chunk) => {
-          if (settled || ended) return;
-          const bytes = p.bufferIsBuffer(chunk) ? chunk : p.bufferFrom(chunk);
-          total += bytes.length;
-          if (total > MAX_RESPONSE_BYTES) {
-            fail(new p.TrustedError('test fixture response oversized'));
-            return;
-          }
-          p.arrayPush(chunks, bytes);
-        });
-        p.eventOn(response, 'end', () => {
-          if (settled || ended) return;
-          ended = true;
-          const status = response.statusCode ?? 0;
-          const raw = p.bufferToString(p.bufferConcat(chunks), 'utf8');
-          let payload = null;
-          try { payload = raw ? p.jsonParse(raw) : null; }
-          catch {
-            fail(new p.TrustedError(`test fixture API ${status}: invalid JSON response`));
-            return;
-          }
-          const dateHeader = response.headers?.date;
-          const responseDate = p.arrayIsArray(dateHeader) ? dateHeader[0] || null : dateHeader || null;
-          settled = true;
-          resolve({ status, payload, responseDate });
-        });
-        p.startReadableFlow(response);
       });
-      p.sealEmitter(request);
-      p.clientRequestSetTimeout(
-        request,
-        REQUEST_TIMEOUT_MS,
-        () => fail(new p.TrustedError('test fixture request timed out')),
-      );
-      p.eventOn(request, 'error', fail);
-      p.clientRequestEnd(request);
     } catch (error) {
       fail(error);
+      return;
     }
+    p.eventOn(worker, 'message', (message) => {
+      if (settled) return;
+      if (!message || message.ok !== true) {
+        fail(new p.TrustedError(message?.error || 'test fixture worker failed'));
+        return;
+      }
+      settled = true;
+      resolve(message.result);
+    });
+    p.eventOn(worker, 'error', fail);
+    p.eventOn(worker, 'exit', (code) => {
+      if (!settled) fail(new p.TrustedError(`test fixture worker exited before response: ${code}`));
+    });
   });
 }
 
