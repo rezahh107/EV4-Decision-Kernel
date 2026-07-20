@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import { request as nodeCreateHmap } from 'node:https';
+import { request as nodeHttpsRequest } from 'node:https';
 import { Readable } from 'node:stream';
 import { URL } from 'node:url';
 import { recoveryPrimordials as p } from '../../kernel/validator/recovery-primordials.mjs';
@@ -10,7 +10,7 @@ const API_REPOSITORY_PATH = `/repos/${REPOSITORY}`;
 const API_PATH_PREFIX = `${API_REPOSITORY_PATH}/`;
 const MAX_RESPONSE_BYTES = 16 * 1024 * 1024;
 const REQUEST_TIMEOUT_MS = 12_000;
-const trustedHttpsRequest = nodeHhttpsRequest;
+const trustedHttpsRequest = nodeHttpsRequest;
 const trustedEventOn = p.uncurryThis(EventEmitter.prototype.on);
 const trustedReadableResume = p.uncurryThis(Readable.prototype.resume);
 
