@@ -3,7 +3,6 @@ import { createHmac as nodeCreateHmac } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import { readFileSync } from 'node:fs';
 import { Agent as HttpsAgent, request as httpsRequest } from 'node:https';
-import { request as httpRequest } from 'node:http';
 import { performance } from 'node:perf_hooks';
 import { Readable } from 'node:stream';
 import { URL } from 'node:url';
@@ -17,11 +16,11 @@ const REPOSITORY = 'rezahh107/EV4-Decision-Kernel';
 const API_ORIGIN = 'https://api.github.com';
 const API_REPOSITORY_PATH = `/repos/${REPOSITORY}`;
 const API_PATH_PREFIX = `${API_REPOSITORY_PATH}/`;
+const WORKER_POLICY_ID = 'recovery-completion-production-github-only.v1';
 const MAX_INPUT_BYTES = 1024 * 1024;
 const MAX_RESPONSE_BYTES = 16 * 1024 * 1024;
 const REQUEST_TIMEOUT_MS = 15_000;
 const trustedHttpsRequest = httpsRequest;
-const trustedHttpRequest = httpRequest;
 const trustedEventOn = p.uncurryThis(EventEmitter.prototype.on);
 const trustedReadableResume = p.uncurryThis(Readable.prototype.resume);
 const trustedReadFileSync = readFileSync;
@@ -34,6 +33,15 @@ const hmacPrototype = p.objectGetPrototypeOf(hmacProbe);
 const hmacUpdate = p.uncurryThis(hmacPrototype.update);
 const hmacDigest = p.uncurryThis(hmacPrototype.digest);
 const HEX_64 = /^[0-9a-f]{64}$/;
+const REQUEST_KEYS = new p.TrustedSet([
+  'schema_version',
+  'nonce',
+  'binding_sha256',
+  'mac_key',
+  'token',
+  'ledger',
+  'task_id',
+]);
 
 function canonical(value) {
   if (p.arrayIsArray(value)) return p.arrayMap(value, canonical);
@@ -57,6 +65,11 @@ function hmacHex(key, value) {
 
 function assertRequest(value) {
   if (!value || value.schema_version !== 'recovery-isolated-request.v1') throw new p.TrustedError('invalid isolated request schema');
+  const keys = p.objectKeys(value);
+  if (keys.length !== p.setSize(REQUEST_KEYS)
+    || p.arraySome(keys, (key) => !p.setHas(REQUEST_KEYS, key))) {
+    throw new p.TrustedError('isolated request contains forbidden transport or loader fields');
+  }
   if (typeof value.nonce !== 'string' || !p.regexpTest(HEX_64, value.nonce)) throw new p.TrustedError('invalid isolated nonce');
   if (typeof value.binding_sha256 !== 'string' || !p.regexpTest(HEX_64, value.binding_sha256)) throw new p.TrustedError('invalid isolated binding');
   if (typeof value.mac_key !== 'string' || !value.mac_key) throw new p.TrustedError('invalid isolated MAC key');
@@ -65,15 +78,9 @@ function assertRequest(value) {
   if (!p.arrayIsArray(value.ledger?.tasks) || value.ledger.tasks.length !== 1 || value.ledger.tasks[0]?.task_id !== value.task_id) {
     throw new p.TrustedError('isolated input must contain exactly one bound task');
   }
-  if (value.transport?.mode === 'github') return;
-  if (value.transport?.mode === 'fixture'
-    && p.numberIsInteger(value.transport.port)
-    && value.transport.port > 0
-    && value.transport.port <= 65535) return;
-  throw new p.TrustedError('isolated transport mode invalid');
 }
 
-function collectJsonResponse(requestFn, destination, options) {
+function collectJsonResponse(destination, options) {
   return new p.TrustedPromise((resolve, reject) => {
     let request = null;
     let settled = false;
@@ -95,7 +102,7 @@ function collectJsonResponse(requestFn, destination, options) {
       reject(error instanceof p.TrustedError ? error : new p.TrustedError(p.TrustedString(error)));
     };
     try {
-      request = requestFn(destination, options, (response) => {
+      request = trustedHttpsRequest(destination, options, (response) => {
         transport.response_seen = true;
         trustedEventOn(response, 'error', fail);
         trustedEventOn(response, 'aborted', () => {
@@ -140,8 +147,6 @@ function collectJsonResponse(requestFn, destination, options) {
           settled = true;
           resolve({ status, payload, responseDate, transport: p.objectFreeze({ ...transport }) });
         });
-        // Flow begins only in the clean isolated realm. No public complete field
-        // participates in the private completion state above.
         trustedReadableResume(response);
       });
       request.setTimeout(REQUEST_TIMEOUT_MS, () => fail(new p.TrustedError('GitHub evidence request timed out')));
@@ -153,7 +158,7 @@ function collectJsonResponse(requestFn, destination, options) {
   });
 }
 
-function buildFetch(input) {
+function buildFetch() {
   return async function isolatedGithubFetch(rawUrl, init = {}) {
     const source = new URL(rawUrl);
     if (source.origin !== API_ORIGIN
@@ -162,16 +167,11 @@ function buildFetch(input) {
       || source.password) {
       throw new p.TrustedError('GitHub evidence endpoint outside trusted repository boundary');
     }
-    const fixture = input.transport.mode === 'fixture';
-    const destination = fixture
-      ? new URL(`http://127.0.0.1:${input.transport.port}${source.pathname}${source.search}`)
-      : source;
-    const requestFn = fixture ? trustedHttpRequest : trustedHttpsRequest;
-    const response = await collectJsonResponse(requestFn, destination, {
+    const response = await collectJsonResponse(source, {
       method: 'GET',
       headers: init.headers,
       setHost: true,
-      agent: fixture ? undefined : trustedAgent,
+      agent: trustedAgent,
     });
     return p.objectFreeze({
       ok: response.status >= 200 && response.status < 300,
@@ -192,13 +192,17 @@ function main() {
   const input = p.jsonParse(p.bufferToString(raw, 'utf8'));
   assertRequest(input);
   const session = createRecoveryCompletionVerifier({
-    fetchImpl: buildFetch(input),
+    fetchImpl: buildFetch(),
     token: input.token,
     now: trustedNow,
   });
   return verifyRecoveryCompletionEvidence(input.ledger, input.task_id, { session }).then((result) => {
     const signed = {
       schema_version: 'recovery-isolated-result.v1',
+      worker_policy_id: WORKER_POLICY_ID,
+      transport_origin: API_ORIGIN,
+      repository: REPOSITORY,
+      fixture_mode: false,
       nonce: input.nonce,
       binding_sha256: input.binding_sha256,
       result,

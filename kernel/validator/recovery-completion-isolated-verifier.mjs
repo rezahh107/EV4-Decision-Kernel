@@ -4,13 +4,15 @@ import {
   randomBytes as nodeRandomBytes,
   timingSafeEqual as nodeTimingSafeEqual,
 } from 'node:crypto';
-import { basename, dirname } from 'node:path';
+import { dirname } from 'node:path';
 import { setTimeout as nodeSetTimeout } from 'node:timers';
 import { fileURLToPath } from 'node:url';
 import { recoveryPrimordials as p } from './recovery-primordials.mjs';
 
 const REPOSITORY = 'rezahh107/EV4-Decision-Kernel';
 const DEFAULT_BRANCH = 'main';
+const WORKER_POLICY_ID = 'recovery-completion-production-github-only.v1';
+const TRANSPORT_ORIGIN = 'https://api.github.com';
 const MAX_INPUT_BYTES = 1024 * 1024;
 const MAX_OUTPUT_BYTES = 8 * 1024 * 1024;
 const WORKER_TIMEOUT_MS = 45_000;
@@ -22,23 +24,6 @@ const TRUSTED_PLATFORM = process.platform;
 const TRUSTED_SYSTEM_ROOT = typeof process.env.SystemRoot === 'string'
   ? process.env.SystemRoot
   : null;
-const TEST_ENTRYPOINTS = new p.TrustedSet([
-  'test-recovery-completion-transitive-intrinsics.mjs',
-  'test-recovery-completion-node-transport-and-hash.mjs',
-  'test-recovery-completion-readable-dependencies.mjs',
-  'test-recovery-completion-isolation-boundary.mjs',
-]);
-const currentEntrypoint = typeof process.argv[1] === 'string' ? basename(process.argv[1]) : '';
-const declaredTestPort = Number.parseInt(process.env.RECOVERY_LOCAL_SERVER_PORT || '', 10);
-const fixtureModeRequested = (process.env.RECOVERY_TRANSITIVE_CHILD === '1'
-    || process.env.RECOVERY_NODE_SECURITY_CHILD === '1'
-    || process.env.RECOVERY_READABLE_DEPENDENCY_CHILD === '1'
-    || process.env.RECOVERY_ISOLATION_BOUNDARY_CHILD === '1')
-  && p.setHas(TEST_ENTRYPOINTS, currentEntrypoint)
-  && Number.isInteger(declaredTestPort)
-  && declaredTestPort > 0
-  && declaredTestPort <= 65535;
-const FIXTURE_PORT = fixtureModeRequested ? declaredTestPort : null;
 
 const spawnSync = nodeSpawnSync;
 const randomBytes = nodeRandomBytes;
@@ -121,13 +106,25 @@ function allowlistedEnvironment() {
   return env;
 }
 
-function validEnvelope(envelope, nonce, bindingSha256, key) {
+export function isValidRecoveryCompletionProductionEnvelope(
+  envelope,
+  nonce,
+  bindingSha256,
+  key,
+) {
   if (!envelope || envelope.schema_version !== 'recovery-isolated-result.v1') return false;
+  if (envelope.worker_policy_id !== WORKER_POLICY_ID) return false;
+  if (envelope.transport_origin !== TRANSPORT_ORIGIN) return false;
+  if (envelope.repository !== REPOSITORY || envelope.fixture_mode !== false) return false;
   if (envelope.nonce !== nonce || envelope.binding_sha256 !== bindingSha256) return false;
   if (!envelope.result || !p.arrayIsArray(envelope.result.diagnostics)) return false;
   if (typeof envelope.mac !== 'string' || !p.regexpTest(HEX_64, envelope.mac)) return false;
   const signed = {
     schema_version: envelope.schema_version,
+    worker_policy_id: envelope.worker_policy_id,
+    transport_origin: envelope.transport_origin,
+    repository: envelope.repository,
+    fixture_mode: envelope.fixture_mode,
     nonce: envelope.nonce,
     binding_sha256: envelope.binding_sha256,
     result: envelope.result,
@@ -163,8 +160,6 @@ export async function verifyRecoveryCompletionEvidenceIsolated(ledger, taskId, s
     return { evidence: null, diagnostics: [diagnostic(snapshot.taskPath, 'RECOVERY_GITHUB_TOKEN unavailable')] };
   }
 
-  // Snapshot first, then yield once so caller-side asynchronous mutation is
-  // observable by the parent binding check while the child keeps immutable input.
   await new p.TrustedPromise((resolve) => trustedSetTimeout(resolve, MUTATION_OBSERVATION_DELAY_MS));
 
   const bindingSha256 = p.canonicalSha256({
@@ -185,9 +180,6 @@ export async function verifyRecoveryCompletionEvidenceIsolated(ledger, taskId, s
     token: state.token,
     ledger: snapshot.ledger,
     task_id: snapshot.task.task_id,
-    transport: FIXTURE_PORT
-      ? { mode: 'fixture', port: FIXTURE_PORT }
-      : { mode: 'github' },
   };
 
   try {
@@ -214,7 +206,7 @@ export async function verifyRecoveryCompletionEvidenceIsolated(ledger, taskId, s
       throw new p.TrustedError('isolated verifier output malformed or oversized');
     }
     const envelope = p.jsonParse(execution.stdout);
-    if (!validEnvelope(envelope, nonce, bindingSha256, macKey)) {
+    if (!isValidRecoveryCompletionProductionEnvelope(envelope, nonce, bindingSha256, macKey)) {
       throw new p.TrustedError('isolated verifier result authentication failed');
     }
     return envelope.result;
