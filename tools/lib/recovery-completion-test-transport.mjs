@@ -1,7 +1,5 @@
-import { EventEmitter } from 'node:events';
 import { request as nodeHttpRequest } from 'node:http';
-import { Readable } from 'node:stream';
-import { URL } from 'node:url';
+import { URL as NodeURL } from 'node:url';
 import { recoveryPrimordials as p } from '../../kernel/validator/recovery-primordials.mjs';
 
 const REPOSITORY = 'rezahh107/EV4-Decision-Kernel';
@@ -11,23 +9,23 @@ const API_PATH_PREFIX = `${API_REPOSITORY_PATH}/`;
 const MAX_RESPONSE_BYTES = 16 * 1024 * 1024;
 const REQUEST_TIMEOUT_MS = 12_000;
 const trustedTestHttpRequest = nodeHttpRequest;
+const trustedParseInt = Number.parseInt;
+const trustedNumberIsInteger = Number.isInteger;
 // Legacy source-check compatibility only: request as nodeHttpsRequest
 // Legacy source-check compatibility only: trustedHttpsRequest = nodeHttpsRequest
-const trustedEventOn = p.uncurryThis(EventEmitter.prototype.on);
-const trustedReadableResume = p.uncurryThis(Readable.prototype.resume);
 
 function fixtureDestination(source) {
-  const fixturePort = Number.parseInt(process.env.RECOVERY_LOCAL_SERVER_PORT || '', 10);
-  if (!Number.isInteger(fixturePort) || fixturePort < 1 || fixturePort > 65535) {
+  const fixturePort = trustedParseInt(process.env.RECOVERY_LOCAL_SERVER_PORT || '', 10);
+  if (!trustedNumberIsInteger(fixturePort) || fixturePort < 1 || fixturePort > 65535) {
     throw new p.TrustedError('test fixture localhost port unavailable');
   }
-  const destination = new URL(`http://127.0.0.1:${fixturePort}`);
+  const destination = new NodeURL(`http://127.0.0.1:${fixturePort}`);
   destination.pathname = source.pathname;
   destination.search = source.search;
   return destination;
 }
 
-function collectJsonResponse(destination, options) {
+function collectJsonResponse(destination) {
   return new p.TrustedPromise((resolve, reject) => {
     let request = null;
     let settled = false;
@@ -38,18 +36,31 @@ function collectJsonResponse(destination, options) {
       if (settled) return;
       settled = true;
       if (request) {
-        try { request.destroy(); } catch { /* test harness fails closed */ }
+        try { p.clientRequestDestroy(request, error); } catch { /* test harness fails closed */ }
       }
       reject(error instanceof p.TrustedError ? error : new p.TrustedError(p.TrustedString(error)));
     };
     try {
-      request = trustedTestHttpRequest(destination, options, (response) => {
-        trustedEventOn(response, 'error', fail);
-        trustedEventOn(response, 'aborted', () => fail(new p.TrustedError('test fixture response aborted')));
-        trustedEventOn(response, 'close', () => {
+      request = trustedTestHttpRequest(destination, {
+        method: 'GET',
+        headers: {
+          accept: 'application/vnd.github+json',
+          'user-agent': 'EV4-Recovery-Test-Harness',
+        },
+        setHost: true,
+      }, (response) => {
+        try {
+          p.sealReadable(response);
+        } catch (error) {
+          fail(error);
+          return;
+        }
+        p.eventOn(response, 'error', fail);
+        p.eventOn(response, 'aborted', () => fail(new p.TrustedError('test fixture response aborted')));
+        p.eventOn(response, 'close', () => {
           if (!ended) fail(new p.TrustedError('test fixture response closed early'));
         });
-        trustedEventOn(response, 'data', (chunk) => {
+        p.eventOn(response, 'data', (chunk) => {
           if (settled || ended) return;
           const bytes = p.bufferIsBuffer(chunk) ? chunk : p.bufferFrom(chunk);
           total += bytes.length;
@@ -59,7 +70,7 @@ function collectJsonResponse(destination, options) {
           }
           p.arrayPush(chunks, bytes);
         });
-        trustedEventOn(response, 'end', () => {
+        p.eventOn(response, 'end', () => {
           if (settled || ended) return;
           ended = true;
           const status = response.statusCode ?? 0;
@@ -75,11 +86,16 @@ function collectJsonResponse(destination, options) {
           settled = true;
           resolve({ status, payload, responseDate });
         });
-        trustedReadableResume(response);
+        p.startReadableFlow(response);
       });
-      request.setTimeout(REQUEST_TIMEOUT_MS, () => fail(new p.TrustedError('test fixture request timed out')));
-      trustedEventOn(request, 'error', fail);
-      request.end();
+      p.sealEmitter(request);
+      p.clientRequestSetTimeout(
+        request,
+        REQUEST_TIMEOUT_MS,
+        () => fail(new p.TrustedError('test fixture request timed out')),
+      );
+      p.eventOn(request, 'error', fail);
+      p.clientRequestEnd(request);
     } catch (error) {
       fail(error);
     }
@@ -87,19 +103,15 @@ function collectJsonResponse(destination, options) {
 }
 
 export function createRecoveryCompletionTestFetch() {
-  return async function recoveryCompletionTestFetch(rawUrl, init = {}) {
-    const source = new URL(rawUrl);
+  return async function recoveryCompletionTestFetch(rawUrl) {
+    const source = new NodeURL(rawUrl);
     if (source.origin !== API_ORIGIN
       || (source.pathname !== API_REPOSITORY_PATH && !p.stringStartsWith(source.pathname, API_PATH_PREFIX))
       || source.username
       || source.password) {
       throw new p.TrustedError('test fixture requested an out-of-bound GitHub endpoint');
     }
-    const response = await collectJsonResponse(fixtureDestination(source), {
-      method: 'GET',
-      headers: init.headers,
-      setHost: true,
-    });
+    const response = await collectJsonResponse(fixtureDestination(source));
     return p.objectFreeze({
       ok: response.status >= 200 && response.status < 300,
       status: response.status,
