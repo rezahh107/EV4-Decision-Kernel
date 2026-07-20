@@ -1,0 +1,46 @@
+{
+  "fixture_version": "recovery-ledger-patch-fixtures.v1",
+  "cases": [
+    {
+      "case_id": "initial-active-program-only-krec-001-ready",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/tasks/0/lifecycle_state",
+          "value": "not_started"
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/candidate",
+          "value": null
+        }
+      ],
+      "expected_diagnostic_ids": []
+    },
+    {
+      "case_id": "legal-in-progress-branch-candidate",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/tasks/0/lifecycle_state",
+          "value": "in_progress"
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/candidate",
+          "value": {
+            "branch": "krec-001/recovery-ledger",
+            "pull_request": null,
+            "pr_state": null
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/completion_evidence",
+          "value": null
+        }
+      ],
+      "expected_diagnostic_ids": []
+    }
+  ]
+}

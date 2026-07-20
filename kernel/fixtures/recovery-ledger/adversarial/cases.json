@@ -1,0 +1,303 @@
+{
+  "fixture_version": "recovery-ledger-patch-fixtures.v1",
+  "cases": [
+    {
+      "case_id": "open-pr-treated-as-completion",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/tasks/0/lifecycle_state",
+          "value": "complete"
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/execution_eligibility",
+          "value": "complete"
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/candidate",
+          "value": {
+            "branch": "krec-001/recovery-ledger",
+            "pull_request": 52,
+            "pr_state": "open"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/1/execution_eligibility",
+          "value": "dependency_ready"
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/3/execution_eligibility",
+          "value": "dependency_ready"
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "RECOVERY_LEDGER_AUTHORITATIVE_COMPLETION_CAPABILITY_REQUIRED",
+        "RECOVERY_LEDGER_EXECUTION_ELIGIBILITY_MISMATCH",
+        "RECOVERY_LEDGER_MERGED_CANDIDATE_REQUIRED",
+        "RECOVERY_LEDGER_OPEN_PR_NOT_COMPLETION",
+        "RECOVERY_LEDGER_COMPLETION_EVIDENCE_REQUIRED"
+      ]
+    },
+    {
+      "case_id": "ci-green-treated-as-completion",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/tasks/0/lifecycle_state",
+          "value": "complete"
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/execution_eligibility",
+          "value": "complete"
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/candidate",
+          "value": {
+            "branch": "krec-001/recovery-ledger",
+            "pull_request": 52,
+            "pr_state": "open"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/completion_evidence",
+          "value": {
+            "pull_request": 52,
+            "reviewed_head_sha": "0123456789abcdef0123456789abcdef01234567",
+            "merge_method": null,
+            "merge_actor": null,
+            "resulting_main_sha": null,
+            "exact_head_ci": {
+              "workflow": "Validate MVK",
+              "run_id": 1001,
+              "head_sha": "0123456789abcdef0123456789abcdef01234567",
+              "conclusion": "success",
+              "reference": "https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/1001"
+            },
+            "current_main_validation": null,
+            "evidence_refs": null
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/1/execution_eligibility",
+          "value": "dependency_ready"
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/3/execution_eligibility",
+          "value": "dependency_ready"
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "RECOVERY_LEDGER_AUTHORITATIVE_COMPLETION_CAPABILITY_REQUIRED",
+        "RECOVERY_LEDGER_CI_GREEN_NOT_COMPLETION",
+        "RECOVERY_LEDGER_COMPLETION_EVIDENCE_UNVERIFIED",
+        "RECOVERY_LEDGER_CURRENT_MAIN_VALIDATION_REQUIRED",
+        "RECOVERY_LEDGER_EXECUTION_ELIGIBILITY_MISMATCH",
+        "RECOVERY_LEDGER_MERGED_CANDIDATE_REQUIRED",
+        "RECOVERY_LEDGER_MERGE_IDENTITY_REQUIRED",
+        "RECOVERY_LEDGER_OPEN_PR_NOT_COMPLETION"
+      ]
+    },
+    {
+      "case_id": "correctly-shaped-nonexistent-github-evidence",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/tasks/0/lifecycle_state",
+          "value": "complete"
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/execution_eligibility",
+          "value": "complete"
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/candidate",
+          "value": {
+            "branch": "krec-001/recovery-ledger",
+            "pull_request": 52,
+            "pr_state": "merged"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/completion_evidence",
+          "value": {
+            "pull_request": 52,
+            "reviewed_head_sha": "0123456789abcdef0123456789abcdef01234567",
+            "merge_method": "merge",
+            "merge_actor": "rezahh107",
+            "resulting_main_sha": "89abcdef0123456789abcdef0123456789abcdef",
+            "exact_head_ci": {
+              "workflow": "Validate MVK",
+              "run_id": 1001,
+              "head_sha": "0123456789abcdef0123456789abcdef01234567",
+              "conclusion": "success",
+              "reference": "https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/1001"
+            },
+            "current_main_validation": {
+              "workflow": "Validate Main",
+              "run_id": 1002,
+              "head_sha": "89abcdef0123456789abcdef0123456789abcdef",
+              "conclusion": "success",
+              "reference": "https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/1002"
+            },
+            "evidence_refs": [
+              {
+                "kind": "authoritative_owner_merge",
+                "reference": "https://github.com/rezahh107/EV4-Decision-Kernel/pull/52"
+              },
+              {
+                "kind": "authoritative_exact_head_ci",
+                "reference": "https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/1001"
+              },
+              {
+                "kind": "authoritative_current_main_validation",
+                "reference": "https://github.com/rezahh107/EV4-Decision-Kernel/actions/runs/1002"
+              }
+            ]
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/1/execution_eligibility",
+          "value": "dependency_ready"
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/3/execution_eligibility",
+          "value": "dependency_ready"
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "RECOVERY_LEDGER_AUTHORITATIVE_COMPLETION_CAPABILITY_REQUIRED",
+        "RECOVERY_LEDGER_EXECUTION_ELIGIBILITY_MISMATCH"
+      ]
+    },
+    {
+      "case_id": "coverage-credit-and-readiness-overclaim",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/effects/coverage_credit",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/effects/readiness_claim",
+          "value": true
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "RECOVERY_LEDGER_COVERAGE_CREDIT_FORBIDDEN",
+        "RECOVERY_LEDGER_READINESS_CLAIM_FORBIDDEN",
+        "RECOVERY_LEDGER_SCHEMA_INVALID"
+      ]
+    },
+    {
+      "case_id": "product-external-and-kroad-effects",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/effects/product_effect",
+          "value": "product_work_activated"
+        },
+        {
+          "op": "replace",
+          "path": "/effects/external_repository_effect",
+          "value": "producer_activated"
+        },
+        {
+          "op": "replace",
+          "path": "/effects/kroad_supersession_effect",
+          "value": "superseded"
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "RECOVERY_LEDGER_PRODUCT_EFFECT_FORBIDDEN",
+        "RECOVERY_LEDGER_EXTERNAL_REPOSITORY_EFFECT_FORBIDDEN",
+        "RECOVERY_LEDGER_KROAD_SUPERSESSION_FORBIDDEN",
+        "RECOVERY_LEDGER_SCHEMA_INVALID"
+      ]
+    },
+    {
+      "case_id": "task-coverage-credit-and-readiness-overclaim",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/tasks/0/coverage_credit",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/0/readiness_claim",
+          "value": true
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "RECOVERY_LEDGER_COVERAGE_CREDIT_FORBIDDEN",
+        "RECOVERY_LEDGER_READINESS_CLAIM_FORBIDDEN",
+        "RECOVERY_LEDGER_SCHEMA_INVALID"
+      ]
+    },
+    {
+      "case_id": "branch-candidate-unlocks-dependent",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/tasks/1/execution_eligibility",
+          "value": "dependency_ready"
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "RECOVERY_LEDGER_EXECUTION_ELIGIBILITY_MISMATCH"
+      ]
+    },
+    {
+      "case_id": "prompt-delivery-unlocks-dependent",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/tasks/0/prompt_delivered",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/tasks/1/execution_eligibility",
+          "value": "dependency_ready"
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "RECOVERY_LEDGER_SCHEMA_INVALID",
+        "RECOVERY_LEDGER_EXECUTION_ELIGIBILITY_MISMATCH"
+      ]
+    },
+    {
+      "case_id": "serialized-capability-lookalike",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/tasks/0/completion_capability",
+          "value": {
+            "capability_type": "recovery-completion-capability.v1",
+            "repository_id": 1292378784,
+            "task_id": "KREC-001",
+            "binding_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "RECOVERY_LEDGER_SCHEMA_INVALID"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "impact_id": "coverage-impact.krec-001.pr52-recovery-ledger",
+  "impact_version": "1.0.0",
+  "sequence_number": 7,
+  "previous_impact_id": "coverage-impact.gov-owner-policy-recovery-activation.pr51",
+  "repository": "rezahh107/EV4-Decision-Kernel",
+  "pull_request": 52,
+  "base_sha": "5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a",
+  "work_package_id": "KREC-001",
+  "work_type": "maintenance",
+  "coverage_sensitive": false,
+  "impact_classification": "not_applicable",
+  "changed_paths": [
+    ".github/workflows/validate-mvk.yml",
+    "package.json",
+    "planning/KERNEL_EXECUTION_PLAN.md",
+    "planning/NEXT_WORK.md",
+    "planning/coverage/impacts/krec-001.pr52-recovery-ledger.json",
+    "tools/test-coverage-impact-governance.mjs"
+  ],
+  "bootstrap_exception": false,
+  "reason": "adds_the_dependency_aware_recovery_lifecycle_and_evidence_ledger_without_coverage_promotion_credit_percentage_readiness_product_external_repository_or_kroad_effect",
+  "coverage_state_before": "not_measurable",
+  "coverage_state_after": "not_measurable",
+  "baseline_before": "coverage-baseline.v1.0.0",
+  "baseline_after": "coverage-baseline.v1.0.0",
+  "completed_obligation_ids": [],
+  "remaining_obligation_ids": [
+    "OB-EXEC-002-RECONCILE-ELEMENTS",
+    "OB-EXEC-002-EXPAND-CATALOG",
+    "OB-EXEC-002-CLOSE-SELECTED-P0-FAMILY",
+    "OB-EXEC-002-LAYOUT-BOUNDED-PROOF",
+    "OB-EXEC-005-VALIDATE-DENOMINATORS",
+    "OB-EXEC-005-CRITICAL-100"
+  ],
+  "closed_family_ids": [],
+  "element_coverage_delta": null,
+  "question_coverage_delta": null,
+  "known_gaps": [
+    "External project-owner Coverage governance promotion remains pending and still requires independent_review_passed.",
+    "Element and Question denominators remain unresolved and every Coverage percentage remains null.",
+    "KREC-001 is checks_pending in open PR #52 and is not complete; KREC-002 and KREC-004 remain dependency-blocked.",
+    "KROAD-012 remains not superseded; KROAD-013 through KROAD-018 remain not_started; KROAD-012R remains historical_non_authoritative."
+  ],
+  "zero_delta": true,
+  "blocking_defect": null,
+  "next_content_expansion_package": "KREC-001",
+  "exact_head_sha": "derived_at_pr_runtime"
+}

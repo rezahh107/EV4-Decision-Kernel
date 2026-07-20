@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-PR #50 is merged at `435add8ee3f3274f781b6e391f11e3262e380c4e`. The owner removed mandatory independent pre-Merge review repository-wide. AIGOV Batch B is closed under the owner-approved sequence, and the Recovery Program is active without Coverage, readiness, product or KROAD supersession effects.
+PR #50 is merged at `435add8ee3f3274f781b6e391f11e3262e380c4e`. AIGOV Batch B remains closed under the owner-approved sequence. The Recovery Program is active, and open non-Draft PR #52 is the bounded `KREC-001` candidate. Exact-head CI succeeded on reviewed Head `240fa2094005f5494e4823f23c59cdcd9b4ba5ff`; this remains candidate evidence and creates no completion, Coverage, readiness, product, external-repository or KROAD supersession effects.
 
 ## Status Authority
 
@@ -52,6 +52,16 @@ recovery:
   task_activation_effect: one_or_more_active
   KREC-001_through_009: active
   implementation_authorized: true
+  ledger: planning/recovery/recovery-ledger.v1.json
+  KREC-001_lifecycle: checks_pending
+  KREC-001_candidate_branch: krec-001/recovery-ledger
+  KREC-001_candidate_pr: 52
+  KREC-001_candidate_pr_state: non_draft_open
+  KREC-001_reviewed_head_sha: 240fa2094005f5494e4823f23c59cdcd9b4ba5ff
+  KREC-001_reviewed_head_exact_head_ci: green
+  KREC-001_completion_evidence: null
+  KREC-002_execution_eligibility: dependency_blocked
+  KREC-004_execution_eligibility: dependency_blocked
   coverage_credit: false
   readiness_claim: false
 preserved:
@@ -69,9 +79,9 @@ kroad_supersession_effect: none
 
 ## Current PR
 
-current_work_package_id: GOV-OWNER-POLICY-RECOVERY-ACTIVATION
+current_work_package_id: KREC-001
 
-No open AIGOV closure PR remains. Recovery activation is represented by the focused owner-policy activation PR.
+`KREC-001` uses `create_new_candidate` on `krec-001/recovery-ledger`. Open non-Draft PR #52 targets exact base `5b25e9e7f43071e1ac5a7e5e798a3600838e5b2a`. Exact-head CI succeeded on reviewed Head `240fa2094005f5494e4823f23c59cdcd9b4ba5ff`; owner Merge, method-aware resulting-main proof, and current-main validation remain pending.
 
 - [ ] `DCOV-EXEC-001` — Coverage Guarantee proposal and validation foundation
   - `implementation_eligibility`: `blocked_pending_external_governance_approval`
@@ -80,27 +90,31 @@ No open AIGOV closure PR remains. Recovery activation is represented by the focu
 ## Next Task
 
 - [ ] KREC-001 — Recovery Ledger
-  - `status`: active
+  - `authority_status`: active
+  - `lifecycle_state`: checks_pending
   - `implementation_authorized`: true
   - `depends_on`: []
+  - `candidate_branch`: krec-001/recovery-ledger
+  - `candidate_pr`: 52
+  - `completion_evidence`: null
   - `coverage_credit`: false
   - `readiness_claim`: false
 
 ## Recovery Execution Availability
 
-| Task | Status | Execution availability |
-|---|---|---|
-| KREC-001 | `active` | `immediately_executable` |
-| KREC-002 | `active` | `dependency_blocked: KREC-001` |
-| KREC-003 | `active` | `dependency_blocked: KREC-001, KREC-002` |
-| KREC-004 | `active` | `dependency_blocked: KREC-001` |
-| KREC-005 | `active` | `dependency_blocked: KREC-002, KREC-003, KREC-004` |
-| KREC-006 | `active` | `dependency_blocked: KREC-003, KREC-004, KREC-005` |
-| KREC-007 | `active` | `dependency_blocked: KREC-005, KREC-006` |
-| KREC-008 | `active` | `dependency_blocked: KREC-002, KREC-007` |
-| KREC-009 | `active` | `dependency_blocked: KREC-003, KREC-006, KREC-007, KREC-008` |
+| Task | Authority | Lifecycle | Execution availability |
+|---|---|---|---|
+| KREC-001 | `active` | `checks_pending` | `dependency_ready; non_draft_pr_52_open` |
+| KREC-002 | `active` | `not_started` | `dependency_blocked: KREC-001` |
+| KREC-003 | `active` | `not_started` | `dependency_blocked: KREC-001, KREC-002` |
+| KREC-004 | `active` | `not_started` | `dependency_blocked: KREC-001` |
+| KREC-005 | `active` | `not_started` | `dependency_blocked: KREC-002, KREC-003, KREC-004` |
+| KREC-006 | `active` | `not_started` | `dependency_blocked: KREC-003, KREC-004, KREC-005` |
+| KREC-007 | `active` | `not_started` | `dependency_blocked: KREC-005, KREC-006` |
+| KREC-008 | `active` | `not_started` | `dependency_blocked: KREC-002, KREC-007` |
+| KREC-009 | `active` | `not_started` | `dependency_blocked: KREC-003, KREC-006, KREC-007, KREC-008` |
 
-Authorization is simultaneous. A task may not become `implemented` or `complete` until all dependencies are `complete`.
+Authorization is simultaneous. Branch creation is candidate state only. No task is `complete`; therefore `KREC-002` and `KREC-004` remain dependency-blocked.
 
 ## Next Product Task
 

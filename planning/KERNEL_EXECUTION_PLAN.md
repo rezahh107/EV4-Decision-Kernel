@@ -55,6 +55,12 @@ Authorization does not erase sequencing. A task may start only when every depend
 | `KREC-008` | Consumer Enforcement Expansion | `KREC-002`, `KREC-007` | `active`, `implementation_authorized: true` | `dependency_blocked: KREC-002, KREC-007` |
 | `KREC-009` | Coverage Baseline | `KREC-003`, `KREC-006`, `KREC-007`, `KREC-008` | `active`, `implementation_authorized: true` | `dependency_blocked: KREC-003, KREC-006, KREC-007, KREC-008` |
 
+### Recovery lifecycle evidence contract
+
+`planning/recovery/recovery-ledger.v1.json` is the canonical machine-readable lifecycle and evidence ledger for this program. It consumes task identity, titles, dependencies, carrier status and authorization from `planning/recovery/recovery-execution-program.v1.json`; it does not replace that carrier or create a competing task universe.
+
+The ledger distinguishes `not_started`, `in_progress`, `checks_pending` and `complete`. Branch creation, prompt delivery, an open PR and exact-head CI are candidate evidence only. A `complete` entry requires exact reviewed-head CI, owner Merge identity, method-aware resulting-main identity and successful current-main validation. Only `complete` dependencies affect execution eligibility. Accepted completion evidence is immutable in later revisions.
+
 ### Preserved roadmap boundaries
 
 - `KROAD-000` through `KROAD-011` remain completed as recorded in the preserved baseline.

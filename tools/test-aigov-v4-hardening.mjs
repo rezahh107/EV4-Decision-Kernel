@@ -206,6 +206,30 @@ record(
   }),
 );
 
+for (const [source, jobKey] of [
+  ['.github/workflows/validate-mvk.yml', 'regression-validation'],
+  ['.github/workflows/validate-main.yml', 'validate-main'],
+]) {
+  const workflow = readFileSync(source, 'utf8');
+  const tokenDiagnostic = {
+    code: 'AIGOV_SECRET_ACCESS_FORBIDDEN',
+    message: `Workflow accesses a credential at jobs.${jobKey}.env.RECOVERY_GITHUB_TOKEN.`,
+  };
+  record(
+    `${source} permits only the structurally verified built-in Recovery job token`,
+    ownerPolicyWorkflowDiagnosticAllowed(tokenDiagnostic, {
+      source,
+      currentText: workflow,
+      baseText: workflow,
+    })
+      && !ownerPolicyWorkflowDiagnosticAllowed(tokenDiagnostic, {
+        source,
+        currentText: workflow.replace('${{ github.token }}', '${{ secrets.RECOVERY_PAT }}'),
+        baseText: workflow,
+      }),
+  );
+}
+
 const recovery = readJson('planning/recovery/recovery-execution-program.v1.json');
 const recoveryDiagnostics = recoveryProgramDiagnostics(recovery);
 record('full Recovery activation passes', recoveryDiagnostics.length === 0, recoveryDiagnostics);

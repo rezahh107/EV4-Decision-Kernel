@@ -76,8 +76,9 @@ async function githubJson(apiPath) {
     'User-Agent': 'ev4-aigov-owner-policy-exact-main',
     'X-GitHub-Api-Version': '2022-11-28',
   };
-  if (process.env.AIGOV_GITHUB_TOKEN) {
-    headers.Authorization = `Bearer ${process.env.AIGOV_GITHUB_TOKEN}`;
+  const token = process.env.AIGOV_GITHUB_TOKEN || process.env.RECOVERY_GITHUB_TOKEN;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   }
   const response = await fetch(`${API}${apiPath}`, { headers });
   if (!response.ok) throw new Error(`GitHub API ${response.status}: ${apiPath}`);
