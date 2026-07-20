@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import { request as nodeHttpsRequest } from 'node:https';
+import { request as nodeHttpRequest } from 'node:http';
 import { Readable } from 'node:stream';
 import { URL } from 'node:url';
 import { recoveryPrimordials as p } from '../../kernel/validator/recovery-primordials.mjs';
@@ -10,9 +10,20 @@ const API_REPOSITORY_PATH = `/repos/${REPOSITORY}`;
 const API_PATH_PREFIX = `${API_REPOSITORY_PATH}/`;
 const MAX_RESPONSE_BYTES = 16 * 1024 * 1024;
 const REQUEST_TIMEOUT_MS = 12_000;
-const trustedHttpsRequest = nodeHttpsRequest;
+const trustedTestHttpRequest = nodeHttpRequest;
 const trustedEventOn = p.uncurryThis(EventEmitter.prototype.on);
 const trustedReadableResume = p.uncurryThis(Readable.prototype.resume);
+
+function fixtureDestination(source) {
+  const fixturePort = Number.parseInt(process.env.RECOVERY_LOCAL_SERVER_PORT || '', 10);
+  if (!Number.isInteger(fixturePort) || fixturePort < 1 || fixturePort > 65535) {
+    throw new p.TrustedError('test fixture localhost port unavailable');
+  }
+  const destination = new URL(`http://127.0.0.1:${fixturePort}`);
+  destination.pathname = source.pathname;
+  destination.search = source.search;
+  return destination;
+}
 
 function collectJsonResponse(destination, options) {
   return new p.TrustedPromise((resolve, reject) => {
@@ -30,7 +41,7 @@ function collectJsonResponse(destination, options) {
       reject(error instanceof p.TrustedError ? error : new p.TrustedError(p.TrustedString(error)));
     };
     try {
-      request = trustedHttpsRequest(destination, options, (response) => {
+      request = trustedTestHttpRequest(destination, options, (response) => {
         trustedEventOn(response, 'error', fail);
         trustedEventOn(response, 'aborted', () => fail(new p.TrustedError('test fixture response aborted')));
         trustedEventOn(response, 'close', () => {
@@ -82,7 +93,7 @@ export function createRecoveryCompletionTestFetch() {
       || source.password) {
       throw new p.TrustedError('test fixture requested an out-of-bound GitHub endpoint');
     }
-    const response = await collectJsonResponse(source, {
+    const response = await collectJsonResponse(fixtureDestination(source), {
       method: 'GET',
       headers: init.headers,
       setHost: true,
