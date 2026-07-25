@@ -144,8 +144,19 @@ async function run() {
     diagnostics: uniqueDiagnostics(diagnostics),
     fixtures,
   };
-  console.log(JSON.stringify(report, null, 2));
-  if (report.status !== 'pass') process.exitCode = 1;
+  const output = `${JSON.stringify(report, null, 2)}\n`;
+  process.stdout.write(output);
+  if (report.status !== 'pass') {
+    const runnerTemp = process.env.RUNNER_TEMP;
+    if (typeof runnerTemp === 'string' && runnerTemp) {
+      fs.writeFileSync(
+        path.join(runnerTemp, 'aigov-owner-policy-report.json'),
+        `${JSON.stringify({ artifact_type: 'recovery-ledger-failure-evidence.v1', ...report }, null, 2)}\n`,
+        'utf8',
+      );
+    }
+    process.exitCode = 1;
+  }
 }
 
 await run();

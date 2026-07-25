@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -70,4 +70,18 @@ const summary = {
 };
 process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
 appendFileSync(logPath, `${JSON.stringify(summary, null, 2)}\n`, 'utf8');
-if (failures.length) process.exitCode = 1;
+if (failures.length) {
+  const runnerTemp = process.env.RUNNER_TEMP;
+  if (typeof runnerTemp === 'string' && runnerTemp) {
+    writeFileSync(
+      join(runnerTemp, 'aigov-owner-policy-report.json'),
+      `${JSON.stringify({
+        artifact_type: 'recovery-security-failure-evidence.v1',
+        ...summary,
+        log: readFileSync(logPath, 'utf8'),
+      }, null, 2)}\n`,
+      'utf8',
+    );
+  }
+  process.exitCode = 1;
+}
