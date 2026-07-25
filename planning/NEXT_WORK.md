@@ -53,6 +53,8 @@ current_work_package_id: AIGOV26-TRANSITION-001
 
 The bounded work package is the AIGOV v2.6 repository transition. It may inventory branches, reconcile KREC lifecycle memory, register source identity, create the successor program, document waves, and add transition validation. It must not implement any `AIGOV26-*` task, delete branches, activate policy, or Merge itself.
 
+Coverage proposal status: `blocked_pending_external_governance_approval`. KROAD-012 remains next-allowed product work and is not superseded by this planning transition.
+
 ## Recovery Task Disposition
 
 | Task | Historical definition | Effective lifecycle | Effective execution |
