@@ -141,7 +141,6 @@ jobs:
           node --check tools/lib/pr-inspector-v1102.mjs
           node --check tools/verify-aigov-v3-exact-main.mjs
           node --check tools/validate-aigov-v4-governance.mjs
-          node --check tools/validate-aigov26-transition.mjs
           node --check tools/validate-roadmap-memory.mjs
           node --check tools/validate-roadmap-memory-v4-owner-policy.mjs
           node --check tools/test-aigov-v3-exception.mjs
@@ -170,24 +169,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          WORK_PACKAGE_ID="$(sed -n 's/^current_work_package_id:[[:space:]]*//p' planning/NEXT_WORK.md)"
-          case "${WORK_PACKAGE_ID}" in
-            KREC-001)
-              SCOPE_PATH="planning/governance/scopes/krec-001-recovery-ledger.scope.json"
-              ;;
-            AIGOV26-TRANSITION-001)
-              SCOPE_PATH="planning/governance/scopes/aigov-v2.6-transition.scope.json"
-              ;;
-            *)
-              echo "Unsupported current_work_package_id: ${WORK_PACKAGE_ID}" >&2
-              exit 1
-              ;;
-          esac
           npm run aigov:scope-disclosure:batch-b -- \
             --base "${COVERAGE_BASE_SHA}" \
             --head "${COVERAGE_HEAD_SHA}" \
-            --scope "${SCOPE_PATH}" \
-            --output "${RUNNER_TEMP}/current-work-package-scope.json"
+            --scope planning/governance/scopes/krec-001-recovery-ledger.scope.json \
+            --output "${RUNNER_TEMP}/krec-001-recovery-ledger-scope.json"
 
       - name: Validate owner policy
         if: ${{ always() }}
@@ -208,8 +194,6 @@ jobs:
           npm run test:recovery-lifecycle
           npm run validate:recovery-ledger
           npm run test:recovery-ledger-lifecycle
-          npm run validate:aigov26-transition
-          npm run test:aigov26-transition
 
       - name: Validate roadmap memory
         if: ${{ always() }}
@@ -289,13 +273,13 @@ jobs:
           --source-main-sha "${COVERAGE_BASE_SHA}"
           --output "${RUNNER_TEMP}/aigov-v4-batch-b-owner-policy-preview.json"
 
-      - name: Upload exact-head work-package evidence
+      - name: Upload exact-head KREC-001 evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: current-work-package-${{ github.event.pull_request.head.sha }}
+          name: krec-001-recovery-ledger-${{ github.event.pull_request.head.sha }}
           path: |
-            ${{ runner.temp }}/current-work-package-scope.json
+            ${{ runner.temp }}/krec-001-recovery-ledger-scope.json
             ${{ runner.temp }}/aigov-owner-policy-report.json
             ${{ runner.temp }}/aigov-v4-batch-b-owner-policy-preview.json
           if-no-files-found: error

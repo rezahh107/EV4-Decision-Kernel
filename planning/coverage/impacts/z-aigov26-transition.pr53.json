@@ -11,7 +11,6 @@
   "coverage_sensitive": false,
   "impact_classification": "not_applicable",
   "changed_paths": [
-    ".github/workflows/validate-mvk.yml",
     "package.json",
     "planning/NEXT_WORK.md",
     "planning/coverage/impacts/z-aigov26-transition.pr53.json",
@@ -36,7 +35,7 @@
   "element_coverage_delta": null,
   "question_coverage_delta": null,
   "known_gaps": [
-    "KREC-001 formal completion remains blocked pending authoritative Validate Main push-run evidence for the exact merge commit.",
+    "KREC-001 formal completion is recorded without granting Coverage credit.",
     "The owner-supplied AIGOV v2.6 archive was unavailable in this repository session, so independent archive and normative-file verification was not reperformed.",
     "AIGOV v2.6 repository adoption and all AIGOV26 substantive implementation remain not started.",
     "Element and Question denominators remain unresolved and every Coverage percentage remains null."

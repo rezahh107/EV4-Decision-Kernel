@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-PR #52 is merged. Its final reviewed Head is `117a6f072c6c0a6a3487a4520e8f6f0623618769` and the current `main` Merge commit is `4fe332847e6867fc6aa4639a94a88b8177d31970`. The available GitHub Actions query could not retrieve the required `Validate Main` push run for that exact commit, so `KREC-001` remains pending formal completion without claiming that the run is absent.
+PR #52 is merged and formally complete. Its final reviewed Head is `117a6f072c6c0a6a3487a4520e8f6f0623618769`; successful exact-head `Validate MVK` is run `29741545637`; the resulting `main` Merge commit is `4fe332847e6867fc6aa4639a94a88b8177d31970`; and successful `Validate Main` with `event=push` on that exact commit is run `29742820512`.
 
 The owner has explicitly retired unexecuted AIGOV v2.5 tasks `KREC-002` through `KREC-009` and registered the versioned `AIGOV v2.6.0` successor program. This transition registers planning and source identity only; it does not adopt or enforce AIGOV v2.6.
 
@@ -44,12 +44,15 @@ AIGOV_v2_6:
   repository_adopted: false
   implementation_started: false
 KREC-001:
-  lifecycle: post_merge_evidence_pending
+  lifecycle: complete
+  execution_eligibility: complete
   pull_request: 52
   final_head_sha: 117a6f072c6c0a6a3487a4520e8f6f0623618769
+  exact_head_validate_mvk_run: 29741545637
   merge_commit_sha: 4fe332847e6867fc6aa4639a94a88b8177d31970
-  formal_completion: pending
-  blocker: KREC-001-CURRENT-MAIN-EVIDENCE-ACCESS
+  current_main_validate_main_run: 29742820512
+  formal_completion: complete
+  blocker: none
 KREC-002_through_009:
   lifecycle: superseded_before_execution
   substantive_implementation_started: false
@@ -60,8 +63,8 @@ KREC-002_through_009:
 successor_program:
   id: AIGOV-2.6-REPOSITORY-MIGRATION-PROGRAM
   task_count: 8
-  transition_gate: blocked_by_KREC_001_formal_completion
-next_executable_task: none
+  transition_gate: satisfied
+next_executable_task: AIGOV26-001
 coverage_credit: false
 readiness_claim: false
 policy_adoption_claim: false
@@ -76,13 +79,13 @@ current_work_package_id: AIGOV26-TRANSITION-001
 
 The bounded work package is the AIGOV v2.6 repository transition. It may inventory branches, reconcile KREC lifecycle memory, register source identity, create the successor program, document waves, and add transition validation. It must not implement any `AIGOV26-*` task, delete branches, activate policy, or Merge itself.
 
-Coverage proposal status: `blocked_pending_external_governance_approval`. KROAD-012 remains next-allowed product work and is not superseded by this planning transition.
+Coverage proposal status: `blocked_pending_external_governance_approval`. `AIGOV26-001` is the next executable governance task; KROAD-012 remains the next-allowed product work and is not superseded by this planning transition.
 
 ## Recovery Task Disposition
 
 | Task | Historical definition | Effective lifecycle | Effective execution |
 |---|---|---|---|
-| `KREC-001` | preserved | `post_merge_evidence_pending` | blocked from formal completion until exact current-main evidence is available |
+| `KREC-001` | preserved | `complete` | `complete` with exact PR, Merge, exact-head CI and current-main evidence |
 | `KREC-002` | preserved | `superseded_before_execution` | `superseded` |
 | `KREC-003` | preserved | `superseded_before_execution` | `superseded` |
 | `KREC-004` | preserved | `superseded_before_execution` | `superseded` |
@@ -96,7 +99,7 @@ Coverage proposal status: `blocked_pending_external_governance_approval`. KROAD-
 
 | Task | Title | Initial state | Dependency |
 |---|---|---|---|
-| `AIGOV26-001` | Field and Consumer Inventory | `transition_gate_blocked` | `KREC-001 formal completion gate` |
+| `AIGOV26-001` | Field and Consumer Inventory | `dependency_ready` | `KREC-001 formal completion satisfied` |
 | `AIGOV26-002` | Claim and Provenance Classification | `dependency_blocked` | `AIGOV26-001` |
 | `AIGOV26-003` | Official Review Package Producer | `dependency_blocked` | `AIGOV26-002` |
 | `AIGOV26-004` | Deterministic Receipt Issuer | `dependency_blocked` | `AIGOV26-003` |

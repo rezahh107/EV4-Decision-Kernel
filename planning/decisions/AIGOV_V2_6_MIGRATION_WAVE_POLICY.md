@@ -30,4 +30,6 @@ The program does not require one PR per task, a full suite after every micro-com
 
 ## Transition Gate
 
-No task may begin while `KREC-001-CURRENT-MAIN-EVIDENCE-ACCESS` remains unresolved. When KREC-001 is formally complete, only `AIGOV26-001` becomes dependency-ready.
+`KREC-001` formal completion is satisfied by PR #52, exact-head `Validate MVK` run `29741545637`, owner Merge commit `4fe332847e6867fc6aa4639a94a88b8177d31970`, and current-main `Validate Main` run `29742820512`.
+
+Only `AIGOV26-001` is dependency-ready. `AIGOV26-002` through `AIGOV26-008` remain dependency-blocked. This transition PR does not implement `AIGOV26-001`.
