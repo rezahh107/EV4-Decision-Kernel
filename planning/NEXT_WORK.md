@@ -49,6 +49,8 @@ external_repository_effect: none
 
 ## Current Transition PR
 
+current_work_package_id: AIGOV26-TRANSITION-001
+
 The bounded work package is the AIGOV v2.6 repository transition. It may inventory branches, reconcile KREC lifecycle memory, register source identity, create the successor program, document waves, and add transition validation. It must not implement any `AIGOV26-*` task, delete branches, activate policy, or Merge itself.
 
 ## Recovery Task Disposition

@@ -1,0 +1,44 @@
+{
+  "impact_id": "coverage-impact.aigov26-transition-001.pr53-transition",
+  "impact_version": "1.0.0",
+  "sequence_number": 8,
+  "previous_impact_id": "coverage-impact.krec-001.pr52-recovery-ledger",
+  "repository": "rezahh107/EV4-Decision-Kernel",
+  "pull_request": 53,
+  "base_sha": "4fe332847e6867fc6aa4639a94a88b8177d31970",
+  "work_package_id": "AIGOV26-TRANSITION-001",
+  "work_type": "maintenance",
+  "coverage_sensitive": false,
+  "impact_classification": "not_applicable",
+  "changed_paths": [
+    "package.json"
+  ],
+  "bootstrap_exception": false,
+  "reason": "registers_a_versioned_aigov_v2_6_transition_and_supersedes_unexecuted_v2_5_recovery_tasks_without_coverage_promotion_credit_readiness_product_or_adoption_effect",
+  "coverage_state_before": "not_measurable",
+  "coverage_state_after": "not_measurable",
+  "baseline_before": "coverage-baseline.v1.0.0",
+  "baseline_after": "coverage-baseline.v1.0.0",
+  "completed_obligation_ids": [],
+  "remaining_obligation_ids": [
+    "OB-EXEC-002-RECONCILE-ELEMENTS",
+    "OB-EXEC-002-EXPAND-CATALOG",
+    "OB-EXEC-002-CLOSE-SELECTED-P0-FAMILY",
+    "OB-EXEC-002-LAYOUT-BOUNDED-PROOF",
+    "OB-EXEC-005-VALIDATE-DENOMINATORS",
+    "OB-EXEC-005-CRITICAL-100"
+  ],
+  "closed_family_ids": [],
+  "element_coverage_delta": null,
+  "question_coverage_delta": null,
+  "known_gaps": [
+    "KREC-001 formal completion remains blocked pending authoritative Validate Main push-run evidence for the exact merge commit.",
+    "The owner-supplied AIGOV v2.6 archive was unavailable in this repository session, so independent archive and normative-file verification was not reperformed.",
+    "AIGOV v2.6 repository adoption and all AIGOV26 substantive implementation remain not started.",
+    "Element and Question denominators remain unresolved and every Coverage percentage remains null."
+  ],
+  "zero_delta": true,
+  "blocking_defect": null,
+  "next_content_expansion_package": "AIGOV26-001",
+  "exact_head_sha": "derived_at_pr_runtime"
+}
