@@ -54,13 +54,18 @@ const graph = {'KREC-001':[],'KREC-002':['KREC-001'],'KREC-003':['KREC-001','KRE
 if (program.program_status !== 'active' || program.tasks?.length !== 9 || program.tasks.some((task) => task.status !== 'active' || task.implementation_authorized !== true || task.coverage_credit !== false || task.readiness_claim !== false || JSON.stringify(task.depends_on) !== JSON.stringify(graph[task.task_id]))) fail('planning/recovery/recovery-execution-program.v1.json', 'Recovery activation state or dependency graph mismatch');
 if (program.kroad_012r_status !== 'historical_non_authoritative' || program.kroad_supersession_effect !== 'none' || program.coverage_promotion_effect !== 'none' || program.product_effect !== 'none') fail('planning/recovery/recovery-execution-program.v1.json', 'forbidden effect detected');
 
-const ledgerDiagnostics = recoveryLedgerDiagnostics(ledger, program);
-if (ledgerDiagnostics.length) fail('planning/recovery/recovery-ledger.v1.json', 'Recovery ledger mismatch: ' + ledgerDiagnostics.map((item) => item.diagnostic_id).join(', '));
+// The legacy path remains fully bound to static Recovery diagnostics. In transition
+// mode, completion authority is checked by the production Recovery validator and
+// this roadmap validator checks only the durable, capability-independent memory.
+if (!transitionActive) {
+  const ledgerDiagnostics = recoveryLedgerDiagnostics(ledger, program);
+  if (ledgerDiagnostics.length) fail('planning/recovery/recovery-ledger.v1.json', 'Recovery ledger mismatch: ' + ledgerDiagnostics.map((item) => item.diagnostic_id).join(', '));
+}
 const ledgerById = new Map(ledger.tasks.map((task) => [task.task_id, task]));
 const krec001 = ledgerById.get('KREC-001');
 
 if (transitionActive) {
-  if (krec001?.lifecycle_state !== 'complete' || krec001?.execution_eligibility !== 'complete' || krec001?.candidate?.branch !== 'krec-001/recovery-ledger' || krec001?.candidate?.pull_request !== 52 || krec001?.candidate?.pr_state !== 'merged' || krec001?.transition_blocker !== null || krec001?.completion_evidence?.exact_head_ci?.run_id !== 29741545637 || krec001?.completion_evidence?.current_main_validation?.run_id !== 29742820512) fail('planning/recovery/recovery-ledger.v1.json', 'KREC-001 transition completion evidence mismatch');
+  if (krec001?.lifecycle_state !== 'complete' || krec001?.execution_eligibility !== 'complete' || krec001?.candidate?.branch !== 'krec-001/recovery-ledger' || krec001?.candidate?.pull_request !== 52 || krec001?.candidate?.pr_state !== 'merged' || krec001?.transition_blocker !== null || krec001?.transition_disposition !== null || krec001?.completion_evidence?.exact_head_ci?.run_id !== 29741545637 || krec001?.completion_evidence?.current_main_validation?.run_id !== 29742820512) fail('planning/recovery/recovery-ledger.v1.json', 'KREC-001 transition completion evidence mismatch');
   for (const id of Object.keys(graph).filter((id) => id !== 'KREC-001')) {
     const task = ledgerById.get(id); const disposition = task?.transition_disposition;
     if (task?.lifecycle_state !== 'not_started' || task?.candidate !== null || task?.completion_evidence !== null || disposition?.lifecycle_state !== 'superseded_before_execution' || disposition?.execution_eligibility !== 'superseded' || disposition?.historical_definition_preserved !== true || disposition?.substantive_implementation_started !== false || disposition?.implementation_credit !== false || disposition?.completion_credit !== false || disposition?.coverage_credit !== false) fail('planning/recovery/recovery-ledger.v1.json', `${id} transition disposition mismatch`);

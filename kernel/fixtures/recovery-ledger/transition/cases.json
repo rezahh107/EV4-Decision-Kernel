@@ -1,0 +1,78 @@
+{
+  "fixture_version": "aigov26-transition-fixtures.v1",
+  "cases": [
+    {
+      "case_id": "canonical-transition-ledger",
+      "patch": [],
+      "expected_diagnostic_ids": []
+    },
+    {
+      "case_id": "completed-task-cannot-be-superseded",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/ledger/tasks/0/transition_disposition",
+          "value": {
+            "lifecycle_state": "superseded_before_execution",
+            "execution_eligibility": "superseded",
+            "superseded_by": "AIGOV-2.6-REPOSITORY-MIGRATION-PROGRAM",
+            "supersession_basis": "OWNER-DIRECTED-AIGOV-2.6-MIGRATION",
+            "historical_definition_preserved": true,
+            "substantive_implementation_started": false,
+            "implementation_credit": false,
+            "completion_credit": false,
+            "coverage_credit": false
+          }
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "AIGOV26_COMPLETED_TASK_SUPERSESSION_FORBIDDEN"
+      ]
+    },
+    {
+      "case_id": "superseded-task-disposition-required",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/ledger/tasks/1/transition_disposition",
+          "value": null
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "AIGOV26_SUPERSESSION_RECORD_INVALID"
+      ],
+      "allow_additional_diagnostics": true
+    },
+    {
+      "case_id": "supersession-cannot-grant-credit",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/ledger/tasks/1/transition_disposition/completion_credit",
+          "value": true
+        },
+        {
+          "op": "replace",
+          "path": "/ledger/tasks/1/transition_disposition/coverage_credit",
+          "value": true
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "AIGOV26_SUPERSESSION_CREDIT_FORBIDDEN"
+      ]
+    },
+    {
+      "case_id": "implemented-or-completed-task-cannot-be-retired",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/ledger/tasks/1/lifecycle_state",
+          "value": "complete"
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "AIGOV26_ACTIVE_OR_COMPLETED_TASK_SUPERSESSION_FORBIDDEN"
+      ]
+    }
+  ]
+}

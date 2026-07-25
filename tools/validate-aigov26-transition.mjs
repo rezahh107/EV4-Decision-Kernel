@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const read = (path) => JSON.parse(fs.readFileSync(path, 'utf8'));
+const read = (filePath) => JSON.parse(fs.readFileSync(filePath, 'utf8'));
 const paths = {
   program: 'planning/recovery/recovery-execution-program.v1.json',
   ledger: 'planning/recovery/recovery-ledger.v1.json',
@@ -43,6 +45,7 @@ export function diagnostics(documents) {
   add(krec1?.lifecycle_state !== 'complete' || krec1?.execution_eligibility !== 'complete', 'AIGOV26_KREC001_LIFECYCLE_INVALID');
   add(krec1?.candidate?.pull_request !== 52 || krec1?.candidate?.pr_state !== 'merged', 'AIGOV26_KREC001_MERGE_RECONCILIATION_INVALID');
   add(krec1?.transition_blocker !== null, 'AIGOV26_KREC001_STALE_BLOCKER');
+  add(krec1?.transition_disposition !== null, 'AIGOV26_COMPLETED_TASK_SUPERSESSION_FORBIDDEN');
   const completion = krec1?.completion_evidence;
   add(completion?.pull_request !== 52
     || completion?.reviewed_head_sha !== '117a6f072c6c0a6a3487a4520e8f6f0623618769'
@@ -131,8 +134,8 @@ export function diagnostics(documents) {
     || !scope?.forbidden_changes?.includes('destructive_deletion')
     || !scope?.excluded?.some((item) => item.includes('remote branch deletion')),
     'AIGOV26_SCOPE_INVALID');
-  for (const path of Object.values(paths).filter((value) => value !== paths.next)) {
-    add(path !== paths.scope && !scope?.committed?.includes(path), 'AIGOV26_SCOPE_PATH_MISSING');
+  for (const filePath of Object.values(paths).filter((value) => value !== paths.next)) {
+    add(filePath !== paths.scope && !scope?.committed?.includes(filePath), 'AIGOV26_SCOPE_PATH_MISSING');
   }
   add(!String(next || '').includes('formal_completion: complete')
     || !String(next || '').includes('exact_head_validate_mvk_run: 29741545637')
@@ -153,7 +156,7 @@ export function diagnostics(documents) {
   return [...new Set(out)];
 }
 
-function load() {
+export function load() {
   return {
     program: read(paths.program),
     ledger: read(paths.ledger),
@@ -165,7 +168,7 @@ function load() {
   };
 }
 
-function selfTest(source) {
+export function selfTest(source) {
   const cases = [];
   const expect = (name, mutate, code) => {
     const value = clone(source);
@@ -174,7 +177,8 @@ function selfTest(source) {
     cases.push({ name, pass: observed.includes(code), diagnostics: observed });
   };
   expect('KREC-001 completion evidence must remain exact', (x) => { x.ledger.tasks[0].completion_evidence.current_main_validation.run_id = 1; }, 'AIGOV26_KREC001_CURRENT_MAIN_EVIDENCE_INVALID');
-  expect('completed KREC task cannot be superseded', (x) => { x.ledger.tasks[1].lifecycle_state = 'complete'; }, 'AIGOV26_ACTIVE_OR_COMPLETED_TASK_SUPERSESSION_FORBIDDEN');
+  expect('completed KREC task cannot be superseded', (x) => { x.ledger.tasks[0].transition_disposition = clone(x.ledger.tasks[1].transition_disposition); }, 'AIGOV26_COMPLETED_TASK_SUPERSESSION_FORBIDDEN');
+  expect('retired KREC task cannot be completed', (x) => { x.ledger.tasks[1].lifecycle_state = 'complete'; }, 'AIGOV26_ACTIVE_OR_COMPLETED_TASK_SUPERSESSION_FORBIDDEN');
   expect('missing successor program fails', (x) => { x.program.transition.successor_program_id = 'missing'; }, 'AIGOV26_SUCCESSOR_PROGRAM_MISSING');
   expect('automatic migration fails', (x) => { x.program.transition.auto_migration = true; }, 'AIGOV26_AUTO_MIGRATION_FORBIDDEN');
   expect('supersession completion credit fails', (x) => { x.ledger.tasks[1].transition_disposition.completion_credit = true; }, 'AIGOV26_SUPERSESSION_CREDIT_FORBIDDEN');
@@ -184,9 +188,14 @@ function selfTest(source) {
   return cases;
 }
 
-const documents = load();
-const observed = diagnostics(documents);
-const tests = process.argv.includes('--self-test') ? selfTest(documents) : [];
-const status = observed.length === 0 && tests.every((item) => item.pass) ? 'pass' : 'fail';
-console.log(JSON.stringify({ validator: 'aigov-v2.6-transition', status, diagnostics: observed, tests }, null, 2));
-if (status !== 'pass') process.exitCode = 1;
+function runCli() {
+  const documents = load();
+  const observed = diagnostics(documents);
+  const tests = process.argv.includes('--self-test') ? selfTest(documents) : [];
+  const status = observed.length === 0 && tests.every((item) => item.pass) ? 'pass' : 'fail';
+  console.log(JSON.stringify({ validator: 'aigov-v2.6-transition', status, diagnostics: observed, tests }, null, 2));
+  if (status !== 'pass') process.exitCode = 1;
+}
+
+const isMain = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+if (isMain) runCli();

@@ -24,6 +24,12 @@ const scopeRevision = (scope) => {
   return `sha256:${crypto.createHash('sha256').update(JSON.stringify(canonical(payload))).digest('hex')}`;
 };
 
+export function resolveOutputPath(value) {
+  return path.isAbsolute(value)
+    ? path.normalize(value)
+    : path.resolve(ROOT, value);
+}
+
 function parseArgs(argv) {
   const options = { base: null, head: 'HEAD', scope: DEFAULT_SCOPE, output: null };
   for (let index = 0; index < argv.length; index += 1) {
@@ -118,7 +124,7 @@ function main() {
     diagnostics,
   };
   const output = `${JSON.stringify(report, null, 2)}\n`;
-  if (options.output) fs.writeFileSync(path.join(ROOT, options.output), output);
+  if (options.output) fs.writeFileSync(resolveOutputPath(options.output), output);
   process.stdout.write(output);
   if (diagnostics.length) process.exitCode = 1;
 }
@@ -136,7 +142,7 @@ if (isMain) {
     const output = `${JSON.stringify(report, null, 2)}\n`;
     const index = process.argv.indexOf('--output');
     if (index >= 0 && process.argv[index + 1]) {
-      fs.writeFileSync(path.resolve(ROOT, process.argv[index + 1]), output);
+      fs.writeFileSync(resolveOutputPath(process.argv[index + 1]), output);
     }
     process.stderr.write(output);
     process.exitCode = 1;

@@ -10,9 +10,12 @@ import {
   createRecoveryCompletionVerifier,
   verifyRecoveryCompletionEvidence,
 } from './recovery-completion-verifier-hardened.mjs';
+import { createRecoveryHistoricalPrAssociationFetch } from './recovery-pr-association-fetch.mjs';
 import { recoveryPrimordials as p } from './recovery-primordials.mjs';
 
 const REPOSITORY = 'rezahh107/EV4-Decision-Kernel';
+const REPOSITORY_ID = 1292378784;
+const DEFAULT_BRANCH = 'main';
 const API_ORIGIN = 'https://api.github.com';
 const API_REPOSITORY_PATH = `/repos/${REPOSITORY}`;
 const API_PATH_PREFIX = `${API_REPOSITORY_PATH}/`;
@@ -74,7 +77,7 @@ function assertRequest(value) {
   if (typeof value.binding_sha256 !== 'string' || !p.regexpTest(HEX_64, value.binding_sha256)) throw new p.TrustedError('invalid isolated binding');
   if (typeof value.mac_key !== 'string' || !value.mac_key) throw new p.TrustedError('invalid isolated MAC key');
   if (typeof value.token !== 'string' || !value.token) throw new p.TrustedError('RECOVERY_GITHUB_TOKEN unavailable');
-  if (value.ledger?.repository !== REPOSITORY || value.ledger?.default_branch !== 'main') throw new p.TrustedError('isolated repository boundary mismatch');
+  if (value.ledger?.repository !== REPOSITORY || value.ledger?.default_branch !== DEFAULT_BRANCH) throw new p.TrustedError('isolated repository boundary mismatch');
   if (!p.arrayIsArray(value.ledger?.tasks) || value.ledger.tasks.length !== 1 || value.ledger.tasks[0]?.task_id !== value.task_id) {
     throw new p.TrustedError('isolated input must contain exactly one bound task');
   }
@@ -158,8 +161,8 @@ function collectJsonResponse(destination, options) {
   });
 }
 
-function buildFetch() {
-  return async function isolatedGithubFetch(rawUrl, init = {}) {
+function buildFetch(task) {
+  const isolatedGithubFetch = async function isolatedGithubFetch(rawUrl, init = {}) {
     const source = new URL(rawUrl);
     if (source.origin !== API_ORIGIN
       || (source.pathname !== API_REPOSITORY_PATH && !p.stringStartsWith(source.pathname, API_PATH_PREFIX))
@@ -184,6 +187,12 @@ function buildFetch() {
       json: async () => response.payload,
     });
   };
+  return createRecoveryHistoricalPrAssociationFetch(isolatedGithubFetch, {
+    repository: REPOSITORY,
+    repositoryId: REPOSITORY_ID,
+    defaultBranch: DEFAULT_BRANCH,
+    task,
+  });
 }
 
 function main() {
@@ -191,8 +200,9 @@ function main() {
   if (!p.bufferIsBuffer(raw) || raw.length === 0 || raw.length > MAX_INPUT_BYTES) throw new p.TrustedError('isolated request input missing or oversized');
   const input = p.jsonParse(p.bufferToString(raw, 'utf8'));
   assertRequest(input);
+  const task = input.ledger.tasks[0];
   const session = createRecoveryCompletionVerifier({
-    fetchImpl: buildFetch(),
+    fetchImpl: buildFetch(task),
     token: input.token,
     now: trustedNow,
   });

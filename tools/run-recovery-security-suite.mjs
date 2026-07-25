@@ -22,6 +22,7 @@ const suites = [
   { name: 'recovery completion readable dependencies', args: ['--import', BOOTSTRAP, 'tools/test-recovery-completion-readable-dependencies.mjs'] },
   { name: 'recovery completion isolation boundary', args: ['--import', BOOTSTRAP, 'tools/test-recovery-completion-isolation-boundary.mjs'] },
   { name: 'recovery completion production fixture rejection', args: ['tools/test-recovery-completion-production-fixture-rejection.mjs'] },
+  { name: 'recovery historical PR association', args: ['tools/test-recovery-historical-pr-association.mjs'] },
 ];
 
 writeFileSync(logPath, '', 'utf8');
