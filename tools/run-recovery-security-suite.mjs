@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +15,7 @@ const suites = [
   { name: 'import test registry', args: ['-e', "import('./tools/lib/recovery-completion-test-registry.mjs')"] },
   { name: 'import test authority', args: ['-e', "import('./tools/lib/recovery-completion-test-authority.mjs')"] },
   { name: 'import test bootstrap', args: ['-e', "import('./tools/lib/recovery-completion-test-bootstrap.mjs')"] },
-  { name: 'recovery ledger lifecycle', args: ['tools/test-recovery-ledger-lifecycle.mjs'] },
+  { name: 'legacy recovery ledger lifecycle', args: ['tools/test-recovery-legacy-ledger-lifecycle.mjs'] },
   { name: 'recovery completion intrinsics', args: ['tools/test-recovery-completion-intrinsics.mjs'] },
   { name: 'recovery completion transitive intrinsics', args: ['--import', BOOTSTRAP, 'tools/test-recovery-completion-transitive-intrinsics.mjs'] },
   { name: 'recovery completion Node transport and hash', args: ['--import', BOOTSTRAP, 'tools/test-recovery-completion-node-transport-and-hash.mjs'] },
@@ -23,6 +23,7 @@ const suites = [
   { name: 'recovery completion isolation boundary', args: ['--import', BOOTSTRAP, 'tools/test-recovery-completion-isolation-boundary.mjs'] },
   { name: 'recovery completion production fixture rejection', args: ['tools/test-recovery-completion-production-fixture-rejection.mjs'] },
   { name: 'recovery historical PR association', args: ['tools/test-recovery-historical-pr-association.mjs'] },
+  { name: 'AIGOV v2.6 transition fixtures', args: ['tools/test-recovery-transition-fixtures.mjs'] },
 ];
 
 writeFileSync(logPath, '', 'utf8');
@@ -70,18 +71,4 @@ const summary = {
 };
 process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
 appendFileSync(logPath, `${JSON.stringify(summary, null, 2)}\n`, 'utf8');
-if (failures.length) {
-  const runnerTemp = process.env.RUNNER_TEMP;
-  if (typeof runnerTemp === 'string' && runnerTemp) {
-    writeFileSync(
-      join(runnerTemp, 'aigov-owner-policy-report.json'),
-      `${JSON.stringify({
-        artifact_type: 'recovery-security-failure-evidence.v1',
-        ...summary,
-        log: readFileSync(logPath, 'utf8'),
-      }, null, 2)}\n`,
-      'utf8',
-    );
-  }
-  process.exitCode = 1;
-}
+if (failures.length) process.exitCode = 1;
