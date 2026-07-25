@@ -10,6 +10,29 @@ The owner has explicitly retired unexecuted AIGOV v2.5 tasks `KREC-002` through 
 
 This file is the authoritative current-status dashboard. `planning/KERNEL_EXECUTION_PLAN.md` preserves durable product history. The versioned successor authority is `planning/migrations/aigov-v2.6-migration-program.v1.json`.
 
+## Preserved Existing Owner-Policy Memory
+
+The following tokens describe the already completed AIGOV owner-policy adoption and the historical Recovery activation carrier. They do not grant current execution eligibility to superseded tasks.
+
+```yaml
+existing_aigov_owner_policy:
+  repository_adoption_status: complete
+  status: merged_and_post_merge_verified
+  merge_commit_sha: 435add8ee3f3274f781b6e391f11e3262e380c4e
+  independent_review:
+    required: false
+    status: not_required_by_owner_policy
+historical_recovery_activation_carrier:
+  program_status: active
+  KREC-001_through_009: active
+  coverage_promotion_effect: none
+  product_effect: none
+  kroad_supersession_effect: none
+KROAD-012: preserved_not_superseded
+KROAD-013_through_018: not_started
+KROAD-012R: historical_non_authoritative
+```
+
 ## Current State
 
 ```yaml

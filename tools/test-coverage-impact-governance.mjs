@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import {
@@ -17,7 +17,6 @@ import {
 } from '../kernel/validator/coverage-work-package-id.mjs';
 
 const schema = JSON.parse(readFileSync('kernel/schemas/coverage-impact.v1.schema.json', 'utf8'));
-const actual = JSON.parse(readFileSync('planning/coverage/impacts/krec-001.pr52-recovery-ledger.json', 'utf8'));
 const nextWork = readFileSync('planning/NEXT_WORK.md', 'utf8');
 const validateMain = readFileSync('.github/workflows/validate-main.yml', 'utf8');
 const currentWrapper = readFileSync('kernel/validator/validate-coverage-guarantee.mjs', 'utf8');
@@ -31,6 +30,13 @@ const ajv = new Ajv2020({ allErrors: true, strict: false });
 addFormats(ajv);
 const validate = ajv.compile(schema);
 const currentWorkPackage = parseCurrentWorkPackageId(nextWork);
+const impactDir = 'planning/coverage/impacts';
+const impactCandidates = readdirSync(impactDir)
+  .filter((name) => name.endsWith('.json'))
+  .sort()
+  .map((name) => JSON.parse(readFileSync(`${impactDir}/${name}`, 'utf8')));
+const actual = impactCandidates.find((impact) => impact.work_package_id === currentWorkPackage);
+if (!actual) throw new Error(`No Coverage Impact carrier for ${currentWorkPackage}.`);
 
 const results = [];
 const ownerPolicyRuntimePaths = [
@@ -80,8 +86,8 @@ function selectionContext(identityMode, overrides = {}) {
   };
 }
 
-test('valid-non-dcov-maintenance-work-package', () => {
-  assert.equal(currentWorkPackage, 'KREC-001');
+test('valid-current-maintenance-work-package', () => {
+  assert.equal(actual.work_package_id, currentWorkPackage);
   assert.equal(validate(actual), true, JSON.stringify(validate.errors));
   assert.deepEqual(impactIdentityCodes(actual, currentWorkPackage, actual.changed_paths), []);
   assert.equal(actual.work_type, 'maintenance');

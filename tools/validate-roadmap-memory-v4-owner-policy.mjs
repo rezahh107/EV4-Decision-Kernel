@@ -1,17 +1,23 @@
 #!/usr/bin/env node
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { recoveryLedgerDiagnostics } from '../kernel/validator/validate-recovery-ledger.mjs';
+
 const failures = [];
 const read = (file) => readFileSync(file, 'utf8');
+const readJson = (file) => JSON.parse(read(file));
 const fail = (file, problem) => failures.push({ file, problem });
 const next = read('planning/NEXT_WORK.md');
 const plan = read('planning/KERNEL_EXECUTION_PLAN.md');
-const program = JSON.parse(read('planning/recovery/recovery-execution-program.v1.json'));
-const ledger = JSON.parse(read('planning/recovery/recovery-ledger.v1.json'));
-const policy = JSON.parse(read('kernel/decision-governance/aigov-repository-policy.v1.json'));
-const coverage = JSON.parse(read('kernel/decision-governance/coverage-guarantee-contract.v1.json'));
+const program = readJson('planning/recovery/recovery-execution-program.v1.json');
+const ledger = readJson('planning/recovery/recovery-ledger.v1.json');
+const policy = readJson('kernel/decision-governance/aigov-repository-policy.v1.json');
+const coverage = readJson('kernel/decision-governance/coverage-guarantee-contract.v1.json');
 const closure = read('planning/reviews/AIGOV_V4_BATCH_B_POST_MERGE_CLOSURE.md');
 const activation = read('planning/reviews/RECOVERY_PROGRAM_ACTIVATION.md');
+const transitionPath = 'planning/migrations/aigov-v2.6-migration-program.v1.json';
+const migration = existsSync(transitionPath) ? readJson(transitionPath) : null;
+const transitionActive = program.transition?.decision_id === 'OWNER-DIRECTED-AIGOV-2.6-MIGRATION'
+  && migration?.program_id === 'AIGOV-2.6-REPOSITORY-MIGRATION-PROGRAM';
 
 function recoveryCandidateMemoryDiagnostics(value) {
   const diagnostics = [];
@@ -34,12 +40,14 @@ function recoveryCandidateMemoryDiagnostics(value) {
   return [...new Set(diagnostics)];
 }
 
-for (const code of recoveryCandidateMemoryDiagnostics(next)) {
-  fail('planning/NEXT_WORK.md', code);
-}
-const draftMutation = next.replace('non_draft_pr_52_open', 'draft_pr_52_open');
-if (!recoveryCandidateMemoryDiagnostics(draftMutation).includes('ROADMAP_RECOVERY_DRAFT_STATE_STALE')) {
-  fail('tools/validate-roadmap-memory-v4-owner-policy.mjs', 'draft-state mutation guard did not reject draft_pr_52_open');
+if (!transitionActive) {
+  for (const code of recoveryCandidateMemoryDiagnostics(next)) {
+    fail('planning/NEXT_WORK.md', code);
+  }
+  const draftMutation = next.replace('non_draft_pr_52_open', 'draft_pr_52_open');
+  if (!recoveryCandidateMemoryDiagnostics(draftMutation).includes('ROADMAP_RECOVERY_DRAFT_STATE_STALE')) {
+    fail('tools/validate-roadmap-memory-v4-owner-policy.mjs', 'draft-state mutation guard did not reject draft_pr_52_open');
+  }
 }
 
 for (const token of [
@@ -56,10 +64,11 @@ for (const token of [
 ]) if (!next.includes(token)) fail('planning/NEXT_WORK.md', `missing ${token}`);
 
 const workPackageMatches = [...next.matchAll(/^current_work_package_id:\s*([A-Z0-9][A-Z0-9._-]*)\s*$/gm)];
-if (workPackageMatches.length !== 1
-  || workPackageMatches[0][1] !== 'KREC-001') {
-  fail('planning/NEXT_WORK.md', 'exactly one structured current_work_package_id must bind the active KREC-001 candidate');
+const expectedWorkPackage = transitionActive ? 'AIGOV26-TRANSITION-001' : 'KREC-001';
+if (workPackageMatches.length !== 1 || workPackageMatches[0][1] !== expectedWorkPackage) {
+  fail('planning/NEXT_WORK.md', `exactly one structured current_work_package_id must bind ${expectedWorkPackage}`);
 }
+
 if (policy.authority?.independent_review_required !== false
   || policy.authority?.independent_exact_head_review !== 'optional_advisory'
   || policy.authority?.merge_authority !== 'owner_only') {
@@ -99,6 +108,7 @@ if (program.kroad_012r_status !== 'historical_non_authoritative'
   || program.product_effect !== 'none') {
   fail('planning/recovery/recovery-execution-program.v1.json', 'forbidden effect detected');
 }
+
 const ledgerDiagnostics = recoveryLedgerDiagnostics(ledger, program);
 if (ledgerDiagnostics.length) {
   fail(
@@ -108,31 +118,80 @@ if (ledgerDiagnostics.length) {
 }
 const ledgerById = new Map(ledger.tasks.map((task) => [task.task_id, task]));
 const krec001 = ledgerById.get('KREC-001');
-const krec002 = ledgerById.get('KREC-002');
-const krec004 = ledgerById.get('KREC-004');
-if (!['in_progress', 'checks_pending'].includes(krec001?.lifecycle_state)
-  || krec001?.candidate?.branch !== 'krec-001/recovery-ledger'
-  || krec001?.completion_evidence !== null) {
-  fail('planning/recovery/recovery-ledger.v1.json', 'KREC-001 must remain a non-complete branch-backed candidate before owner Merge');
+
+if (transitionActive) {
+  if (krec001?.lifecycle_state !== 'post_merge_evidence_pending'
+    || krec001?.candidate?.branch !== 'krec-001/recovery-ledger'
+    || krec001?.candidate?.pull_request !== 52
+    || krec001?.candidate?.pr_state !== 'merged'
+    || krec001?.completion_evidence !== null
+    || krec001?.transition_blocker?.blocker_id !== 'KREC-001-CURRENT-MAIN-EVIDENCE-ACCESS'
+    || krec001?.transition_blocker?.absence_claimed !== false) {
+    fail('planning/recovery/recovery-ledger.v1.json', 'KREC-001 transition evidence boundary mismatch');
+  }
+  for (const id of Object.keys(graph).filter((id) => id !== 'KREC-001')) {
+    const task = ledgerById.get(id);
+    const disposition = task?.transition_disposition;
+    if (task?.lifecycle_state !== 'not_started'
+      || task?.candidate !== null
+      || task?.completion_evidence !== null
+      || disposition?.lifecycle_state !== 'superseded_before_execution'
+      || disposition?.execution_eligibility !== 'superseded'
+      || disposition?.historical_definition_preserved !== true
+      || disposition?.substantive_implementation_started !== false
+      || disposition?.implementation_credit !== false
+      || disposition?.completion_credit !== false
+      || disposition?.coverage_credit !== false) {
+      fail('planning/recovery/recovery-ledger.v1.json', `${id} transition disposition mismatch`);
+    }
+  }
+  if (migration.repository_adoption_status !== 'planned_not_adopted'
+    || migration.implementation_started !== false
+    || migration.transition_gate?.state !== 'blocked'
+    || migration.tasks?.length !== 8
+    || migration.tasks[0]?.state !== 'transition_gate_blocked'
+    || migration.tasks.slice(1).some((task) => task.state !== 'dependency_blocked')) {
+    fail(transitionPath, 'AIGOV v2.6 successor initial state mismatch');
+  }
+  for (const token of [
+    'current_work_package_id: AIGOV26-TRANSITION-001',
+    'source_registered: true',
+    'repository_adopted: false',
+    'implementation_started: false',
+    'lifecycle: post_merge_evidence_pending',
+    'blocker: KREC-001-CURRENT-MAIN-EVIDENCE-ACCESS',
+    'lifecycle: superseded_before_execution',
+    'historical_definition_preserved: true',
+    'next_executable_task: none',
+  ]) if (!next.includes(token)) fail('planning/NEXT_WORK.md', `missing transition token: ${token}`);
+} else {
+  const krec002 = ledgerById.get('KREC-002');
+  const krec004 = ledgerById.get('KREC-004');
+  if (!['in_progress', 'checks_pending'].includes(krec001?.lifecycle_state)
+    || krec001?.candidate?.branch !== 'krec-001/recovery-ledger'
+    || krec001?.completion_evidence !== null) {
+    fail('planning/recovery/recovery-ledger.v1.json', 'KREC-001 must remain a non-complete branch-backed candidate before owner Merge');
+  }
+  if (krec002?.lifecycle_state !== 'not_started'
+    || krec002?.execution_eligibility !== 'dependency_blocked'
+    || krec004?.lifecycle_state !== 'not_started'
+    || krec004?.execution_eligibility !== 'dependency_blocked') {
+    fail('planning/recovery/recovery-ledger.v1.json', 'KREC-002 and KREC-004 must remain dependency-blocked before KREC-001 completion');
+  }
+  for (const token of [
+    'current_work_package_id: KREC-001',
+    'ledger: planning/recovery/recovery-ledger.v1.json',
+    'KREC-001_lifecycle: ' + krec001?.lifecycle_state,
+    'KREC-001_candidate_branch: krec-001/recovery-ledger',
+    'KREC-001_candidate_pr: ' + krec001?.candidate?.pull_request,
+    'KREC-001_candidate_pr_state: non_draft_open',
+    'KREC-001_reviewed_head_exact_head_ci: green',
+    'KREC-001_completion_evidence: null',
+    'KREC-002_execution_eligibility: dependency_blocked',
+    'KREC-004_execution_eligibility: dependency_blocked',
+  ]) if (!next.includes(token)) fail('planning/NEXT_WORK.md', 'missing live KREC-001 candidate token: ' + token);
 }
-if (krec002?.lifecycle_state !== 'not_started'
-  || krec002?.execution_eligibility !== 'dependency_blocked'
-  || krec004?.lifecycle_state !== 'not_started'
-  || krec004?.execution_eligibility !== 'dependency_blocked') {
-  fail('planning/recovery/recovery-ledger.v1.json', 'KREC-002 and KREC-004 must remain dependency-blocked before KREC-001 completion');
-}
-for (const token of [
-  'current_work_package_id: KREC-001',
-  'ledger: planning/recovery/recovery-ledger.v1.json',
-  'KREC-001_lifecycle: ' + krec001?.lifecycle_state,
-  'KREC-001_candidate_branch: krec-001/recovery-ledger',
-  'KREC-001_candidate_pr: ' + krec001?.candidate?.pull_request,
-  'KREC-001_candidate_pr_state: non_draft_open',
-  'KREC-001_reviewed_head_exact_head_ci: green',
-  'KREC-001_completion_evidence: null',
-  'KREC-002_execution_eligibility: dependency_blocked',
-  'KREC-004_execution_eligibility: dependency_blocked',
-]) if (!next.includes(token)) fail('planning/NEXT_WORK.md', 'missing live KREC-001 candidate token: ' + token);
+
 for (const token of [
   '## Recovery Execution Program Overlay — Active',
   '`DCOV-COVERAGE-EXECUTION-PROGRAM`',
@@ -159,12 +218,16 @@ if (!closure.includes('435add8ee3f3274f781b6e391f11e3262e380c4e')
 if (!activation.includes('substantive_krec_implementation_included: false')) {
   fail('planning/reviews/RECOVERY_PROGRAM_ACTIVATION.md', 'activation boundary incomplete');
 }
-if (!/^- \[ \] KREC-001 — Recovery Ledger$/m.test(next)) {
+if (!transitionActive && !/^- \[ \] KREC-001 — Recovery Ledger$/m.test(next)) {
   fail('planning/NEXT_WORK.md', 'KREC-001 must be the immediate next task');
 }
+if (transitionActive && !/^- \[ \] `KROAD-012 — External Evidence Producer Boundary`$/m.test(next)) {
+  fail('planning/NEXT_WORK.md', 'KROAD-012 must remain the preserved next product task');
+}
+
 if (failures.length) {
   console.error('Roadmap memory owner-policy validation failed:');
   for (const item of failures) console.error(`\n${item.file}\n  Problem: ${item.problem}`);
   process.exit(1);
 }
-console.log('Roadmap memory owner-policy validation passed.');
+console.log(`Roadmap memory owner-policy validation passed (${transitionActive ? 'AIGOV26 transition' : 'KREC-001 candidate'} mode).`);

@@ -11,9 +11,11 @@
   "coverage_sensitive": false,
   "impact_classification": "not_applicable",
   "changed_paths": [
+    ".github/workflows/validate-mvk.yml",
     "package.json",
     "planning/NEXT_WORK.md",
-    "planning/coverage/impacts/z-aigov26-transition.pr53.json"
+    "planning/coverage/impacts/z-aigov26-transition.pr53.json",
+    "tools/test-coverage-impact-governance.mjs"
   ],
   "bootstrap_exception": false,
   "reason": "registers_a_versioned_aigov_v2_6_transition_and_supersedes_unexecuted_v2_5_recovery_tasks_without_coverage_promotion_credit_readiness_product_or_adoption_effect",
