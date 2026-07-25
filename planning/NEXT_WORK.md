@@ -22,6 +22,11 @@ existing_aigov_owner_policy:
   independent_review:
     required: false
     status: not_required_by_owner_policy
+historical_pr49_closure:
+  historical_independent_green_receipt: not_claimed
+  exception_reusable: false
+  exception_precedential: false
+coverage_status: not_measurable_pending_external_promotion
 historical_recovery_activation_carrier:
   program_status: active
   KREC-001_through_009: active
@@ -111,7 +116,7 @@ Coverage proposal status: `blocked_pending_external_governance_approval`. `AIGOV
 ## Next Product Task
 
 - [ ] `KROAD-012 — External Evidence Producer Boundary`
-  - `status`: preserved_available_not_selected
+  - `status`: preserved_available_not_selected`
   - This transition does not implement or supersede KROAD product work.
   - KROAD-013 through KROAD-018 remain `not_started`.
 
