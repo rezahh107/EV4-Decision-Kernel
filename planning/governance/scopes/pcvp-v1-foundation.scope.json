@@ -8,8 +8,9 @@
   "base_sha": "4fe332847e6867fc6aa4639a94a88b8177d31970",
   "head_binding": "derived_at_runtime",
   "change_class": "L3",
-  "scope_revision": "sha256:9fc20280107fec44126793de5477d1303e3b80524ecb1d509d20b94836f3bf8c",
+  "scope_revision": "sha256:a3066d8e58c81bcd8c3e2be701aacc09412b0f4141b85e1312cab63e063e6f81",
   "committed": [
+    ".github/workflows/validate-mvk.yml",
     ".github/workflows/validate-pcvp.yml",
     "kernel/pcvp/README.md",
     "kernel/pcvp/pcvp-enforcement-map.v1.json",
@@ -64,7 +65,7 @@
     "strict validation of existing legacy handoffs",
     "adoption-status change",
     "owner-facing runtime behavior change",
-    "AIGOV or Recovery Program changes",
+    "AIGOV or Recovery Program semantic changes",
     "package dependency changes",
     "default-branch write",
     "merge, approval, deployment or release"
@@ -98,6 +99,7 @@
     "add bounded structural and semantic validator",
     "add indexed fixture and mutation tests",
     "add dedicated exact-head PCVP workflow",
+    "route the existing exact-scope step to the PCVP manifest for this work unit",
     "open one dedicated draft PR"
   ],
   "forbidden_changes": [
