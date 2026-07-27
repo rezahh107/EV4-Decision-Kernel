@@ -18,6 +18,9 @@ import {
 
 const schema = JSON.parse(readFileSync('kernel/schemas/coverage-impact.v1.schema.json', 'utf8'));
 const actual = JSON.parse(readFileSync('planning/coverage/impacts/krec-001.pr52-recovery-ledger.json', 'utf8'));
+const currentBranchImpact = JSON.parse(
+  readFileSync('planning/coverage/impacts/krec-001.pr54-pcvp-foundation.json', 'utf8'),
+);
 const nextWork = readFileSync('planning/NEXT_WORK.md', 'utf8');
 const validateMain = readFileSync('.github/workflows/validate-main.yml', 'utf8');
 const currentWrapper = readFileSync('kernel/validator/validate-coverage-guarantee.mjs', 'utf8');
@@ -245,13 +248,13 @@ test('owner-policy-recursive-runtime-is-forbidden', () => {
 
 test('post-merge-owner-policy-integration-without-pr-number', () => {
   const output = runOwnerPolicy({
-    COVERAGE_REPOSITORY: actual.repository,
+    COVERAGE_REPOSITORY: currentBranchImpact.repository,
     COVERAGE_IDENTITY_MODE: COVERAGE_IDENTITY_MODES.POST_MERGE,
-    COVERAGE_BASE_SHA: actual.base_sha,
+    COVERAGE_BASE_SHA: currentBranchImpact.base_sha,
     COVERAGE_HEAD_SHA: headSha,
   }, ['COVERAGE_PR_NUMBER']);
   assert(output.includes('"identity_mode": "post_merge"'));
-  assert(output.includes(actual.impact_id));
+  assert(output.includes(currentBranchImpact.impact_id));
 });
 
 test('generation-b-future-base-full-validation-passes', () => {

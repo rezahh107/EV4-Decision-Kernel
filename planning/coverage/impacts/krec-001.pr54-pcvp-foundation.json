@@ -12,7 +12,8 @@
   "impact_classification": "not_applicable",
   "changed_paths": [
     ".github/workflows/validate-mvk.yml",
-    "planning/coverage/impacts/krec-001.pr54-pcvp-foundation.json"
+    "planning/coverage/impacts/krec-001.pr54-pcvp-foundation.json",
+    "tools/test-coverage-impact-governance.mjs"
   ],
   "bootstrap_exception": false,
   "reason": "routes_exact_scope_validation_for_the_dormant_pcvp_foundation_without_coverage_promotion_credit_percentage_readiness_product_external_repository_or_kroad_effect",
