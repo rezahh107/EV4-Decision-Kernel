@@ -1,0 +1,98 @@
+{
+  "valid": {
+    "01_verified_green.json": {
+      "schema_errors": [],
+      "semantic_errors": []
+    },
+    "02_owner_authorized_provisional.json": {
+      "schema_errors": [],
+      "semantic_errors": []
+    },
+    "03_authorization_required.json": {
+      "schema_errors": [],
+      "semantic_errors": []
+    },
+    "04_profile_preauthorized.json": {
+      "schema_errors": [],
+      "semantic_errors": []
+    },
+    "05_safe_reversible_default.json": {
+      "schema_errors": [],
+      "semantic_errors": []
+    },
+    "06_contradicted_blocked_red.json": {
+      "schema_errors": [],
+      "semantic_errors": []
+    },
+    "07_multiple_effects_multiple_authorizations.json": {
+      "schema_errors": [],
+      "semantic_errors": []
+    },
+    "08_not_applicable_claim.json": {
+      "schema_errors": [],
+      "semantic_errors": []
+    }
+  },
+  "invalid": {
+    "01_claim_contains_continuation.json": {
+      "schema_errors": [
+        "Additional properties are not allowed ('continuation_state' was unexpected)"
+      ],
+      "semantic_errors": []
+    },
+    "02_effect_contains_authorization_basis.json": {
+      "schema_errors": [
+        "Additional properties are not allowed ('authorization_basis' was unexpected)"
+      ],
+      "semantic_errors": []
+    },
+    "03_continue_without_authorization_ref.json": {
+      "schema_errors": [
+        "None is not of type 'string'"
+      ],
+      "semantic_errors": []
+    },
+    "04_authorization_required_with_ref.json": {
+      "schema_errors": [
+        "'AUTH-MISSING' is not of type 'null'"
+      ],
+      "semantic_errors": []
+    },
+    "05_blocked_with_ref.json": {
+      "schema_errors": [
+        "'AUTH-001' is not of type 'null'"
+      ],
+      "semantic_errors": []
+    },
+    "06_unknown_authorization_ref.json": {
+      "schema_errors": [],
+      "semantic_errors": [
+        "effect EFF-001 unresolved authorization"
+      ]
+    },
+    "07_green_with_unverified_critical_claim.json": {
+      "schema_errors": [],
+      "semantic_errors": [
+        "green with non-verified critical applicable claim"
+      ]
+    },
+    "08_safe_default_external_mutation.json": {
+      "schema_errors": [],
+      "semantic_errors": [
+        "effect EFF-001 invalid safe default class"
+      ]
+    },
+    "09_contradicted_claim_continues.json": {
+      "schema_errors": [],
+      "semantic_errors": [
+        "effect EFF-001 continues despite contradicted critical claim"
+      ]
+    },
+    "10_authorization_does_not_cover_effect.json": {
+      "schema_errors": [],
+      "semantic_errors": [
+        "effect EFF-001 not covered by authorization"
+      ]
+    }
+  }
+}

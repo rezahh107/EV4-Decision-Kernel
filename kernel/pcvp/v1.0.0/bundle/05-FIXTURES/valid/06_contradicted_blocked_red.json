@@ -1,0 +1,54 @@
+{
+  "continuation_assurance": {
+    "policy_id": "EV4-PCVP",
+    "policy_version": "1.0.0",
+    "source_stage": "PROJECT_GATE",
+    "claims": [
+      {
+        "claim_id": "CLM-001",
+        "statement": "The current artifact matches the required exact head.",
+        "criticality": "CRITICAL",
+        "applicability_state": "APPLICABLE",
+        "verification_state": "CONTRADICTED",
+        "lifecycle_state": "ACTIVE",
+        "evidence_refs": [
+          "EVD-HEAD-MISMATCH"
+        ],
+        "dependency_refs": [],
+        "assumption_refs": []
+      }
+    ],
+    "effects": [
+      {
+        "effect_id": "EFF-001",
+        "effect_class": "IRREVERSIBLE_OR_AUTHORITY_BEARING",
+        "depends_on_claim_ids": [
+          "CLM-001"
+        ],
+        "continuation_state": "BLOCKED",
+        "authorization_ref": null,
+        "blocker_reason": "MATERIAL_CONTRADICTION",
+        "permitted_scope": null
+      }
+    ],
+    "authorizations": [],
+    "unresolved_items": [
+      {
+        "id": "ISS-001",
+        "class": "MATERIAL_CONTRADICTION",
+        "statement": "Exact-head identity conflicts with the required head.",
+        "impact": "official gate decision is blocked"
+      }
+    ],
+    "stage_summary": {
+      "owner_projection": "RED",
+      "yellow_substate": null,
+      "derived_from_claim_ids": [
+        "CLM-001"
+      ],
+      "current_effect_id": "EFF-001",
+      "lifecycle_state": "ACTIVE",
+      "derivation_reason": "critical dependent claim is contradicted"
+    }
+  }
+}

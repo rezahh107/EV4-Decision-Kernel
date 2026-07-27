@@ -1,0 +1,87 @@
+{
+  "continuation_assurance": {
+    "policy_id": "EV4-PCVP",
+    "policy_version": "1.0.0",
+    "source_stage": "CONSTRUCTABILITY_ENGINEER",
+    "claims": [
+      {
+        "claim_id": "CLM-001",
+        "statement": "A migration is required for this change.",
+        "criticality": "CRITICAL",
+        "applicability_state": "NOT_APPLICABLE",
+        "verification_state": "UNVERIFIED",
+        "lifecycle_state": "ACTIVE",
+        "evidence_refs": [
+          "EVD-NO-PERSISTED-STATE"
+        ],
+        "dependency_refs": [],
+        "assumption_refs": []
+      },
+      {
+        "claim_id": "CLM-002",
+        "statement": "The current reasoning-only effect is bounded.",
+        "criticality": "CRITICAL",
+        "applicability_state": "APPLICABLE",
+        "verification_state": "VERIFIED",
+        "lifecycle_state": "ACTIVE",
+        "evidence_refs": [
+          "PROFILE-001"
+        ],
+        "dependency_refs": [],
+        "assumption_refs": []
+      }
+    ],
+    "effects": [
+      {
+        "effect_id": "EFF-001",
+        "effect_class": "REASONING_ONLY",
+        "depends_on_claim_ids": [
+          "CLM-001",
+          "CLM-002"
+        ],
+        "continuation_state": "CONTINUE",
+        "authorization_ref": "AUTH-001",
+        "blocker_reason": null,
+        "permitted_scope": "bounded constructability analysis"
+      }
+    ],
+    "authorizations": [
+      {
+        "authorization_id": "AUTH-001",
+        "basis": "NOT_REQUIRED",
+        "status": "ACTIVE",
+        "allowed_effect_ids": [
+          "EFF-001"
+        ],
+        "allowed_effect_classes": [
+          "REASONING_ONLY"
+        ],
+        "bound_unknown_ids": [],
+        "bound_assumption_ids": [],
+        "stage_scope": {
+          "from": "CONSTRUCTABILITY_ENGINEER",
+          "through": "NEW_MATERIAL_BLOCKER"
+        },
+        "permitted_scope": "bounded constructability analysis",
+        "valid_until_events": [
+          "NEW_MATERIAL_BLOCKER",
+          "OWNER_REVOCATION",
+          "CONTRADICTING_EVIDENCE",
+          "SCOPE_EXPANSION"
+        ]
+      }
+    ],
+    "unresolved_items": [],
+    "stage_summary": {
+      "owner_projection": "GREEN",
+      "yellow_substate": null,
+      "derived_from_claim_ids": [
+        "CLM-001",
+        "CLM-002"
+      ],
+      "current_effect_id": "EFF-001",
+      "lifecycle_state": "ACTIVE",
+      "derivation_reason": "non-applicable migration claim does not block the verified bounded effect"
+    }
+  }
+}
