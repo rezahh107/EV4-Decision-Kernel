@@ -1,0 +1,45 @@
+{
+  "impact_id": "coverage-impact.krec-001.pr54-pcvp-foundation",
+  "impact_version": "1.0.0",
+  "sequence_number": 8,
+  "previous_impact_id": "coverage-impact.krec-001.pr52-recovery-ledger",
+  "repository": "rezahh107/EV4-Decision-Kernel",
+  "pull_request": 54,
+  "base_sha": "4fe332847e6867fc6aa4639a94a88b8177d31970",
+  "work_package_id": "KREC-001",
+  "work_type": "maintenance",
+  "coverage_sensitive": false,
+  "impact_classification": "not_applicable",
+  "changed_paths": [
+    ".github/workflows/validate-mvk.yml",
+    "planning/coverage/impacts/krec-001.pr54-pcvp-foundation.json"
+  ],
+  "bootstrap_exception": false,
+  "reason": "routes_exact_scope_validation_for_the_dormant_pcvp_foundation_without_coverage_promotion_credit_percentage_readiness_product_external_repository_or_kroad_effect",
+  "coverage_state_before": "not_measurable",
+  "coverage_state_after": "not_measurable",
+  "baseline_before": "coverage-baseline.v1.0.0",
+  "baseline_after": "coverage-baseline.v1.0.0",
+  "completed_obligation_ids": [],
+  "remaining_obligation_ids": [
+    "OB-EXEC-002-RECONCILE-ELEMENTS",
+    "OB-EXEC-002-EXPAND-CATALOG",
+    "OB-EXEC-002-CLOSE-SELECTED-P0-FAMILY",
+    "OB-EXEC-002-LAYOUT-BOUNDED-PROOF",
+    "OB-EXEC-005-VALIDATE-DENOMINATORS",
+    "OB-EXEC-005-CRITICAL-100"
+  ],
+  "closed_family_ids": [],
+  "element_coverage_delta": null,
+  "question_coverage_delta": null,
+  "known_gaps": [
+    "External project-owner Coverage governance promotion remains pending and still requires independent_review_passed.",
+    "Element and Question denominators remain unresolved and every Coverage percentage remains null.",
+    "This dormant PCVP foundation adds no Coverage credit, readiness claim, product effect, or activation.",
+    "KREC-001 remains the current work package and this record does not claim its completion."
+  ],
+  "zero_delta": true,
+  "blocking_defect": null,
+  "next_content_expansion_package": "KREC-001",
+  "exact_head_sha": "derived_at_pr_runtime"
+}
