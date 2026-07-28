@@ -1,0 +1,127 @@
+{
+  "continuation_assurance": {
+    "policy_id": "EV4-PCVP",
+    "policy_version": "1.0.0",
+    "source_stage": "ARCHITECT",
+    "claims": [
+      {
+        "claim_id": "CLM-001",
+        "statement": "Internal comparison is discardable.",
+        "criticality": "CRITICAL",
+        "applicability_state": "APPLICABLE",
+        "verification_state": "VERIFIED",
+        "lifecycle_state": "ACTIVE",
+        "evidence_refs": [
+          "POLICY-001"
+        ],
+        "dependency_refs": [],
+        "assumption_refs": []
+      },
+      {
+        "claim_id": "CLM-002",
+        "statement": "Official architecture validation has not executed.",
+        "criticality": "CRITICAL",
+        "applicability_state": "APPLICABLE",
+        "verification_state": "UNVERIFIED",
+        "lifecycle_state": "ACTIVE",
+        "evidence_refs": [],
+        "dependency_refs": [],
+        "assumption_refs": []
+      }
+    ],
+    "effects": [
+      {
+        "effect_id": "EFF-001",
+        "effect_class": "REASONING_ONLY",
+        "depends_on_claim_ids": [
+          "CLM-001"
+        ],
+        "continuation_state": "CONTINUE",
+        "authorization_ref": "AUTH-001",
+        "blocker_reason": null,
+        "permitted_scope": "internal comparison"
+      },
+      {
+        "effect_id": "EFF-002",
+        "effect_class": "DRAFT_ONLY",
+        "depends_on_claim_ids": [
+          "CLM-002"
+        ],
+        "continuation_state": "CONTINUE",
+        "authorization_ref": "AUTH-002",
+        "blocker_reason": null,
+        "permitted_scope": "provisional handoff through CE"
+      }
+    ],
+    "authorizations": [
+      {
+        "authorization_id": "AUTH-001",
+        "basis": "NOT_REQUIRED",
+        "status": "ACTIVE",
+        "allowed_effect_ids": [
+          "EFF-001"
+        ],
+        "allowed_effect_classes": [
+          "REASONING_ONLY"
+        ],
+        "bound_unknown_ids": [],
+        "bound_assumption_ids": [],
+        "stage_scope": {
+          "from": "ARCHITECT",
+          "through": "NEW_MATERIAL_BLOCKER"
+        },
+        "permitted_scope": "internal comparison",
+        "valid_until_events": [
+          "NEW_MATERIAL_BLOCKER",
+          "OWNER_REVOCATION",
+          "CONTRADICTING_EVIDENCE",
+          "SCOPE_EXPANSION"
+        ]
+      },
+      {
+        "authorization_id": "AUTH-002",
+        "basis": "EXPLICIT_OWNER",
+        "status": "ACTIVE",
+        "allowed_effect_ids": [
+          "EFF-002"
+        ],
+        "allowed_effect_classes": [
+          "DRAFT_ONLY"
+        ],
+        "bound_unknown_ids": [
+          "UNK-VALIDATION"
+        ],
+        "bound_assumption_ids": [],
+        "stage_scope": {
+          "from": "ARCHITECT",
+          "through": "CONSTRUCTABILITY_ENGINEER"
+        },
+        "permitted_scope": "provisional handoff through CE",
+        "valid_until_events": [
+          "NEW_MATERIAL_BLOCKER",
+          "OWNER_REVOCATION",
+          "CONTRADICTING_EVIDENCE",
+          "SCOPE_EXPANSION"
+        ]
+      }
+    ],
+    "unresolved_items": [
+      {
+        "id": "UNK-VALIDATION",
+        "class": "VERIFICATION_PATH_UNAVAILABLE",
+        "statement": "Official architecture validation is unavailable.",
+        "impact": "handoff remains provisional"
+      }
+    ],
+    "stage_summary": {
+      "owner_projection": "YELLOW",
+      "yellow_substate": "CONTINUATION_AVAILABLE",
+      "derived_from_claim_ids": [
+        "CLM-002"
+      ],
+      "current_effect_id": "EFF-002",
+      "lifecycle_state": "ACTIVE",
+      "derivation_reason": "current effect is authorized but its critical claim remains unverified"
+    }
+  }
+}

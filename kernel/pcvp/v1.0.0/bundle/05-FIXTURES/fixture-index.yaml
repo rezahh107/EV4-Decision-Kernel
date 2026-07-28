@@ -1,0 +1,63 @@
+fixture_suite:
+  policy_id: EV4-PCVP
+  policy_version: 1.0.0
+  purpose: Behavioral and structural falsification examples. Valid fixtures must pass
+    schema and semantic checks. Invalid fixtures must fail at the listed layer.
+  valid:
+  - file: valid/01_verified_green.json
+    expected: ACCEPT
+  - file: valid/02_owner_authorized_provisional.json
+    expected: ACCEPT
+  - file: valid/03_authorization_required.json
+    expected: ACCEPT
+  - file: valid/04_profile_preauthorized.json
+    expected: ACCEPT
+  - file: valid/05_safe_reversible_default.json
+    expected: ACCEPT
+  - file: valid/06_contradicted_blocked_red.json
+    expected: ACCEPT
+  - file: valid/07_multiple_effects_multiple_authorizations.json
+    expected: ACCEPT
+  - file: valid/08_not_applicable_claim.json
+    expected: ACCEPT
+  invalid:
+  - file: invalid/01_claim_contains_continuation.json
+    expected: REJECT
+    layer: JSON_SCHEMA
+    rule: Claim owns no continuation fields.
+  - file: invalid/02_effect_contains_authorization_basis.json
+    expected: REJECT
+    layer: JSON_SCHEMA
+    rule: Effect owns no authorization basis.
+  - file: invalid/03_continue_without_authorization_ref.json
+    expected: REJECT
+    layer: JSON_SCHEMA
+    rule: CONTINUE requires a non-null authorization ref.
+  - file: invalid/04_authorization_required_with_ref.json
+    expected: REJECT
+    layer: JSON_SCHEMA
+    rule: AUTHORIZATION_REQUIRED requires a null authorization ref.
+  - file: invalid/05_blocked_with_ref.json
+    expected: REJECT
+    layer: JSON_SCHEMA
+    rule: BLOCKED requires a null authorization ref.
+  - file: invalid/06_unknown_authorization_ref.json
+    expected: REJECT
+    layer: CROSS_RECORD
+    rule: Every authorization ref must resolve.
+  - file: invalid/07_green_with_unverified_critical_claim.json
+    expected: REJECT
+    layer: SEMANTIC_POLICY
+    rule: GREEN cannot be derived from an unverified critical dependent claim.
+  - file: invalid/08_safe_default_external_mutation.json
+    expected: REJECT
+    layer: SEMANTIC_POLICY
+    rule: Safe reversible default cannot authorize external mutation.
+  - file: invalid/09_contradicted_claim_continues.json
+    expected: REJECT
+    layer: SEMANTIC_POLICY
+    rule: A contradicted critical dependent claim blocks the effect.
+  - file: invalid/10_authorization_does_not_cover_effect.json
+    expected: REJECT
+    layer: CROSS_RECORD
+    rule: Authorization must cover the referenced effect by ID or class.

@@ -1,0 +1,46 @@
+{
+  "schema_version": "ev4-pcvp-foundation.v1",
+  "policy_id": "EV4-PCVP",
+  "policy_version": "1.0.0",
+  "bundle_id": "EV4-PCVP-ACTIVE-BUNDLE",
+  "bundle_version": "1.0.0",
+  "canonical_owner": "rezahh107/EV4-Decision-Kernel",
+  "architecture_lock_id": "EV4-PCVP-ROLL-LOCK-20260727-R1",
+  "source_of_truth_model": "exact_vendored_bundle_snapshot",
+  "bundle_root": "kernel/pcvp/v1.0.0/bundle",
+  "manifest_path": "kernel/pcvp/v1.0.0/bundle/00-MANIFEST.yaml",
+  "normative_source_path": "kernel/pcvp/v1.0.0/bundle/01-SPEC/EV4_PCVP_SPEC_v1.0.0.md",
+  "model_policy_path": "kernel/pcvp/v1.0.0/bundle/02-MODEL_POLICY/EV4_PCVP_MODEL_POLICY_v1.0.0.md",
+  "authority_order_source": "kernel/pcvp/v1.0.0/bundle/00-MANIFEST.yaml::bundle.authority_order",
+  "prompt_summaries_are_authoritative": false,
+  "repository_local_redefinitions_are_authoritative": false,
+  "bundle_archive_sha256": "b24e471e682818ba029086f9742394b92e88b66743e12d8a6451ed0064362aec",
+  "external_authenticity_proven": false,
+  "bundle_status": "release_candidate",
+  "adoption_status": "not_yet_adopted",
+  "rollout_state": "canonical_foundation_dormant",
+  "compatibility_mode": "ADDITIVE",
+  "activation_effect": "NONE_UNTIL_DEDICATED_ACTIVATION",
+  "normal_runtime_load_set": [
+    "02-MODEL_POLICY/EV4_PCVP_MODEL_POLICY_v1.0.0.md",
+    "exactly_one_repository_correct_profile",
+    "only_relevant_schema_or_fixture_when_needed"
+  ],
+  "enforcement": {
+    "schema_scope": "structural_only",
+    "cross_record_validator": "kernel/validator/pcvp-v1.mjs",
+    "fixture_runner": "tools/validate-pcvp-v1.mjs",
+    "mutation_tests": "tools/test-pcvp-v1-fixtures.mjs",
+    "official_verification_replacement": false
+  },
+  "pending_required_consumers_and_boundaries": [
+    "rezahh107/EV4-Project-Gate",
+    "rezahh107/EV4-Constructability-Engineer-Repo",
+    "rezahh107/EV4-Builder-Assistant-Repo",
+    "rezahh107/EV4-Responsive-Architect",
+    "rezahh107/EV4-Architect-Repo",
+    "rezahh107/EV4-Architect-Stage-QC"
+  ],
+  "strict_activation_allowed": false,
+  "rollback_or_safe_disable": "Do not load or emit the dormant carrier before the dedicated activation work unit."
+}

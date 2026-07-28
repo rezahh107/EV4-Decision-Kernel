@@ -76,10 +76,16 @@ export const RECOVERY_AUTHORITATIVE_WORKFLOWS = Object.freeze({
       COVERAGE_BASE_SHA: '${{ needs.external-coverage-trust.outputs.verified_base_sha }}',
       COVERAGE_HEAD_SHA: '${{ needs.external-coverage-trust.outputs.verified_head_sha }}',
     }),
-    acceptedSources: Object.freeze([Object.freeze({
-      blob_sha: 'ca39316889c594fc3e47783809375da38abeb36c',
-      final_byte_sha256: '6a5aadf26ebd910e1f84e6ebc570ed492647627e8aec151a9c88409c2c810b4b',
-    })]),
+    acceptedSources: Object.freeze([
+      Object.freeze({
+        blob_sha: 'ca39316889c594fc3e47783809375da38abeb36c',
+        final_byte_sha256: '6a5aadf26ebd910e1f84e6ebc570ed492647627e8aec151a9c88409c2c810b4b',
+      }),
+      Object.freeze({
+        blob_sha: '5f93a6c073c4459f421dc3dc3f4af75d36b42091',
+        final_byte_sha256: '8337dc4b2ac89ced45ec9a402107e8d6130fd89e10684d9225902b93fa6c2854',
+      }),
+    ]),
     externalTrust: EXTERNAL_COVERAGE_TRUST,
     coverageJob: Object.freeze({
       jobKey: 'validate-mvk',
