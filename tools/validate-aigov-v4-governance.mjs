@@ -11,7 +11,11 @@ import {
   permissionExpansions,
   scopeRevision,
 } from '../kernel/validator/validate-aigov-governance.mjs';
-import { recoveryProgramDiagnostics } from '../kernel/validator/validate-recovery-execution-program.mjs';
+import {
+  RECOVERY_SUPERSEDED_TASK_IDS,
+  RECOVERY_TRANSITION_AUTHORITY,
+  recoveryProgramDiagnostics,
+} from '../kernel/validator/validate-recovery-execution-program.mjs';
 import {
   RECOVERY_AUTHORITATIVE_WORKFLOWS,
   analyzeRecoveryWorkflowSource,
@@ -267,16 +271,45 @@ function validateRecovery() {
       'planning/recovery/recovery-execution-program.v1.json',
     );
   }
-  if (program.program_status !== 'active'
+
+  const transitionActive = program.transition?.decision_id === 'OWNER-DIRECTED-AIGOV-2.6-MIGRATION'
+    && program.transition?.effective_execution_authority === RECOVERY_TRANSITION_AUTHORITY;
+  const superseded = new Set(RECOVERY_SUPERSEDED_TASK_IDS);
+  const commonCarrierInvalid = program.program_status !== 'active'
     || program.task_activation_effect !== 'one_or_more_active'
     || program.tasks?.length !== 9
     || program.tasks.some((task) => task.status !== 'active'
-      || task.implementation_authorized !== true
       || task.coverage_credit !== false
-      || task.readiness_claim !== false)) {
+      || task.readiness_claim !== false);
+
+  if (commonCarrierInvalid) {
     fail(
       'RECOVERY_ACTIVATION_STATE_INVALID',
-      'All nine KREC tasks must be active and authorized without credit claims.',
+      'The historical Recovery carrier must retain nine active task definitions without Coverage or readiness credit.',
+      'planning/recovery/recovery-execution-program.v1.json',
+    );
+    return;
+  }
+
+  if (transitionActive) {
+    const transitionProjectionInvalid = program.tasks.some((task) =>
+      task.task_id === 'KREC-001'
+        ? task.implementation_authorized !== true
+        : superseded.has(task.task_id) && task.implementation_authorized !== false);
+    if (transitionProjectionInvalid) {
+      fail(
+        'RECOVERY_TRANSITION_AUTHORITY_INVALID',
+        'Program transition is the sole execution authority: KREC-001 keeps its historical authorization while KREC-002 through KREC-009 must project implementation_authorized=false.',
+        'planning/recovery/recovery-execution-program.v1.json',
+      );
+    }
+    return;
+  }
+
+  if (program.tasks.some((task) => task.implementation_authorized !== true)) {
+    fail(
+      'RECOVERY_ACTIVATION_STATE_INVALID',
+      'Legacy pre-transition Recovery activation requires all nine active tasks to be authorized.',
       'planning/recovery/recovery-execution-program.v1.json',
     );
   }
