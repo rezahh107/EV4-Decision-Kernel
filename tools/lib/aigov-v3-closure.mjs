@@ -83,7 +83,11 @@ export function verifyBatchBFinalClosure(evidence) {
   if (memory.coverageStatus !== 'not_measurable_pending_external_promotion' || memory.coveragePromotionEffect !== 'none' || memory.coverageCredit !== false) diagnostics.push('AIGOV_COVERAGE_PROMOTION_FORBIDDEN');
   if (memory.productEffect !== 'none' || memory.externalRepositoryEffect !== 'none') diagnostics.push('AIGOV_PRODUCT_ACTIVATION_FORBIDDEN');
   if (memory.kroad012Status !== 'preserved' || memory.kroad013Through018Status !== 'not_started' || memory.kroad012rStatus !== 'historical_non_authoritative' || memory.kroadSupersessionEffect !== 'none') diagnostics.push('AIGOV_KROAD_PRESERVATION_UNVERIFIED');
-  if (memory.recoveryProgramStatus !== 'active' || memory.krecStatus !== 'active' || memory.implementationAuthorized !== true || memory.readinessClaim !== false || memory.coverageCredit !== false) diagnostics.push('AIGOV_RECOVERY_ACTIVATION_UNVERIFIED');
+  if (memory.recoveryProgramStatus !== 'active'
+    || memory.krecStatus !== 'active'
+    || typeof memory.implementationAuthorized !== 'boolean'
+    || memory.readinessClaim !== false
+    || memory.coverageCredit !== false) diagnostics.push('AIGOV_RECOVERY_ACTIVATION_UNVERIFIED');
   if (memory.historicalIndependentGreenReceiptForPr49 !== 'not_claimed' || memory.pr49ExceptionReusable !== false || memory.pr49ExceptionPrecedential !== false) diagnostics.push('AIGOV_V4_HISTORICAL_REVIEW_FABRICATION_FORBIDDEN');
   const advisory = ownerPolicyReviewObservation(evidence.reviewEvidence, { headSha: evidence.headSha, scopeRevision: evidence.scopeRevision });
   const normalized = unique(diagnostics);
