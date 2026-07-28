@@ -30,6 +30,71 @@
       ]
     },
     {
+      "case_id": "krec-002-dependency-ready-cannot-bypass-supersession",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/ledger/tasks/1/execution_eligibility",
+          "value": "dependency_ready"
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "AIGOV26_SUPERSEDED_EXECUTION_ELIGIBILITY_INVALID"
+      ]
+    },
+    {
+      "case_id": "krec-004-dependency-ready-cannot-bypass-supersession",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/ledger/tasks/3/execution_eligibility",
+          "value": "dependency_ready"
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "AIGOV26_SUPERSEDED_EXECUTION_ELIGIBILITY_INVALID"
+      ]
+    },
+    {
+      "case_id": "legacy-program-authorization-cannot-bypass-supersession",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/program/tasks/1/implementation_authorized",
+          "value": true
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "AIGOV26_LEGACY_AUTHORIZATION_BYPASS"
+      ]
+    },
+    {
+      "case_id": "legacy-ledger-authorization-cannot-bypass-supersession",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/ledger/tasks/1/authority/implementation_authorized",
+          "value": true
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "AIGOV26_LEGACY_AUTHORIZATION_BYPASS"
+      ]
+    },
+    {
+      "case_id": "ledger-cannot-declare-independent-execution-authority",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/ledger/transition/effective_task_execution_authority",
+          "value": "transition_disposition"
+        }
+      ],
+      "expected_diagnostic_ids": [
+        "AIGOV26_EXECUTION_AUTHORITY_INVALID"
+      ]
+    },
+    {
       "case_id": "superseded-task-disposition-required",
       "patch": [
         {
