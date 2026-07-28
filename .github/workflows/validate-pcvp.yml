@@ -93,8 +93,6 @@ jobs:
           fi
 
       - name: Verify pinned prerequisite merge and CI evidence
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: node tools/validate-pcvp-activation-v1.mjs --verify-remote
 
       - name: Run indexed carrier fixtures and focused mutations
