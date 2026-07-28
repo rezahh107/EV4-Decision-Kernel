@@ -1,8 +1,8 @@
 # AIGOV v2.6 Repository Transition Inventory
 
-**Repository:** `rezahh107/EV4-Decision-Kernel`  
-**Observed main:** `03336312f6c3fcc4c315e56592bac3bac0bf7465`  
-**Observed open PRs:** `#53`  
+**Repository:** `rezahh107/EV4-Decision-Kernel`
+**Observed main:** `03336312f6c3fcc4c315e56592bac3bac0bf7465`
+**Observed open PRs:** `#53`
 **Remote branches deleted:** `false`
 
 ## Result
