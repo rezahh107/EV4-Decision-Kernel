@@ -12,7 +12,8 @@
   "impact_classification": "not_applicable",
   "changed_paths": [
     ".github/workflows/validate-mvk.yml",
-    "planning/coverage/impacts/z-krec-001.pr55-pcvp-activation.json"
+    "planning/coverage/impacts/z-krec-001.pr55-pcvp-activation.json",
+    "tools/test-coverage-impact-governance.mjs"
   ],
   "bootstrap_exception": false,
   "reason": "authorizes_only_the_pcvp_architect_to_project_gate_to_ce_transport_edge_and_routes_its_exact_scope_without_coverage_promotion_credit_percentage_readiness_product_deployment_or_full_rollout_effect",
