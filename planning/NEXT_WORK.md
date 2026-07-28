@@ -125,7 +125,7 @@ Dependency completion never overrides `superseded`. In particular, KREC-002 and 
 ## Next Product Task
 
 - [ ] `KROAD-012 — External Evidence Producer Boundary`
-  - `status`: preserved_available_not_selected`
+  - `status`: `preserved_available_not_selected`
   - This transition does not implement or supersede KROAD product work.
   - KROAD-013 through KROAD-018 remain `not_started`.
 
