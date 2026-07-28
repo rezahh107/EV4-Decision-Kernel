@@ -524,3 +524,129 @@ export function verifyRecoveryWorkflowDescriptorPayloads({
   descriptor.descriptor_digest = canonicalSha256(descriptor);
   return { diagnostics: [], evidence: freezeEvidence(descriptor, VERIFIED_RUNS) };
 }
+
+export function aggregateAuthoritativeCi({ exactHeadSha, event, descriptors, requiredPaths }) {
+  const diagnostics = [];
+  if (!validSha(exactHeadSha) || !Array.isArray(descriptors) || descriptors.some((item) => !isVerifiedAuthoritativeRun(item))) diagnostics.push('AIGOV_CI_UNVERIFIED_DESCRIPTOR');
+  const paths = descriptors?.map((item) => item.workflow_path) || [];
+  if (new Set(paths).size !== paths.length) diagnostics.push('AIGOV_CI_DUPLICATE_WORKFLOW_DESCRIPTOR');
+  const expectedPaths = [...(requiredPaths || [])].sort();
+  if (JSON.stringify([...paths].sort()) !== JSON.stringify(expectedPaths)) diagnostics.push('AIGOV_CI_REQUIRED_WORKFLOW_SET_MISMATCH');
+  if (descriptors?.some((item) => item.exact_head_sha !== exactHeadSha || item.event !== event)) diagnostics.push('AIGOV_CI_AGGREGATE_CONTEXT_MISMATCH');
+  const completed = descriptors?.map((item) => Date.parse(item.completed_at)) || [];
+  if (completed.some((item) => !Number.isFinite(item))) diagnostics.push('AIGOV_CI_COMPLETION_TIME_INVALID');
+  if (diagnostics.length) return { diagnostics: unique(diagnostics), evidence: null };
+  const value = {
+    schema_version: 'aigov-authoritative-ci-aggregate.v1',
+    exact_head_sha: exactHeadSha,
+    event,
+    descriptors: Object.freeze([...descriptors]),
+    completed_at: new Date(Math.max(...completed)).toISOString(),
+  };
+  return { diagnostics: [], evidence: freezeEvidence(value, VERIFIED_AGGREGATES) };
+}
+
+export function verifyMergeResultPayloads({ pr, reviewedHeadSha, headCommit, mergeCommit, headToMain, mergeToMain }) {
+  const diagnostics = [];
+  const add = (condition, code) => { if (condition) diagnostics.push(code); };
+  add(!pr || pr.number !== 50 || pr.merged !== true || pr.head?.sha !== reviewedHeadSha || !validSha(pr.merge_commit_sha), 'AIGOV_BATCH_B_MERGE_IDENTITY_UNVERIFIED');
+  add(!headCommit || headCommit.sha !== reviewedHeadSha || !validSha(headCommit.tree?.sha), 'AIGOV_BATCH_B_REVIEWED_HEAD_TREE_UNVERIFIED');
+  add(!mergeCommit || mergeCommit.sha !== pr?.merge_commit_sha || !validSha(mergeCommit.tree?.sha) || !Array.isArray(mergeCommit.parents), 'AIGOV_BATCH_B_MERGE_COMMIT_UNVERIFIED');
+  if (diagnostics.length) return { diagnostics: unique(diagnostics), evidence: null };
+  const parents = mergeCommit.parents.map((item) => item.sha);
+  const exactTree = headCommit.tree.sha === mergeCommit.tree.sha;
+  let mergeMethod = 'unknown';
+  let methodProof = false;
+  if (parents.includes(reviewedHeadSha)) {
+    mergeMethod = 'merge';
+    methodProof = ['ahead', 'identical'].includes(headToMain?.status);
+  } else if (parents.length === 1 && exactTree && parents[0] === pr.base?.sha) {
+    mergeMethod = 'squash';
+    methodProof = true;
+  } else if (parents.length === 1 && exactTree) {
+    mergeMethod = 'rebase';
+    methodProof = true;
+  }
+  add(!methodProof || mergeMethod === 'unknown', 'AIGOV_BATCH_B_MERGE_RESULT_UNVERIFIED');
+  add(!['ahead', 'identical'].includes(mergeToMain?.status), 'AIGOV_BATCH_B_CURRENT_MAIN_MISSING_MERGE_RESULT');
+  add(!pr.merged_at || !Number.isFinite(Date.parse(pr.merged_at)), 'AIGOV_BATCH_B_MERGE_TIME_INVALID');
+  if (diagnostics.length) return { diagnostics: unique(diagnostics), evidence: null };
+  return {
+    diagnostics: [],
+    evidence: freezeEvidence({
+      schema_version: 'aigov-merge-result-evidence.v1',
+      merge_method: mergeMethod,
+      reviewed_head_sha: reviewedHeadSha,
+      reviewed_head_tree_sha: headCommit.tree.sha,
+      merge_commit_sha: mergeCommit.sha,
+      merge_result_tree_sha: mergeCommit.tree.sha,
+      merge_actor: pr.merged_by?.login || null,
+      merged_at: new Date(Date.parse(pr.merged_at)).toISOString(),
+      current_main_contains_merge_result: true,
+      method_aware_verified: true,
+    }, VERIFIED_MERGES),
+  };
+}
+
+export function verifyCurrentMainExecution({ beforeSha, afterSha, eventHeadSha, descriptor }) {
+  const diagnostics = [];
+  if (!validSha(beforeSha) || beforeSha !== afterSha || beforeSha !== eventHeadSha) diagnostics.push('AIGOV_BATCH_B_CURRENT_MAIN_MOVED');
+  if (!isVerifiedAuthoritativeRun(descriptor)
+    || descriptor.workflow_path !== AUTHORITATIVE_WORKFLOWS.main.path
+    || descriptor.event !== 'push'
+    || descriptor.exact_head_sha !== beforeSha
+    || descriptor.check_name !== AUTHORITATIVE_WORKFLOWS.main.checkName) diagnostics.push('AIGOV_BATCH_B_CURRENT_MAIN_VALIDATION_UNVERIFIED');
+  if (diagnostics.length) return { diagnostics: unique(diagnostics), evidence: null };
+  return {
+    diagnostics: [],
+    evidence: freezeEvidence({ schema_version: 'aigov-current-main-evidence.v1', current_main_sha: beforeSha, validation: descriptor, green: true }, VERIFIED_CURRENT_MAIN),
+  };
+}
+
+function rulesetEvidence(payload) {
+  const checks = [];
+  const bypass = [];
+  let strict = false;
+  for (const ruleset of Array.isArray(payload) ? payload : []) {
+    if (ruleset?.enforcement !== 'active') continue;
+    bypass.push(...(ruleset.bypass_actors || []));
+    for (const rule of ruleset.rules || []) {
+      if (rule?.type !== 'required_status_checks') continue;
+      strict ||= rule.parameters?.strict_required_status_checks_policy === true;
+      for (const item of rule.parameters?.required_status_checks || []) checks.push({ context: item.context, app_id: item.integration_id ?? item.app_id ?? null });
+    }
+  }
+  return { checks, bypass, strict };
+}
+
+export function verifyRepositoryEnforcementPayloads({ branchProtection, rulesets, requiredChecks }) {
+  const diagnostics = [];
+  const branchAvailable = Boolean(branchProtection && branchProtection.__unavailable !== true);
+  const rulesetAvailable = Array.isArray(rulesets);
+  if (!branchAvailable && !rulesetAvailable) diagnostics.push('AIGOV_BATCH_B_REQUIRED_CHECK_CONFIGURATION_UNVERIFIED');
+  const bpChecks = branchAvailable ? (branchProtection.required_status_checks?.checks || []) : [];
+  const bpStrict = branchAvailable && branchProtection.required_status_checks?.strict === true;
+  const bpAdminEnforced = branchAvailable && branchProtection.enforce_admins?.enabled === true;
+  const rs = rulesetEvidence(rulesets);
+  const checks = [...bpChecks.map((item) => ({ context: item.context, app_id: item.app_id ?? null })), ...rs.checks];
+  for (const required of requiredChecks || []) {
+    if (!checks.some((item) => item.context === required.context && item.app_id === required.appId)) diagnostics.push(`AIGOV_BATCH_B_REQUIRED_CHECK_MISSING:${required.context}`);
+  }
+  if (!(bpStrict || rs.strict)) diagnostics.push('AIGOV_BATCH_B_STALE_CHECK_POLICY_UNVERIFIED');
+  if (branchAvailable && !bpAdminEnforced) diagnostics.push('AIGOV_BATCH_B_ADMIN_BYPASS_UNVERIFIED');
+  if (rs.bypass.length) diagnostics.push('AIGOV_BATCH_B_BYPASS_ACTORS_PRESENT');
+  const status = diagnostics.length ? 'unverified' : 'verified';
+  return {
+    diagnostics: unique(diagnostics),
+    evidence: freezeEvidence({
+      schema_version: 'aigov-repository-enforcement-evidence.v1',
+      status,
+      required_check_configuration: status,
+      repository_settings_enforced: status === 'verified' ? 'verified' : 'not_claimed',
+      checks,
+      strict_stale_check_policy: bpStrict || rs.strict,
+      admin_enforcement: bpAdminEnforced,
+      bypass_actors: rs.bypass,
+    }, VERIFIED_ENFORCEMENT),
+  };
+}
