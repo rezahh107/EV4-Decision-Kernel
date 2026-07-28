@@ -13,6 +13,8 @@ const paths = {
   scope: 'planning/governance/scopes/aigov-v2.6-transition.scope.json',
   next: 'planning/NEXT_WORK.md',
 };
+const CURRENT_BASE_SHA = '03336312f6c3fcc4c315e56592bac3bac0bf7465';
+const EXECUTION_AUTHORITY = 'program_transition';
 const expectedRetired = Array.from({ length: 8 }, (_, index) => `KREC-${String(index + 2).padStart(3, '0')}`);
 const expectedAigov = Array.from({ length: 8 }, (_, index) => `AIGOV26-${String(index + 1).padStart(3, '0')}`);
 const expectedDeps = {
@@ -39,7 +41,11 @@ export function diagnostics(documents) {
   add(!same(program?.transition?.superseded_before_execution_task_ids, expectedRetired), 'AIGOV26_RETIRED_TASK_SET_INVALID');
   add(program?.transition?.historical_definitions_preserved !== true, 'AIGOV26_HISTORICAL_DEFINITION_LOSS');
   add(program?.transition?.auto_migration !== false, 'AIGOV26_AUTO_MIGRATION_FORBIDDEN');
+  add(program?.transition?.effective_execution_authority !== EXECUTION_AUTHORITY
+    || ledger?.transition?.effective_task_execution_authority !== EXECUTION_AUTHORITY,
+  'AIGOV26_EXECUTION_AUTHORITY_INVALID');
 
+  const programById = new Map((program?.tasks || []).map((task) => [task.task_id, task]));
   const ledgerById = new Map((ledger?.tasks || []).map((task) => [task.task_id, task]));
   const krec1 = ledgerById.get('KREC-001');
   add(krec1?.lifecycle_state !== 'complete' || krec1?.execution_eligibility !== 'complete', 'AIGOV26_KREC001_LIFECYCLE_INVALID');
@@ -52,35 +58,42 @@ export function diagnostics(documents) {
     || completion?.merge_method !== 'merge'
     || completion?.merge_actor !== 'rezahh107'
     || completion?.resulting_main_sha !== '4fe332847e6867fc6aa4639a94a88b8177d31970',
-    'AIGOV26_KREC001_COMPLETION_IDENTITY_INVALID');
+  'AIGOV26_KREC001_COMPLETION_IDENTITY_INVALID');
   add(completion?.exact_head_ci?.workflow !== 'Validate MVK'
     || completion?.exact_head_ci?.run_id !== 29741545637
     || completion?.exact_head_ci?.head_sha !== '117a6f072c6c0a6a3487a4520e8f6f0623618769'
     || completion?.exact_head_ci?.conclusion !== 'success',
-    'AIGOV26_KREC001_EXACT_HEAD_EVIDENCE_INVALID');
+  'AIGOV26_KREC001_EXACT_HEAD_EVIDENCE_INVALID');
   add(completion?.current_main_validation?.workflow !== 'Validate Main'
     || completion?.current_main_validation?.run_id !== 29742820512
     || completion?.current_main_validation?.head_sha !== '4fe332847e6867fc6aa4639a94a88b8177d31970'
     || completion?.current_main_validation?.conclusion !== 'success',
-    'AIGOV26_KREC001_CURRENT_MAIN_EVIDENCE_INVALID');
+  'AIGOV26_KREC001_CURRENT_MAIN_EVIDENCE_INVALID');
 
   for (const id of expectedRetired) {
+    const carrier = programById.get(id);
     const task = ledgerById.get(id);
     const disposition = task?.transition_disposition;
-    add(!task, 'AIGOV26_RETIRED_TASK_MISSING');
+    add(!carrier || !task, 'AIGOV26_RETIRED_TASK_MISSING');
+    add(carrier?.status !== 'active'
+      || carrier?.implementation_authorized !== false
+      || task?.authority?.carrier_status !== 'active'
+      || task?.authority?.implementation_authorized !== false,
+    'AIGOV26_LEGACY_AUTHORIZATION_BYPASS');
     add(task?.lifecycle_state !== 'not_started' || task?.candidate !== null || task?.completion_evidence !== null,
       'AIGOV26_ACTIVE_OR_COMPLETED_TASK_SUPERSESSION_FORBIDDEN');
+    add(task?.execution_eligibility !== 'superseded', 'AIGOV26_SUPERSEDED_EXECUTION_ELIGIBILITY_INVALID');
     add(disposition?.lifecycle_state !== 'superseded_before_execution'
       || disposition?.execution_eligibility !== 'superseded'
       || disposition?.superseded_by !== 'AIGOV-2.6-REPOSITORY-MIGRATION-PROGRAM',
-      'AIGOV26_SUPERSESSION_RECORD_INVALID');
+    'AIGOV26_SUPERSESSION_RECORD_INVALID');
     add(disposition?.historical_definition_preserved !== true
       || disposition?.substantive_implementation_started !== false,
-      'AIGOV26_SUPERSESSION_HISTORY_INVALID');
+    'AIGOV26_SUPERSESSION_HISTORY_INVALID');
     add(disposition?.implementation_credit !== false
       || disposition?.completion_credit !== false
       || disposition?.coverage_credit !== false,
-      'AIGOV26_SUPERSESSION_CREDIT_FORBIDDEN');
+    'AIGOV26_SUPERSESSION_CREDIT_FORBIDDEN');
   }
 
   add(migration?.program_id !== 'AIGOV-2.6-REPOSITORY-MIGRATION-PROGRAM', 'AIGOV26_MIGRATION_PROGRAM_ID_INVALID');
@@ -88,31 +101,31 @@ export function diagnostics(documents) {
     || migration?.implementation_started !== false, 'AIGOV26_ADOPTION_OR_IMPLEMENTATION_OVERCLAIM');
   add(migration?.transition_gate?.state !== 'satisfied'
     || migration?.transition_gate?.completion_evidence_ref !== 'planning/recovery/recovery-ledger.v1.json#/tasks/0/completion_evidence',
-    'AIGOV26_TRANSITION_GATE_INVALID');
+  'AIGOV26_TRANSITION_GATE_INVALID');
   const migrationById = new Map((migration?.tasks || []).map((task) => [task.task_id, task]));
   add(migrationById.size !== 8 || expectedAigov.some((id) => !migrationById.has(id)), 'AIGOV26_TASK_SET_INVALID');
   for (const id of expectedAigov) {
     const task = migrationById.get(id);
     add(!same(task?.dependencies, expectedDeps[id]), 'AIGOV26_DEPENDENCY_GRAPH_INVALID');
-    add(task?.state !== (id === 'AIGOV26-001' ? 'dependency_ready' : 'dependency_blocked'),
-      'AIGOV26_INITIAL_STATE_INVALID');
+    add(task?.state !== (id === 'AIGOV26-001' ? 'dependency_ready' : 'dependency_blocked'), 'AIGOV26_INITIAL_STATE_INVALID');
     add(task?.coverage_effects?.coverage_credit !== false
       || task?.coverage_effects?.readiness_claim !== false,
-      'AIGOV26_TASK_CREDIT_FORBIDDEN');
+    'AIGOV26_TASK_CREDIT_FORBIDDEN');
   }
 
   add(source?.package_identity !== 'AIGOV_v2.6.0_active'
     || source?.observed_archive_sha256 !== '6b1040b6a9d704777d803d99ac7e23752fd4151721b5279b3fd98566d007b9ce',
-    'AIGOV26_SOURCE_IDENTITY_INVALID');
+  'AIGOV26_SOURCE_IDENTITY_INVALID');
   add(source?.external_trusted_archive_sha256 !== null, 'AIGOV26_EXTERNAL_TRUST_OVERCLAIM');
   add(source?.verification?.status !== 'NOT_REPERFORMED_ARCHIVE_UNAVAILABLE'
     || source?.verification?.absence_claimed !== false,
-    'AIGOV26_SOURCE_VERIFICATION_BOUNDARY_INVALID');
+  'AIGOV26_SOURCE_VERIFICATION_BOUNDARY_INVALID');
   add(source?.repository_adoption_status !== 'planned_not_adopted'
     || source?.repository_policy_activated !== false
     || source?.ci_enforcement_activated !== false,
-    'AIGOV26_SOURCE_ACTIVATION_OVERCLAIM');
+  'AIGOV26_SOURCE_ACTIVATION_OVERCLAIM');
 
+  add(inventory?.observed_main_sha !== CURRENT_BASE_SHA, 'AIGOV26_INVENTORY_BASE_STALE');
   add(inventory?.remote_branches_deleted !== false, 'AIGOV26_REMOTE_BRANCH_DELETION_FORBIDDEN');
   const branches = new Map((inventory?.branches || []).map((item) => [item.branch, item]));
   for (const name of [
@@ -129,11 +142,11 @@ export function diagnostics(documents) {
   add(branches.get('fix/ev4-wave5-receipt-safety-profile')?.disposition !== 'requirements_extracted_into_aigov26',
     'AIGOV26_PR32_REQUIREMENTS_NOT_ACCOUNTED');
 
-  add(scope?.base_sha !== '4fe332847e6867fc6aa4639a94a88b8177d31970'
+  add(scope?.base_sha !== CURRENT_BASE_SHA
     || scope?.plan_id !== 'AIGOV-2.6-REPOSITORY-MIGRATION-PROGRAM'
     || !scope?.forbidden_changes?.includes('destructive_deletion')
     || !scope?.excluded?.some((item) => item.includes('remote branch deletion')),
-    'AIGOV26_SCOPE_INVALID');
+  'AIGOV26_SCOPE_INVALID');
   for (const filePath of Object.values(paths).filter((value) => value !== paths.next)) {
     add(filePath !== paths.scope && !scope?.committed?.includes(filePath), 'AIGOV26_SCOPE_PATH_MISSING');
   }
@@ -141,9 +154,10 @@ export function diagnostics(documents) {
     || !String(next || '').includes('exact_head_validate_mvk_run: 29741545637')
     || !String(next || '').includes('current_main_validate_main_run: 29742820512')
     || !String(next || '').includes('superseded_before_execution')
+    || !String(next || '').includes('effective_execution_authority: program_transition')
     || !String(next || '').includes('repository_adopted: false')
     || !String(next || '').includes('next_executable_task: AIGOV26-001'),
-    'AIGOV26_ROADMAP_MEMORY_INVALID');
+  'AIGOV26_ROADMAP_MEMORY_INVALID');
 
   add(migration?.effects?.coverage_credit !== false
     || migration?.effects?.readiness_claim !== false
@@ -151,7 +165,7 @@ export function diagnostics(documents) {
     || migration?.effects?.product_effect !== 'none'
     || migration?.effects?.deployment_effect !== 'none'
     || migration?.effects?.external_repository_effect !== 'none',
-    'AIGOV26_EFFECT_OVERCLAIM');
+  'AIGOV26_EFFECT_OVERCLAIM');
 
   return [...new Set(out)];
 }
@@ -179,6 +193,11 @@ export function selfTest(source) {
   expect('KREC-001 completion evidence must remain exact', (x) => { x.ledger.tasks[0].completion_evidence.current_main_validation.run_id = 1; }, 'AIGOV26_KREC001_CURRENT_MAIN_EVIDENCE_INVALID');
   expect('completed KREC task cannot be superseded', (x) => { x.ledger.tasks[0].transition_disposition = clone(x.ledger.tasks[1].transition_disposition); }, 'AIGOV26_COMPLETED_TASK_SUPERSESSION_FORBIDDEN');
   expect('retired KREC task cannot be completed', (x) => { x.ledger.tasks[1].lifecycle_state = 'complete'; }, 'AIGOV26_ACTIVE_OR_COMPLETED_TASK_SUPERSESSION_FORBIDDEN');
+  expect('KREC-002 dependency readiness cannot override supersession', (x) => { x.ledger.tasks[1].execution_eligibility = 'dependency_ready'; }, 'AIGOV26_SUPERSEDED_EXECUTION_ELIGIBILITY_INVALID');
+  expect('KREC-004 dependency readiness cannot override supersession', (x) => { x.ledger.tasks[3].execution_eligibility = 'dependency_ready'; }, 'AIGOV26_SUPERSEDED_EXECUTION_ELIGIBILITY_INVALID');
+  expect('stale Program authorization cannot bypass supersession', (x) => { x.program.tasks[1].implementation_authorized = true; }, 'AIGOV26_LEGACY_AUTHORIZATION_BYPASS');
+  expect('stale Ledger authorization cannot bypass supersession', (x) => { x.ledger.tasks[1].authority.implementation_authorized = true; }, 'AIGOV26_LEGACY_AUTHORIZATION_BYPASS');
+  expect('execution authority mutation fails closed', (x) => { x.ledger.transition.effective_task_execution_authority = 'transition_disposition'; }, 'AIGOV26_EXECUTION_AUTHORITY_INVALID');
   expect('missing successor program fails', (x) => { x.program.transition.successor_program_id = 'missing'; }, 'AIGOV26_SUCCESSOR_PROGRAM_MISSING');
   expect('automatic migration fails', (x) => { x.program.transition.auto_migration = true; }, 'AIGOV26_AUTO_MIGRATION_FORBIDDEN');
   expect('supersession completion credit fails', (x) => { x.ledger.tasks[1].transition_disposition.completion_credit = true; }, 'AIGOV26_SUPERSESSION_CREDIT_FORBIDDEN');
