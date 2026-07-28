@@ -7,6 +7,7 @@ import Ajv2020 from 'ajv/dist/2020.js';
 const ROOT = process.cwd();
 const PROGRAM_PATH = 'planning/recovery/recovery-execution-program.v1.json';
 const SCHEMA_PATH = 'kernel/schemas/recovery-execution-program.v1.schema.json';
+export const RECOVERY_TRANSITION_AUTHORITY = 'program_transition';
 export const EXPECTED_RECOVERY_GRAPH = Object.freeze({
   'KREC-001': [],
   'KREC-002': ['KREC-001'],
@@ -18,10 +19,21 @@ export const EXPECTED_RECOVERY_GRAPH = Object.freeze({
   'KREC-008': ['KREC-002', 'KREC-007'],
   'KREC-009': ['KREC-003', 'KREC-006', 'KREC-007', 'KREC-008'],
 });
+export const RECOVERY_SUPERSEDED_TASK_IDS = Object.freeze([
+  'KREC-002',
+  'KREC-003',
+  'KREC-004',
+  'KREC-005',
+  'KREC-006',
+  'KREC-007',
+  'KREC-008',
+  'KREC-009',
+]);
 const TASK_IDS = Object.freeze(Object.keys(EXPECTED_RECOVERY_GRAPH));
 const TASK_STATES = new Set(['registered_planned_task', 'active', 'implemented', 'complete']);
 const unique = (items) => [...new Set(items)];
 const sameSet = (left, right) => JSON.stringify([...(left || [])].sort()) === JSON.stringify([...(right || [])].sort());
+const same = (left, right) => JSON.stringify(left) === JSON.stringify(right);
 const readJson = (file) => JSON.parse(fs.readFileSync(path.join(ROOT, file), 'utf8'));
 
 function cycleDiagnostics(tasksById) {
@@ -40,6 +52,20 @@ function cycleDiagnostics(tasksById) {
   return diagnostics;
 }
 
+function transitionAuthorityValid(value) {
+  const transition = value?.transition;
+  return transition?.decision_id === 'OWNER-DIRECTED-AIGOV-2.6-MIGRATION'
+    && transition?.transition_kind === 'explicit_versioned_successor'
+    && transition?.successor_program_id === 'AIGOV-2.6-REPOSITORY-MIGRATION-PROGRAM'
+    && transition?.successor_program_ref === 'planning/migrations/aigov-v2.6-migration-program.v1.json'
+    && same(transition?.preserved_task_ids, ['KREC-001'])
+    && same(transition?.superseded_before_execution_task_ids, RECOVERY_SUPERSEDED_TASK_IDS)
+    && transition?.historical_definitions_preserved === true
+    && transition?.auto_migration === false
+    && transition?.effective_execution_authority === RECOVERY_TRANSITION_AUTHORITY
+    && transition?.substantive_implementation_started_for_superseded_tasks === false;
+}
+
 export function recoveryProgramDiagnostics(value) {
   const diagnostics = [];
   if (!value || typeof value !== 'object') return ['RECOVERY_PROGRAM_MALFORMED'];
@@ -49,6 +75,11 @@ export function recoveryProgramDiagnostics(value) {
   if (value.product_effect !== 'none') diagnostics.push('RECOVERY_PRODUCT_EFFECT_FORBIDDEN');
   if (value.kroad_012r_status !== 'historical_non_authoritative'
     || value.kroad_supersession_effect !== 'none') diagnostics.push('RECOVERY_KROAD_SUPERSESSION_FORBIDDEN');
+
+  const hasTransition = value.transition !== undefined;
+  const transitionActive = hasTransition && transitionAuthorityValid(value);
+  if (hasTransition && !transitionActive) diagnostics.push('RECOVERY_TRANSITION_AUTHORITY_INVALID');
+  const superseded = transitionActive ? new Set(RECOVERY_SUPERSEDED_TASK_IDS) : new Set();
 
   const tasks = Array.isArray(value.tasks) ? value.tasks : [];
   const seen = new Set();
@@ -84,11 +115,20 @@ export function recoveryProgramDiagnostics(value) {
     if (value.task_activation_effect !== 'one_or_more_active') diagnostics.push('RECOVERY_PROGRAM_STATE_INCONSISTENT');
     for (const task of tasks) {
       if (task.status === 'registered_planned_task') diagnostics.push('RECOVERY_ACTIVE_TASK_STATE_INVALID');
-      if (task.implementation_authorized !== true) diagnostics.push('RECOVERY_ACTIVE_TASK_AUTHORIZATION_REQUIRED');
+      if (superseded.has(task.task_id)) {
+        if (task.status !== 'active') diagnostics.push('RECOVERY_SUPERSEDED_TASK_STATE_INVALID');
+        if (task.implementation_authorized !== false) diagnostics.push('RECOVERY_SUPERSEDED_TASK_AUTHORIZATION_FORBIDDEN');
+      } else if (task.implementation_authorized !== true) {
+        diagnostics.push('RECOVERY_ACTIVE_TASK_AUTHORIZATION_REQUIRED');
+      }
     }
   }
 
   for (const task of tasks) {
+    if (superseded.has(task.task_id)) {
+      if (['implemented', 'complete'].includes(task.status)) diagnostics.push('RECOVERY_SUPERSEDED_TASK_EXECUTION_FORBIDDEN');
+      continue;
+    }
     if (!['implemented', 'complete'].includes(task.status)) continue;
     for (const dependencyId of task.depends_on || []) {
       const dependency = tasksById.get(dependencyId);
