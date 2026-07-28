@@ -1,0 +1,44 @@
+continuation_profile:
+  profile_id: EV4-PCVP-PROFILE-RESPONSIVE
+  profile_version: 1.0.0
+  profile_status: release_candidate
+  policy_id: EV4-PCVP
+  policy_version: 1.0.0
+  repository: rezahh107/EV4-Responsive-Architect
+  stage_id: RESPONSIVE_ARCHITECT
+  consumes_from:
+  - ARCHITECT
+  - CONSTRUCTABILITY_ENGINEER
+  - BUILDER_ASSISTANT
+  produces_for:
+  - PROJECT_GATE
+  preauthorized_effects:
+  - effect_class: REASONING_ONLY
+    bounded_output_types:
+    - responsive_analysis
+    - breakpoint_assumption_analysis
+    - dependency_scoped_risk_note
+    scope: current responsive decision only
+  - effect_class: DRAFT_ONLY
+    bounded_output_types:
+    - provisional_responsive_handoff
+    scope: discardable provisional handoff; no rendered-result claim
+  safe_reversible_default_enabled: true
+  safe_reversible_default_effect_classes:
+  - REASONING_ONLY
+  - DRAFT_ONLY
+  verified_only_boundaries:
+  - rendered responsive result
+  - browser/device validation
+  - production-ready responsive claim
+  - locked architecture change
+  upstream_supplement_request_format: one bounded request tied to affected responsive
+    dependency claims
+  new_blocker_examples:
+  - new custom breakpoint requires owner decision
+  - evidence contradicts assumed content order
+  - responsive effect requires authority-bearing structure change
+  non_blocker_examples:
+  - same provisional breakpoint assumption in unchanged scope
+  - unrelated upstream provisional claim
+  owner_facing_language: fa

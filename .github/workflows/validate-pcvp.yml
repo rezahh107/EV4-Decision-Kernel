@@ -1,0 +1,73 @@
+name: Validate PCVP Foundation
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/validate-pcvp.yml'
+      - 'kernel/pcvp/**'
+      - 'kernel/validator/pcvp-v1.mjs'
+      - 'planning/governance/scopes/pcvp-v1-foundation.scope.json'
+      - 'tools/test-pcvp-v1-fixtures.mjs'
+      - 'tools/validate-pcvp-v1.mjs'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/validate-pcvp.yml'
+      - 'kernel/pcvp/**'
+      - 'kernel/validator/pcvp-v1.mjs'
+      - 'planning/governance/scopes/pcvp-v1-foundation.scope.json'
+      - 'tools/test-pcvp-v1-fixtures.mjs'
+      - 'tools/validate-pcvp-v1.mjs'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-pcvp:
+    name: PCVP bundle and semantic fixtures
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out exact source head
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Assert exact clean checkout
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
+      - name: Set up Node.js LTS
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: lts/*
+          package-manager-cache: false
+
+      - name: Install pinned repository dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Check source syntax and patch whitespace
+        run: |
+          set -euo pipefail
+          node --check kernel/validator/pcvp-v1.mjs
+          node --check tools/validate-pcvp-v1.mjs
+          node --check tools/test-pcvp-v1-fixtures.mjs
+          git diff --check
+
+      - name: Validate exact bundle and bounded diff
+        env:
+          PCVP_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          PCVP_HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          node tools/validate-pcvp-v1.mjs \
+            --base "${PCVP_BASE_SHA}" \
+            --head "${PCVP_HEAD_SHA}" \
+            --scope planning/governance/scopes/pcvp-v1-foundation.scope.json
+
+      - name: Run indexed fixtures and focused mutations
+        run: node tools/test-pcvp-v1-fixtures.mjs

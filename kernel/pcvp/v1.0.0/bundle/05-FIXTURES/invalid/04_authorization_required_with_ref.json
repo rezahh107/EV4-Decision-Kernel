@@ -1,0 +1,52 @@
+{
+  "continuation_assurance": {
+    "policy_id": "EV4-PCVP",
+    "policy_version": "1.0.0",
+    "source_stage": "CONSTRUCTABILITY_ENGINEER",
+    "claims": [
+      {
+        "claim_id": "CLM-001",
+        "statement": "The constructability assumption is not officially verified.",
+        "criticality": "CRITICAL",
+        "applicability_state": "APPLICABLE",
+        "verification_state": "UNVERIFIED",
+        "lifecycle_state": "ACTIVE",
+        "evidence_refs": [],
+        "dependency_refs": [],
+        "assumption_refs": []
+      }
+    ],
+    "effects": [
+      {
+        "effect_id": "EFF-001",
+        "effect_class": "DRAFT_ONLY",
+        "depends_on_claim_ids": [
+          "CLM-001"
+        ],
+        "continuation_state": "AUTHORIZATION_REQUIRED",
+        "authorization_ref": "AUTH-MISSING",
+        "blocker_reason": "OWNER_DECISION_REQUIRED",
+        "permitted_scope": "provisional handoff if owner authorizes"
+      }
+    ],
+    "authorizations": [],
+    "unresolved_items": [
+      {
+        "id": "DEC-001",
+        "class": "OWNER_DECISION_REQUIRED",
+        "statement": "Owner must choose whether to continue provisionally.",
+        "impact": "draft handoff not emitted yet"
+      }
+    ],
+    "stage_summary": {
+      "owner_projection": "YELLOW",
+      "yellow_substate": "OWNER_CHOICE_REQUIRED",
+      "derived_from_claim_ids": [
+        "CLM-001"
+      ],
+      "current_effect_id": "EFF-001",
+      "lifecycle_state": "ACTIVE",
+      "derivation_reason": "owner authorization is required"
+    }
+  }
+}

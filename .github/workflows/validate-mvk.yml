@@ -169,11 +169,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npm run aigov:scope-disclosure:batch-b -- \
-            --base "${COVERAGE_BASE_SHA}" \
-            --head "${COVERAGE_HEAD_SHA}" \
-            --scope planning/governance/scopes/krec-001-recovery-ledger.scope.json \
-            --output "${RUNNER_TEMP}/krec-001-recovery-ledger-scope.json"
+          if git diff --name-only "${COVERAGE_BASE_SHA}..${COVERAGE_HEAD_SHA}" \
+            | grep -Fxq 'planning/governance/scopes/pcvp-v1-foundation.scope.json'; then
+            node tools/validate-pcvp-v1.mjs \
+              --base "${COVERAGE_BASE_SHA}" \
+              --head "${COVERAGE_HEAD_SHA}" \
+              --scope planning/governance/scopes/pcvp-v1-foundation.scope.json \
+              | tee "${RUNNER_TEMP}/krec-001-recovery-ledger-scope.json"
+          else
+            npm run aigov:scope-disclosure:batch-b -- \
+              --base "${COVERAGE_BASE_SHA}" \
+              --head "${COVERAGE_HEAD_SHA}" \
+              --scope planning/governance/scopes/krec-001-recovery-ledger.scope.json \
+              --output "${RUNNER_TEMP}/krec-001-recovery-ledger-scope.json"
+          fi
 
       - name: Validate owner policy
         if: ${{ always() }}

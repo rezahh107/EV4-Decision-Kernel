@@ -1,0 +1,246 @@
+{
+  "schema_version": "ev4-pcvp-enforcement-map.v1",
+  "policy_id": "EV4-PCVP",
+  "policy_version": "1.0.0",
+  "classification_authority": "non_normative_observed_enforcement_map",
+  "activation_state": "DORMANT",
+  "rules": [
+    {
+      "source_id": "PCVP-CORE-001",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "validator_or_test": "kernel/validator/pcvp-v1.mjs",
+      "coverage_note": "Schema ownership separation plus cross-record global identifier uniqueness."
+    },
+    {
+      "source_id": "PCVP-CLAIM-001",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "validator_or_test": "04-SCHEMAS/claim.schema.json",
+      "coverage_note": "Applicability and verification are separate required fields."
+    },
+    {
+      "source_id": "PCVP-CLAIM-002",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "validator_or_test": "04-SCHEMAS/claim.schema.json",
+      "coverage_note": "Canonical Claim structure is schema-enforced."
+    },
+    {
+      "source_id": "PCVP-EFFECT-001",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "validator_or_test": "04-SCHEMAS/effect.schema.json",
+      "coverage_note": "Continuation fields exist only on Effect records."
+    },
+    {
+      "source_id": "PCVP-EFFECT-002",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "validator_or_test": "04-SCHEMAS/effect.schema.json",
+      "coverage_note": "Canonical Effect structure is schema-enforced."
+    },
+    {
+      "source_id": "PCVP-EFFECT-003",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "validator_or_test": "kernel/validator/pcvp-v1.mjs",
+      "coverage_note": "Continuation, blocker, dependency and authorization-reference invariants are checked."
+    },
+    {
+      "source_id": "PCVP-AUTH-001",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "validator_or_test": "kernel/validator/pcvp-v1.mjs",
+      "coverage_note": "Authorization identity, activity, effect coverage and exact permitted scope are checked."
+    },
+    {
+      "source_id": "PCVP-AUTH-002",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "validator_or_test": "04-SCHEMAS/authorization.schema.json",
+      "coverage_note": "NOT_REQUIRED is represented as a real Authorization basis."
+    },
+    {
+      "source_id": "PCVP-TRUTH-001",
+      "enforcement_class": "PROMPT_ONLY_BEST_EFFORT",
+      "validator_or_test": "MISSING_REPOSITORY_BEHAVIORAL_EVALUATION",
+      "coverage_note": "A carrier schema cannot prove that model prose avoids equating progress with Verification."
+    },
+    {
+      "source_id": "PCVP-TRUTH-002",
+      "enforcement_class": "PROMPT_ONLY_BEST_EFFORT",
+      "validator_or_test": "MISSING_REPOSITORY_BEHAVIORAL_EVALUATION",
+      "coverage_note": "Owner permission versus technical proof requires repository behavior evaluation."
+    },
+    {
+      "source_id": "PCVP-TRUTH-003",
+      "enforcement_class": "PROMPT_ONLY_BEST_EFFORT",
+      "validator_or_test": "MISSING_CROSS_STAGE_CLAIM_STRENGTH_TEST",
+      "coverage_note": "Downstream claim-strength preservation requires real edge tests."
+    },
+    {
+      "source_id": "PCVP-TRUTH-004",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "validator_or_test": "kernel/validator/pcvp-v1.mjs",
+      "coverage_note": "Contradicted critical dependencies force BLOCKED and RED."
+    },
+    {
+      "source_id": "PCVP-TRUTH-005",
+      "enforcement_class": "PROMPT_ONLY_BEST_EFFORT",
+      "validator_or_test": "MISSING_REPOSITORY_BEHAVIORAL_EVALUATION",
+      "coverage_note": "Percentage and confidence wording is outside the canonical carrier."
+    },
+    {
+      "source_id": "PCVP-SUMMARY-001",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "validator_or_test": "kernel/validator/pcvp-v1.mjs",
+      "coverage_note": "Current effect and derived Claim references resolve and projection predicates are checked."
+    },
+    {
+      "source_id": "PCVP-SUMMARY-002",
+      "enforcement_class": "BEHAVIORAL_TESTED",
+      "validator_or_test": "tools/test-pcvp-v1-fixtures.mjs",
+      "coverage_note": "Carrier projection consistency is tested; preventing downstream use as authority remains an edge-level gap."
+    },
+    {
+      "source_id": "PCVP-PROP-001",
+      "enforcement_class": "PROMPT_ONLY_BEST_EFFORT",
+      "validator_or_test": "MISSING_CROSS_STAGE_DEPENDENCY_PROPAGATION_TEST",
+      "coverage_note": "Dependency references are mechanical, but contamination behavior requires real producer-consumer tests."
+    },
+    {
+      "source_id": "PCVP-AUTH-003",
+      "enforcement_class": "PROMPT_ONLY_BEST_EFFORT",
+      "validator_or_test": "MISSING_HISTORY_AWARE_AUTHORIZATION_INVALIDATION_TEST",
+      "coverage_note": "New-blocker detection and invalidation require repository runtime history."
+    }
+  ],
+  "spec_behavioral_scenarios": [
+    {
+      "source_id": "SPEC-FIXTURE-01",
+      "source_heading": "Runtime unavailable, bounded continuation",
+      "enforcement_class": "PROMPT_ONLY_BEST_EFFORT",
+      "indexed_fixture_mapping": ["valid/02_owner_authorized_provisional.json"],
+      "coverage_note": "Carrier shape is covered; truthful Runtime-unavailable wording requires behavioral evaluation."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-02",
+      "source_heading": "Claim and Effect ownership separation",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "indexed_fixture_mapping": ["invalid/01_claim_contains_continuation.json", "invalid/02_effect_contains_authorization_basis.json"],
+      "coverage_note": "Schema rejection is exact."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-03",
+      "source_heading": "Authorization required, no basis yet",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "indexed_fixture_mapping": ["valid/03_authorization_required.json", "invalid/04_authorization_required_with_ref.json"],
+      "coverage_note": "Effect-state/ref invariant is exact."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-04",
+      "source_heading": "Verified Fact, owner decision required",
+      "enforcement_class": "BEHAVIORAL_TESTED",
+      "indexed_fixture_mapping": ["valid/03_authorization_required.json"],
+      "coverage_note": "Carrier behavior is represented; owner-facing question quality remains repository-specific."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-05",
+      "source_heading": "Profile preauthorization",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "indexed_fixture_mapping": ["valid/04_profile_preauthorized.json"],
+      "coverage_note": "Bounded Authorization carrier is checked; profile identity binding remains a consumer integration obligation."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-06",
+      "source_heading": "Safe reversible default",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "indexed_fixture_mapping": ["valid/05_safe_reversible_default.json"],
+      "coverage_note": "Eligible bounded class is accepted."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-07",
+      "source_heading": "Safe default forbidden",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "indexed_fixture_mapping": ["invalid/08_safe_default_external_mutation.json"],
+      "coverage_note": "External or irreversible class is rejected."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-08",
+      "source_heading": "Applicability separate from Verification",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "indexed_fixture_mapping": ["valid/08_not_applicable_claim.json"],
+      "coverage_note": "Separate fields and not-applicable behavior are represented."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-09",
+      "source_heading": "Dependency-scoped propagation",
+      "enforcement_class": "PROMPT_ONLY_BEST_EFFORT",
+      "indexed_fixture_mapping": [],
+      "coverage_note": "Requires a cross-stage negative test proving unrelated Claims remain unchanged."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-10",
+      "source_heading": "Contradicted Claim",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "indexed_fixture_mapping": ["valid/06_contradicted_blocked_red.json", "invalid/09_contradicted_claim_continues.json"],
+      "coverage_note": "Contradiction precedence is checked."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-11",
+      "source_heading": "Repeated blocker",
+      "enforcement_class": "PROMPT_ONLY_BEST_EFFORT",
+      "indexed_fixture_mapping": [],
+      "coverage_note": "Requires history-aware model behavior evaluation."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-12",
+      "source_heading": "New blocker invalidates authorization",
+      "enforcement_class": "PROMPT_ONLY_BEST_EFFORT",
+      "indexed_fixture_mapping": [],
+      "coverage_note": "Requires history-aware invalidation behavior."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-13",
+      "source_heading": "Multiple effects, different authorizations",
+      "enforcement_class": "MACHINE_ENFORCED",
+      "indexed_fixture_mapping": ["valid/07_multiple_effects_multiple_authorizations.json"],
+      "coverage_note": "Per-effect references and coverage are checked."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-14",
+      "source_heading": "Upstream supplement",
+      "enforcement_class": "PROMPT_ONLY_BEST_EFFORT",
+      "indexed_fixture_mapping": [],
+      "coverage_note": "Requires repository-specific supplement-request behavior."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-15",
+      "source_heading": "Fabrication required",
+      "enforcement_class": "PROMPT_ONLY_BEST_EFFORT",
+      "indexed_fixture_mapping": [],
+      "coverage_note": "Requires behavioral falsification of fabrication avoidance."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-16",
+      "source_heading": "Verification upgrade",
+      "enforcement_class": "PROMPT_ONLY_BEST_EFFORT",
+      "indexed_fixture_mapping": [],
+      "coverage_note": "Requires two-state reconciliation history."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-17",
+      "source_heading": "Percentage does not verify",
+      "enforcement_class": "PROMPT_ONLY_BEST_EFFORT",
+      "indexed_fixture_mapping": [],
+      "coverage_note": "Requires model-output behavioral evaluation."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-18",
+      "source_heading": "Hidden state claim",
+      "enforcement_class": "PROMPT_ONLY_BEST_EFFORT",
+      "indexed_fixture_mapping": [],
+      "coverage_note": "Requires environment-aware truthfulness evaluation."
+    },
+    {
+      "source_id": "SPEC-FIXTURE-19",
+      "source_heading": "Owner-facing projection",
+      "enforcement_class": "BEHAVIORAL_TESTED",
+      "indexed_fixture_mapping": ["valid/01_verified_green.json", "valid/02_owner_authorized_provisional.json", "valid/06_contradicted_blocked_red.json", "invalid/07_green_with_unverified_critical_claim.json"],
+      "coverage_note": "Projection predicates are checked; Persian fixed-format UX remains repository-specific."
+    }
+  ]
+}
