@@ -73,18 +73,26 @@ kroad_supersession_effect: none
 
 ## 5. Recovery Program boundary
 
-`DCOV-COVERAGE-EXECUTION-PROGRAM` is active. `KREC-001` through `KREC-009` are simultaneously authorized with:
+`DCOV-COVERAGE-EXECUTION-PROGRAM` remains the historical Recovery carrier. The current AIGOV v2.6 transition has one execution authority:
 
 ```yaml
-status: active
-implementation_authorized: true
-coverage_credit: false
-readiness_claim: false
+effective_execution_authority: program_transition
+authority_path: planning/recovery/recovery-execution-program.v1.json#/transition
+preserved_task: KREC-001
+superseded_before_execution:
+  - KREC-002
+  - KREC-003
+  - KREC-004
+  - KREC-005
+  - KREC-006
+  - KREC-007
+  - KREC-008
+  - KREC-009
 ```
 
-Authorization may be simultaneous. Execution and completion remain dependency-aware. A task may not become `implemented` or `complete` until every `depends_on` task is `complete`.
+`KREC-001` remains formally complete. `KREC-002` through `KREC-009` remain historical definitions with historical carrier status `active`, but their compatibility projection is `implementation_authorized: false` and their effective `execution_eligibility` is `superseded`. Dependency completion cannot reactivate them. A transition-unaware legacy validator must fail closed rather than grant execution authority.
 
-No substantive KREC deliverable is implemented by the activation change itself.
+The historical activation record that once authorized all nine KREC tasks is evidence only; it is not current execution authority. No substantive `AIGOV26-*` implementation is started by the transition repair.
 
 ## 6. Security and scope
 
