@@ -24,42 +24,49 @@ Merge metadata, CI success, advisory pre-Merge review, repository placement, PR 
 
 The historical `DCOV-EXEC-001` through `DCOV-EXEC-005` decomposition remains proposal context only. It does not replace, reorder, or supersede KROAD-012 through KROAD-018.
 
-## Recovery Execution Program Overlay — Active
+## Recovery Execution Program Overlay — Transitioned
 
 - **Program ID:** `DCOV-COVERAGE-EXECUTION-PROGRAM`
-- **Status:** `active`
+- **Historical carrier status:** `active`
 - **Current-status authority:** `planning/NEXT_WORK.md`
 - **Durable operating-map authority:** this section.
-- **Activation semantics:** all nine KREC tasks are authorized simultaneously, while execution and completion remain dependency-aware.
-- **Substantive implementation in the activation PR:** none.
+- **Effective KREC execution authority:** `planning/recovery/recovery-execution-program.v1.json#/transition` (`program_transition`).
+- **KREC-001:** formally `complete` with preserved PR #52 completion evidence.
+- **KREC-002 through KREC-009:** `superseded_before_execution`; historical definitions preserved.
+- **Substantive AIGOV26 implementation in the transition repair:** none.
 - **Coverage promotion effect:** `none`.
 - **Coverage credit or percentage effect:** `none`.
 - **Readiness or production-readiness effect:** `none`.
 - **Product effect:** `none`.
+- **Deployment effect:** `none`.
 - **External-repository effect:** `none`.
 - **KROAD supersession effect:** `none`.
 
-Authorization does not erase sequencing. A task may start only when every dependency is `complete`; it may become `implemented` or `complete` only after its own substantive artifacts and validation evidence exist. This activation PR changes authorization and lifecycle state only.
+The original Recovery activation is retained as historical evidence, but it no longer grants current execution authority to KREC-002 through KREC-009. For those superseded tasks, the legacy compatibility projection is `implementation_authorized: false` and the effective ledger eligibility is `superseded`. Supersession has precedence over dependency completion; a complete dependency can never turn a superseded task into `dependency_ready`.
 
-### Recovery task graph
+### Recovery task graph and effective disposition
 
-| Task | Title | Depends on | Authorization | Execution availability |
+| Task | Title | Historical depends on | Historical carrier | Effective execution |
 |---|---|---|---|---|
-| `KREC-001` | Recovery Ledger | none | `active`, `implementation_authorized: true` | `immediately_executable` |
-| `KREC-002` | Current Source Verification | `KREC-001` | `active`, `implementation_authorized: true` | `dependency_blocked: KREC-001` |
-| `KREC-003` | Element Reconciliation | `KREC-001`, `KREC-002` | `active`, `implementation_authorized: true` | `dependency_blocked: KREC-001, KREC-002` |
-| `KREC-004` | Decision Demand Corpus | `KREC-001` | `active`, `implementation_authorized: true` | `dependency_blocked: KREC-001` |
-| `KREC-005` | Canonical Registry Foundation | `KREC-002`, `KREC-003`, `KREC-004` | `active`, `implementation_authorized: true` | `dependency_blocked: KREC-002, KREC-003, KREC-004` |
-| `KREC-006` | Decision Question Catalog | `KREC-003`, `KREC-004`, `KREC-005` | `active`, `implementation_authorized: true` | `dependency_blocked: KREC-003, KREC-004, KREC-005` |
-| `KREC-007` | P0 Resolver Expansion | `KREC-005`, `KREC-006` | `active`, `implementation_authorized: true` | `dependency_blocked: KREC-005, KREC-006` |
-| `KREC-008` | Consumer Enforcement Expansion | `KREC-002`, `KREC-007` | `active`, `implementation_authorized: true` | `dependency_blocked: KREC-002, KREC-007` |
-| `KREC-009` | Coverage Baseline | `KREC-003`, `KREC-006`, `KREC-007`, `KREC-008` | `active`, `implementation_authorized: true` | `dependency_blocked: KREC-003, KREC-006, KREC-007, KREC-008` |
+| `KREC-001` | Recovery Ledger | none | `active`, `implementation_authorized: true` | `complete`; no re-execution implied |
+| `KREC-002` | Current Source Verification | `KREC-001` | `active`, `implementation_authorized: false` | `superseded` |
+| `KREC-003` | Element Reconciliation | `KREC-001`, `KREC-002` | `active`, `implementation_authorized: false` | `superseded` |
+| `KREC-004` | Decision Demand Corpus | `KREC-001` | `active`, `implementation_authorized: false` | `superseded` |
+| `KREC-005` | Canonical Registry Foundation | `KREC-002`, `KREC-003`, `KREC-004` | `active`, `implementation_authorized: false` | `superseded` |
+| `KREC-006` | Decision Question Catalog | `KREC-003`, `KREC-004`, `KREC-005` | `active`, `implementation_authorized: false` | `superseded` |
+| `KREC-007` | P0 Resolver Expansion | `KREC-005`, `KREC-006` | `active`, `implementation_authorized: false` | `superseded` |
+| `KREC-008` | Consumer Enforcement Expansion | `KREC-002`, `KREC-007` | `active`, `implementation_authorized: false` | `superseded` |
+| `KREC-009` | Coverage Baseline | `KREC-003`, `KREC-006`, `KREC-007`, `KREC-008` | `active`, `implementation_authorized: false` | `superseded` |
 
 ### Recovery lifecycle evidence contract
 
-`planning/recovery/recovery-ledger.v1.json` is the canonical machine-readable lifecycle and evidence ledger for this program. It consumes task identity, titles, dependencies, carrier status and authorization from `planning/recovery/recovery-execution-program.v1.json`; it does not replace that carrier or create a competing task universe.
+`planning/recovery/recovery-ledger.v1.json` remains the canonical lifecycle and evidence ledger. It consumes task identity, titles, dependencies and historical carrier status from `planning/recovery/recovery-execution-program.v1.json`; it does not create a competing execution authority. During the AIGOV v2.6 transition, its `transition_disposition` values and legacy fields are projections of the Program transition authority.
 
-The ledger distinguishes `not_started`, `in_progress`, `checks_pending` and `complete`. Branch creation, prompt delivery, an open PR and exact-head CI are candidate evidence only. A `complete` entry requires exact reviewed-head CI, owner Merge identity, method-aware resulting-main identity and successful current-main validation. Only `complete` dependencies affect execution eligibility. Accepted completion evidence is immutable in later revisions.
+Historical candidate and completion evidence remain immutable. KREC-001 completion evidence remains bound to PR #52 and its exact historical CI/current-main receipts. KREC-002 through KREC-009 retain no implementation, completion, Coverage or readiness credit.
+
+### AIGOV v2.6 successor boundary
+
+`AIGOV26-001` is the only successor task initially `dependency_ready`. `AIGOV26-002` through `AIGOV26-008` remain `dependency_blocked`. Repository adoption remains `planned_not_adopted`, and this transition does not activate or implement AIGOV v2.6.
 
 ### Preserved roadmap boundaries
 
@@ -67,7 +74,7 @@ The ledger distinguishes `not_started`, `in_progress`, `checks_pending` and `com
 - `KROAD-012` remains not superseded and available as the preserved next product task.
 - `KROAD-013` through `KROAD-018` remain `not_started`.
 - `KROAD-012R` remains `historical_non_authoritative`.
-- The active Recovery Program is distinct from the non-executable Coverage proposal. Recovery authorization cannot satisfy `independent_review_passed` or any other external Coverage-promotion predicate.
+- Recovery/AIGOV transition authority cannot satisfy `independent_review_passed` or any other external Coverage-promotion predicate.
 
 ## Preserved detailed roadmap
 
