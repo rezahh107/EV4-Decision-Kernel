@@ -208,13 +208,17 @@ jobs:
           npm run test:aigov-v3-exception
           npm run test:aigov-v4-hardening
 
-      - name: Validate Recovery lifecycle and AIGOV v2.6 transition
+      - name: Validate Recovery lifecycle
         if: ${{ always() }}
         run: |
           npm run validate:recovery-program
           npm run test:recovery-lifecycle
           npm run validate:recovery-ledger
           npm run test:recovery-ledger-lifecycle
+
+      - name: Validate AIGOV v2.6 transition authority
+        if: ${{ always() }}
+        run: |
           npm run validate:aigov26-transition
           npm run test:aigov26-transition
 
