@@ -13,7 +13,11 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const LEGACY_FIXTURE_BASE_SHA = '4fe332847e6867fc6aa4639a94a88b8177d31970';
-const LEDGER_PATH = 'planning/recovery/recovery-ledger.v1.json';
+const HISTORICAL_PATHS = [
+  'planning/recovery/recovery-ledger.v1.json',
+  'planning/recovery/recovery-execution-program.v1.json',
+  'kernel/schemas/recovery-ledger.v1.schema.json',
+];
 const temporaryRoot = mkdtempSync(join(tmpdir(), 'ev4-recovery-legacy-lifecycle-'));
 const worktree = join(temporaryRoot, 'repo');
 
@@ -29,11 +33,13 @@ let worktreeCreated = false;
 try {
   git(['worktree', 'add', '--detach', worktree, 'HEAD']);
   worktreeCreated = true;
-  const historicalLedger = git(
-    ['show', `${LEGACY_FIXTURE_BASE_SHA}:${LEDGER_PATH}`],
-    { capture: true },
-  );
-  writeFileSync(join(worktree, LEDGER_PATH), historicalLedger, 'utf8');
+  for (const filePath of HISTORICAL_PATHS) {
+    const historical = git(
+      ['show', `${LEGACY_FIXTURE_BASE_SHA}:${filePath}`],
+      { capture: true },
+    );
+    writeFileSync(join(worktree, filePath), historical, 'utf8');
+  }
 
   const sourceModules = join(ROOT, 'node_modules');
   const worktreeModules = join(worktree, 'node_modules');
