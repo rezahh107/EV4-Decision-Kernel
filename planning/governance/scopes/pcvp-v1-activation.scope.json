@@ -10,9 +10,10 @@
     "kernel/pcvp/pcvp-activation.v1.schema.json",
     "kernel/pcvp/pcvp-foundation.v1.json",
     "kernel/validator/pcvp-activation-v1.mjs",
+    "planning/coverage/impacts/z-krec-001.pr55-pcvp-activation.json",
     "planning/governance/scopes/pcvp-v1-activation.scope.json",
     "tools/test-pcvp-activation-v1.mjs",
     "tools/validate-pcvp-activation-v1.mjs"
   ],
-  "scope_revision": "sha256:9ab8c00e9bb351f26b596487a5ac723e166b490d65238e1e278525ae2549d5b1"
+  "scope_revision": "sha256:c3656a91948757434e045e4ba172157654ba2f093e5d703ebba56c97c3ff9872"
 }
