@@ -16,8 +16,7 @@
     "planning/KERNEL_EXECUTION_PLAN.md",
     "planning/NEXT_WORK.md",
     "planning/coverage/impacts/z-aigov26-transition.pr53.json",
-    "tools/test-coverage-impact-governance.mjs",
-    "tools/validate-aigov-v4-governance.mjs"
+    "tools/test-coverage-impact-governance.mjs"
   ],
   "bootstrap_exception": false,
   "reason": "repairs_aigov_v2_6_transition_execution_authority_and_rebases_it_on_current_main_without_coverage_promotion_credit_readiness_product_deployment_or_adoption_effect",
