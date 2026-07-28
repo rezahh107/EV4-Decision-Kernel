@@ -69,6 +69,31 @@ jobs:
           node --check tools/test-pcvp-activation-v1.mjs
           git diff --check
 
+      - name: Capture exact MVK workflow identity
+        run: |
+          node --input-type=module <<'NODE' > "${RUNNER_TEMP}/pcvp-mvk-workflow-identity.json"
+          import { createHash } from 'node:crypto';
+          import { readFileSync } from 'node:fs';
+          const bytes = readFileSync('.github/workflows/validate-mvk.yml');
+          const identity = {
+            blob_sha: createHash('sha1')
+              .update(Buffer.from(`blob ${bytes.length}\0`))
+              .update(bytes)
+              .digest('hex'),
+            final_byte_sha256: createHash('sha256').update(bytes).digest('hex'),
+          };
+          process.stdout.write(`${JSON.stringify(identity, null, 2)}\n`);
+          NODE
+          cat "${RUNNER_TEMP}/pcvp-mvk-workflow-identity.json"
+
+      - name: Upload exact MVK workflow identity
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: pcvp-mvk-workflow-identity-${{ github.sha }}
+          path: ${{ runner.temp }}/pcvp-mvk-workflow-identity.json
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Validate immutable bundle and exact scoped authority
         env:
           PCVP_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
