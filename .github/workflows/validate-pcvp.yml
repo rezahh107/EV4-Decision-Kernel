@@ -1,4 +1,4 @@
-name: Validate PCVP Foundation
+name: Validate PCVP Foundation and Activation
 
 on:
   pull_request:
@@ -6,9 +6,13 @@ on:
       - '.github/workflows/validate-pcvp.yml'
       - 'kernel/pcvp/**'
       - 'kernel/validator/pcvp-v1.mjs'
+      - 'kernel/validator/pcvp-activation-v1.mjs'
       - 'planning/governance/scopes/pcvp-v1-foundation.scope.json'
+      - 'planning/governance/scopes/pcvp-v1-activation.scope.json'
       - 'tools/test-pcvp-v1-fixtures.mjs'
+      - 'tools/test-pcvp-activation-v1.mjs'
       - 'tools/validate-pcvp-v1.mjs'
+      - 'tools/validate-pcvp-activation-v1.mjs'
   push:
     branches:
       - main
@@ -16,16 +20,20 @@ on:
       - '.github/workflows/validate-pcvp.yml'
       - 'kernel/pcvp/**'
       - 'kernel/validator/pcvp-v1.mjs'
+      - 'kernel/validator/pcvp-activation-v1.mjs'
       - 'planning/governance/scopes/pcvp-v1-foundation.scope.json'
+      - 'planning/governance/scopes/pcvp-v1-activation.scope.json'
       - 'tools/test-pcvp-v1-fixtures.mjs'
+      - 'tools/test-pcvp-activation-v1.mjs'
       - 'tools/validate-pcvp-v1.mjs'
+      - 'tools/validate-pcvp-activation-v1.mjs'
 
 permissions:
   contents: read
 
 jobs:
   validate-pcvp:
-    name: PCVP bundle and semantic fixtures
+    name: PCVP bundle, activation authority, and semantic fixtures
     runs-on: ubuntu-latest
     steps:
       - name: Check out exact source head
@@ -54,20 +62,43 @@ jobs:
         run: |
           set -euo pipefail
           node --check kernel/validator/pcvp-v1.mjs
+          node --check kernel/validator/pcvp-activation-v1.mjs
           node --check tools/validate-pcvp-v1.mjs
+          node --check tools/validate-pcvp-activation-v1.mjs
           node --check tools/test-pcvp-v1-fixtures.mjs
+          node --check tools/test-pcvp-activation-v1.mjs
           git diff --check
 
-      - name: Validate exact bundle and bounded diff
+      - name: Validate immutable bundle and exact scoped authority
         env:
           PCVP_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           PCVP_HEAD_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          node tools/validate-pcvp-v1.mjs \
-            --base "${PCVP_BASE_SHA}" \
-            --head "${PCVP_HEAD_SHA}" \
-            --scope planning/governance/scopes/pcvp-v1-foundation.scope.json
+          if git diff --name-only "${PCVP_BASE_SHA}..${PCVP_HEAD_SHA}" \
+            | grep -Fxq 'planning/governance/scopes/pcvp-v1-activation.scope.json'; then
+            node tools/validate-pcvp-v1.mjs
+            node tools/validate-pcvp-activation-v1.mjs \
+              --base "${PCVP_BASE_SHA}" \
+              --head "${PCVP_HEAD_SHA}" \
+              --scope planning/governance/scopes/pcvp-v1-activation.scope.json
+          else
+            node tools/validate-pcvp-v1.mjs \
+              --base "${PCVP_BASE_SHA}" \
+              --head "${PCVP_HEAD_SHA}" \
+              --scope planning/governance/scopes/pcvp-v1-foundation.scope.json
+            if test -f kernel/pcvp/pcvp-activation.v1.json; then
+              node tools/validate-pcvp-activation-v1.mjs
+            fi
+          fi
 
-      - name: Run indexed fixtures and focused mutations
+      - name: Verify pinned prerequisite merge and CI evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node tools/validate-pcvp-activation-v1.mjs --verify-remote
+
+      - name: Run indexed carrier fixtures and focused mutations
         run: node tools/test-pcvp-v1-fixtures.mjs
+
+      - name: Run activation authority fail-closed mutations
+        run: node tools/test-pcvp-activation-v1.mjs
