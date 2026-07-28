@@ -1,0 +1,21 @@
+{
+  "scope_id": "PCVP-V1-ARCHITECT-TO-CE-ACTIVATION",
+  "base_sha": "03336312f6c3fcc4c315e56592bac3bac0bf7465",
+  "activation_impact": "ARCHITECT_TO_PROJECT_GATE_TO_CE",
+  "committed": [
+    ".github/workflows/validate-mvk.yml",
+    ".github/workflows/validate-pcvp.yml",
+    "kernel/pcvp/README.md",
+    "kernel/pcvp/pcvp-activation.v1.json",
+    "kernel/pcvp/pcvp-activation.v1.schema.json",
+    "kernel/pcvp/pcvp-foundation.v1.json",
+    "kernel/validator/pcvp-activation-v1.mjs",
+    "planning/coverage/impacts/z-krec-001.pr55-pcvp-activation.json",
+    "planning/governance/scopes/pcvp-v1-activation.scope.json",
+    "tools/lib/aigov-ci-descriptor.mjs",
+    "tools/test-coverage-impact-governance.mjs",
+    "tools/test-pcvp-activation-v1.mjs",
+    "tools/validate-pcvp-activation-v1.mjs"
+  ],
+  "scope_revision": "sha256:e8fb7befd9acd63b03fbe38c7e7f7d94a260704f3d0520bcafddf4f5a53ea159"
+}

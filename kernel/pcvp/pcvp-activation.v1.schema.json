@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ev4.local/schemas/ev4-pcvp-edge-activation.v1.schema.json",
+  "title": "EV4 PCVP edge-scoped activation authority v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "activation_id",
+    "policy",
+    "canonical_bundle",
+    "official_adoption_authorization",
+    "full_rollout_authorized",
+    "strict_activation_allowed_for_enabled_scope",
+    "activation_scope",
+    "runtime_authorization",
+    "prerequisites",
+    "bounded_non_blocking_trial",
+    "authority_boundaries",
+    "rollback"
+  ],
+  "properties": {
+    "schema_version": {"const": "ev4-pcvp-edge-activation.v1"},
+    "activation_id": {"type": "string", "pattern": "^EV4-PCVP-ACT-[A-Z0-9-]+$"},
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "architecture_lock_id"],
+      "properties": {
+        "id": {"const": "EV4-PCVP"},
+        "version": {"const": "1.0.0"},
+        "architecture_lock_id": {"const": "EV4-PCVP-ROLL-LOCK-20260727-R1"}
+      }
+    },
+    "canonical_bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest_path", "bundle_status", "bundle_adoption_status", "immutable_snapshot"],
+      "properties": {
+        "manifest_path": {"const": "kernel/pcvp/v1.0.0/bundle/00-MANIFEST.yaml"},
+        "bundle_status": {"const": "release_candidate"},
+        "bundle_adoption_status": {"const": "not_yet_adopted"},
+        "immutable_snapshot": {"const": true}
+      }
+    },
+    "official_adoption_authorization": {"const": true},
+    "full_rollout_authorized": {"const": false},
+    "strict_activation_allowed_for_enabled_scope": {"const": true},
+    "activation_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled_edges", "disabled_edges"],
+      "properties": {
+        "enabled_edges": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {"enum": ["ARCHITECT_TO_PROJECT_GATE_TO_CE"]}
+        },
+        "disabled_edges": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {"enum": ["CE_TO_BUILDER", "BUILDER_TO_RESPONSIVE", "RESPONSIVE_TO_FINAL"]}
+        }
+      }
+    },
+    "runtime_authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "architect_producer_emission",
+        "architect_to_project_gate",
+        "project_gate_to_ce",
+        "ce_to_builder_emission",
+        "builder_to_responsive_emission",
+        "responsive_to_final_emission"
+      ],
+      "properties": {
+        "architect_producer_emission": {"const": true},
+        "architect_to_project_gate": {"const": true},
+        "project_gate_to_ce": {"const": true},
+        "ce_to_builder_emission": {"const": false},
+        "builder_to_responsive_emission": {"const": false},
+        "responsive_to_final_emission": {"const": false}
+      }
+    },
+    "prerequisites": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "repository", "pull_request", "exact_head_sha", "merge_commit_sha", "merged", "exact_head_ci_passed", "evidence_run_ids"],
+        "properties": {
+          "role": {"type": "string", "minLength": 1},
+          "repository": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
+          "pull_request": {"type": "integer", "minimum": 1},
+          "exact_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+          "merge_commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+          "merged": {"const": true},
+          "exact_head_ci_passed": {"const": true},
+          "evidence_run_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "integer", "minimum": 1}}
+        }
+      }
+    },
+    "bounded_non_blocking_trial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["completed", "source_repository", "pull_request", "exact_head_sha", "evidence_run_id", "path", "carrier_emission_mode", "production_run"],
+      "properties": {
+        "completed": {"const": true},
+        "source_repository": {"const": "rezahh107/EV4-Architect-Repo"},
+        "pull_request": {"const": 43},
+        "exact_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "evidence_run_id": {"type": "integer", "minimum": 1},
+        "path": {"const": "ARCHITECT_TO_PROJECT_GATE_TO_CE"},
+        "carrier_emission_mode": {"const": "dormant_fixture_integration"},
+        "production_run": {"const": false}
+      }
+    },
+    "authority_boundaries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime_correctness_created", "project_gate_pass_created", "ce_correctness_created", "production_readiness_created", "official_verification_replacement"],
+      "properties": {
+        "runtime_correctness_created": {"const": false},
+        "project_gate_pass_created": {"const": false},
+        "ce_correctness_created": {"const": false},
+        "production_readiness_created": {"const": false},
+        "official_verification_replacement": {"const": false}
+      }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy", "requires_history_rewrite", "deletes_canonical_evidence", "accepts_invalid_carriers", "weakens_legacy_validation"],
+      "properties": {
+        "strategy": {"const": "dedicated_canonical_activation_reversal"},
+        "requires_history_rewrite": {"const": false},
+        "deletes_canonical_evidence": {"const": false},
+        "accepts_invalid_carriers": {"const": false},
+        "weakens_legacy_validation": {"const": false}
+      }
+    }
+  }
+}

@@ -19,7 +19,7 @@ import {
 const schema = JSON.parse(readFileSync('kernel/schemas/coverage-impact.v1.schema.json', 'utf8'));
 const actual = JSON.parse(readFileSync('planning/coverage/impacts/krec-001.pr52-recovery-ledger.json', 'utf8'));
 const currentBranchImpact = JSON.parse(
-  readFileSync('planning/coverage/impacts/krec-001.pr54-pcvp-foundation.json', 'utf8'),
+  readFileSync('planning/coverage/impacts/z-krec-001.pr55-pcvp-activation.json', 'utf8'),
 );
 const nextWork = readFileSync('planning/NEXT_WORK.md', 'utf8');
 const validateMain = readFileSync('.github/workflows/validate-main.yml', 'utf8');

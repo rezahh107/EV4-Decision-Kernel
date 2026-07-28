@@ -1,0 +1,132 @@
+{
+  "schema_version": "ev4-pcvp-edge-activation.v1",
+  "activation_id": "EV4-PCVP-ACT-ARCH-PG-CE-20260728-R1",
+  "policy": {
+    "id": "EV4-PCVP",
+    "version": "1.0.0",
+    "architecture_lock_id": "EV4-PCVP-ROLL-LOCK-20260727-R1"
+  },
+  "canonical_bundle": {
+    "manifest_path": "kernel/pcvp/v1.0.0/bundle/00-MANIFEST.yaml",
+    "bundle_status": "release_candidate",
+    "bundle_adoption_status": "not_yet_adopted",
+    "immutable_snapshot": true
+  },
+  "official_adoption_authorization": true,
+  "full_rollout_authorized": false,
+  "strict_activation_allowed_for_enabled_scope": true,
+  "activation_scope": {
+    "enabled_edges": [
+      "ARCHITECT_TO_PROJECT_GATE_TO_CE"
+    ],
+    "disabled_edges": [
+      "CE_TO_BUILDER",
+      "BUILDER_TO_RESPONSIVE",
+      "RESPONSIVE_TO_FINAL"
+    ]
+  },
+  "runtime_authorization": {
+    "architect_producer_emission": true,
+    "architect_to_project_gate": true,
+    "project_gate_to_ce": true,
+    "ce_to_builder_emission": false,
+    "builder_to_responsive_emission": false,
+    "responsive_to_final_emission": false
+  },
+  "prerequisites": [
+    {
+      "role": "CANONICAL_FOUNDATION",
+      "repository": "rezahh107/EV4-Decision-Kernel",
+      "pull_request": 54,
+      "exact_head_sha": "029e646f2f45f8b33563198dfe80ffade279cf30",
+      "merge_commit_sha": "03336312f6c3fcc4c315e56592bac3bac0bf7465",
+      "merged": true,
+      "exact_head_ci_passed": true,
+      "evidence_run_ids": [30243953834]
+    },
+    {
+      "role": "PROJECT_GATE_TOLERANT_READER",
+      "repository": "rezahh107/EV4-Project-Gate",
+      "pull_request": 64,
+      "exact_head_sha": "3fb55b7e6e705f828a9cc9398596cf5c8a0ea668",
+      "merge_commit_sha": "89411685922cb956b8bd46dc5b75d410c91695c1",
+      "merged": true,
+      "exact_head_ci_passed": true,
+      "evidence_run_ids": [30296158661, 30296158479]
+    },
+    {
+      "role": "CE_TOLERANT_CONSUMER",
+      "repository": "rezahh107/EV4-Constructability-Engineer-Repo",
+      "pull_request": 47,
+      "exact_head_sha": "20cfc352a75754923bac0fe76efd02de0eb616d4",
+      "merge_commit_sha": "bc4a901d82fcdbdb131e30058b399508262706c5",
+      "merged": true,
+      "exact_head_ci_passed": true,
+      "evidence_run_ids": [30350235353, 30350235890]
+    },
+    {
+      "role": "BUILDER_TOLERANT_CONSUMER",
+      "repository": "rezahh107/EV4-Builder-Assistant-Repo",
+      "pull_request": 68,
+      "exact_head_sha": "d7561ac874ad2850e48cb057d4009fba0a08c417",
+      "merge_commit_sha": "8d0c0521c6ce2148ce351666ba20895975a19c1c",
+      "merged": true,
+      "exact_head_ci_passed": true,
+      "evidence_run_ids": [30275887318]
+    },
+    {
+      "role": "RESPONSIVE_TOLERANT_CONSUMER",
+      "repository": "rezahh107/EV4-Responsive-Architect",
+      "pull_request": 191,
+      "exact_head_sha": "b6d269d12f0809514dd9fbb15429af94721a1c32",
+      "merge_commit_sha": "261f87c4496bdd4e1a5184076974f9a850767c20",
+      "merged": true,
+      "exact_head_ci_passed": true,
+      "evidence_run_ids": [30348251382, 30348251684]
+    },
+    {
+      "role": "ARCHITECT_DORMANT_PRODUCER",
+      "repository": "rezahh107/EV4-Architect-Repo",
+      "pull_request": 43,
+      "exact_head_sha": "a74bf709b93bcc08bc6969a0a34002ff529d16f0",
+      "merge_commit_sha": "1e61f4aa9485d98791780487eccdac5bb7fd4b2d",
+      "merged": true,
+      "exact_head_ci_passed": true,
+      "evidence_run_ids": [30278322110]
+    },
+    {
+      "role": "ARCHITECT_STAGE_QC_DORMANT_AUTHORITY",
+      "repository": "rezahh107/EV4-Architect-Stage-QC",
+      "pull_request": 10,
+      "exact_head_sha": "dcfc115cf2bae9770c2526469eea1346c5175c92",
+      "merge_commit_sha": "849fbff5372e9de5273669a26402de44d4bdb90f",
+      "merged": true,
+      "exact_head_ci_passed": true,
+      "evidence_run_ids": [30294970496]
+    }
+  ],
+  "bounded_non_blocking_trial": {
+    "completed": true,
+    "source_repository": "rezahh107/EV4-Architect-Repo",
+    "pull_request": 43,
+    "exact_head_sha": "a74bf709b93bcc08bc6969a0a34002ff529d16f0",
+    "evidence_run_id": 30278322110,
+    "path": "ARCHITECT_TO_PROJECT_GATE_TO_CE",
+    "carrier_emission_mode": "dormant_fixture_integration",
+    "production_run": false
+  },
+  "rollback": {
+    "strategy": "dedicated_canonical_activation_reversal",
+    "requires_history_rewrite": false,
+    "deletes_canonical_evidence": false,
+    "accepts_invalid_carriers": false,
+    "weakens_legacy_validation": false
+  },
+  "authority_boundaries": {
+    "runtime_correctness_created": false,
+    "project_gate_pass_created": false,
+    "ce_correctness_created": false,
+    "production_readiness_created": false,
+    "official_verification_replacement": false
+  }
+}

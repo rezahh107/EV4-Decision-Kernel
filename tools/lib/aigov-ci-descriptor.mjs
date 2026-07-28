@@ -85,6 +85,10 @@ export const RECOVERY_AUTHORITATIVE_WORKFLOWS = Object.freeze({
         blob_sha: '5f93a6c073c4459f421dc3dc3f4af75d36b42091',
         final_byte_sha256: '8337dc4b2ac89ced45ec9a402107e8d6130fd89e10684d9225902b93fa6c2854',
       }),
+      Object.freeze({
+        blob_sha: '133631fd3ae32f11de7459dfb74d6c3f21a9b7bd',
+        final_byte_sha256: 'ecd5d34ddf64f30a7ecef6749d6c63704afe618ed2633e8c9d4b37c1708300bb',
+      }),
     ]),
     externalTrust: EXTERNAL_COVERAGE_TRUST,
     coverageJob: Object.freeze({

@@ -33,14 +33,13 @@
     "mutation_tests": "tools/test-pcvp-v1-fixtures.mjs",
     "official_verification_replacement": false
   },
-  "pending_required_consumers_and_boundaries": [
-    "rezahh107/EV4-Project-Gate",
-    "rezahh107/EV4-Constructability-Engineer-Repo",
-    "rezahh107/EV4-Builder-Assistant-Repo",
-    "rezahh107/EV4-Responsive-Architect",
-    "rezahh107/EV4-Architect-Repo",
-    "rezahh107/EV4-Architect-Stage-QC"
-  ],
+  "pending_required_consumers_and_boundaries": [],
+  "edge_scoped_activation_authority": {
+    "record_path": "kernel/pcvp/pcvp-activation.v1.json",
+    "schema_path": "kernel/pcvp/pcvp-activation.v1.schema.json",
+    "official_adoption_authorization": true,
+    "full_rollout_authorized": false
+  },
   "strict_activation_allowed": false,
-  "rollback_or_safe_disable": "Do not load or emit the dormant carrier before the dedicated activation work unit."
+  "rollback_or_safe_disable": "Use a dedicated canonical activation-reversal change to disable the enabled edge; do not rewrite history, delete evidence, accept invalid carriers, or weaken legacy validation."
 }
