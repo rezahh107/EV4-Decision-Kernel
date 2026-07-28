@@ -1,22 +1,27 @@
 # AIGOV v2.6 Repository Transition Inventory
 
-**Repository:** `rezahh107/EV4-Decision-Kernel`
-**Observed main:** `4fe332847e6867fc6aa4639a94a88b8177d31970`
+**Repository:** `rezahh107/EV4-Decision-Kernel`  
+**Observed main:** `03336312f6c3fcc4c315e56592bac3bac0bf7465`  
+**Observed open PRs:** `#53`  
 **Remote branches deleted:** `false`
 
 ## Result
 
-Seven required historical branches were inspected. No branch is merged or cherry-picked by this transition. PR #45 and PR #32 retain useful requirements; those requirements are mapped into the successor program rather than revived as stale code.
+Seven required historical branches were re-inspected against the current live `main`. No historical branch is merged, cherry-picked, revived, or deleted by this transition. PR #45 and PR #32 retain useful requirements; those requirements remain mapped into the successor program rather than revived as stale code.
 
-| Branch | PR | Ahead / Behind | Disposition | Deletion candidate |
+| Branch | PR | Ahead / Behind current main | Disposition | Deletion candidate |
 |---|---:|---:|---|---|
-| `krec-001/recovery-ledger` | #52 | 0 / 1 | `merged_lineage_stale` | `true` |
-| `codex/refactor-github-pr-protection-configuration` | #45 | 1 / 141 | `requirements_extracted_into_aigov26` | `true` |
-| `fix/ev4-wave5-receipt-safety-profile` | #32 | 2 / 202 | `requirements_extracted_into_aigov26` | `true` |
-| `agent/coverage-guarantee-bootstrap-pr1` | #42 | 9 / 142 | `superseded_by_merged_work` | `true` |
-| `kroad-010/evidence-closure-pr37-main` | #38 | 2 / 145 | `superseded_by_merged_work` | `true` |
-| `kroad-010/downstream-consumer-contract` | #31 | 87 / 200 | `superseded_by_merged_work` | `true` |
-| `kroad-007-l2-decision-audit` | #25 | 17 / 257 | `superseded_by_merged_work` | `true` |
+| `krec-001/recovery-ledger` | #52 | 0 / 6 | `merged_lineage_stale` | `true` |
+| `codex/refactor-github-pr-protection-configuration` | #45 | 1 / 146 | `requirements_extracted_into_aigov26` | `true` |
+| `fix/ev4-wave5-receipt-safety-profile` | #32 | 2 / 207 | `requirements_extracted_into_aigov26` | `true` |
+| `agent/coverage-guarantee-bootstrap-pr1` | #42 | 9 / 147 | `superseded_by_merged_work` | `true` |
+| `kroad-010/evidence-closure-pr37-main` | #38 | 2 / 150 | `superseded_by_merged_work` | `true` |
+| `kroad-010/downstream-consumer-contract` | #31 | 87 / 205 | `superseded_by_merged_work` | `true` |
+| `kroad-007-l2-decision-audit` | #25 | 17 / 262 | `superseded_by_merged_work` | `true` |
+
+## Current-main reconciliation
+
+Current `main` includes the merged PCVP foundation work from PR #54. That work is preserved as current-main history and is not treated as AIGOV v2.6 adoption or implementation. The transition repair must validate against that PCVP foundation without changing its dormant activation/adoption boundary.
 
 ## PR #45 Requirement Extraction
 
@@ -40,4 +45,4 @@ The following requirements are preserved in `AIGOV26-002` through `AIGOV26-006`:
 - rejection of mixed lineage, arbitrary accepted status, execution overclaim, status upgrade, and trace mutation;
 - Receipt text cannot replace, repair, or mutate the machine trace.
 
-No residual requirement remains outside the successor tasks.
+No residual requirement remains outside the successor tasks. No remote branch was deleted.
