@@ -13,6 +13,8 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const LEGACY_FIXTURE_BASE_SHA = '4fe332847e6867fc6aa4639a94a88b8177d31970';
+const ACCEPTED_MVK_BLOB = '5f93a6c073c4459f421dc3dc3f4af75d36b42091';
+const MVK_WORKFLOW = '.github/workflows/validate-mvk.yml';
 const HISTORICAL_PATHS = [
   'planning/recovery/recovery-ledger.v1.json',
   'planning/recovery/recovery-execution-program.v1.json',
@@ -40,6 +42,8 @@ try {
     );
     writeFileSync(join(worktree, filePath), historical, 'utf8');
   }
+  const acceptedWorkflow = git(['cat-file', 'blob', ACCEPTED_MVK_BLOB], { capture: true });
+  writeFileSync(join(worktree, MVK_WORKFLOW), acceptedWorkflow, 'utf8');
 
   const sourceModules = join(ROOT, 'node_modules');
   const worktreeModules = join(worktree, 'node_modules');
