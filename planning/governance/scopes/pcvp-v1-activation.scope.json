@@ -1,0 +1,17 @@
+{
+  "scope_id": "PCVP-V1-ARCHITECT-TO-CE-ACTIVATION",
+  "base_sha": "03336312f6c3fcc4c315e56592bac3bac0bf7465",
+  "activation_impact": "ARCHITECT_TO_PROJECT_GATE_TO_CE",
+  "committed": [
+    ".github/workflows/validate-pcvp.yml",
+    "kernel/pcvp/README.md",
+    "kernel/pcvp/pcvp-activation.v1.json",
+    "kernel/pcvp/pcvp-activation.v1.schema.json",
+    "kernel/pcvp/pcvp-foundation.v1.json",
+    "kernel/validator/pcvp-activation-v1.mjs",
+    "planning/governance/scopes/pcvp-v1-activation.scope.json",
+    "tools/test-pcvp-activation-v1.mjs",
+    "tools/validate-pcvp-activation-v1.mjs"
+  ],
+  "scope_revision": "sha256:eda4860fccffdf8642aac282313d062c5cd5bc7c6bc8efe2ecb86c75cca67275"
+}
