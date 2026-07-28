@@ -141,18 +141,23 @@ jobs:
           node --check tools/lib/pr-inspector-v1102.mjs
           node --check tools/verify-aigov-v3-exact-main.mjs
           node --check tools/validate-aigov-v4-governance.mjs
+          node --check tools/validate-aigov26-transition.mjs
           node --check tools/validate-roadmap-memory.mjs
           node --check tools/validate-roadmap-memory-v4-owner-policy.mjs
           node --check tools/test-aigov-v3-exception.mjs
           node --check tools/test-aigov-v4-hardening.mjs
           node --check tools/test-recovery-program-lifecycle.mjs
+          node --check tools/test-recovery-transition-fixtures.mjs
           node --check tools/test-coverage-impact-governance.mjs
+          node --check tools/validate-pcvp-v1.mjs
+          node --check tools/test-pcvp-v1-fixtures.mjs
           node --check kernel/validator/coverage-work-package-id.mjs
           node --check kernel/validator/validate-coverage-guarantee-history.mjs
           node --check kernel/validator/validate-coverage-guarantee.mjs
           node --check kernel/validator/validate-coverage-guarantee-owner-policy.mjs
           node --check kernel/validator/validate-coverage-guarantee-legacy.mjs
           node --check kernel/validator/validate-recovery-execution-program.mjs
+          node --check kernel/validator/validate-recovery-transition-authority.mjs
           node --check kernel/validator/recovery-completion-evidence.mjs
           node --check kernel/validator/validate-recovery-ledger.mjs
           node --check tools/test-recovery-ledger-lifecycle.mjs
@@ -175,13 +180,20 @@ jobs:
               --base "${COVERAGE_BASE_SHA}" \
               --head "${COVERAGE_HEAD_SHA}" \
               --scope planning/governance/scopes/pcvp-v1-foundation.scope.json \
-              | tee "${RUNNER_TEMP}/krec-001-recovery-ledger-scope.json"
+              | tee "${RUNNER_TEMP}/current-work-package-scope.json"
+          elif git diff --name-only "${COVERAGE_BASE_SHA}..${COVERAGE_HEAD_SHA}" \
+            | grep -Fxq 'planning/governance/scopes/aigov-v2.6-transition.scope.json'; then
+            npm run aigov:scope-disclosure:batch-b -- \
+              --base "${COVERAGE_BASE_SHA}" \
+              --head "${COVERAGE_HEAD_SHA}" \
+              --scope planning/governance/scopes/aigov-v2.6-transition.scope.json \
+              --output "${RUNNER_TEMP}/current-work-package-scope.json"
           else
             npm run aigov:scope-disclosure:batch-b -- \
               --base "${COVERAGE_BASE_SHA}" \
               --head "${COVERAGE_HEAD_SHA}" \
               --scope planning/governance/scopes/krec-001-recovery-ledger.scope.json \
-              --output "${RUNNER_TEMP}/krec-001-recovery-ledger-scope.json"
+              --output "${RUNNER_TEMP}/current-work-package-scope.json"
           fi
 
       - name: Validate owner policy
@@ -196,13 +208,21 @@ jobs:
           npm run test:aigov-v3-exception
           npm run test:aigov-v4-hardening
 
-      - name: Validate Recovery lifecycle
+      - name: Validate Recovery lifecycle and AIGOV v2.6 transition
         if: ${{ always() }}
         run: |
           npm run validate:recovery-program
           npm run test:recovery-lifecycle
           npm run validate:recovery-ledger
           npm run test:recovery-ledger-lifecycle
+          npm run validate:aigov26-transition
+          npm run test:aigov26-transition
+
+      - name: Validate current-main PCVP foundation remains dormant
+        if: ${{ always() }}
+        run: |
+          node tools/validate-pcvp-v1.mjs
+          node tools/test-pcvp-v1-fixtures.mjs
 
       - name: Validate roadmap memory
         if: ${{ always() }}
@@ -282,13 +302,13 @@ jobs:
           --source-main-sha "${COVERAGE_BASE_SHA}"
           --output "${RUNNER_TEMP}/aigov-v4-batch-b-owner-policy-preview.json"
 
-      - name: Upload exact-head KREC-001 evidence
+      - name: Upload exact-head transition evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: krec-001-recovery-ledger-${{ github.event.pull_request.head.sha }}
+          name: aigov26-transition-${{ github.event.pull_request.head.sha }}
           path: |
-            ${{ runner.temp }}/krec-001-recovery-ledger-scope.json
+            ${{ runner.temp }}/current-work-package-scope.json
             ${{ runner.temp }}/aigov-owner-policy-report.json
             ${{ runner.temp }}/aigov-v4-batch-b-owner-policy-preview.json
           if-no-files-found: error
