@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,6 +8,14 @@ import { validateActivationRecord } from '../kernel/validator/pcvp-activation-v1
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const record = JSON.parse(readFileSync(path.join(ROOT, 'kernel/pcvp/pcvp-activation.v1.json'), 'utf8'));
 const schema = JSON.parse(readFileSync(path.join(ROOT, 'kernel/pcvp/pcvp-activation.v1.schema.json'), 'utf8'));
+const mvkWorkflowBytes = readFileSync(path.join(ROOT, '.github/workflows/validate-mvk.yml'));
+const mvkWorkflowIdentity = {
+  blob_sha: createHash('sha1')
+    .update(Buffer.from(`blob ${mvkWorkflowBytes.length}\0`))
+    .update(mvkWorkflowBytes)
+    .digest('hex'),
+  final_byte_sha256: createHash('sha256').update(mvkWorkflowBytes).digest('hex'),
+};
 
 function clone(value) {
   return structuredClone(value);
@@ -83,4 +92,5 @@ console.log(JSON.stringify({
   fail_closed_mutations: 9,
   enabled_edge: record.activation_scope.enabled_edges[0],
   full_rollout_authorized: record.full_rollout_authorized,
+  mvk_workflow_identity: mvkWorkflowIdentity,
 }, null, 2));
