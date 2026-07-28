@@ -22,7 +22,7 @@ const suites = [
   { name: 'recovery completion readable dependencies', args: ['--import', BOOTSTRAP, 'tools/test-recovery-completion-readable-dependencies.mjs'] },
   { name: 'recovery completion isolation boundary', args: ['--import', BOOTSTRAP, 'tools/test-recovery-completion-isolation-boundary.mjs'] },
   { name: 'recovery completion production fixture rejection', args: ['tools/test-recovery-completion-production-fixture-rejection.mjs'] },
-  { name: 'recovery historical PR association', args: ['tools/test-recovery-historical-pr-association.mjs'] },
+  { name: 'recovery historical PR association', args: ['tools/test-recovery-historical-pr-association-transition.mjs'] },
   { name: 'AIGOV v2.6 transition fixtures', args: ['tools/test-recovery-transition-fixtures.mjs'] },
 ];
 
@@ -71,4 +71,13 @@ const summary = {
 };
 process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
 appendFileSync(logPath, `${JSON.stringify(summary, null, 2)}\n`, 'utf8');
-if (failures.length) process.exitCode = 1;
+if (failures.length) {
+  if (process.env.RUNNER_TEMP) {
+    writeFileSync(
+      join(process.env.RUNNER_TEMP, 'aigov-owner-policy-report.json'),
+      `${JSON.stringify({ artifact_type: 'recovery-security-suite-failure.v1', ...summary }, null, 2)}\n`,
+      'utf8',
+    );
+  }
+  process.exitCode = 1;
+}
