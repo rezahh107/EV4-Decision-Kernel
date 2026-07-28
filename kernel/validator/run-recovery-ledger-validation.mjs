@@ -9,6 +9,7 @@ import {
   repositoryCompletionDiagnostics,
   validateRecoveryLedgerDocument,
 } from './validate-recovery-ledger.mjs';
+import { validateRecoveryTransitionLedgerDocument } from './validate-recovery-transition-authority.mjs';
 import { fetchRecoveryCompletionCapabilities } from './recovery-completion-evidence.mjs';
 
 const ROOT = process.cwd();
@@ -62,10 +63,10 @@ function git(args) {
   }).trim();
 }
 
-function ledgerAt(ref) {
+function jsonAt(ref, file) {
   if (!ref) return null;
   try {
-    return JSON.parse(git(['show', `${ref}:${LEDGER_PATH}`]));
+    return JSON.parse(git(['show', `${ref}:${file}`]));
   } catch {
     return null;
   }
@@ -103,25 +104,38 @@ async function run() {
   const ledger = readJson(LEDGER_PATH);
   const program = readJson(PROGRAM_PATH);
   const schema = readJson(SCHEMA_PATH);
-  const legacyFixtureLedger = ledgerAt(LEGACY_FIXTURE_BASE_SHA);
+  const legacyFixtureLedger = jsonAt(LEGACY_FIXTURE_BASE_SHA, LEDGER_PATH);
+  const legacyFixtureProgram = jsonAt(LEGACY_FIXTURE_BASE_SHA, PROGRAM_PATH);
+  const legacyFixtureSchema = jsonAt(LEGACY_FIXTURE_BASE_SHA, SCHEMA_PATH);
+  const legacyFixtureAvailable = Boolean(
+    legacyFixtureLedger && legacyFixtureProgram && legacyFixtureSchema,
+  );
   const historyBaseSha = process.env.COVERAGE_BASE_SHA;
-  const previousLedger = SHA40.test(historyBaseSha || '') ? ledgerAt(historyBaseSha) : null;
-  const fixtures = legacyFixtureLedger
-    ? runFixtureSuite(legacyFixtureLedger, program, schema)
+  const previousLedger = SHA40.test(historyBaseSha || '') ? jsonAt(historyBaseSha, LEDGER_PATH) : null;
+  const fixtures = legacyFixtureAvailable
+    ? runFixtureSuite(legacyFixtureLedger, legacyFixtureProgram, legacyFixtureSchema)
     : [];
 
   const completionBoundary = await fetchRecoveryCompletionCapabilities(ledger);
   const completionCapabilities = completionBoundary.capabilities;
+  const canonicalValidation = program.transition?.decision_id === 'OWNER-DIRECTED-AIGOV-2.6-MIGRATION'
+    ? validateRecoveryTransitionLedgerDocument(
+      ledger,
+      program,
+      schema,
+      completionCapabilities,
+    )
+    : validateRecoveryLedgerDocument(ledger, program, schema, completionCapabilities);
   const diagnostics = uniqueDiagnostics([
-    ...(legacyFixtureLedger ? [] : [diagnostic(
+    ...(legacyFixtureAvailable ? [] : [diagnostic(
       'RECOVERY_LEDGER_LEGACY_FIXTURE_BASE_UNAVAILABLE',
       '/kernel/fixtures/recovery-ledger',
       LEGACY_FIXTURE_BASE_SHA,
       null,
-      'Fetch complete repository history so legacy fixtures remain bound to their historical pre-transition baseline.',
+      'Fetch complete repository history so legacy fixtures remain bound to their historical pre-transition Program, Ledger, and schema baseline.',
     )]),
     ...completionBoundary.diagnostics,
-    ...validateRecoveryLedgerDocument(ledger, program, schema, completionCapabilities),
+    ...canonicalValidation,
     ...(previousLedger ? recoveryLedgerHistoryDiagnostics(previousLedger, ledger) : []),
     ...repositoryCompletionDiagnostics(ledger, completionCapabilities),
   ]);
@@ -130,9 +144,9 @@ async function run() {
     diagnostics.push(diagnostic(
       'RECOVERY_LEDGER_FIXTURE_EXPECTATION_FAILED',
       '/kernel/fixtures/recovery-ledger',
-      'all legacy fixture expectations pass against the historical pre-transition ledger',
+      'all legacy fixture expectations pass against the historical pre-transition Program, Ledger, and schema',
       fixtures.filter((fixture) => !fixture.pass),
-      'Keep legacy Recovery fixtures isolated from the active AIGOV v2.6 transition overlay.',
+      'Keep legacy Recovery fixtures isolated from the active AIGOV v2.6 transition authority.',
     ));
   }
 
