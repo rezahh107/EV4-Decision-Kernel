@@ -232,7 +232,7 @@ for (const [source, jobKey] of [
 
 const recovery = readJson('planning/recovery/recovery-execution-program.v1.json');
 const recoveryDiagnostics = recoveryProgramDiagnostics(recovery);
-record('full Recovery activation passes', recoveryDiagnostics.length === 0, recoveryDiagnostics);
+record('transitioned Recovery carrier passes', recoveryDiagnostics.length === 0, recoveryDiagnostics);
 {
   const candidate = structuredClone(recovery);
   candidate.kroad_supersession_effect = 'superseded';
@@ -258,8 +258,19 @@ record('full Recovery activation passes', recoveryDiagnostics.length === 0, reco
   candidate.tasks[1].status = 'complete';
   const observed = recoveryProgramDiagnostics(candidate);
   record(
-    'premature task completion still blocks',
-    observed.includes('RECOVERY_COMPLETE_TASK_DEPENDENCY_INCOMPLETE'),
+    'superseded task completion remains blocked',
+    observed.includes('RECOVERY_SUPERSEDED_TASK_STATE_INVALID')
+      && observed.includes('RECOVERY_SUPERSEDED_TASK_EXECUTION_FORBIDDEN'),
+    observed,
+  );
+}
+{
+  const candidate = structuredClone(recovery);
+  candidate.tasks[1].implementation_authorized = true;
+  const observed = recoveryProgramDiagnostics(candidate);
+  record(
+    'stale legacy authorization cannot reactivate a superseded task',
+    observed.includes('RECOVERY_SUPERSEDED_TASK_AUTHORIZATION_FORBIDDEN'),
     observed,
   );
 }
