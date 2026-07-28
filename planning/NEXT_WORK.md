@@ -2,13 +2,13 @@
 
 ## Last Updated
 
-PR #52 is merged and formally complete. Its final reviewed Head is `117a6f072c6c0a6a3487a4520e8f6f0623618769`; successful exact-head `Validate MVK` is run `29741545637`; the resulting `main` Merge commit is `4fe332847e6867fc6aa4639a94a88b8177d31970`; and successful `Validate Main` with `event=push` on that exact commit is run `29742820512`.
+PR #52 is merged and formally complete. Its final reviewed Head is `117a6f072c6c0a6a3487a4520e8f6f0623618769`; successful exact-head `Validate MVK` is run `29741545637`; the resulting `main` Merge commit is `4fe332847e6867fc6aa4639a94a88b8177d31970`; and successful `Validate Main` with `event=push` on that exact historical commit is run `29742820512`.
 
 The owner has explicitly retired unexecuted AIGOV v2.5 tasks `KREC-002` through `KREC-009` and registered the versioned `AIGOV v2.6.0` successor program. This transition registers planning and source identity only; it does not adopt or enforce AIGOV v2.6.
 
 ## Status Authority
 
-This file is the authoritative current-status dashboard. `planning/KERNEL_EXECUTION_PLAN.md` preserves durable product history. The versioned successor authority is `planning/migrations/aigov-v2.6-migration-program.v1.json`.
+This file is the authoritative current-status dashboard. `planning/KERNEL_EXECUTION_PLAN.md` preserves durable product history. The versioned successor authority is `planning/migrations/aigov-v2.6-migration-program.v1.json`. KREC execution authority is the Program transition at `planning/recovery/recovery-execution-program.v1.json#/transition`.
 
 ## Preserved Existing Owner-Policy Memory
 
@@ -48,6 +48,10 @@ AIGOV_v2_6:
   source_lock: planning/governance/sources/aigov-v2.6.0-source-lock.v1.json
   repository_adopted: false
   implementation_started: false
+Recovery_transition:
+  effective_execution_authority: program_transition
+  authority_path: planning/recovery/recovery-execution-program.v1.json#/transition
+  legacy_consumer_policy: fail_closed
 KREC-001:
   lifecycle: complete
   execution_eligibility: complete
@@ -60,6 +64,9 @@ KREC-001:
   blocker: none
 KREC-002_through_009:
   lifecycle: superseded_before_execution
+  execution_eligibility: superseded
+  historical_carrier_status: active
+  legacy_implementation_authorized: false
   substantive_implementation_started: false
   historical_definition_preserved: true
   implementation_credit: false
@@ -82,23 +89,25 @@ external_repository_effect: none
 
 current_work_package_id: AIGOV26-TRANSITION-001
 
-The bounded work package is the AIGOV v2.6 repository transition. It may inventory branches, reconcile KREC lifecycle memory, register source identity, create the successor program, document waves, and add transition validation. It must not implement any `AIGOV26-*` task, delete branches, activate policy, or Merge itself.
+The bounded work package is the AIGOV v2.6 repository transition. It may inventory branches, reconcile KREC lifecycle memory, register source identity, create the successor program, document waves, add transition validation, and repair fail-closed execution authority. It must not implement any `AIGOV26-*` task, delete branches, activate policy, or Merge itself.
 
 Coverage proposal status: `blocked_pending_external_governance_approval`. `AIGOV26-001` is the next executable governance task; KROAD-012 remains the next-allowed product work and is not superseded by this planning transition.
 
 ## Recovery Task Disposition
 
-| Task | Historical definition | Effective lifecycle | Effective execution |
-|---|---|---|---|
-| `KREC-001` | preserved | `complete` | `complete` with exact PR, Merge, exact-head CI and current-main evidence |
-| `KREC-002` | preserved | `superseded_before_execution` | `superseded` |
-| `KREC-003` | preserved | `superseded_before_execution` | `superseded` |
-| `KREC-004` | preserved | `superseded_before_execution` | `superseded` |
-| `KREC-005` | preserved | `superseded_before_execution` | `superseded` |
-| `KREC-006` | preserved | `superseded_before_execution` | `superseded` |
-| `KREC-007` | preserved | `superseded_before_execution` | `superseded` |
-| `KREC-008` | preserved | `superseded_before_execution` | `superseded` |
-| `KREC-009` | preserved | `superseded_before_execution` | `superseded` |
+| Task | Historical definition | Effective lifecycle | Legacy authorization | Effective execution |
+|---|---|---|---|---|
+| `KREC-001` | preserved | `complete` | historical carrier retained | `complete` with exact PR, Merge, exact-head CI and current-main evidence |
+| `KREC-002` | preserved | `superseded_before_execution` | `false` | `superseded` |
+| `KREC-003` | preserved | `superseded_before_execution` | `false` | `superseded` |
+| `KREC-004` | preserved | `superseded_before_execution` | `false` | `superseded` |
+| `KREC-005` | preserved | `superseded_before_execution` | `false` | `superseded` |
+| `KREC-006` | preserved | `superseded_before_execution` | `false` | `superseded` |
+| `KREC-007` | preserved | `superseded_before_execution` | `false` | `superseded` |
+| `KREC-008` | preserved | `superseded_before_execution` | `false` | `superseded` |
+| `KREC-009` | preserved | `superseded_before_execution` | `false` | `superseded` |
+
+Dependency completion never overrides `superseded`. In particular, KREC-002 and KREC-004 do not become executable merely because KREC-001 is complete.
 
 ## Successor Program
 
