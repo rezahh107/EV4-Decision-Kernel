@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from 'node:fs';
 import { recoveryLedgerDiagnostics } from '../kernel/validator/validate-recovery-ledger.mjs';
+import {
+  RECOVERY_SUPERSEDED_TASK_IDS,
+  RECOVERY_TRANSITION_AUTHORITY,
+} from '../kernel/validator/validate-recovery-execution-program.mjs';
 
 const failures = [];
 const read = (file) => readFileSync(file, 'utf8');
@@ -17,6 +21,7 @@ const activation = read('planning/reviews/RECOVERY_PROGRAM_ACTIVATION.md');
 const transitionPath = 'planning/migrations/aigov-v2.6-migration-program.v1.json';
 const migration = existsSync(transitionPath) ? readJson(transitionPath) : null;
 const transitionActive = program.transition?.decision_id === 'OWNER-DIRECTED-AIGOV-2.6-MIGRATION'
+  && program.transition?.effective_execution_authority === RECOVERY_TRANSITION_AUTHORITY
   && migration?.program_id === 'AIGOV-2.6-REPOSITORY-MIGRATION-PROGRAM';
 
 function recoveryCandidateMemoryDiagnostics(value) {
@@ -51,12 +56,25 @@ if (coverage.merge_gate?.exact_head_ci_green !== 'required' || coverage.merge_ga
 if (!coverage.promotion_boundary?.required_predicates?.includes('independent_review_passed')) fail('kernel/decision-governance/coverage-guarantee-contract.v1.json', 'external Coverage-promotion independent review predicate must remain distinct and required');
 
 const graph = {'KREC-001':[],'KREC-002':['KREC-001'],'KREC-003':['KREC-001','KREC-002'],'KREC-004':['KREC-001'],'KREC-005':['KREC-002','KREC-003','KREC-004'],'KREC-006':['KREC-003','KREC-004','KREC-005'],'KREC-007':['KREC-005','KREC-006'],'KREC-008':['KREC-002','KREC-007'],'KREC-009':['KREC-003','KREC-006','KREC-007','KREC-008']};
-if (program.program_status !== 'active' || program.tasks?.length !== 9 || program.tasks.some((task) => task.status !== 'active' || task.implementation_authorized !== true || task.coverage_credit !== false || task.readiness_claim !== false || JSON.stringify(task.depends_on) !== JSON.stringify(graph[task.task_id]))) fail('planning/recovery/recovery-execution-program.v1.json', 'Recovery activation state or dependency graph mismatch');
+if (program.program_status !== 'active'
+  || program.tasks?.length !== 9
+  || program.tasks.some((task) => task.status !== 'active'
+    || task.coverage_credit !== false
+    || task.readiness_claim !== false
+    || JSON.stringify(task.depends_on) !== JSON.stringify(graph[task.task_id]))) {
+  fail('planning/recovery/recovery-execution-program.v1.json', 'Recovery carrier state or dependency graph mismatch');
+}
+if (transitionActive) {
+  const byId = new Map(program.tasks.map((task) => [task.task_id, task]));
+  if (byId.get('KREC-001')?.implementation_authorized !== true
+    || RECOVERY_SUPERSEDED_TASK_IDS.some((id) => byId.get(id)?.implementation_authorized !== false)) {
+    fail('planning/recovery/recovery-execution-program.v1.json', 'transition legacy authorization projection mismatch');
+  }
+} else if (program.tasks.some((task) => task.implementation_authorized !== true)) {
+  fail('planning/recovery/recovery-execution-program.v1.json', 'legacy Recovery activation authorization mismatch');
+}
 if (program.kroad_012r_status !== 'historical_non_authoritative' || program.kroad_supersession_effect !== 'none' || program.coverage_promotion_effect !== 'none' || program.product_effect !== 'none') fail('planning/recovery/recovery-execution-program.v1.json', 'forbidden effect detected');
 
-// The legacy path remains fully bound to static Recovery diagnostics. In transition
-// mode, completion authority is checked by the production Recovery validator and
-// this roadmap validator checks only the durable, capability-independent memory.
 if (!transitionActive) {
   const ledgerDiagnostics = recoveryLedgerDiagnostics(ledger, program);
   if (ledgerDiagnostics.length) fail('planning/recovery/recovery-ledger.v1.json', 'Recovery ledger mismatch: ' + ledgerDiagnostics.map((item) => item.diagnostic_id).join(', '));
@@ -65,13 +83,25 @@ const ledgerById = new Map(ledger.tasks.map((task) => [task.task_id, task]));
 const krec001 = ledgerById.get('KREC-001');
 
 if (transitionActive) {
+  if (ledger.transition?.effective_task_execution_authority !== RECOVERY_TRANSITION_AUTHORITY) fail('planning/recovery/recovery-ledger.v1.json', 'Ledger must project Program transition authority');
   if (krec001?.lifecycle_state !== 'complete' || krec001?.execution_eligibility !== 'complete' || krec001?.candidate?.branch !== 'krec-001/recovery-ledger' || krec001?.candidate?.pull_request !== 52 || krec001?.candidate?.pr_state !== 'merged' || krec001?.transition_blocker !== null || krec001?.transition_disposition !== null || krec001?.completion_evidence?.exact_head_ci?.run_id !== 29741545637 || krec001?.completion_evidence?.current_main_validation?.run_id !== 29742820512) fail('planning/recovery/recovery-ledger.v1.json', 'KREC-001 transition completion evidence mismatch');
-  for (const id of Object.keys(graph).filter((id) => id !== 'KREC-001')) {
+  for (const id of RECOVERY_SUPERSEDED_TASK_IDS) {
     const task = ledgerById.get(id); const disposition = task?.transition_disposition;
-    if (task?.lifecycle_state !== 'not_started' || task?.candidate !== null || task?.completion_evidence !== null || disposition?.lifecycle_state !== 'superseded_before_execution' || disposition?.execution_eligibility !== 'superseded' || disposition?.historical_definition_preserved !== true || disposition?.substantive_implementation_started !== false || disposition?.implementation_credit !== false || disposition?.completion_credit !== false || disposition?.coverage_credit !== false) fail('planning/recovery/recovery-ledger.v1.json', `${id} transition disposition mismatch`);
+    if (task?.lifecycle_state !== 'not_started'
+      || task?.execution_eligibility !== 'superseded'
+      || task?.authority?.implementation_authorized !== false
+      || task?.candidate !== null
+      || task?.completion_evidence !== null
+      || disposition?.lifecycle_state !== 'superseded_before_execution'
+      || disposition?.execution_eligibility !== 'superseded'
+      || disposition?.historical_definition_preserved !== true
+      || disposition?.substantive_implementation_started !== false
+      || disposition?.implementation_credit !== false
+      || disposition?.completion_credit !== false
+      || disposition?.coverage_credit !== false) fail('planning/recovery/recovery-ledger.v1.json', `${id} transition disposition mismatch`);
   }
   if (migration.repository_adoption_status !== 'planned_not_adopted' || migration.implementation_started !== false || migration.transition_gate?.state !== 'satisfied' || migration.tasks?.length !== 8 || migration.tasks[0]?.state !== 'dependency_ready' || migration.tasks.slice(1).some((task) => task.state !== 'dependency_blocked')) fail(transitionPath, 'AIGOV v2.6 successor initial state mismatch');
-  for (const token of ['current_work_package_id: AIGOV26-TRANSITION-001','source_registered: true','repository_adopted: false','implementation_started: false','lifecycle: complete','formal_completion: complete','exact_head_validate_mvk_run: 29741545637','current_main_validate_main_run: 29742820512','lifecycle: superseded_before_execution','historical_definition_preserved: true','next_executable_task: AIGOV26-001']) if (!next.includes(token)) fail('planning/NEXT_WORK.md', `missing transition token: ${token}`);
+  for (const token of ['current_work_package_id: AIGOV26-TRANSITION-001','source_registered: true','repository_adopted: false','implementation_started: false','effective_execution_authority: program_transition','legacy_consumer_policy: fail_closed','lifecycle: complete','formal_completion: complete','exact_head_validate_mvk_run: 29741545637','current_main_validate_main_run: 29742820512','lifecycle: superseded_before_execution','execution_eligibility: superseded','legacy_implementation_authorized: false','historical_definition_preserved: true','next_executable_task: AIGOV26-001']) if (!next.includes(token)) fail('planning/NEXT_WORK.md', `missing transition token: ${token}`);
 } else {
   const krec002 = ledgerById.get('KREC-002'); const krec004 = ledgerById.get('KREC-004');
   if (!['in_progress','checks_pending'].includes(krec001?.lifecycle_state) || krec001?.candidate?.branch !== 'krec-001/recovery-ledger' || krec001?.completion_evidence !== null) fail('planning/recovery/recovery-ledger.v1.json', 'KREC-001 must remain a non-complete branch-backed candidate before owner Merge');
@@ -79,7 +109,11 @@ if (transitionActive) {
   for (const token of ['current_work_package_id: KREC-001','ledger: planning/recovery/recovery-ledger.v1.json','KREC-001_lifecycle: ' + krec001?.lifecycle_state,'KREC-001_candidate_branch: krec-001/recovery-ledger','KREC-001_candidate_pr: ' + krec001?.candidate?.pull_request,'KREC-001_candidate_pr_state: non_draft_open','KREC-001_reviewed_head_exact_head_ci: green','KREC-001_completion_evidence: null','KREC-002_execution_eligibility: dependency_blocked','KREC-004_execution_eligibility: dependency_blocked']) if (!next.includes(token)) fail('planning/NEXT_WORK.md', 'missing live KREC-001 candidate token: ' + token);
 }
 
-for (const token of ['## Recovery Execution Program Overlay — Active','`DCOV-COVERAGE-EXECUTION-PROGRAM`','all nine KREC tasks are authorized simultaneously','`KREC-001` | Recovery Ledger | none','`KREC-009` | Coverage Baseline | `KREC-003`, `KREC-006`, `KREC-007`, `KREC-008`','Substantive implementation in the activation PR:** none','Coverage promotion effect:** `none`','`KROAD-012` remains not superseded','`KROAD-013` through `KROAD-018` remain `not_started`','`KROAD-012R` remains `historical_non_authoritative`','### Recovery lifecycle evidence contract','`planning/recovery/recovery-ledger.v1.json`','Only `complete` dependencies affect execution eligibility']) if (!plan.includes(token)) fail('planning/KERNEL_EXECUTION_PLAN.md', `missing durable Recovery token: ${token}`);
+if (transitionActive) {
+  for (const token of ['## Recovery Execution Program Overlay — Transitioned','`program_transition`','`KREC-002` | Current Source Verification','`implementation_authorized: false` | `superseded`','Supersession has precedence over dependency completion','`AIGOV26-001` is the only successor task initially `dependency_ready`']) if (!plan.includes(token)) fail('planning/KERNEL_EXECUTION_PLAN.md', `missing transition Recovery token: ${token}`);
+} else {
+  for (const token of ['## Recovery Execution Program Overlay — Active','all nine KREC tasks are authorized simultaneously','Only `complete` dependencies affect execution eligibility']) if (!plan.includes(token)) fail('planning/KERNEL_EXECUTION_PLAN.md', `missing legacy Recovery token: ${token}`);
+}
 if (!plan.includes('# Coverage Guarantee Proposal Overlay — Non-Executable') || !plan.includes('## Proposed Unified Coverage Execution Program — Non-Executable')) fail('planning/KERNEL_EXECUTION_PLAN.md', 'non-executable Coverage proposal overlays must remain distinct');
 if (!closure.includes('435add8ee3f3274f781b6e391f11e3262e380c4e') || !closure.includes('not_required_by_owner_policy')) fail('planning/reviews/AIGOV_V4_BATCH_B_POST_MERGE_CLOSURE.md', 'closure identity incomplete');
 if (!activation.includes('substantive_krec_implementation_included: false')) fail('planning/reviews/RECOVERY_PROGRAM_ACTIVATION.md', 'activation boundary incomplete');
