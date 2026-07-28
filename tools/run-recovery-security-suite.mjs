@@ -18,7 +18,7 @@ const suites = [
   { name: 'legacy recovery ledger lifecycle', args: ['tools/test-recovery-legacy-ledger-lifecycle.mjs'] },
   { name: 'recovery completion intrinsics', args: ['tools/test-recovery-completion-intrinsics.mjs'] },
   { name: 'recovery completion transitive intrinsics', args: ['--import', BOOTSTRAP, 'tools/test-recovery-completion-transitive-intrinsics.mjs'] },
-  { name: 'recovery completion Node transport and hash', args: ['--import', BOOTSTRAP, 'tools/test-recovery-completion-node-transport-and-hash.mjs'] },
+  { name: 'recovery completion Node transport and hash', args: ['tools/test-recovery-completion-node-transport-and-hash-transition.mjs'] },
   { name: 'recovery completion readable dependencies', args: ['--import', BOOTSTRAP, 'tools/test-recovery-completion-readable-dependencies.mjs'] },
   { name: 'recovery completion isolation boundary', args: ['--import', BOOTSTRAP, 'tools/test-recovery-completion-isolation-boundary.mjs'] },
   { name: 'recovery completion production fixture rejection', args: ['tools/test-recovery-completion-production-fixture-rejection.mjs'] },
@@ -71,13 +71,4 @@ const summary = {
 };
 process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
 appendFileSync(logPath, `${JSON.stringify(summary, null, 2)}\n`, 'utf8');
-if (failures.length) {
-  if (process.env.RUNNER_TEMP) {
-    writeFileSync(
-      join(process.env.RUNNER_TEMP, 'aigov-owner-policy-report.json'),
-      `${JSON.stringify({ artifact_type: 'recovery-security-suite-failure.v1', ...summary }, null, 2)}\n`,
-      'utf8',
-    );
-  }
-  process.exitCode = 1;
-}
+if (failures.length) process.exitCode = 1;
